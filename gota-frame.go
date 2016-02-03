@@ -10,16 +10,13 @@ import (
 )
 
 func main() {
-	in := `A,B,C,D
-1,2,3,4
-5,6,7,8`
+	// Test 02
 	//textColumn := []string{"One", "Two", "Three"}
 	//intColumn := []int{1, 2, 3}
 	//c1 := Column{}
 	//c1.fillColumn(textColumn)
 	//c2 := Column{}
 	//c2.fillColumn(intColumn)
-	df := DataFrame{}
 	//df := DataFrame{
 	//columns:  []Column{c1, c2},
 	//nCols:    2,
@@ -27,91 +24,37 @@ func main() {
 	//colnames: []string{"Text", "Ints"},
 	//}
 	//fmt.Println(df)
-	df.readCsvFromStringToString(in)
 
-	//type mystruct struct {
-	//a int
-	//b string
-	//c int
-	//d float64
-	//}
-	//type dataframe []mystruct
+	// Test 01
+	in := `A,B,C,D
+1,2,3,4
+5,6,7,8`
+	df := DataFrame{}
+	r := csv.NewReader(strings.NewReader(in))
+	records, err := r.ReadAll()
+	if err != nil {
+		panic(err)
+	}
+	df.loadData(records)
 
-	//r := csv.NewReader(strings.NewReader(in))
-	//records, err := r.ReadAll()
-	//if err != nil {
-	//panic(err.Error())
-	//}
-	//headers := records[0]
-	//for _, v := range records[1:] {
-	//mystr := make(map[string]interface{})
-	//for k, m := range headers {
-	//mystr[m] = v[k]
-	//}
-	//fmt.Println(mystr)
-	//}
+	for _, v := range df.columns {
+		fmt.Println(v)
+	}
+	fmt.Println(df)
 }
 
+// DataFrame Definition
+// ====================
 type DataFrame struct {
 	columns  []Column
+	colnames []string
 	nCols    int
 	nRows    int
-	colnames []string
-	coltypes []string
 }
 
-//func (df *DataFrame) readCsvFromString(in string, out string) error {
-//return nil
-//}
-func (df *DataFrame) readCsvFromStringTyped(in string, types []string) error {
-	r := csv.NewReader(strings.NewReader(in))
-	records, err := r.ReadAll()
-	if err != nil {
-		return err
-	}
-
-	// TODO: Check if empty records
-
-	// Get DataFrame dimensions
-	nRows := len(records) - 1
-	if nRows == 0 {
-		return errors.New("Empty dataframe")
-	}
-	nCols := len(records[0])
-
-	// Generate a virtual df to store the temporary values
-	newDf := DataFrame{
-		columns:  []Column{},
-		colnames: records[0],
-		nRows:    nRows,
-		nCols:    nCols,
-	}
-
-	for j := 0; j < nCols; j++ {
-		col := []string{}
-		for i := 1; i < nRows+1; i++ {
-			// TODO: Parse the column elements with the appropriate type
-			col = append(col, records[i][j])
-		}
-		column := Column{}
-		column.fillColumn(col)
-		newDf.columns = append(newDf.columns, column)
-	}
-	fmt.Println(newDf)
-
-	//fmt.Println(nRows)
-	//fmt.Println(nCols)
-	//fmt.Println(records)
-	return nil
-}
-
-func (df *DataFrame) readCsvFromStringToString(in string) error {
-	r := csv.NewReader(strings.NewReader(in))
-	records, err := r.ReadAll()
-	if err != nil {
-		return err
-	}
-
+// DataFrame Methods
+// =================
+func (df *DataFrame) loadData(records [][]string) error {
 	// TODO: Check if empty records
 
 	// Get DataFrame dimensions
@@ -138,11 +81,7 @@ func (df *DataFrame) readCsvFromStringToString(in string) error {
 		column.fillColumn(col)
 		newDf.columns = append(newDf.columns, column)
 	}
-	fmt.Println(newDf)
-
-	//fmt.Println(nRows)
-	//fmt.Println(nCols)
-	//fmt.Println(records)
+	*df = newDf
 	return nil
 }
 
@@ -168,16 +107,27 @@ func (df DataFrame) String() string {
 	return str
 }
 
+// Column Definition
+// =================
 type Column struct {
-	row []interface{}
+	row     []interface{}
+	colType string
 }
 
+// Column Methods
+// ==============
+func (c Column) String() string {
+	return fmt.Sprint(c.row)
+}
+
+// TODO: Should this return an error?
 func (c *Column) fillColumn(values interface{}) {
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(values)
 		for i := 0; i < s.Len(); i++ {
 			c.row = append(c.row, s.Index(i).Interface())
+			c.colType = fmt.Sprint(s.Index(i).Type())
 		}
 	}
 }
