@@ -31,6 +31,12 @@ type Column struct {
 	numChars int
 }
 
+// Subset represent a distance from a number to another
+type Subset struct {
+	From int
+	To   int
+}
+
 // Columns is an alias for multiple columns
 type Columns map[string]Column
 
@@ -157,7 +163,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 // SubsetColumns will return a DataFrame that contains only the columns named
 // after the given columns.
 func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
-	// Generate a df to store the temporary values
+	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		Columns:  make(map[string]Column),
 		nRows:    df.nRows,
@@ -191,6 +197,37 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 	}
 
 	newDf.nCols = len(newDf.colNames)
+
+	return &newDf, nil
+}
+
+// SubsetRows will return a DataFrame that contains only the selected rows
+func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
+	// Generate a DataFrame to store the temporary values
+	newDf := DataFrame{
+		Columns:  make(map[string]Column),
+		nCols:    df.nCols,
+		colNames: df.colNames,
+	}
+
+	switch subset.(type) {
+	case Subset:
+		s := subset.(Subset)
+		// Check for errors
+		if s.From > s.To {
+			return nil, errors.New("Bad subset: Start greater than Beginning")
+		}
+		if s.To > df.nRows || s.To < 0 || s.From < 0 {
+			return nil, errors.New("Subset out of range")
+		}
+
+		newDf.nRows = s.To - s.From
+		for _, v := range df.colNames {
+			col := df.Columns[v]
+			col.FillColumn(col.row[s.From:s.To])
+			newDf.Columns[v] = col
+		}
+	}
 
 	return &newDf, nil
 }
@@ -288,7 +325,6 @@ func (c *Column) FillColumn(values interface{}) {
 				rowStr = fmt.Sprint(cell)
 				c.colType = "string"
 			}
-			fmt.Println(c.colType)
 			if len(rowStr) > c.numChars {
 				c.numChars = len(rowStr)
 			}
@@ -309,8 +345,6 @@ func (c *Column) ParseType(t string) error {
 	case "date":
 		newRows = []*time.Time{}
 	}
-	// TODO: Make columns aware of their own name to be able to reference it later
-	//c.numChars = c.colName
 
 	// TODO: Retrieve all formatting errors to return it as warnings and in case
 	// of errors we use NA by default

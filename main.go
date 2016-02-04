@@ -29,9 +29,11 @@ func main() {
 		return
 	}
 	fmt.Println(d)
-	fmt.Println(d.Columns["Age"])
-	fmt.Println(d.Columns["Country"])
-	fmt.Println(d.Columns["Date"])
-	fmt.Println(d.Columns["Volume"])
-	fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
+	//fmt.Println(d.Columns["Age"])
+	//fmt.Println(d.Columns["Country"])
+	//fmt.Println(d.Columns["Date"])
+	//fmt.Println(d.Columns["Volume"])
+	//fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
+	//fmt.Println(d.SubsetRows(df.Subset{0, 3}))
+	fmt.Println(d.SubsetRows(df.Subset{0, 7}))
 }
