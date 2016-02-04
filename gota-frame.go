@@ -59,7 +59,12 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	df.loadData(records)
+	//df.loadData(records)
+	err = df.loadAndParse(records, []string{"string", "int", "string", "int", "int", "int", "int", "int", "int", "int"})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	fmt.Println(df)
 }
 
@@ -67,27 +72,29 @@ func main() {
 // ====================
 type DataFrame struct {
 	columns  map[string]Column
-	colNames []string
+	colnames []string
 	nCols    int
 	nRows    int
 }
 
 // DataFrame Methods
 // =================
-//func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
-//err := df.loadData(records)
-//if err != nil {
-//return err
-//}
-//if df.nCols != len(types) {
-//return errors.New("Number of columns different from number of types")
-//}
-//for k, v := range df.columns {
-//v.parseType(types[k])
-//df.columns[k].colType = types[k]
-//}
-//return nil
-//}
+func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
+	err := df.loadData(records)
+	if err != nil {
+		return err
+	}
+	if df.nCols != len(types) {
+		return errors.New("Number of columns different from number of types")
+	}
+	for k, v := range df.colnames {
+		col := df.columns[v]
+		col.parseType(types[k])
+		col.colType = types[k]
+		df.columns[v] = col
+	}
+	return nil
+}
 
 func (df DataFrame) subsetColumns(columns []string) (DataFrame, error) {
 	newDf := DataFrame{}
@@ -107,7 +114,7 @@ func (df *DataFrame) loadData(records [][]string) error {
 		columns:  make(map[string]Column),
 		nRows:    nRows,
 		nCols:    nCols,
-		colNames: records[0],
+		colnames: records[0],
 	}
 
 	for j := 0; j < nCols; j++ {
@@ -124,14 +131,6 @@ func (df *DataFrame) loadData(records [][]string) error {
 	return nil
 }
 
-//func (df DataFrame) colnames() (colnames []string) {
-//for _, v := range df.columns {
-//colnames = append(colnames, v.colName)
-//}
-//return
-//}
-
-// TODO: Truncate output for the same tabular format?
 func (df DataFrame) String() (str string) {
 	addPadding := func(s string, nchar int) string {
 		for {
@@ -141,10 +140,9 @@ func (df DataFrame) String() (str string) {
 			s += " "
 		}
 	}
-	colnames := df.colNames
-	if len(colnames) != 0 {
+	if len(df.colnames) != 0 {
 		str += "   "
-		for _, v := range colnames {
+		for _, v := range df.colnames {
 			str += addPadding(v, df.columns[v].maxCharLength)
 			str += "  "
 		}
@@ -153,7 +151,7 @@ func (df DataFrame) String() (str string) {
 	}
 	for i := 0; i < df.nRows; i++ {
 		str += strconv.Itoa(i+1) + ": "
-		for _, v := range colnames {
+		for _, v := range df.colnames {
 			str += addPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].maxCharLength)
 			str += "  "
 		}
@@ -214,6 +212,7 @@ func (c *Column) fillColumn(values interface{}) {
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(values)
+		c.row = make([]interface{}, 0)
 		for i := 0; i < s.Len(); i++ {
 			c.row = append(c.row, s.Index(i).Interface())
 			c.colType = fmt.Sprint(s.Index(i).Type())
