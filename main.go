@@ -23,10 +23,11 @@ func main() {
 		return
 	}
 
-	err = df.LoadAndParse(records, map[string]string{"Volume": "int", "Age": "int"})
+	err = df.LoadAndParse(records, map[string]string{"Volume": "int", "Age": "int", "Date": "date"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(df)
+	fmt.Println(df.SubsetColumns([]string{"Date", "Country"}))
 }

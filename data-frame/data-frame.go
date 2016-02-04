@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // NOTE: The concept of NA is represented by nil pointers
@@ -35,6 +36,12 @@ type Columns map[string]Column
 
 // T is used to represent the association between a column and it't type
 type T map[string]string
+
+// ----------------------------------------------------------------------
+// Constant definitions
+// ----------------------------------------------------------------------
+
+const defaultDateFormat = "2006-01-02"
 
 // ----------------------------------------------------------------------
 // DataFrame methods
@@ -231,9 +238,11 @@ func (c *Column) ParseType(t string) error {
 	case "int":
 		newRows = []*int{}
 	case "float":
-		newRows = []float64{}
+		newRows = []*float64{}
 	case "string":
 		newRows = []string{}
+	case "date":
+		newRows = []*time.Time{}
 	}
 	// TODO: Make columns aware of their own name to be able to reference it later
 	//c.numChars = c.colName
@@ -254,11 +263,21 @@ func (c *Column) ParseType(t string) error {
 		case "float":
 			i, err := strconv.ParseFloat(r, 64)
 			if err != nil {
-				return err
+				newRows = append(newRows.([]*float64), nil)
+			} else {
+				newRows = append(newRows.([]*float64), &i)
 			}
-			newRows = append(newRows.([]float64), i)
 		case "string":
 			newRows = append(newRows.([]string), r)
+		case "date":
+			i, err := time.Parse(defaultDateFormat, r)
+			if err != nil {
+				newRows = append(newRows.([]*time.Time), nil)
+			} else {
+				newRows = append(newRows.([]*time.Time), &i)
+			}
+		default:
+			return errors.New("Unknown type")
 		}
 	}
 	c.FillColumn(newRows)
