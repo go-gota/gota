@@ -64,5 +64,5 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(df)
+	fmt.Println(df.SubsetColumns([]string{"Biobank", "Patient", "BoxId"}))
 }

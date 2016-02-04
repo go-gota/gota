@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // DataFrame Definition
@@ -47,9 +48,37 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	return nil
 }
 
-func (df DataFrame) SubsetColumns(columns []string) (DataFrame, error) {
-	newDf := DataFrame{}
-	return newDf, nil
+func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
+
+	newDf := DataFrame{
+		columns:  make(map[string]Column),
+		nRows:    df.nRows,
+		colnames: []string{},
+	}
+
+	noCols := []string{}
+	dupedCols := []string{}
+	for _, v := range columns {
+		if col, ok := df.columns[v]; ok {
+			if _, ok := newDf.columns[v]; ok {
+				dupedCols = append(dupedCols, v)
+			}
+			newDf.colnames = append(newDf.colnames, v)
+			newDf.columns[v] = col
+		} else {
+			noCols = append(noCols, v)
+		}
+	}
+	if len(dupedCols) != 0 {
+		errStr := "The following columns appear more than once:\n" + strings.Join(dupedCols, ", ")
+		return nil, errors.New(errStr)
+	}
+	if len(noCols) != 0 {
+		errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
+		return nil, errors.New(errStr)
+	}
+	newDf.nCols = len(newDf.colnames)
+	return &newDf, nil
 }
 
 func (df *DataFrame) LoadData(records [][]string) error {
