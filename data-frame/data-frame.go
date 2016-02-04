@@ -1,4 +1,4 @@
-package DataFrame
+package df
 
 import (
 	"errors"
@@ -10,19 +10,11 @@ import (
 
 // NOTE: The concept of NA is represented by nil pointers
 
-// Column Definition
-// =================
-type Column struct {
-	row      []interface{}
-	colType  string
-	colName  string
-	numChars int
-}
+// ----------------------------------------------------------------------
+// Type Definitions
+// ----------------------------------------------------------------------
 
-type Columns map[string]Column
-
-// DataFrame Definition
-// ====================
+// DataFrame is the base data structure
 type DataFrame struct {
 	columns  Columns
 	colNames []string
@@ -30,8 +22,62 @@ type DataFrame struct {
 	nRows    int
 }
 
-// DataFrame Methods
-// =================
+// Column is a column inside a DataFrame
+type Column struct {
+	row      []interface{}
+	colType  string
+	colName  string
+	numChars int
+}
+
+// Columns is an alias for multiple columns
+type Columns map[string]Column
+
+// T is used to represent the association between a column and it't type
+type T map[string]string
+
+// ----------------------------------------------------------------------
+// DataFrame methods
+// ----------------------------------------------------------------------
+
+// LoadData will load the data from a multidimensional array of strings into
+// a DataFrame object.
+func (df *DataFrame) LoadData(records [][]string) error {
+	// Calculate DataFrame dimensions
+	nRows := len(records) - 1
+	if nRows <= 0 {
+		return errors.New("Empty dataframe")
+	}
+	nCols := len(records[0])
+
+	// Generate a df to store the temporary values
+	newDf := DataFrame{
+		columns:  make(map[string]Column),
+		nRows:    nRows,
+		nCols:    nCols,
+		colNames: records[0],
+	}
+
+	// Fill the columns on the DataFrame
+	for j := 0; j < nCols; j++ {
+		col := []string{}
+		for i := 1; i < nRows+1; i++ {
+			col = append(col, records[i][j])
+		}
+		column := Column{}
+		column.numChars = len(records[0][j])
+		column.FillColumn(col)
+		newDf.columns[records[0][j]] = column
+	}
+
+	*df = newDf
+	return nil
+}
+
+// LoadAndParse will load the data from a multidimensional array of strings and
+// parse it accordingly with the given types element. The types element can be
+// a string array with matching dimensions to the number of columns or
+// a DataFrame.T object.
 func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	// Initialize the DataFrame with all columns as string type
 	err := df.LoadData(records)
@@ -71,6 +117,8 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	return nil
 }
 
+// SubsetColumns will return a DataFrame that contains only the columns named
+// after the given columns.
 func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
@@ -108,38 +156,6 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 	newDf.nCols = len(newDf.colNames)
 
 	return &newDf, nil
-}
-
-func (df *DataFrame) LoadData(records [][]string) error {
-	// Calculate DataFrame dimensions
-	nRows := len(records) - 1
-	if nRows <= 0 {
-		return errors.New("Empty dataframe")
-	}
-	nCols := len(records[0])
-
-	// Generate a df to store the temporary values
-	newDf := DataFrame{
-		columns:  make(map[string]Column),
-		nRows:    nRows,
-		nCols:    nCols,
-		colNames: records[0],
-	}
-
-	// Fill the columns on the DataFrame
-	for j := 0; j < nCols; j++ {
-		col := []string{}
-		for i := 1; i < nRows+1; i++ {
-			col = append(col, records[i][j])
-		}
-		column := Column{}
-		column.numChars = len(records[0][j])
-		column.FillColumn(col)
-		newDf.columns[records[0][j]] = column
-	}
-
-	*df = newDf
-	return nil
 }
 
 func (df DataFrame) String() (str string) {
@@ -187,12 +203,28 @@ func (df DataFrame) String() (str string) {
 	return str
 }
 
+// ----------------------------------------------------------------------
 // Column Methods
-// ==============
-func (c Column) String() string {
-	return fmt.Sprint(c.row)
+// ----------------------------------------------------------------------
+
+// FillColumn will use reflection to fill the column with the given values
+func (c *Column) FillColumn(values interface{}) {
+	switch reflect.TypeOf(values).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(values)
+		c.row = make([]interface{}, 0)
+		for i := 0; i < s.Len(); i++ {
+			c.row = append(c.row, s.Index(i).Interface())
+			c.colType = fmt.Sprint(s.Index(i).Type())
+			rowStr := fmt.Sprint(s.Index(i).Interface())
+			if len(rowStr) > c.numChars {
+				c.numChars = len(rowStr)
+			}
+		}
+	}
 }
 
+// ParseType will parse the column based on the given type
 func (c *Column) ParseType(t string) error {
 	var newRows interface{}
 	switch t {
@@ -232,20 +264,6 @@ func (c *Column) ParseType(t string) error {
 	c.FillColumn(newRows)
 	return nil
 }
-
-// Use reflection to fill the column with the given values
-func (c *Column) FillColumn(values interface{}) {
-	switch reflect.TypeOf(values).Kind() {
-	case reflect.Slice:
-		s := reflect.ValueOf(values)
-		c.row = make([]interface{}, 0)
-		for i := 0; i < s.Len(); i++ {
-			c.row = append(c.row, s.Index(i).Interface())
-			c.colType = fmt.Sprint(s.Index(i).Type())
-			rowStr := fmt.Sprint(s.Index(i).Interface())
-			if len(rowStr) > c.numChars {
-				c.numChars = len(rowStr)
-			}
-		}
-	}
+func (c Column) String() string {
+	return fmt.Sprint(c.row)
 }
