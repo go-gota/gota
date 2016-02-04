@@ -20,10 +20,13 @@ type DataFrame struct {
 // DataFrame Methods
 // =================
 func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
+	// Initialize the DataFrame with all columns as string type
 	err := df.LoadData(records)
 	if err != nil {
 		return err
 	}
+
+	// Parse the DataFrame columns acording to the given types
 	switch types.(type) {
 	case []string:
 		types := types.([]string)
@@ -45,19 +48,23 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			df.columns[k] = col
 		}
 	}
+
 	return nil
 }
 
 func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
-
+	// Generate a df to store the temporary values
 	newDf := DataFrame{
 		columns:  make(map[string]Column),
 		nRows:    df.nRows,
 		colnames: []string{},
 	}
 
+	// Initialize variables to store possible errors
 	noCols := []string{}
 	dupedCols := []string{}
+
+	// Select the desired subset of columns
 	for _, v := range columns {
 		if col, ok := df.columns[v]; ok {
 			if _, ok := newDf.columns[v]; ok {
@@ -69,6 +76,7 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 			noCols = append(noCols, v)
 		}
 	}
+
 	if len(dupedCols) != 0 {
 		errStr := "The following columns appear more than once:\n" + strings.Join(dupedCols, ", ")
 		return nil, errors.New(errStr)
@@ -77,19 +85,21 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 		errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
 		return nil, errors.New(errStr)
 	}
+
 	newDf.nCols = len(newDf.colnames)
+
 	return &newDf, nil
 }
 
 func (df *DataFrame) LoadData(records [][]string) error {
-	// Get DataFrame dimensions
+	// Calculate DataFrame dimensions
 	nRows := len(records) - 1
 	if nRows <= 0 {
 		return errors.New("Empty dataframe")
 	}
 	nCols := len(records[0])
 
-	// Generate a virtual df to store the temporary values
+	// Generate a df to store the temporary values
 	newDf := DataFrame{
 		columns:  make(map[string]Column),
 		nRows:    nRows,
@@ -97,16 +107,18 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		colnames: records[0],
 	}
 
+	// Fill the columns on the DataFrame
 	for j := 0; j < nCols; j++ {
 		col := []string{}
 		for i := 1; i < nRows+1; i++ {
 			col = append(col, records[i][j])
 		}
 		column := Column{}
-		column.maxCharLength = len(records[0][j])
+		column.numChars = len(records[0][j])
 		column.FillColumn(col)
 		newDf.columns[records[0][j]] = column
 	}
+
 	*df = newDf
 	return nil
 }
@@ -129,7 +141,7 @@ func (df DataFrame) String() (str string) {
 	if len(df.colnames) != 0 {
 		str += addLeftPadding("  ", nRowsPadding+2)
 		for _, v := range df.colnames {
-			str += addRightPadding(v, df.columns[v].maxCharLength)
+			str += addRightPadding(v, df.columns[v].numChars)
 			str += "  "
 		}
 		str += "\n"
@@ -138,7 +150,7 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colnames {
-			str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].maxCharLength)
+			str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].numChars)
 			str += "  "
 		}
 		str += "\n"
@@ -149,9 +161,9 @@ func (df DataFrame) String() (str string) {
 // Column Definition
 // =================
 type Column struct {
-	row           []interface{}
-	colType       string
-	maxCharLength int
+	row      []interface{}
+	colType  string
+	numChars int
 }
 
 // Column Methods
@@ -193,7 +205,7 @@ func (c *Column) ParseType(t string) error {
 	return nil
 }
 
-// TODO: Should this return an error?
+// Use reflection to fill the column with the given values
 func (c *Column) FillColumn(values interface{}) {
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
@@ -203,8 +215,8 @@ func (c *Column) FillColumn(values interface{}) {
 			c.row = append(c.row, s.Index(i).Interface())
 			c.colType = fmt.Sprint(s.Index(i).Type())
 			rowStr := fmt.Sprint(s.Index(i).Interface())
-			if len(rowStr) > c.maxCharLength {
-				c.maxCharLength = len(rowStr)
+			if len(rowStr) > c.numChars {
+				c.numChars = len(rowStr)
 			}
 		}
 	}
