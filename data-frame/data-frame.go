@@ -113,21 +113,18 @@ func (df *DataFrame) LoadData(records [][]string) error {
 
 func (df DataFrame) String() (str string) {
 	addLeftPadding := func(s string, nchar int) string {
-		for {
-			if len(s) >= nchar {
-				return s
-			}
-			s = " " + s
+		if len(s) < nchar {
+			return strings.Repeat(" ", nchar-len(s)) + s
 		}
+		return s
 	}
 	addRightPadding := func(s string, nchar int) string {
-		for {
-			if len(s) >= nchar {
-				return s
-			}
-			s += " "
+		if len(s) < nchar {
+			return s + strings.Repeat(" ", nchar-len(s))
 		}
+		return s
 	}
+
 	nRowsPadding := len(fmt.Sprint(df.nRows))
 	if len(df.colnames) != 0 {
 		str += addLeftPadding("  ", nRowsPadding+2)
