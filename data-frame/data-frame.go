@@ -112,7 +112,15 @@ func (df *DataFrame) LoadData(records [][]string) error {
 }
 
 func (df DataFrame) String() (str string) {
-	addPadding := func(s string, nchar int) string {
+	addLeftPadding := func(s string, nchar int) string {
+		for {
+			if len(s) >= nchar {
+				return s
+			}
+			s = " " + s
+		}
+	}
+	addRightPadding := func(s string, nchar int) string {
 		for {
 			if len(s) >= nchar {
 				return s
@@ -120,19 +128,20 @@ func (df DataFrame) String() (str string) {
 			s += " "
 		}
 	}
+	nRowsPadding := len(fmt.Sprint(df.nRows))
 	if len(df.colnames) != 0 {
-		str += "   "
+		str += addLeftPadding("  ", nRowsPadding+2)
 		for _, v := range df.colnames {
-			str += addPadding(v, df.columns[v].maxCharLength)
+			str += addRightPadding(v, df.columns[v].maxCharLength)
 			str += "  "
 		}
 		str += "\n"
 		str += "\n"
 	}
 	for i := 0; i < df.nRows; i++ {
-		str += strconv.Itoa(i+1) + ": "
+		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colnames {
-			str += addPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].maxCharLength)
+			str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].maxCharLength)
 			str += "  "
 		}
 		str += "\n"
