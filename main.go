@@ -23,7 +23,7 @@ func main() {
 		return
 	}
 
-	err = d.LoadAndParse(records, map[string]string{"Volume": "int", "Age": "int"})
+	err = d.LoadAndParse(records, map[string]string{"Volume": "float", "Age": "int", "Date": "date"})
 	if err != nil {
 		fmt.Println(err)
 		return

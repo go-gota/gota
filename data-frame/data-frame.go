@@ -205,6 +205,20 @@ func (df DataFrame) String() (str string) {
 				} else {
 					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
+			case "float":
+				s := df.Columns[v].row[i].(*float64)
+				if s != nil {
+					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
+				} else {
+					str += addRightPadding("NA", df.Columns[v].numChars)
+				}
+			case "date":
+				s := df.Columns[v].row[i].(*time.Time)
+				if s != nil {
+					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
+				} else {
+					str += addRightPadding("NA", df.Columns[v].numChars)
+				}
 			default:
 				str += addRightPadding(fmt.Sprint(df.Columns[v].row[i]), df.Columns[v].numChars)
 			}
@@ -240,7 +254,7 @@ func (c *Column) FillColumn(values interface{}) {
 					rowStr = fmt.Sprint(*cell.(*float64))
 				}
 			case *time.Time:
-				if cell.(*float64) != nil {
+				if cell.(*time.Time) != nil {
 					rowStr = fmt.Sprint(*cell.(*time.Time))
 				}
 			default:
