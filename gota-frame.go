@@ -9,6 +9,7 @@ import (
 	"strings"
 )
 
+// TODO: Write tests!
 func main() {
 	// Test 02
 	//textColumn := []string{"One", "Two", "Three"}
@@ -35,10 +36,14 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	df.loadData(records)
+	err = df.loadAndParse(records, []string{"string", "int", "string", "int"})
+	if err != nil {
+		panic(err)
+	}
 
 	for _, v := range df.columns {
 		fmt.Println(v)
+		fmt.Println(v.colType)
 	}
 	fmt.Println(df)
 }
@@ -54,8 +59,24 @@ type DataFrame struct {
 
 // DataFrame Methods
 // =================
+func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
+	err := df.loadData(records)
+	if err != nil {
+		return err
+	}
+	if df.nCols != len(types) {
+		return errors.New("Number of columns different from number of types")
+	}
+	for k, v := range df.columns {
+		v.parseType(types[k])
+		df.columns[k].colType = types[k]
+	}
+	return nil
+}
+
 func (df *DataFrame) loadData(records [][]string) error {
 	// TODO: Check if empty records
+	// TODO: More error checking
 
 	// Get DataFrame dimensions
 	nRows := len(records) - 1
@@ -118,6 +139,39 @@ type Column struct {
 // ==============
 func (c Column) String() string {
 	return fmt.Sprint(c.row)
+}
+
+func (c *Column) parseType(t string) error {
+	var newRows interface{}
+	switch t {
+	case "int":
+		newRows = []int{}
+	case "float":
+		newRows = []float64{}
+	case "string":
+		newRows = []string{}
+	}
+	for _, v := range c.row {
+		r := fmt.Sprint(v)
+		switch t {
+		case "int":
+			i, err := strconv.Atoi(r)
+			if err != nil {
+				return err
+			}
+			newRows = append(newRows.([]int), i)
+		case "float":
+			i, err := strconv.ParseFloat(r, 64)
+			if err != nil {
+				return err
+			}
+			newRows = append(newRows.([]float64), i)
+		case "string":
+			newRows = append(newRows.([]string), r)
+		}
+	}
+	c.fillColumn(newRows)
+	return nil
 }
 
 // TODO: Should this return an error?
