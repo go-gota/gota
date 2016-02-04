@@ -31,8 +31,8 @@ type Column struct {
 	numChars int
 }
 
-// Subset represent a distance from a number to another
-type Subset struct {
+// R represent a distance from a number to another
+type R struct {
 	From int
 	To   int
 }
@@ -160,8 +160,23 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	return nil
 }
 
-// SubsetColumns will return a DataFrame that contains only the columns named
-// after the given columns.
+// Subset will return a DataFrame that contains only the columns and rows contained
+// on the given subset
+func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*DataFrame, error) {
+	dfA, err := df.SubsetColumns(subsetCols)
+	if err != nil {
+		return nil, err
+	}
+	dfB, err := dfA.SubsetRows(subsetRows)
+	if err != nil {
+		return nil, err
+	}
+
+	return dfB, nil
+}
+
+// SubsetColumns will return a DataFrame that contains only the columns contained
+// on the given subset
 func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
@@ -171,8 +186,8 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	}
 
 	switch subset.(type) {
-	case Subset:
-		s := subset.(Subset)
+	case R:
+		s := subset.(R)
 		// Check for errors
 		if s.From > s.To {
 			return nil, errors.New("Bad subset: Start greater than Beginning")
@@ -234,6 +249,25 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	}
 
 	switch subset.(type) {
+	case R:
+		s := subset.(R)
+		// Check for errors
+		if s.From > s.To {
+			return nil, errors.New("Bad subset: Start greater than Beginning")
+		}
+		if s.From == s.To {
+			return nil, errors.New("Empty subset")
+		}
+		if s.To > df.nRows || s.To < 0 || s.From < 0 {
+			return nil, errors.New("Subset out of range")
+		}
+
+		newDf.nRows = s.To - s.From
+		for _, v := range df.colNames {
+			col := df.Columns[v]
+			col.FillColumn(col.row[s.From:s.To])
+			newDf.Columns[v] = col
+		}
 	case []int:
 		rowNums := subset.([]int)
 
@@ -252,25 +286,6 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 				row = append(row, col.row[v])
 			}
 			col.FillColumn(row)
-			newDf.Columns[v] = col
-		}
-	case Subset:
-		s := subset.(Subset)
-		// Check for errors
-		if s.From > s.To {
-			return nil, errors.New("Bad subset: Start greater than Beginning")
-		}
-		if s.From == s.To {
-			return nil, errors.New("Empty subset")
-		}
-		if s.To > df.nRows || s.To < 0 || s.From < 0 {
-			return nil, errors.New("Subset out of range")
-		}
-
-		newDf.nRows = s.To - s.From
-		for _, v := range df.colNames {
-			col := df.Columns[v]
-			col.FillColumn(col.row[s.From:s.To])
 			newDf.Columns[v] = col
 		}
 	}
