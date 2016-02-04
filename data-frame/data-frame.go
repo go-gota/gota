@@ -234,6 +234,26 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	}
 
 	switch subset.(type) {
+	case []int:
+		rowNums := subset.([]int)
+
+		// Check for errors
+		for _, v := range rowNums {
+			if v >= df.nRows || v < 0 {
+				return nil, errors.New("Subset out of range")
+			}
+		}
+
+		newDf.nRows = len(rowNums)
+		for _, v := range df.colNames {
+			col := df.Columns[v]
+			var row []interface{}
+			for _, v := range rowNums {
+				row = append(row, col.row[v])
+			}
+			col.FillColumn(row)
+			newDf.Columns[v] = col
+		}
 	case Subset:
 		s := subset.(Subset)
 		// Check for errors
@@ -283,7 +303,7 @@ func (df DataFrame) String() (str string) {
 		str += "\n"
 	}
 	for i := 0; i < df.nRows; i++ {
-		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
+		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
 		for _, v := range df.colNames {
 			switch df.Columns[v].colType {
 			case "int":

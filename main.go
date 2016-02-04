@@ -33,8 +33,9 @@ func main() {
 	//fmt.Println(d.Columns["Country"])
 	//fmt.Println(d.Columns["Date"])
 	//fmt.Println(d.Columns["Volume"])
-	fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
-	fmt.Println(d.SubsetColumns(df.Subset{0, 1}))
-	fmt.Println(d.SubsetRows(df.Subset{0, 1}))
+	//fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
+	//fmt.Println(d.SubsetColumns(df.Subset{0, 1}))
+	fmt.Println(d.SubsetRows([]int{0, 6, 6}))
+	//fmt.Println(d.SubsetRows(df.Subset{0, 1}))
 	//fmt.Println(d.SubsetRows(df.Subset{0, 7}))
 }
