@@ -17,7 +17,7 @@ import (
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns  Columns
+	Columns  Columns
 	colNames []string
 	nCols    int
 	nRows    int
@@ -59,7 +59,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
-		columns:  make(map[string]Column),
+		Columns:  make(map[string]Column),
 		nRows:    nRows,
 		nCols:    nCols,
 		colNames: records[0],
@@ -72,9 +72,10 @@ func (df *DataFrame) LoadData(records [][]string) error {
 			col = append(col, records[i][j])
 		}
 		column := Column{}
+		column.colName = records[0][j]
 		column.numChars = len(records[0][j])
 		column.FillColumn(col)
-		newDf.columns[records[0][j]] = column
+		newDf.Columns[records[0][j]] = column
 	}
 
 	*df = newDf
@@ -100,24 +101,24 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			return errors.New("Number of columns different from number of types")
 		}
 		for k, v := range df.colNames {
-			col := df.columns[v]
+			col := df.Columns[v]
 			err := col.ParseType(types[k])
 			if err != nil {
 				return err
 			}
 			col.colType = types[k]
-			df.columns[v] = col
+			df.Columns[v] = col
 		}
 	case map[string]string:
 		types := types.(map[string]string)
 		for k, v := range types {
-			col := df.columns[k]
+			col := df.Columns[k]
 			err := col.ParseType(v)
 			if err != nil {
 				return err
 			}
 			col.colType = v
-			df.columns[k] = col
+			df.Columns[k] = col
 		}
 	}
 
@@ -129,7 +130,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
-		columns:  make(map[string]Column),
+		Columns:  make(map[string]Column),
 		nRows:    df.nRows,
 		colNames: []string{},
 	}
@@ -140,12 +141,12 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 
 	// Select the desired subset of columns
 	for _, v := range columns {
-		if col, ok := df.columns[v]; ok {
-			if _, ok := newDf.columns[v]; ok {
+		if col, ok := df.Columns[v]; ok {
+			if _, ok := newDf.Columns[v]; ok {
 				dupedCols = append(dupedCols, v)
 			}
 			newDf.colNames = append(newDf.colNames, v)
-			newDf.columns[v] = col
+			newDf.Columns[v] = col
 		} else {
 			noCols = append(noCols, v)
 		}
@@ -183,7 +184,7 @@ func (df DataFrame) String() (str string) {
 	if len(df.colNames) != 0 {
 		str += addLeftPadding("  ", nRowsPadding+2)
 		for _, v := range df.colNames {
-			str += addRightPadding(v, df.columns[v].numChars)
+			str += addRightPadding(v, df.Columns[v].numChars)
 			str += "  "
 		}
 		str += "\n"
@@ -192,16 +193,16 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colNames {
-			switch df.columns[v].colType {
+			switch df.Columns[v].colType {
 			case "int":
-				s := df.columns[v].row[i].(*int)
+				s := df.Columns[v].row[i].(*int)
 				if s != nil {
-					str += addRightPadding(fmt.Sprint(*s), df.columns[v].numChars)
+					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
 				} else {
-					str += addRightPadding("NA", df.columns[v].numChars)
+					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
 			default:
-				str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].numChars)
+				str += addRightPadding(fmt.Sprint(df.Columns[v].row[i]), df.Columns[v].numChars)
 			}
 			str += "  "
 		}
@@ -221,9 +222,26 @@ func (c *Column) FillColumn(values interface{}) {
 		s := reflect.ValueOf(values)
 		c.row = make([]interface{}, 0)
 		for i := 0; i < s.Len(); i++ {
-			c.row = append(c.row, s.Index(i).Interface())
+			cell := s.Index(i).Interface()
+			c.row = append(c.row, cell)
 			c.colType = fmt.Sprint(s.Index(i).Type())
-			rowStr := fmt.Sprint(s.Index(i).Interface())
+			rowStr := ""
+			switch cell.(type) {
+			case *int:
+				if cell.(*int) != nil {
+					rowStr = fmt.Sprint(*cell.(*int))
+				}
+			case *float64:
+				if cell.(*float64) != nil {
+					rowStr = fmt.Sprint(*cell.(*float64))
+				}
+			case *time.Time:
+				if cell.(*float64) != nil {
+					rowStr = fmt.Sprint(*cell.(*time.Time))
+				}
+			default:
+				rowStr = fmt.Sprint(cell)
+			}
 			if len(rowStr) > c.numChars {
 				c.numChars = len(rowStr)
 			}
@@ -250,8 +268,12 @@ func (c *Column) ParseType(t string) error {
 	// TODO: Retrieve all formatting errors to return it as warnings and in case
 	// of errors we use NA by default
 
+	c.numChars = len(c.colName)
 	for _, v := range c.row {
 		r := fmt.Sprint(v)
+		if len(r) > c.numChars {
+			c.numChars = len(r)
+		}
 		switch t {
 		case "int":
 			i, err := strconv.Atoi(r)

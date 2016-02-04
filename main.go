@@ -10,7 +10,7 @@ import (
 
 // TODO: Write tests!
 func main() {
-	df := df.DataFrame{}
+	d := df.DataFrame{}
 	csvfile, err := os.Open("example.csv")
 	if err != nil {
 		fmt.Println(err)
@@ -23,11 +23,11 @@ func main() {
 		return
 	}
 
-	err = df.LoadAndParse(records, map[string]string{"Volume": "int", "Age": "int", "Date": "date"})
+	err = d.LoadAndParse(records, map[string]string{"Volume": "int", "Age": "int"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println(df)
-	fmt.Println(df.SubsetColumns([]string{"Date", "Country"}))
+	fmt.Println(d)
+	//fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
 }
