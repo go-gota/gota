@@ -55,16 +55,44 @@ func (df *DataFrame) LoadData(records [][]string) error {
 	if nRows <= 0 {
 		return errors.New("Empty dataframe")
 	}
-	nCols := len(records[0])
+	colnames := records[0]
+	nCols := len(colnames)
+
+	// If colNames has empty elements we must fill it with unique colnames
+	colnamesMap := make(map[string]bool)
+	auxCounter := 0
+	// Get unique columnenames
+	for _, v := range colnames {
+		if v != "" {
+			if _, ok := colnamesMap[v]; !ok {
+				colnamesMap[v] = true
+			} else {
+				return errors.New("Duplicated column names: " + v)
+			}
+		}
+	}
+
+	for k, v := range colnames {
+		if v == "" {
+			for {
+				newColname := fmt.Sprint("V", auxCounter)
+				auxCounter++
+				if _, ok := colnamesMap[newColname]; !ok {
+					colnames[k] = newColname
+					colnamesMap[newColname] = true
+					break
+				}
+			}
+		}
+	}
 
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
 		Columns:  make(map[string]Column),
 		nRows:    nRows,
 		nCols:    nCols,
-		colNames: records[0],
+		colNames: colnames,
 	}
-	// TODO: If colNames has empty elements we must fill it with unique colnames
 
 	// Fill the columns on the DataFrame
 	for j := 0; j < nCols; j++ {
@@ -72,10 +100,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		for i := 1; i < nRows+1; i++ {
 			col = append(col, records[i][j])
 		}
-		colName := records[0][j]
-		if _, ok := newDf.Columns[colName]; ok {
-			return errors.New("Duplicated column names: " + colName)
-		}
+		colName := colnames[j]
 		column := Column{}
 		column.colName = colName
 		column.numChars = len(colName)
