@@ -39,6 +39,6 @@ func main() {
 	//fmt.Println(d.SubsetRows(df.S{0, 1}))
 	//fmt.Println(d.SubsetRows(df.S{0, 7}))
 	//fmt.Println(d.Subset([]string{"Date", "Age"}, []int{0, 6, 6}))
-	fmt.Println(d.Subset(df.R{0, 2}, []int{0, 6, 6}))
-	fmt.Println(d.Subset(df.R{5, 7}, df.R{0, 2}))
+	//fmt.Println(d.Subset(df.R{0, 2}, []int{0, 6, 6}))
+	fmt.Println(d.Subset([]int{0, 6}, df.R{0, 2}))
 }

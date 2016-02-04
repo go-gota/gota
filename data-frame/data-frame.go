@@ -205,6 +205,28 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 			col := df.Columns[v]
 			newDf.Columns[v] = col
 		}
+	case []int:
+		colNums := subset.([]int)
+
+		// Check for errors
+		colNumsMap := make(map[int]bool)
+		for _, v := range colNums {
+			if v >= df.nCols || v < 0 {
+				return nil, errors.New("Subset out of range")
+			}
+			if _, ok := colNumsMap[v]; !ok {
+				colNumsMap[v] = true
+			} else {
+				return nil, errors.New("Duplicated column numbers")
+			}
+		}
+
+		newDf.nCols = len(colNums)
+		for _, v := range colNums {
+			col := df.Columns[df.colNames[v]]
+			newDf.Columns[df.colNames[v]] = col
+			newDf.colNames = append(newDf.colNames, df.colNames[v])
+		}
 	case []string:
 		columns := subset.([]string)
 		// Initialize variables to store possible errors
