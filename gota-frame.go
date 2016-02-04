@@ -4,9 +4,9 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"strconv"
-	"strings"
 )
 
 // TODO: Write tests!
@@ -27,34 +27,51 @@ func main() {
 	//fmt.Println(df)
 
 	// Test 01
-	in := `A,B,C,D
-1,2,3,4
-5,6,7,8`
+	//in := `A,B,C,D
+	//1,2,3,4
+	//5,6,7,8`
+	//df := DataFrame{}
+	//r := csv.NewReader(strings.NewReader(in))
+	//records, err := r.ReadAll()
+	//if err != nil {
+	//panic(err)
+	//}
+	//err = df.loadAndParse(records, []string{"string", "int", "string", "int"})
+	//if err != nil {
+	//panic(err)
+	//}
+
+	//for _, v := range df.columns {
+	//fmt.Println(v)
+	//}
+	//fmt.Println(df)
+
+	// Test 03
 	df := DataFrame{}
-	r := csv.NewReader(strings.NewReader(in))
+	csvfile, err := os.Open("example.csv")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	r := csv.NewReader(csvfile)
 	records, err := r.ReadAll()
 	if err != nil {
 		panic(err)
 	}
-	err = df.loadAndParse(records, []string{"string", "int", "string", "int"})
-	if err != nil {
-		panic(err)
-	}
-
-	for _, v := range df.columns {
-		fmt.Println(v)
-		fmt.Println(v.colType)
-	}
+	df.loadData(records)
 	fmt.Println(df)
+	for _, v := range df.columns {
+		fmt.Println(v.colType)
+		fmt.Println(v.maxCharLength)
+	}
 }
 
 // DataFrame Definition
 // ====================
 type DataFrame struct {
-	columns  []Column
-	colnames []string
-	nCols    int
-	nRows    int
+	columns []Column
+	nCols   int
+	nRows   int
 }
 
 // DataFrame Methods
@@ -75,22 +92,18 @@ func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
 }
 
 func (df *DataFrame) loadData(records [][]string) error {
-	// TODO: Check if empty records
-	// TODO: More error checking
-
 	// Get DataFrame dimensions
 	nRows := len(records) - 1
-	if nRows == 0 {
+	if nRows <= 0 {
 		return errors.New("Empty dataframe")
 	}
 	nCols := len(records[0])
 
 	// Generate a virtual df to store the temporary values
 	newDf := DataFrame{
-		columns:  []Column{},
-		colnames: records[0],
-		nRows:    nRows,
-		nCols:    nCols,
+		columns: []Column{},
+		nRows:   nRows,
+		nCols:   nCols,
 	}
 
 	for j := 0; j < nCols; j++ {
@@ -99,6 +112,8 @@ func (df *DataFrame) loadData(records [][]string) error {
 			col = append(col, records[i][j])
 		}
 		column := Column{}
+		column.colName = records[0][j]
+		column.maxCharLength = len(column.colName)
 		column.fillColumn(col)
 		newDf.columns = append(newDf.columns, column)
 	}
@@ -106,11 +121,18 @@ func (df *DataFrame) loadData(records [][]string) error {
 	return nil
 }
 
-func (df DataFrame) String() string {
-	str := ""
-	if len(df.colnames) != 0 {
+func (df DataFrame) colnames() (colnames []string) {
+	for _, v := range df.columns {
+		colnames = append(colnames, v.colName)
+	}
+	return
+}
+
+// TODO: Truncate output for the same tabular format?
+func (df DataFrame) String() (str string) {
+	if len(df.colnames()) != 0 {
 		str += "\t"
-		for _, v := range df.colnames {
+		for _, v := range df.colnames() {
 			str += v
 			str += "\t"
 		}
@@ -131,8 +153,10 @@ func (df DataFrame) String() string {
 // Column Definition
 // =================
 type Column struct {
-	row     []interface{}
-	colType string
+	row           []interface{}
+	colType       string
+	colName       string
+	maxCharLength int
 }
 
 // Column Methods
@@ -182,6 +206,10 @@ func (c *Column) fillColumn(values interface{}) {
 		for i := 0; i < s.Len(); i++ {
 			c.row = append(c.row, s.Index(i).Interface())
 			c.colType = fmt.Sprint(s.Index(i).Type())
+			rowStr := fmt.Sprint(s.Index(i).Interface())
+			if len(rowStr) > c.maxCharLength {
+				c.maxCharLength = len(rowStr)
+			}
 		}
 	}
 }
