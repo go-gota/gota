@@ -222,22 +222,22 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colNames {
-			switch df.Columns[v].row[i].(type) {
-			case *int:
+			switch df.Columns[v].colType {
+			case "int":
 				s := df.Columns[v].row[i].(*int)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
 				} else {
 					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
-			case *float64:
+			case "float64":
 				s := df.Columns[v].row[i].(*float64)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
 				} else {
 					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
-			case *time.Time:
+			case "date":
 				s := df.Columns[v].row[i].(*time.Time)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
@@ -267,24 +267,28 @@ func (c *Column) FillColumn(values interface{}) {
 		for i := 0; i < s.Len(); i++ {
 			cell := s.Index(i).Interface()
 			c.row = append(c.row, cell)
-			c.colType = fmt.Sprint(s.Index(i).Type())
 			rowStr := ""
 			switch cell.(type) {
 			case *int:
 				if cell.(*int) != nil {
 					rowStr = fmt.Sprint(*cell.(*int))
 				}
+				c.colType = "int"
 			case *float64:
 				if cell.(*float64) != nil {
 					rowStr = fmt.Sprint(*cell.(*float64))
 				}
+				c.colType = "float64"
 			case *time.Time:
 				if cell.(*time.Time) != nil {
 					rowStr = fmt.Sprint(*cell.(*time.Time))
 				}
+				c.colType = "date"
 			default:
 				rowStr = fmt.Sprint(cell)
+				c.colType = "string"
 			}
+			fmt.Println(c.colType)
 			if len(rowStr) > c.numChars {
 				c.numChars = len(rowStr)
 			}
@@ -298,7 +302,7 @@ func (c *Column) ParseType(t string) error {
 	switch t {
 	case "int":
 		newRows = []*int{}
-	case "float":
+	case "float64":
 		newRows = []*float64{}
 	case "string":
 		newRows = []string{}
@@ -325,7 +329,7 @@ func (c *Column) ParseType(t string) error {
 			} else {
 				newRows = append(newRows.([]*int), &i)
 			}
-		case "float":
+		case "float64":
 			i, err := strconv.ParseFloat(r, 64)
 			if err != nil {
 				newRows = append(newRows.([]*float64), nil)
@@ -352,22 +356,22 @@ func (c *Column) ParseType(t string) error {
 func (c Column) String() string {
 	strArray := []string{}
 	for _, v := range c.row {
-		switch v.(type) {
-		case *int:
+		switch c.colType {
+		case "int":
 			cell := v.(*int)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
 			} else {
 				strArray = append(strArray, "NA")
 			}
-		case *float64:
+		case "float64":
 			cell := v.(*float64)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
 			} else {
 				strArray = append(strArray, "NA")
 			}
-		case *time.Time:
+		case "date":
 			cell := v.(*time.Time)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
@@ -379,5 +383,5 @@ func (c Column) String() string {
 		}
 	}
 
-	return fmt.Sprint(c.colName, ": ", strArray)
+	return fmt.Sprintln(c.colName, "(", c.colType, "):\n", strings.Join(strArray, "\n "))
 }
