@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// TODO: Introduce the concept of NA
+
 // DataFrame Definition
 // ====================
 type DataFrame struct {
@@ -35,7 +37,10 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 		}
 		for k, v := range df.colnames {
 			col := df.columns[v]
-			col.ParseType(types[k])
+			err := col.ParseType(types[k])
+			if err != nil {
+				return err
+			}
 			col.colType = types[k]
 			df.columns[v] = col
 		}
@@ -43,7 +48,10 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 		types := types.(map[string]string)
 		for k, v := range types {
 			col := df.columns[k]
-			col.ParseType(v)
+			err := col.ParseType(v)
+			if err != nil {
+				return err
+			}
 			col.colType = v
 			df.columns[k] = col
 		}
@@ -150,7 +158,17 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colnames {
-			str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].numChars)
+			switch df.columns[v].colType {
+			case "int":
+				s := df.columns[v].row[i].(*int)
+				if s != nil {
+					str += addRightPadding(fmt.Sprint(*s), df.columns[v].numChars)
+				} else {
+					str += addRightPadding("NA", df.columns[v].numChars)
+				}
+			default:
+				str += addRightPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].numChars)
+			}
 			str += "  "
 		}
 		str += "\n"
@@ -176,21 +194,23 @@ func (c *Column) ParseType(t string) error {
 	var newRows interface{}
 	switch t {
 	case "int":
-		newRows = []int{}
+		newRows = []*int{}
 	case "float":
 		newRows = []float64{}
 	case "string":
 		newRows = []string{}
 	}
+	//c.numChars = c.colName
 	for _, v := range c.row {
 		r := fmt.Sprint(v)
 		switch t {
 		case "int":
 			i, err := strconv.Atoi(r)
 			if err != nil {
-				return err
+				newRows = append(newRows.([]*int), nil)
+			} else {
+				newRows = append(newRows.([]*int), &i)
 			}
-			newRows = append(newRows.([]int), i)
 		case "float":
 			i, err := strconv.ParseFloat(r, 64)
 			if err != nil {
