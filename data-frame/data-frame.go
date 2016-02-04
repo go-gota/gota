@@ -8,13 +8,24 @@ import (
 	"strings"
 )
 
-// TODO: Introduce the concept of NA
+// NOTE: The concept of NA is represented by nil pointers
+
+// Column Definition
+// =================
+type Column struct {
+	row      []interface{}
+	colType  string
+	colName  string
+	numChars int
+}
+
+type Columns map[string]Column
 
 // DataFrame Definition
 // ====================
 type DataFrame struct {
-	columns  map[string]Column
-	colnames []string
+	columns  Columns
+	colNames []string
 	nCols    int
 	nRows    int
 }
@@ -35,7 +46,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 		if df.nCols != len(types) {
 			return errors.New("Number of columns different from number of types")
 		}
-		for k, v := range df.colnames {
+		for k, v := range df.colNames {
 			col := df.columns[v]
 			err := col.ParseType(types[k])
 			if err != nil {
@@ -65,7 +76,7 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 	newDf := DataFrame{
 		columns:  make(map[string]Column),
 		nRows:    df.nRows,
-		colnames: []string{},
+		colNames: []string{},
 	}
 
 	// Initialize variables to store possible errors
@@ -78,7 +89,7 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 			if _, ok := newDf.columns[v]; ok {
 				dupedCols = append(dupedCols, v)
 			}
-			newDf.colnames = append(newDf.colnames, v)
+			newDf.colNames = append(newDf.colNames, v)
 			newDf.columns[v] = col
 		} else {
 			noCols = append(noCols, v)
@@ -94,7 +105,7 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 		return nil, errors.New(errStr)
 	}
 
-	newDf.nCols = len(newDf.colnames)
+	newDf.nCols = len(newDf.colNames)
 
 	return &newDf, nil
 }
@@ -112,7 +123,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		columns:  make(map[string]Column),
 		nRows:    nRows,
 		nCols:    nCols,
-		colnames: records[0],
+		colNames: records[0],
 	}
 
 	// Fill the columns on the DataFrame
@@ -146,9 +157,9 @@ func (df DataFrame) String() (str string) {
 	}
 
 	nRowsPadding := len(fmt.Sprint(df.nRows))
-	if len(df.colnames) != 0 {
+	if len(df.colNames) != 0 {
 		str += addLeftPadding("  ", nRowsPadding+2)
-		for _, v := range df.colnames {
+		for _, v := range df.colNames {
 			str += addRightPadding(v, df.columns[v].numChars)
 			str += "  "
 		}
@@ -157,7 +168,7 @@ func (df DataFrame) String() (str string) {
 	}
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
-		for _, v := range df.colnames {
+		for _, v := range df.colNames {
 			switch df.columns[v].colType {
 			case "int":
 				s := df.columns[v].row[i].(*int)
@@ -176,14 +187,6 @@ func (df DataFrame) String() (str string) {
 	return str
 }
 
-// Column Definition
-// =================
-type Column struct {
-	row      []interface{}
-	colType  string
-	numChars int
-}
-
 // Column Methods
 // ==============
 func (c Column) String() string {
@@ -200,7 +203,12 @@ func (c *Column) ParseType(t string) error {
 	case "string":
 		newRows = []string{}
 	}
+	// TODO: Make columns aware of their own name to be able to reference it later
 	//c.numChars = c.colName
+
+	// TODO: Retrieve all formatting errors to return it as warnings and in case
+	// of errors we use NA by default
+
 	for _, v := range c.row {
 		r := fmt.Sprint(v)
 		switch t {
