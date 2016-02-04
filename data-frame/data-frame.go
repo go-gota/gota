@@ -177,6 +177,9 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		if s.From > s.To {
 			return nil, errors.New("Bad subset: Start greater than Beginning")
 		}
+		if s.From == s.To {
+			return nil, errors.New("Empty subset")
+		}
 		if s.To > df.nCols || s.To < 0 || s.From < 0 {
 			return nil, errors.New("Subset out of range")
 		}
@@ -236,6 +239,9 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		// Check for errors
 		if s.From > s.To {
 			return nil, errors.New("Bad subset: Start greater than Beginning")
+		}
+		if s.From == s.To {
+			return nil, errors.New("Empty subset")
 		}
 		if s.To > df.nRows || s.To < 0 || s.From < 0 {
 			return nil, errors.New("Subset out of range")
