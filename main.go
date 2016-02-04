@@ -29,5 +29,6 @@ func main() {
 		return
 	}
 	fmt.Println(d)
+	fmt.Println(d.Columns["Age"])
 	//fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
 }

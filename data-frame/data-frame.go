@@ -64,6 +64,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		nCols:    nCols,
 		colNames: records[0],
 	}
+	// TODO: If colNames has empty elements we must fill it with unique colnames
 
 	// Fill the columns on the DataFrame
 	for j := 0; j < nCols; j++ {
@@ -324,5 +325,39 @@ func (c *Column) ParseType(t string) error {
 	return nil
 }
 func (c Column) String() string {
-	return fmt.Sprint(c.row)
+	strArray := []string{}
+	switch c.colType {
+	case "int":
+		for _, v := range c.row {
+			cell := v.(*int)
+			if cell != nil {
+				strArray = append(strArray, fmt.Sprint(*cell))
+			} else {
+				strArray = append(strArray, "NA")
+			}
+		}
+		return fmt.Sprint(c.colName, ": ", strArray)
+	case "float":
+		for _, v := range c.row {
+			cell := v.(*float64)
+			if cell != nil {
+				strArray = append(strArray, fmt.Sprint(*cell))
+			} else {
+				strArray = append(strArray, "NA")
+			}
+		}
+		return fmt.Sprint(c.colName, ": ", strArray)
+	case "date":
+		for _, v := range c.row {
+			cell := v.(*time.Time)
+			if cell != nil {
+				strArray = append(strArray, fmt.Sprint(*cell))
+			} else {
+				strArray = append(strArray, "NA")
+			}
+		}
+		return fmt.Sprint(c.colName, ": ", strArray)
+	}
+
+	return fmt.Sprint(c.colName, ": ", c.row)
 }
