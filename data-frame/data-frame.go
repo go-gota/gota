@@ -162,7 +162,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 
 // SubsetColumns will return a DataFrame that contains only the columns named
 // after the given columns.
-func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
+func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		Columns:  make(map[string]Column),
@@ -170,30 +170,50 @@ func (df DataFrame) SubsetColumns(columns []string) (*DataFrame, error) {
 		colNames: []string{},
 	}
 
-	// Initialize variables to store possible errors
-	noCols := []string{}
-	dupedCols := []string{}
-
-	// Select the desired subset of columns
-	for _, v := range columns {
-		if col, ok := df.Columns[v]; ok {
-			if _, ok := newDf.Columns[v]; ok {
-				dupedCols = append(dupedCols, v)
-			}
-			newDf.colNames = append(newDf.colNames, v)
-			newDf.Columns[v] = col
-		} else {
-			noCols = append(noCols, v)
+	switch subset.(type) {
+	case Subset:
+		s := subset.(Subset)
+		// Check for errors
+		if s.From > s.To {
+			return nil, errors.New("Bad subset: Start greater than Beginning")
 		}
-	}
+		if s.To > df.nCols || s.To < 0 || s.From < 0 {
+			return nil, errors.New("Subset out of range")
+		}
 
-	if len(dupedCols) != 0 {
-		errStr := "The following columns appear more than once:\n" + strings.Join(dupedCols, ", ")
-		return nil, errors.New(errStr)
-	}
-	if len(noCols) != 0 {
-		errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
-		return nil, errors.New(errStr)
+		newDf.nCols = s.To - s.From
+		newDf.colNames = df.colNames[s.From:s.To]
+		for _, v := range df.colNames[s.From:s.To] {
+			col := df.Columns[v]
+			newDf.Columns[v] = col
+		}
+	case []string:
+		columns := subset.([]string)
+		// Initialize variables to store possible errors
+		noCols := []string{}
+		dupedCols := []string{}
+
+		// Select the desired subset of columns
+		for _, v := range columns {
+			if col, ok := df.Columns[v]; ok {
+				if _, ok := newDf.Columns[v]; ok {
+					dupedCols = append(dupedCols, v)
+				}
+				newDf.colNames = append(newDf.colNames, v)
+				newDf.Columns[v] = col
+			} else {
+				noCols = append(noCols, v)
+			}
+		}
+
+		if len(dupedCols) != 0 {
+			errStr := "The following columns appear more than once:\n" + strings.Join(dupedCols, ", ")
+			return nil, errors.New(errStr)
+		}
+		if len(noCols) != 0 {
+			errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
+			return nil, errors.New(errStr)
+		}
 	}
 
 	newDf.nCols = len(newDf.colNames)
