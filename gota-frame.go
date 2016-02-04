@@ -60,10 +60,6 @@ func main() {
 	}
 	df.loadData(records)
 	fmt.Println(df)
-	for _, v := range df.columns {
-		fmt.Println(v.colType)
-		fmt.Println(v.maxCharLength)
-	}
 }
 
 // DataFrame Definition
@@ -130,20 +126,28 @@ func (df DataFrame) colnames() (colnames []string) {
 
 // TODO: Truncate output for the same tabular format?
 func (df DataFrame) String() (str string) {
+	addPadding := func(s string, nchar int) string {
+		for {
+			if len(s) >= nchar {
+				return s
+			}
+			s += " "
+		}
+	}
 	if len(df.colnames()) != 0 {
-		str += "\t"
-		for _, v := range df.colnames() {
-			str += v
-			str += "\t"
+		str += "   "
+		for k, v := range df.colnames() {
+			str += addPadding(v, df.columns[k].maxCharLength)
+			str += "  "
 		}
 		str += "\n"
 		str += "\n"
 	}
 	for i := 0; i < df.nRows; i++ {
-		str += strconv.Itoa(i+1) + ":\t"
+		str += strconv.Itoa(i+1) + ": "
 		for j := 0; j < df.nCols; j++ {
-			str += fmt.Sprint(df.columns[j].row[i])
-			str += "\t"
+			str += addPadding(fmt.Sprint(df.columns[j].row[i]), df.columns[j].maxCharLength)
+			str += "  "
 		}
 		str += "\n"
 	}
