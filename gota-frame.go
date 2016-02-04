@@ -56,7 +56,8 @@ func main() {
 	r := csv.NewReader(csvfile)
 	records, err := r.ReadAll()
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return
 	}
 	df.loadData(records)
 	fmt.Println(df)
@@ -65,26 +66,32 @@ func main() {
 // DataFrame Definition
 // ====================
 type DataFrame struct {
-	columns []Column
-	nCols   int
-	nRows   int
+	columns  map[string]Column
+	colNames []string
+	nCols    int
+	nRows    int
 }
 
 // DataFrame Methods
 // =================
-func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
-	err := df.loadData(records)
-	if err != nil {
-		return err
-	}
-	if df.nCols != len(types) {
-		return errors.New("Number of columns different from number of types")
-	}
-	for k, v := range df.columns {
-		v.parseType(types[k])
-		df.columns[k].colType = types[k]
-	}
-	return nil
+//func (df *DataFrame) loadAndParse(records [][]string, types []string) error {
+//err := df.loadData(records)
+//if err != nil {
+//return err
+//}
+//if df.nCols != len(types) {
+//return errors.New("Number of columns different from number of types")
+//}
+//for k, v := range df.columns {
+//v.parseType(types[k])
+//df.columns[k].colType = types[k]
+//}
+//return nil
+//}
+
+func (df DataFrame) subsetColumns(columns []string) (DataFrame, error) {
+	newDf := DataFrame{}
+	return newDf, nil
 }
 
 func (df *DataFrame) loadData(records [][]string) error {
@@ -97,9 +104,10 @@ func (df *DataFrame) loadData(records [][]string) error {
 
 	// Generate a virtual df to store the temporary values
 	newDf := DataFrame{
-		columns: []Column{},
-		nRows:   nRows,
-		nCols:   nCols,
+		columns:  make(map[string]Column),
+		nRows:    nRows,
+		nCols:    nCols,
+		colNames: records[0],
 	}
 
 	for j := 0; j < nCols; j++ {
@@ -108,21 +116,20 @@ func (df *DataFrame) loadData(records [][]string) error {
 			col = append(col, records[i][j])
 		}
 		column := Column{}
-		column.colName = records[0][j]
-		column.maxCharLength = len(column.colName)
+		column.maxCharLength = len(records[0][j])
 		column.fillColumn(col)
-		newDf.columns = append(newDf.columns, column)
+		newDf.columns[records[0][j]] = column
 	}
 	*df = newDf
 	return nil
 }
 
-func (df DataFrame) colnames() (colnames []string) {
-	for _, v := range df.columns {
-		colnames = append(colnames, v.colName)
-	}
-	return
-}
+//func (df DataFrame) colnames() (colnames []string) {
+//for _, v := range df.columns {
+//colnames = append(colnames, v.colName)
+//}
+//return
+//}
 
 // TODO: Truncate output for the same tabular format?
 func (df DataFrame) String() (str string) {
@@ -134,10 +141,11 @@ func (df DataFrame) String() (str string) {
 			s += " "
 		}
 	}
-	if len(df.colnames()) != 0 {
+	colnames := df.colNames
+	if len(colnames) != 0 {
 		str += "   "
-		for k, v := range df.colnames() {
-			str += addPadding(v, df.columns[k].maxCharLength)
+		for _, v := range colnames {
+			str += addPadding(v, df.columns[v].maxCharLength)
 			str += "  "
 		}
 		str += "\n"
@@ -145,8 +153,8 @@ func (df DataFrame) String() (str string) {
 	}
 	for i := 0; i < df.nRows; i++ {
 		str += strconv.Itoa(i+1) + ": "
-		for j := 0; j < df.nCols; j++ {
-			str += addPadding(fmt.Sprint(df.columns[j].row[i]), df.columns[j].maxCharLength)
+		for _, v := range colnames {
+			str += addPadding(fmt.Sprint(df.columns[v].row[i]), df.columns[v].maxCharLength)
 			str += "  "
 		}
 		str += "\n"
@@ -159,7 +167,6 @@ func (df DataFrame) String() (str string) {
 type Column struct {
 	row           []interface{}
 	colType       string
-	colName       string
 	maxCharLength int
 }
 
