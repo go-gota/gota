@@ -71,11 +71,15 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		for i := 1; i < nRows+1; i++ {
 			col = append(col, records[i][j])
 		}
+		colName := records[0][j]
+		if _, ok := newDf.Columns[colName]; ok {
+			return errors.New("Duplicated column names: " + colName)
+		}
 		column := Column{}
-		column.colName = records[0][j]
-		column.numChars = len(records[0][j])
+		column.colName = colName
+		column.numChars = len(colName)
 		column.FillColumn(col)
-		newDf.Columns[records[0][j]] = column
+		newDf.Columns[colName] = column
 	}
 
 	*df = newDf
