@@ -71,7 +71,6 @@ func (df *DataFrame) LoadData(records [][]string) error {
 			}
 		}
 	}
-
 	for k, v := range colnames {
 		if v == "" {
 			for {
@@ -139,8 +138,8 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			col.colType = types[k]
 			df.Columns[v] = col
 		}
-	case map[string]string:
-		types := types.(map[string]string)
+	case T:
+		types := types.(T)
 		for k, v := range types {
 			col := df.Columns[k]
 			err := col.ParseType(v)
@@ -223,22 +222,22 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i+1)+": ", nRowsPadding+2)
 		for _, v := range df.colNames {
-			switch df.Columns[v].colType {
-			case "int":
+			switch df.Columns[v].row[i].(type) {
+			case *int:
 				s := df.Columns[v].row[i].(*int)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
 				} else {
 					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
-			case "float":
+			case *float64:
 				s := df.Columns[v].row[i].(*float64)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
 				} else {
 					str += addRightPadding("NA", df.Columns[v].numChars)
 				}
-			case "date":
+			case *time.Time:
 				s := df.Columns[v].row[i].(*time.Time)
 				if s != nil {
 					str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
@@ -349,40 +348,36 @@ func (c *Column) ParseType(t string) error {
 	c.FillColumn(newRows)
 	return nil
 }
+
 func (c Column) String() string {
 	strArray := []string{}
-	switch c.colType {
-	case "int":
-		for _, v := range c.row {
+	for _, v := range c.row {
+		switch v.(type) {
+		case *int:
 			cell := v.(*int)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
 			} else {
 				strArray = append(strArray, "NA")
 			}
-		}
-		return fmt.Sprint(c.colName, ": ", strArray)
-	case "float":
-		for _, v := range c.row {
+		case *float64:
 			cell := v.(*float64)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
 			} else {
 				strArray = append(strArray, "NA")
 			}
-		}
-		return fmt.Sprint(c.colName, ": ", strArray)
-	case "date":
-		for _, v := range c.row {
+		case *time.Time:
 			cell := v.(*time.Time)
 			if cell != nil {
 				strArray = append(strArray, fmt.Sprint(*cell))
 			} else {
 				strArray = append(strArray, "NA")
 			}
+		default:
+			strArray = append(strArray, fmt.Sprint(v))
 		}
-		return fmt.Sprint(c.colName, ": ", strArray)
 	}
 
-	return fmt.Sprint(c.colName, ": ", c.row)
+	return fmt.Sprint(c.colName, ": ", strArray)
 }

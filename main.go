@@ -23,12 +23,13 @@ func main() {
 		return
 	}
 
-	err = d.LoadAndParse(records, map[string]string{"Volume": "float", "Age": "int", "Date": "date"})
+	err = d.LoadAndParse(records, df.T{"Volume": "float", "Age": "int", "Date": "date"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	fmt.Println(d)
 	fmt.Println(d.Columns["Age"])
-	//fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
+	fmt.Println(d.Columns["Country"])
+	fmt.Println(d.SubsetColumns([]string{"Date", "Country"}))
 }
