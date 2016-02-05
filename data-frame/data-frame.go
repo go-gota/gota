@@ -363,7 +363,22 @@ func (df *DataFrame) addRow(row Row) error {
 	if df.nCols != row.nCols {
 		return errors.New("Different number of columns")
 	}
+
 	// Check that the names and the types of all columns are the same
+	colNameTypeMap := make(map[string]string)
+	for k, v := range df.colNames {
+		colNameTypeMap[v] = df.colTypes[k]
+	}
+	for k, v := range row.colNames {
+		if dfType, ok := colNameTypeMap[v]; ok {
+			if dfType != row.colTypes[k] {
+				return errors.New("Mismatching column types")
+			}
+		} else {
+			return errors.New("Mismatching column names")
+		}
+	}
+
 	return nil
 }
 
