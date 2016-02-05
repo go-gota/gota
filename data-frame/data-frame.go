@@ -19,6 +19,7 @@ import (
 type DataFrame struct {
 	Columns  Columns
 	colNames []string
+	colTypes []string
 	nCols    int
 	nRows    int
 }
@@ -34,6 +35,7 @@ type Column struct {
 type Row struct {
 	Columns  Columns
 	colNames []string
+	colTypes []string
 	nCols    int
 }
 
@@ -45,6 +47,7 @@ func (df DataFrame) getRow(i int) (*Row, error) {
 	row := Row{
 		Columns:  make(Columns),
 		colNames: df.colNames,
+		colTypes: df.colTypes,
 		nCols:    df.nCols,
 	}
 	for _, v := range df.colNames {
@@ -123,6 +126,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		nRows:    nRows,
 		nCols:    nCols,
 		colNames: colnames,
+		colTypes: []string{},
 	}
 
 	// Fill the columns on the DataFrame
@@ -136,6 +140,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		column.colName = colName
 		column.numChars = len(colName)
 		column.FillColumn(col)
+		newDf.colTypes = append(newDf.colTypes, column.colType)
 		newDf.Columns[colName] = column
 	}
 
@@ -168,6 +173,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 				return err
 			}
 			col.colType = types[k]
+			df.colTypes[k] = types[k]
 			df.Columns[v] = col
 		}
 	case T:
@@ -179,11 +185,22 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 				return err
 			}
 			col.colType = v
+			colIndex, _ := df.colIndex(k)
+			df.colTypes[*colIndex] = v
 			df.Columns[k] = col
 		}
 	}
 
 	return nil
+}
+
+func (df DataFrame) colIndex(colname string) (*int, error) {
+	for k, v := range df.colNames {
+		if v == colname {
+			return &k, nil
+		}
+	}
+	return nil, errors.New("Can't find the given column")
 }
 
 // Subset will return a DataFrame that contains only the columns and rows contained
