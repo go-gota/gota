@@ -31,7 +31,33 @@ type Column struct {
 	numChars int
 }
 
-// R represent a distance from a number to another
+type Row struct {
+	Columns  Columns
+	colNames []string
+	nCols    int
+}
+
+func (df DataFrame) getRow(i int) (*Row, error) {
+	if i >= df.nRows {
+		return nil, errors.New("Row out of range")
+	}
+
+	row := Row{
+		Columns:  make(Columns),
+		colNames: df.colNames,
+		nCols:    df.nCols,
+	}
+	for _, v := range df.colNames {
+		col := Column{}
+		r := df.Columns[v].row[i]
+		col.FillColumn(r)
+		row.Columns[v] = col
+	}
+
+	return &row, nil
+}
+
+// R represent a range from a number to another
 type R struct {
 	From int
 	To   int
@@ -93,7 +119,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
-		Columns:  make(map[string]Column),
+		Columns:  make(Columns),
 		nRows:    nRows,
 		nCols:    nCols,
 		colNames: colnames,
@@ -180,7 +206,7 @@ func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*Dat
 func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
-		Columns:  make(map[string]Column),
+		Columns:  make(Columns),
 		nRows:    df.nRows,
 		colNames: []string{},
 	}
@@ -265,7 +291,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
-		Columns:  make(map[string]Column),
+		Columns:  make(Columns),
 		nCols:    df.nCols,
 		colNames: df.colNames,
 	}
@@ -311,6 +337,36 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 			newDf.Columns[v] = col
 		}
 	}
+
+	return &newDf, nil
+}
+
+func (df *DataFrame) addRow(row Row) error {
+	// Check that the given row contains the same number of columns that the current dataframe
+	if df.nCols != row.nCols {
+		return errors.New("Different number of columns")
+	}
+	// Check that the names and the types of all columns are the same
+	return nil
+}
+
+func (df DataFrame) Unique() (*DataFrame, error) {
+	newDf := DataFrame{}
+	fmt.Println(df.getRow(0))
+	//uniqueRows := make(map[string]bool)
+	//var uniqueRowsIndex []int
+	//for i := 0; i < df.nRows; i++ {
+	//str := ""
+	//for _, v := range df.colNames {
+	//col := df.Columns[v]
+	//str += col.colType
+	//str += col.getRowStr(i)
+	//}
+	//if _, ok := uniqueRows[str]; !ok {
+	//uniqueRows[str] = true
+	//uniqueRowsIndex = append(uniqueRowsIndex, i)
+	//}
+	//}
 
 	return &newDf, nil
 }
@@ -380,38 +436,49 @@ func (df DataFrame) String() (str string) {
 
 // FillColumn will use reflection to fill the column with the given values
 func (c *Column) FillColumn(values interface{}) {
+	var cell interface{}
+	setColumnType := func() {
+		rowStr := ""
+		switch cell.(type) {
+		case *int:
+			if cell.(*int) != nil {
+				rowStr = fmt.Sprint(*cell.(*int))
+			}
+			c.colType = "int"
+		case *float64:
+			if cell.(*float64) != nil {
+				rowStr = fmt.Sprint(*cell.(*float64))
+			}
+			c.colType = "float64"
+		case *time.Time:
+			if cell.(*time.Time) != nil {
+				rowStr = fmt.Sprint(*cell.(*time.Time))
+			}
+			c.colType = "date"
+		default:
+			rowStr = fmt.Sprint(cell)
+			c.colType = "string"
+		}
+		if len(rowStr) > c.numChars {
+			c.numChars = len(rowStr)
+		}
+	}
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
+		// TODO: What happens if the values is empty? Empty column? Error?
 		s := reflect.ValueOf(values)
 		c.row = make([]interface{}, 0)
 		for i := 0; i < s.Len(); i++ {
-			cell := s.Index(i).Interface()
+			cell = s.Index(i).Interface()
+			setColumnType()
 			c.row = append(c.row, cell)
-			rowStr := ""
-			switch cell.(type) {
-			case *int:
-				if cell.(*int) != nil {
-					rowStr = fmt.Sprint(*cell.(*int))
-				}
-				c.colType = "int"
-			case *float64:
-				if cell.(*float64) != nil {
-					rowStr = fmt.Sprint(*cell.(*float64))
-				}
-				c.colType = "float64"
-			case *time.Time:
-				if cell.(*time.Time) != nil {
-					rowStr = fmt.Sprint(*cell.(*time.Time))
-				}
-				c.colType = "date"
-			default:
-				rowStr = fmt.Sprint(cell)
-				c.colType = "string"
-			}
-			if len(rowStr) > c.numChars {
-				c.numChars = len(rowStr)
-			}
 		}
+	default:
+		s := reflect.ValueOf(values)
+		c.row = make([]interface{}, 0)
+		cell = s.Interface()
+		setColumnType()
+		c.row = append(c.row, cell)
 	}
 }
 
@@ -468,6 +535,39 @@ func (c *Column) ParseType(t string) error {
 	}
 	c.FillColumn(newRows)
 	return nil
+}
+
+func (c Column) getRowStr(i int) string {
+	var str string
+	switch c.colType {
+	case "int":
+		row := c.row[i].(*int)
+		if row != nil {
+			str = fmt.Sprint(*row)
+		} else {
+			str = "NA"
+		}
+	case "float64":
+		row := c.row[i].(*float64)
+		if row != nil {
+			str = fmt.Sprint(*row)
+		} else {
+			str = "NA"
+		}
+	case "string":
+		row := c.row[i].(string)
+		str = row
+	case "date":
+		row := c.row[i].(*time.Time)
+		if row != nil {
+			str = fmt.Sprint(*row)
+		} else {
+			str = "NA"
+		}
+	default:
+		str = "NA"
+	}
+	return str
 }
 
 func (c Column) String() string {

@@ -4,13 +4,15 @@ import (
 	"encoding/csv"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/kniren/gota/data-frame"
 )
 
 func main() {
 	d := df.DataFrame{}
-	csvfile, err := os.Open("dataset.csv")
+	absPath, _ := filepath.Abs("../dataset.csv")
+	csvfile, err := os.Open(absPath)
 	if err != nil {
 		fmt.Println(err)
 		return
