@@ -47,13 +47,14 @@ type u struct {
 	appears []int
 }
 
+// getRow tries to return the Row for a given row number
 func (df DataFrame) getRow(i int) (*Row, error) {
 	if i >= df.nRows {
 		return nil, errors.New("Row out of range")
 	}
 
 	row := Row{
-		Columns:  make(Columns),
+		Columns:  initColumns(df.colNames),
 		colNames: df.colNames,
 		colTypes: df.colTypes,
 		nCols:    df.nCols,
@@ -77,14 +78,17 @@ type R struct {
 // Columns is an alias for multiple columns
 type Columns map[string]Column
 
-func (cols *Columns) initEmpty(names []string) {
-	c := *cols
+// initColumns will initialize an empty Columns given an array of column names
+func initColumns(names []string) Columns {
+	c := make(Columns)
 	for _, v := range names {
 		c[v] = Column{
 			colName:  v,
 			numChars: len(v),
 		}
 	}
+
+	return c
 }
 
 // T is used to represent the association between a column and it't type
@@ -142,7 +146,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 
 	// Generate a df to store the temporary values
 	newDf := DataFrame{
-		Columns:  make(Columns),
+		Columns:  initColumns(colnames),
 		nRows:    nRows,
 		nCols:    nCols,
 		colNames: colnames,
@@ -214,6 +218,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	return nil
 }
 
+// colIndex tries to find the column index for a given column name
 func (df DataFrame) colIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
 		if v == colname {
@@ -328,7 +333,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
-		Columns:  make(Columns),
+		Columns:  initColumns(df.colNames),
 		nCols:    df.nCols,
 		colNames: df.colNames,
 	}
@@ -378,8 +383,8 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	return &newDf, nil
 }
 
+// addRow adds a single Row to the DataFrame
 func (df *DataFrame) addRow(row Row) error {
-
 	// Check that the given row contains the same number of columns that the
 	// current dataframe.
 	if df.nCols != row.nCols {
@@ -443,12 +448,11 @@ func uniqueRowsMap(df DataFrame) map[string]u {
 // will not be preserved.
 func (df DataFrame) Unique() (*DataFrame, error) {
 	newDf := DataFrame{
-		Columns:  make(Columns),
+		Columns:  initColumns(df.colNames),
 		nCols:    df.nCols,
 		colNames: df.colNames,
 		colTypes: df.colTypes,
 	}
-	newDf.Columns.initEmpty(df.colNames)
 
 	uniqueRows := uniqueRowsMap(df)
 	for _, v := range uniqueRows {
@@ -467,12 +471,11 @@ func (df DataFrame) Unique() (*DataFrame, error) {
 // Duplicated will return all duplicated rows inside a DataFrame
 func (df DataFrame) Duplicated() (*DataFrame, error) {
 	newDf := DataFrame{
-		Columns:  make(Columns),
+		Columns:  initColumns(df.colNames),
 		nCols:    df.nCols,
 		colNames: df.colNames,
 		colTypes: df.colTypes,
 	}
-	newDf.Columns.initEmpty(df.colNames)
 
 	type u struct {
 		unique  bool
@@ -495,6 +498,7 @@ func (df DataFrame) Duplicated() (*DataFrame, error) {
 	return &newDf, nil
 }
 
+// Implementing the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
 	addLeftPadding := func(s string, nchar int) string {
 		if len(s) < nchar {
@@ -732,6 +736,7 @@ func (c *Column) ParseType(t string) error {
 	return nil
 }
 
+// getRowStr returns the string representation of a row on a given column
 func (c Column) getRowStr(i int) string {
 	var str string
 	switch c.colType {
@@ -765,6 +770,7 @@ func (c Column) getRowStr(i int) string {
 	return str
 }
 
+// Implementing the Stringer interface for Column
 func (c Column) String() string {
 	strArray := []string{}
 	for _, v := range c.row {
