@@ -320,7 +320,11 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 					dupedCols = append(dupedCols, v)
 				}
 				newDf.colNames = append(newDf.colNames, v)
-				newDf.colTypes = append(newDf.colTypes, v)
+				colindex, err := df.colIndex(v)
+				if err != nil {
+					return nil, err
+				}
+				newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
 				newDf.Columns[v] = col
 			} else {
 				noCols = append(noCols, v)
@@ -335,6 +339,8 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 			errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
 			return nil, errors.New(errStr)
 		}
+	default:
+		return nil, errors.New("Unknown subsetting option")
 	}
 
 	newDf.nCols = len(newDf.colNames)
@@ -392,6 +398,8 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 			col.FillColumn(row)
 			newDf.Columns[v] = col
 		}
+	default:
+		return nil, errors.New("Unknown subsetting option")
 	}
 
 	return &newDf, nil
@@ -433,6 +441,46 @@ func (df *DataFrame) addRow(row Row) error {
 	df.nRows++
 
 	return nil
+}
+
+// Cbind combines the columns of two DataFrames
+func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+	// Check that the two DataFrames contains the same number of rows
+	if dfA.nRows != dfB.nRows {
+		return nil, errors.New("Different number of rows")
+	}
+
+	// Check that the column names are unique when combined
+	colNameMap := make(map[string]bool)
+	for _, v := range dfA.colNames {
+		colNameMap[v] = true
+	}
+
+	for _, v := range dfB.colNames {
+		if _, ok := colNameMap[v]; ok {
+			return nil, errors.New("Conflicting column names")
+		}
+	}
+
+	colnames := append(dfA.colNames, dfB.colNames...)
+	coltypes := append(dfA.colTypes, dfB.colTypes...)
+
+	newDf := DataFrame{
+		Columns:  initColumns(colnames),
+		nRows:    dfA.nRows,
+		nCols:    len(colnames),
+		colNames: colnames,
+		colTypes: coltypes,
+	}
+
+	for _, v := range dfA.colNames {
+		newDf.Columns[v] = dfA.Columns[v]
+	}
+	for _, v := range dfB.colNames {
+		newDf.Columns[v] = dfB.Columns[v]
+	}
+
+	return &newDf, nil
 }
 
 // Rbind combines the rows of two dataframes

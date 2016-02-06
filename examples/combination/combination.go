@@ -40,17 +40,36 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+	fmt.Println("Subset A:")
+	fmt.Println(da)
 	db, err := d.SubsetRows(df.R{3, 4})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("Subset A:")
-	fmt.Println(da)
 	fmt.Println("Subset B:")
 	fmt.Println(db)
 
 	// Let's combine both subsets
-	fmt.Println("Combination:")
+	fmt.Println("Row Combination A+B:")
 	fmt.Println(df.Rbind(*da, *db))
+
+	// Subsetting from the original dataframe
+	dc, err := d.SubsetColumns([]string{"Age", "Amount"})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Subset C:")
+	fmt.Println(dc)
+	dd, err := d.SubsetColumns([]string{"Date"})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("Subset D:")
+	fmt.Println(dd)
+
+	fmt.Println("Column Combination C+D:")
+	fmt.Println(df.Cbind(*dc, *dd))
 }
