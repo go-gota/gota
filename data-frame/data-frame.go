@@ -22,6 +22,7 @@ type DataFrame struct {
 	colTypes []string
 	nCols    int
 	nRows    int
+	keys     []string
 }
 
 // Column is a column inside a DataFrame
@@ -40,6 +41,12 @@ type Row struct {
 	nCols    int
 }
 
+// R represent a range from a number to another
+type R struct {
+	From int
+	To   int
+}
+
 // u represents if an element is unique or if it appears on more than one place in
 // addition to the index where it appears.
 type u struct {
@@ -47,49 +54,8 @@ type u struct {
 	appears []int
 }
 
-// getRow tries to return the Row for a given row number
-func (df DataFrame) getRow(i int) (*Row, error) {
-	if i >= df.nRows {
-		return nil, errors.New("Row out of range")
-	}
-
-	row := Row{
-		Columns:  initColumns(df.colNames),
-		colNames: df.colNames,
-		colTypes: df.colTypes,
-		nCols:    df.nCols,
-	}
-	for _, v := range df.colNames {
-		col := Column{}
-		r := df.Columns[v].row[i]
-		col.FillColumn(r)
-		row.Columns[v] = col
-	}
-
-	return &row, nil
-}
-
-// R represent a range from a number to another
-type R struct {
-	From int
-	To   int
-}
-
 // Columns is an alias for multiple columns
 type Columns map[string]Column
-
-// initColumns will initialize an empty Columns given an array of column names
-func initColumns(names []string) Columns {
-	c := make(Columns)
-	for _, v := range names {
-		c[v] = Column{
-			colName:  v,
-			numChars: len(v),
-		}
-	}
-
-	return c
-}
 
 // T is used to represent the association between a column and it't type
 type T map[string]string
@@ -260,6 +226,28 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 		}
 	}
 	return nil, errors.New("Can't find the given column")
+}
+
+// getRow tries to return the Row for a given row number
+func (df DataFrame) getRow(i int) (*Row, error) {
+	if i >= df.nRows {
+		return nil, errors.New("Row out of range")
+	}
+
+	row := Row{
+		Columns:  initColumns(df.colNames),
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+		nCols:    df.nCols,
+	}
+	for _, v := range df.colNames {
+		col := Column{}
+		r := df.Columns[v].row[i]
+		col.FillColumn(r)
+		row.Columns[v] = col
+	}
+
+	return &row, nil
 }
 
 // Subset will return a DataFrame that contains only the columns and rows contained
@@ -939,4 +927,21 @@ func (c Column) String() string {
 	}
 
 	return fmt.Sprintln(c.colName, "(", c.colType, "):\n", strings.Join(strArray, "\n "))
+}
+
+// ----------------------------------------------------------------------
+// Columns methods
+// ----------------------------------------------------------------------
+
+// initColumns will initialize an empty Columns given an array of column names
+func initColumns(names []string) Columns {
+	c := make(Columns)
+	for _, v := range names {
+		c[v] = Column{
+			colName:  v,
+			numChars: len(v),
+		}
+	}
+
+	return c
 }
