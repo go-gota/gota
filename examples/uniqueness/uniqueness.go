@@ -35,4 +35,7 @@ func main() {
 
 	// Only unique elements
 	fmt.Println(d.Unique())
+
+	// Only duplicated elements
+	fmt.Println(d.Duplicated())
 }

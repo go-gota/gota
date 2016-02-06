@@ -40,6 +40,13 @@ type Row struct {
 	nCols    int
 }
 
+// u represents if an element is unique or if it appears on more than one place in
+// addition to the index where it appears.
+type u struct {
+	unique  bool
+	appears []int
+}
+
 func (df DataFrame) getRow(i int) (*Row, error) {
 	if i >= df.nRows {
 		return nil, errors.New("Row out of range")
@@ -409,7 +416,31 @@ func (df *DataFrame) addRow(row Row) error {
 	return nil
 }
 
-// Unique will return all unique rows inside a DataFrame
+// uniqueRowsMap is a helper function that will get a map of unique or duplicated
+// rows for a given DataFrame
+func uniqueRowsMap(df DataFrame) map[string]u {
+	uniqueRows := make(map[string]u)
+	for i := 0; i < df.nRows; i++ {
+		str := ""
+		for _, v := range df.colNames {
+			col := df.Columns[v]
+			str += col.colType
+			str += col.getRowStr(i)
+		}
+		if a, ok := uniqueRows[str]; ok {
+			a.unique = false
+			a.appears = append(a.appears, i)
+			uniqueRows[str] = a
+		} else {
+			uniqueRows[str] = u{true, []int{i}}
+		}
+	}
+
+	return uniqueRows
+}
+
+// Unique will return all unique rows inside a DataFrame. The order of the rows
+// will not be preserved.
 func (df DataFrame) Unique() (*DataFrame, error) {
 	newDf := DataFrame{
 		Columns:  make(Columns),
@@ -419,21 +450,45 @@ func (df DataFrame) Unique() (*DataFrame, error) {
 	}
 	newDf.Columns.initEmpty(df.colNames)
 
-	uniqueRows := make(map[string]bool)
-	for i := 0; i < df.nRows; i++ {
-		str := ""
-		for _, v := range df.colNames {
-			col := df.Columns[v]
-			str += col.colType
-			str += col.getRowStr(i)
-		}
-		if _, ok := uniqueRows[str]; !ok {
-			uniqueRows[str] = true
-			row, err := df.getRow(i)
+	uniqueRows := uniqueRowsMap(df)
+	for _, v := range uniqueRows {
+		if v.unique {
+			row, err := df.getRow(v.appears[0])
 			if err != nil {
 				return nil, err
 			}
 			newDf.addRow(*row)
+		}
+	}
+
+	return &newDf, nil
+}
+
+// Duplicated will return all duplicated rows inside a DataFrame
+func (df DataFrame) Duplicated() (*DataFrame, error) {
+	newDf := DataFrame{
+		Columns:  make(Columns),
+		nCols:    df.nCols,
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+	}
+	newDf.Columns.initEmpty(df.colNames)
+
+	type u struct {
+		unique  bool
+		appears []int
+	}
+
+	uniqueRows := uniqueRowsMap(df)
+	for _, v := range uniqueRows {
+		if !v.unique {
+			for _, i := range v.appears {
+				row, err := df.getRow(i)
+				if err != nil {
+					return nil, err
+				}
+				newDf.addRow(*row)
+			}
 		}
 	}
 
