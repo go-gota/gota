@@ -32,6 +32,7 @@ type Column struct {
 	numChars int
 }
 
+// Row represents a single row on a DataFrame
 type Row struct {
 	Columns  Columns
 	colNames []string
@@ -69,6 +70,16 @@ type R struct {
 // Columns is an alias for multiple columns
 type Columns map[string]Column
 
+func (cols *Columns) initEmpty(names []string) {
+	c := *cols
+	for _, v := range names {
+		c[v] = Column{
+			colName:  v,
+			numChars: len(v),
+		}
+	}
+}
+
 // T is used to represent the association between a column and it't type
 type T map[string]string
 
@@ -81,6 +92,8 @@ const defaultDateFormat = "2006-01-02"
 // ----------------------------------------------------------------------
 // DataFrame methods
 // ----------------------------------------------------------------------
+
+// TODO: Save data to records [][]string format
 
 // LoadData will load the data from a multidimensional array of strings into
 // a DataFrame object.
@@ -359,7 +372,9 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 }
 
 func (df *DataFrame) addRow(row Row) error {
-	// Check that the given row contains the same number of columns that the current dataframe
+
+	// Check that the given row contains the same number of columns that the
+	// current dataframe.
 	if df.nCols != row.nCols {
 		return errors.New("Different number of columns")
 	}
@@ -379,26 +394,48 @@ func (df *DataFrame) addRow(row Row) error {
 		}
 	}
 
+	cols := make(Columns)
+	for _, v := range df.colNames {
+		col := df.Columns[v]
+		err := col.AddValues(row.Columns[v].row)
+		if err != nil {
+			return err
+		}
+		cols[v] = col
+	}
+	df.Columns = cols
+	df.nRows++
+
 	return nil
 }
 
+// Unique will return all unique rows inside a DataFrame
 func (df DataFrame) Unique() (*DataFrame, error) {
-	newDf := DataFrame{}
-	fmt.Println(df.getRow(0))
-	//uniqueRows := make(map[string]bool)
-	//var uniqueRowsIndex []int
-	//for i := 0; i < df.nRows; i++ {
-	//str := ""
-	//for _, v := range df.colNames {
-	//col := df.Columns[v]
-	//str += col.colType
-	//str += col.getRowStr(i)
-	//}
-	//if _, ok := uniqueRows[str]; !ok {
-	//uniqueRows[str] = true
-	//uniqueRowsIndex = append(uniqueRowsIndex, i)
-	//}
-	//}
+	newDf := DataFrame{
+		Columns:  make(Columns),
+		nCols:    df.nCols,
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+	}
+	newDf.Columns.initEmpty(df.colNames)
+
+	uniqueRows := make(map[string]bool)
+	for i := 0; i < df.nRows; i++ {
+		str := ""
+		for _, v := range df.colNames {
+			col := df.Columns[v]
+			str += col.colType
+			str += col.getRowStr(i)
+		}
+		if _, ok := uniqueRows[str]; !ok {
+			uniqueRows[str] = true
+			row, err := df.getRow(i)
+			if err != nil {
+				return nil, err
+			}
+			newDf.addRow(*row)
+		}
+	}
 
 	return &newDf, nil
 }
@@ -466,6 +503,69 @@ func (df DataFrame) String() (str string) {
 // Column Methods
 // ----------------------------------------------------------------------
 
+// AddValues will add a value or values to a column
+func (c *Column) AddValues(values interface{}) error {
+	if len(c.row) == 0 {
+		c.FillColumn(values)
+		return nil
+	}
+	var cell interface{}
+	checkColumnType := func() error {
+		rowStr := ""
+		switch cell.(type) {
+		case *int:
+			if c.colType != "int" {
+				return errors.New("Wrong type passed to column, 'int' expected")
+			}
+			if cell.(*int) != nil {
+				rowStr = fmt.Sprint(*cell.(*int))
+			}
+		case *float64:
+			if c.colType != "float64" {
+				return errors.New("Wrong type passed to column, 'float64' expected")
+			}
+			if cell.(*float64) != nil {
+				rowStr = fmt.Sprint(*cell.(*float64))
+			}
+		case *time.Time:
+			if c.colType != "date" {
+				return errors.New("Wrong type passed to column, 'date' expected")
+			}
+			if cell.(*time.Time) != nil {
+				rowStr = fmt.Sprint(*cell.(*time.Time))
+			}
+		case string:
+			rowStr = fmt.Sprint(cell)
+		default:
+			return errors.New("Unknown type")
+		}
+
+		// Adjust c.numChars if necessary
+		if len(rowStr) > c.numChars {
+			c.numChars = len(rowStr)
+		}
+
+		return nil
+	}
+	switch reflect.TypeOf(values).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(values)
+		for i := 0; i < s.Len(); i++ {
+			cell = s.Index(i).Interface()
+			checkColumnType()
+			c.row = append(c.row, cell)
+		}
+	default:
+		fmt.Println("dong")
+		s := reflect.ValueOf(values)
+		cell = s.Interface()
+		checkColumnType()
+		c.row = append(c.row, cell)
+	}
+
+	return nil
+}
+
 // FillColumn will use reflection to fill the column with the given values
 func (c *Column) FillColumn(values interface{}) {
 	var cell interface{}
@@ -487,10 +587,16 @@ func (c *Column) FillColumn(values interface{}) {
 				rowStr = fmt.Sprint(*cell.(*time.Time))
 			}
 			c.colType = "date"
-		default:
+		case string:
 			rowStr = fmt.Sprint(cell)
 			c.colType = "string"
+		default:
+			// TODO: ERROR?
+			//rowStr = fmt.Sprint(cell)
+			//c.colType = "string"
 		}
+
+		// Adjust c.numChars if necessary
 		if len(rowStr) > c.numChars {
 			c.numChars = len(rowStr)
 		}
@@ -526,6 +632,8 @@ func (c *Column) ParseType(t string) error {
 		newRows = []string{}
 	case "date":
 		newRows = []*time.Time{}
+	default:
+		return errors.New("Unknown type")
 	}
 
 	// TODO: Retrieve all formatting errors to return it as warnings and in case

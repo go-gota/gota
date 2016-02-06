@@ -29,6 +29,10 @@ func main() {
 		fmt.Println(err)
 		return
 	}
+
+	// Original DataFrame
 	fmt.Println(d)
-	d.Unique()
+
+	// Only unique elements
+	fmt.Println(d.Unique())
 }
