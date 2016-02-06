@@ -251,6 +251,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		Columns:  make(Columns),
 		nRows:    df.nRows,
 		colNames: []string{},
+		colTypes: []string{},
 	}
 
 	switch subset.(type) {
@@ -269,6 +270,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 		newDf.nCols = s.To - s.From
 		newDf.colNames = df.colNames[s.From:s.To]
+		newDf.colTypes = df.colTypes[s.From:s.To]
 		for _, v := range df.colNames[s.From:s.To] {
 			col := df.Columns[v]
 			newDf.Columns[v] = col
@@ -294,6 +296,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 			col := df.Columns[df.colNames[v]]
 			newDf.Columns[df.colNames[v]] = col
 			newDf.colNames = append(newDf.colNames, df.colNames[v])
+			newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
 		}
 	case []string:
 		columns := subset.([]string)
@@ -308,6 +311,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 					dupedCols = append(dupedCols, v)
 				}
 				newDf.colNames = append(newDf.colNames, v)
+				newDf.colTypes = append(newDf.colTypes, v)
 				newDf.Columns[v] = col
 			} else {
 				noCols = append(noCols, v)
@@ -336,6 +340,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		Columns:  initColumns(df.colNames),
 		nCols:    df.nCols,
 		colNames: df.colNames,
+		colTypes: df.colTypes,
 	}
 
 	switch subset.(type) {
@@ -419,6 +424,45 @@ func (df *DataFrame) addRow(row Row) error {
 	df.nRows++
 
 	return nil
+}
+
+// Rbind combines the rows of two dataframes
+func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+	// Check that the given DataFrame contains the same number of columns that the
+	// current dataframe.
+	if dfA.nCols != dfB.nCols {
+		return nil, errors.New("Different number of columns")
+	}
+
+	// Check that the names and the types of all columns are the same
+	colNameTypeMap := make(map[string]string)
+	for k, v := range dfA.colNames {
+		colNameTypeMap[v] = dfA.colTypes[k]
+	}
+
+	for k, v := range dfB.colNames {
+		if dfType, ok := colNameTypeMap[v]; ok {
+			if dfType != dfB.colTypes[k] {
+				return nil, errors.New("Mismatching column types")
+			}
+		} else {
+			return nil, errors.New("Mismatching column names")
+		}
+	}
+
+	cols := make(Columns)
+	for _, v := range dfA.colNames {
+		col := dfA.Columns[v]
+		err := col.AddValues(dfB.Columns[v].row)
+		if err != nil {
+			return nil, err
+		}
+		cols[v] = col
+	}
+	dfA.Columns = cols
+	dfA.nRows += dfB.nRows
+
+	return &dfA, nil
 }
 
 // uniqueRowsMap is a helper function that will get a map of unique or duplicated
