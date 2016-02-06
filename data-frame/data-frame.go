@@ -218,6 +218,15 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	return nil
 }
 
+// Dim will return the current dimensions of the DataFrame in a two element array
+// where the first element is the number of rows and the second the number of
+// columns.
+func (df DataFrame) Dim() (dim [2]int) {
+	dim[0] = df.nRows
+	dim[1] = df.nCols
+	return
+}
+
 // colIndex tries to find the column index for a given column name
 func (df DataFrame) colIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
