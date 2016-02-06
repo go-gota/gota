@@ -1,5 +1,5 @@
-Gota: DataFrames and data wrangling and statistics for Go
-=========================================================
+Gota: DataFrames and Data Wrangling for Go
+==========================================
 
 This is an initial implementation of DataFrames for the Go programming
 language (Golang). This is still at a very early stage of development
