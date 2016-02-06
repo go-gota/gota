@@ -311,6 +311,9 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		}
 	case []int:
 		colNums := subset.([]int)
+		if len(colNums) == 0 {
+			return nil, errors.New("Empty subset")
+		}
 
 		// Check for errors
 		colNumsMap := make(map[int]bool)
@@ -334,6 +337,10 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		}
 	case []string:
 		columns := subset.([]string)
+		if len(columns) == 0 {
+			return nil, errors.New("Empty subset")
+		}
+
 		// Initialize variables to store possible errors
 		noCols := []string{}
 		dupedCols := []string{}
@@ -405,6 +412,10 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		}
 	case []int:
 		rowNums := subset.([]int)
+
+		if len(rowNums) == 0 {
+			return nil, errors.New("Empty subset")
+		}
 
 		// Check for errors
 		for _, v := range rowNums {

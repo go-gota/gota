@@ -55,7 +55,7 @@ func main() {
 	fmt.Println(df.Rbind(*da, *db))
 
 	// Subsetting from the original dataframe
-	dc, err := d.SubsetColumns([]string{"Age", "Amount"})
+	dc, err := d.SubsetColumns([]string{})
 	if err != nil {
 		fmt.Println(err)
 		return
