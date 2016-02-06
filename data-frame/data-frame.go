@@ -104,8 +104,6 @@ const defaultDateFormat = "2006-01-02"
 // DataFrame methods
 // ----------------------------------------------------------------------
 
-// TODO: Save data to records [][]string format
-
 // LoadData will load the data from a multidimensional array of strings into
 // a DataFrame object.
 func (df *DataFrame) LoadData(records [][]string) error {
@@ -217,6 +215,33 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 
 	return nil
 }
+
+// SaveRecords will save data to records in [][]string format
+func (df DataFrame) SaveRecords() [][]string {
+	if df.nCols == 0 {
+		return make([][]string, 0)
+	}
+	if df.nRows == 0 {
+		records := make([][]string, 1)
+		records[0] = df.colNames
+		return records
+	}
+
+	var records [][]string
+
+	records = append(records, df.colNames)
+	for i := 0; i < df.nRows; i++ {
+		r := []string{}
+		for _, v := range df.colNames {
+			r = append(r, df.Columns[v].getRowStr(i))
+		}
+		records = append(records, r)
+	}
+
+	return records
+}
+
+// TODO: Save to other formats. JSON? XML?
 
 // Dim will return the current dimensions of the DataFrame in a two element array
 // where the first element is the number of rows and the second the number of
