@@ -25,6 +25,17 @@ type DataFrame struct {
 	keys     []string
 }
 
+type C struct {
+	Colname  string
+	Elements interface{}
+}
+
+func New(cols ...C) {
+	for _, v := range cols {
+		fmt.Println(v.Colname)
+	}
+}
+
 // Column is a column inside a DataFrame
 type Column struct {
 	row      []interface{}
