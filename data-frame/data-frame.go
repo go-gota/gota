@@ -11,6 +11,10 @@ import (
 
 // NOTE: The concept of NA is represented by nil pointers
 
+// TODO: Constructors should allow options to set up:
+//	DateFormat
+//	TrimSpaces?
+
 // ----------------------------------------------------------------------
 // Type Definitions
 // ----------------------------------------------------------------------
@@ -76,6 +80,17 @@ type T map[string]string
 // ----------------------------------------------------------------------
 
 const defaultDateFormat = "2006-01-02"
+
+// TODO: Implement a custom Error type that stores information about the type of
+// error and the severity of it (Warning vs Error)
+// Error types
+type Err int
+
+const (
+	FormatError Err = iota
+	Warning
+	Etc
+)
 
 // ----------------------------------------------------------------------
 // DataFrame methods
@@ -613,11 +628,6 @@ func (df DataFrame) Duplicated() (*DataFrame, error) {
 		colTypes: df.colTypes,
 	}
 
-	type u struct {
-		unique  bool
-		appears []int
-	}
-
 	uniqueRows := uniqueRowsMap(df)
 	for _, v := range uniqueRows {
 		if !v.unique {
@@ -628,6 +638,53 @@ func (df DataFrame) Duplicated() (*DataFrame, error) {
 				}
 				newDf.addRow(*row)
 			}
+		}
+	}
+
+	return &newDf, nil
+}
+
+// RemoveDuplicates will return all unique rows in a DataFrame and the first
+// appearance of all duplicated rows. The order of the rows will not be
+// preserved.
+func (df DataFrame) RemoveDuplicates() (*DataFrame, error) {
+	newDf := DataFrame{
+		Columns:  initColumns(df.colNames),
+		nCols:    df.nCols,
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+	}
+
+	uniqueRows := uniqueRowsMap(df)
+	for _, v := range uniqueRows {
+		row, err := df.getRow(v.appears[0])
+		if err != nil {
+			return nil, err
+		}
+		newDf.addRow(*row)
+	}
+
+	return &newDf, nil
+}
+
+// RemoveUnique will return the first appearance of the duplicated rows in
+// a DataFrame. The order of the rows will not be preserved.
+func (df DataFrame) RemoveUnique() (*DataFrame, error) {
+	newDf := DataFrame{
+		Columns:  initColumns(df.colNames),
+		nCols:    df.nCols,
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+	}
+
+	uniqueRows := uniqueRowsMap(df)
+	for _, v := range uniqueRows {
+		if !v.unique {
+			row, err := df.getRow(v.appears[0])
+			if err != nil {
+				return nil, err
+			}
+			newDf.addRow(*row)
 		}
 	}
 
