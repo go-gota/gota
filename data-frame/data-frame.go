@@ -35,8 +35,10 @@ type C struct {
 }
 
 func New(cols ...C) {
+	// TODO: Check that the length of all elements is the same
+	// TODO: Check that it is not an empty dataframe, or should we allow it?
 	for _, v := range cols {
-		fmt.Println(v.Colname)
+		fmt.Println(newColumn(v.Colname, v.Elements))
 	}
 }
 
@@ -46,6 +48,18 @@ type Column struct {
 	colType  string
 	colName  string
 	numChars int
+}
+
+func newColumn(colName string, elements interface{}) (*Column, error) {
+	col := &Column{
+		colName:  colName,
+		numChars: len(colName),
+	}
+	err := col.FillColumn(elements)
+	if err != nil {
+		return nil, err
+	}
+	return col, nil
 }
 
 // Row represents a single row on a DataFrame
@@ -75,6 +89,10 @@ type Columns map[string]Column
 // T is used to represent the association between a column and it't type
 type T map[string]string
 
+type Error struct {
+	errorType Err
+}
+
 // ----------------------------------------------------------------------
 // Constant definitions
 // ----------------------------------------------------------------------
@@ -88,6 +106,7 @@ type Err int
 
 const (
 	FormatError Err = iota
+	UnknownType
 	Warning
 	Etc
 )
@@ -808,7 +827,6 @@ func (c *Column) AddValues(values interface{}) error {
 			c.row = append(c.row, cell)
 		}
 	default:
-		fmt.Println("dong")
 		s := reflect.ValueOf(values)
 		cell = s.Interface()
 		checkColumnType()
@@ -819,57 +837,59 @@ func (c *Column) AddValues(values interface{}) error {
 }
 
 // FillColumn will use reflection to fill the column with the given values
-func (c *Column) FillColumn(values interface{}) {
-	var cell interface{}
-	setColumnType := func() {
-		rowStr := ""
-		switch cell.(type) {
-		case *int:
-			if cell.(*int) != nil {
-				rowStr = fmt.Sprint(*cell.(*int))
-			}
-			c.colType = "int"
-		case *float64:
-			if cell.(*float64) != nil {
-				rowStr = fmt.Sprint(*cell.(*float64))
-			}
-			c.colType = "float64"
-		case *time.Time:
-			if cell.(*time.Time) != nil {
-				rowStr = fmt.Sprint(*cell.(*time.Time))
-			}
-			c.colType = "date"
-		case string:
-			rowStr = fmt.Sprint(cell)
-			c.colType = "string"
-		default:
-			// TODO: ERROR?
-			//rowStr = fmt.Sprint(cell)
-			//c.colType = "string"
-		}
+func (c *Column) FillColumn(values interface{}) error {
+	// Set column type
+	//switch values.(type) {
+	//case []*int, []int:
+	//c.colType = "int"
+	//case []*float64, []float64:
+	//c.colType = "float64"
+	//case []*time.Time, []time.Time:
+	//c.colType = "date"
+	//case []*string, []string:
+	//c.colType = "string"
+	//default:
+	//return errors.New("Unknown Type")
+	//}
 
-		// Adjust c.numChars if necessary
+	var cell interface{}
+	setCharLength := func() {
+		rowStr := formatCell(cell)
+
 		if len(rowStr) > c.numChars {
 			c.numChars = len(rowStr)
 		}
 	}
+
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
-		// TODO: What happens if the values is empty? Empty column? Error?
 		s := reflect.ValueOf(values)
+		if s.Len() == 0 {
+			return errors.New("Can't create empty column")
+		}
 		c.row = make([]interface{}, 0)
 		for i := 0; i < s.Len(); i++ {
 			cell = s.Index(i).Interface()
-			setColumnType()
-			c.row = append(c.row, cell)
+			setCharLength()
+			if s.Index(i).Type().Kind() == reflect.Ptr {
+				c.row = append(c.row, cell)
+			} else {
+				c.row = append(c.row, s.Index(i).Addr().Interface())
+			}
 		}
 	default:
 		s := reflect.ValueOf(values)
 		c.row = make([]interface{}, 0)
 		cell = s.Interface()
-		setColumnType()
-		c.row = append(c.row, cell)
+		setCharLength()
+		if s.Type().Kind() == reflect.Ptr {
+			c.row = append(c.row, cell)
+		} else {
+			c.row = append(c.row, s.Addr().Interface())
+		}
 	}
+
+	return nil
 }
 
 // ParseType will parse the column based on the given type
@@ -931,67 +951,14 @@ func (c *Column) ParseType(t string) error {
 
 // getRowStr returns the string representation of a row on a given column
 func (c Column) getRowStr(i int) string {
-	var str string
-	switch c.colType {
-	case "int":
-		row := c.row[i].(*int)
-		if row != nil {
-			str = fmt.Sprint(*row)
-		} else {
-			str = "NA"
-		}
-	case "float64":
-		row := c.row[i].(*float64)
-		if row != nil {
-			str = fmt.Sprint(*row)
-		} else {
-			str = "NA"
-		}
-	case "string":
-		row := c.row[i].(string)
-		str = row
-	case "date":
-		row := c.row[i].(*time.Time)
-		if row != nil {
-			str = fmt.Sprint(*row)
-		} else {
-			str = "NA"
-		}
-	default:
-		str = "NA"
-	}
-	return str
+	return formatCell(c.row[i])
 }
 
 // Implementing the Stringer interface for Column
 func (c Column) String() string {
 	strArray := []string{}
 	for _, v := range c.row {
-		switch c.colType {
-		case "int":
-			cell := v.(*int)
-			if cell != nil {
-				strArray = append(strArray, fmt.Sprint(*cell))
-			} else {
-				strArray = append(strArray, "NA")
-			}
-		case "float64":
-			cell := v.(*float64)
-			if cell != nil {
-				strArray = append(strArray, fmt.Sprint(*cell))
-			} else {
-				strArray = append(strArray, "NA")
-			}
-		case "date":
-			cell := v.(*time.Time)
-			if cell != nil {
-				strArray = append(strArray, fmt.Sprint(*cell))
-			} else {
-				strArray = append(strArray, "NA")
-			}
-		default:
-			strArray = append(strArray, fmt.Sprint(v))
-		}
+		strArray = append(strArray, formatCell(v))
 	}
 
 	return fmt.Sprintln(c.colName, "(", c.colType, "):\n", strings.Join(strArray, "\n "))
@@ -1013,3 +980,21 @@ func initColumns(names []string) Columns {
 
 	return c
 }
+
+// formatCell returns the value of a given element in string format. In case of
+// a nil pointer the value returned will be NA.
+func formatCell(cell interface{}) string {
+	if reflect.TypeOf(cell).Kind() == reflect.Ptr {
+		if reflect.ValueOf(cell).IsNil() {
+			return "NA"
+		} else {
+			val := reflect.Indirect(reflect.ValueOf(cell)).Interface()
+			return fmt.Sprint(val)
+		}
+	}
+	return fmt.Sprint(cell)
+}
+
+// TODO: Allow custom types support, we must be able to operate on them in the way
+// we do with basic types. Maybe we could do this with an interface? For sure they
+// must implement Stringer...
