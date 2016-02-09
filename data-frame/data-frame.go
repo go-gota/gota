@@ -949,7 +949,6 @@ type Columns map[string]Column
 
 // FillColumn will use reflection to fill the column with the given values
 func (c *Column) FillColumn(values interface{}) error {
-
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(values)
@@ -960,24 +959,27 @@ func (c *Column) FillColumn(values interface{}) error {
 		// The given elements should implement the rowable interface
 		rowableType := reflect.TypeOf((*rowable)(nil)).Elem()
 		if s.Index(0).Type().Implements(rowableType) {
-			av := reflect.MakeSlice(
+			sarr := reflect.MakeSlice(
 				reflect.SliceOf(s.Index(0).Type()),
 				0,
 				s.Len(),
 			)
-			// Check that all the elements on a column have the same type
 			t := s.Index(0).Type()
 			for i := 0; i < s.Len(); i++ {
+				// Check that all the elements on a column hsarre the same type
 				if t != s.Index(i).Type() {
 					return errors.New("Can't use different types on a column")
 				}
+
+				// Update Column.numChars if necessary
 				rowStr := s.Index(i).String()
 				if len(rowStr) > c.numChars {
 					c.numChars = len(rowStr)
 				}
-				av = reflect.Append(av, s.Index(i))
+				sarr = reflect.Append(sarr, s.Index(i))
 			}
-			c.row = av.Interface()
+			c.row = sarr.Interface()
+			c.colType = t.String()
 		} else {
 			return errors.New("The given values don't comply with the rowable interface")
 		}
