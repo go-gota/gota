@@ -22,6 +22,10 @@ type rowable interface {
 	String() string
 }
 
+type tointeger interface {
+	ToInteger() (int, error)
+}
+
 // DataFrame is the base data structure
 type DataFrame struct {
 	Columns  Columns
@@ -52,6 +56,15 @@ type String struct {
 	s string
 }
 
+// ToInteger returns the integer value of String
+func (s String) ToInteger() (int, error) {
+	str, err := strconv.Atoi(s.s)
+	if err != nil {
+		return 0, errors.New("Could't convert to int")
+	}
+	return str, nil
+}
+
 func (s String) String() string {
 	return s.s
 }
@@ -59,6 +72,14 @@ func (s String) String() string {
 // Int is an alias for string to be able to implement custom methods
 type Int struct {
 	i *int
+}
+
+// ToInteger returns the integer value of Int
+func (s Int) ToInteger() (int, error) {
+	if s.i != nil {
+		return *s.i, nil
+	}
+	return 0, errors.New("Could't convert to int")
 }
 
 func (s Int) String() string {
@@ -103,12 +124,10 @@ func Strings(args ...interface{}) []String {
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice:
 				if s.Len() > 0 {
-					if s.Index(0).Type().Implements(stringer) {
-						for i := 0; i < s.Len(); i++ {
+					for i := 0; i < s.Len(); i++ {
+						if s.Index(i).Type().Implements(stringer) {
 							ret = append(ret, String{fmt.Sprint(s.Index(i).Interface())})
-						}
-					} else {
-						for i := 0; i < s.Len(); i++ {
+						} else {
 							ret = append(ret, String{"NA"})
 						}
 					}
@@ -157,18 +176,42 @@ func Ints(args ...interface{}) []Int {
 				i, err := strconv.Atoi(s)
 				if err != nil {
 					ret = append(ret, Int{nil})
-					continue
+				} else {
+					ret = append(ret, Int{&i})
 				}
-				ret = append(ret, Int{&i})
 			}
 		case string:
 			i, err := strconv.Atoi(v.(string))
 			if err != nil {
 				ret = append(ret, Int{nil})
+			} else {
+				ret = append(ret, Int{&i})
 			}
-			ret = append(ret, Int{&i})
 		default:
-			ret = append(ret, Int{nil})
+			s := reflect.ValueOf(v)
+			tointer := reflect.TypeOf((*tointeger)(nil)).Elem()
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Slice:
+				if s.Len() > 0 {
+					for i := 0; i < s.Len(); i++ {
+						if s.Index(i).Type().Implements(tointer) {
+							m := s.Index(i).MethodByName("ToInteger")
+							resolvedMethod := m.Call([]reflect.Value{})
+							j := resolvedMethod[0].Interface().(int)
+							err := resolvedMethod[1].Interface()
+							if err != nil {
+								ret = append(ret, Int{nil})
+							} else {
+								ret = append(ret, Int{&j})
+							}
+						} else {
+							ret = append(ret, Int{nil})
+						}
+					}
+				}
+			default:
+				ret = append(ret, Int{nil})
+			}
 		}
 	}
 

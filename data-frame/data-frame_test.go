@@ -71,6 +71,72 @@ func TestStrings(t *testing.T) {
 	}
 }
 
+func TestInts(t *testing.T) {
+	a := []string{"C", "D"}
+	aa := Ints("A", "B", a)
+	expected := "[NA NA NA NA]"
+	received := fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"string and/or []string not being propery introduced\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	b := []int{1, 2}
+	aa = Ints(b, 3, 4)
+	expected = "[1 2 3 4]"
+	received = fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"int and/or []int not being propery introduced\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	c := []float64{3.6, 4.7}
+	aa = Ints(1.1, 2.2, c)
+	expected = "[1 2 3 4]"
+	received = fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"float64 and/or []float64 not being propery introduced\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	type T struct {
+		x int
+		y int
+	}
+	d := T{
+		1,
+		2,
+	}
+	dd := []T{d, d}
+	aa = Ints(dd, aa, d)
+	expected = "[NA NA 1 2 3 4 NA]"
+	received = fmt.Sprint(aa)
+	if received != expected {
+		t.Error(
+			"otherStructs and/or []otherStructs not being propery introduced\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+}
+
 func TestColumn_FillColum(t *testing.T) {
 	//colname := "TestColumn"
 	//col := Column{
