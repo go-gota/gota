@@ -9,7 +9,7 @@ import (
 func TestColumn_FillColum(t *testing.T) {
 	col := Column{}
 	a := []string{"C", "D"}
-	aa := strings("A", "B", a, 1, 2, []int{3, 4, 5}, 6.0, []float64{7.0, 8.0}, time.Now())
+	aa := Strings("A", "B", a, 1, 2, []int{3, 4, 5}, 6.0, []float64{7.0, 8.0}, time.Now())
 	col.FillColumn(aa)
 	fmt.Println(col)
 
@@ -25,7 +25,7 @@ func TestColumn_FillColum(t *testing.T) {
 	k := []int{1, 2, 3}
 	kk := []float64{4, 2, 3}
 	kkk := []string{"1", "2"}
-	b := ints(k, nil, kk, nil, kkk)
+	b := ints(1, 2.0, "3", k, nil, kk, nil, kkk)
 	col.FillColumn(b)
 	fmt.Println(col)
 }

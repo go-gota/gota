@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strconv"
+	"strings"
 )
 
 // NOTE: The concept of NA is represented by nil pointers
@@ -64,7 +65,8 @@ func (s Int) String() string {
 	return formatCell(s.i)
 }
 
-func strings(args ...interface{}) []String {
+// Strings is a constructor for a String array
+func Strings(args ...interface{}) []String {
 	ret := make([]String, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
@@ -94,6 +96,7 @@ func strings(args ...interface{}) []String {
 				ret = append(ret, String{varr[k]})
 			}
 		default:
+			// TODO: This should only happen if v implements Stringer
 			ret = append(ret, String{fmt.Sprint(v)})
 		}
 	}
@@ -101,7 +104,8 @@ func strings(args ...interface{}) []String {
 	return ret
 }
 
-func ints(args ...interface{}) []Int {
+// Ints is a constructor for an Int array
+func Ints(args ...interface{}) []Int {
 	ret := make([]Int, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
@@ -1055,14 +1059,20 @@ func (c *Column) FillColumn(values interface{}) error {
 //}
 
 // Implementing the Stringer interface for Column
-//func (c Column) String() string {
-//strArray := []string{}
-//for _, v := range c.row {
-//strArray = append(strArray, formatCell(v))
-//}
+func (c Column) String() string {
+	strArray := []string{}
+	s := reflect.ValueOf(c.row)
 
-//return fmt.Sprintln(c.colName, "(", c.colType, "):\n", strings.Join(strArray, "\n "))
-//}
+	for i := 0; i < s.Len(); i++ {
+		strArray = append(strArray, formatCell(s.Index(i).Interface()))
+	}
+
+	return fmt.Sprintln(
+		c.colName,
+		"(", c.colType, "):\n",
+		strings.Join(strArray, "\n "),
+	)
+}
 
 //// ----------------------------------------------------------------------
 //// Columns methods
