@@ -965,6 +965,7 @@ func (c *Column) FillColumn(values interface{}) error {
 				s.Len(),
 			)
 			t := s.Index(0).Type()
+			numChars := c.numChars
 			for i := 0; i < s.Len(); i++ {
 				// Check that all the elements on a column hsarre the same type
 				if t != s.Index(i).Type() {
@@ -973,13 +974,16 @@ func (c *Column) FillColumn(values interface{}) error {
 
 				// Update Column.numChars if necessary
 				rowStr := s.Index(i).String()
-				if len(rowStr) > c.numChars {
-					c.numChars = len(rowStr)
+				if len(rowStr) > numChars {
+					numChars = len(rowStr)
 				}
 				sarr = reflect.Append(sarr, s.Index(i))
 			}
+
+			// Update column variables on success
 			c.row = sarr.Interface()
 			c.colType = t.String()
+			c.numChars = numChars
 		} else {
 			return errors.New("The given values don't comply with the rowable interface")
 		}
