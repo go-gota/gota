@@ -123,8 +123,9 @@ func TestInts(t *testing.T) {
 		2,
 	}
 	dd := []T{d, d}
-	aa = Ints(dd, aa, d)
-	expected = "[NA NA 1 2 3 4 NA]"
+	bb := Strings(1, "B")
+	aa = Ints(dd, aa, d, bb)
+	expected = "[NA NA 1 2 3 4 NA 1 NA]"
 	received = fmt.Sprint(aa)
 	if received != expected {
 		t.Error(
