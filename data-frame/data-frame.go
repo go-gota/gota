@@ -96,8 +96,30 @@ func Strings(args ...interface{}) []String {
 				ret = append(ret, String{varr[k]})
 			}
 		default:
-			// TODO: This should only happen if v implements Stringer
-			ret = append(ret, String{fmt.Sprint(v)})
+			// This should only happen if v (or its elements in case of a slice)
+			// implements Stringer.
+			stringer := reflect.TypeOf((*fmt.Stringer)(nil)).Elem()
+			s := reflect.ValueOf(v)
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Slice:
+				if s.Len() > 0 {
+					if s.Index(0).Type().Implements(stringer) {
+						for i := 0; i < s.Len(); i++ {
+							ret = append(ret, String{fmt.Sprint(s.Index(i).Interface())})
+						}
+					} else {
+						for i := 0; i < s.Len(); i++ {
+							ret = append(ret, String{"NA"})
+						}
+					}
+				}
+			default:
+				if s.Type().Implements(stringer) {
+					ret = append(ret, String{fmt.Sprint(v)})
+				} else {
+					ret = append(ret, String{"NA"})
+				}
+			}
 		}
 	}
 
