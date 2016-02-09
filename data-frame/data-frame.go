@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 // NOTE: The concept of NA is represented by nil pointers
@@ -46,17 +47,106 @@ func New(cols ...C) {
 }
 
 // String is an alias for string to be able to implement custom methods
-type String string
+type String struct {
+	s string
+}
 
 func (s String) String() string {
-	return string(s)
+	return s.s
 }
 
 // Int is an alias for string to be able to implement custom methods
-type Int *int
+type Int struct {
+	i *int
+}
 
 func (s Int) String() string {
-	return string(s)
+	return formatCell(s.i)
+}
+
+func strings(args ...interface{}) []String {
+	ret := make([]String, 0, len(args))
+	for _, v := range args {
+		switch v.(type) {
+		case int:
+			s := strconv.Itoa(v.(int))
+			ret = append(ret, String{s})
+		case float64:
+			s := strconv.FormatFloat(v.(float64), 'f', 6, 64)
+			ret = append(ret, String{s})
+		case []int:
+			varr := v.([]int)
+			for k := range varr {
+				s := strconv.Itoa(varr[k])
+				ret = append(ret, String{s})
+			}
+		case []float64:
+			varr := v.([]float64)
+			for k := range varr {
+				s := strconv.FormatFloat(varr[k], 'f', 6, 64)
+				ret = append(ret, String{s})
+			}
+		case string:
+			ret = append(ret, String{v.(string)})
+		case []string:
+			varr := v.([]string)
+			for k := range varr {
+				ret = append(ret, String{varr[k]})
+			}
+		default:
+			ret = append(ret, String{fmt.Sprint(v)})
+		}
+	}
+
+	return ret
+}
+
+func ints(args ...interface{}) []Int {
+	ret := make([]Int, 0, len(args))
+	for _, v := range args {
+		switch v.(type) {
+		case int:
+			i := v.(int)
+			ret = append(ret, Int{&i})
+		case float64:
+			f := v.(float64)
+			i := int(f)
+			ret = append(ret, Int{&i})
+		case []int:
+			varr := v.([]int)
+			for k := range varr {
+				ret = append(ret, Int{&varr[k]})
+			}
+		case []float64:
+			varr := v.([]float64)
+			for k := range varr {
+				f := varr[k]
+				i := int(f)
+				ret = append(ret, Int{&i})
+			}
+		case []string:
+			varr := v.([]string)
+			for k := range varr {
+				s := varr[k]
+				i, err := strconv.Atoi(s)
+				if err != nil {
+					ret = append(ret, Int{nil})
+					continue
+				}
+				ret = append(ret, Int{&i})
+			}
+		case string:
+			i, err := strconv.Atoi(v.(string))
+			if err != nil {
+				ret = append(ret, Int{nil})
+			}
+			ret = append(ret, Int{&i})
+		default:
+			ret = append(ret, Int{nil})
+		}
+	}
+
+	return ret
 }
 
 // Column is a column inside a DataFrame
