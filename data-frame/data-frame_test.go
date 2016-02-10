@@ -12,7 +12,7 @@ func TestStrings(t *testing.T) {
 	received := fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"string and/or []string not being propery introduced\n",
+			"string and/or []string not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -26,7 +26,7 @@ func TestStrings(t *testing.T) {
 	received = fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"int and/or []int not being propery introduced\n",
+			"int and/or []int not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -40,7 +40,7 @@ func TestStrings(t *testing.T) {
 	received = fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"float64 and/or []float64 not being propery introduced\n",
+			"float64 and/or []float64 not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -57,12 +57,12 @@ func TestStrings(t *testing.T) {
 		2,
 	}
 	dd := []T{d, d}
-	aa = Strings(dd, aa, d)
-	expected = "[NA NA 1.000000 2.000000 3.000000 4.000000 NA]"
+	aa = Strings(dd, aa, d, String{"B"}, nil)
+	expected = "[NA NA 1.000000 2.000000 3.000000 4.000000 NA B ]"
 	received = fmt.Sprint(aa)
 	if received != expected {
 		t.Error(
-			"otherStructs and/or []otherStructs not being propery introduced\n",
+			"otherStructs and/or []otherStructs not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -72,13 +72,13 @@ func TestStrings(t *testing.T) {
 }
 
 func TestInts(t *testing.T) {
-	a := []string{"C", "D"}
-	aa := Ints("A", "B", a)
-	expected := "[NA NA NA NA]"
+	a := []string{"C", "D", "1"}
+	aa := Ints("A", "B", a, "2")
+	expected := "[NA NA NA NA 1 2]"
 	received := fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"string and/or []string not being propery introduced\n",
+			"string and/or []string not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -92,7 +92,7 @@ func TestInts(t *testing.T) {
 	received = fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"int and/or []int not being propery introduced\n",
+			"int and/or []int not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -106,7 +106,7 @@ func TestInts(t *testing.T) {
 	received = fmt.Sprint(aa)
 	if expected != received {
 		t.Error(
-			"float64 and/or []float64 not being propery introduced\n",
+			"float64 and/or []float64 not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
@@ -124,44 +124,94 @@ func TestInts(t *testing.T) {
 	}
 	dd := []T{d, d}
 	bb := Strings(1, "B")
-	aa = Ints(dd, aa, d, bb)
-	expected = "[NA NA 1 2 3 4 NA 1 NA]"
+	aa = Ints(dd, aa, d, bb, nil)
+	expected = "[NA NA 1 2 3 4 NA 1 NA NA]"
 	received = fmt.Sprint(aa)
 	if received != expected {
 		t.Error(
-			"otherStructs and/or []otherStructs not being propery introduced\n",
+			"otherStructs and/or []otherStructs not being propery inserted\n",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",
 			received,
 		)
 	}
+
+	_, err := aa[0].ToInteger()
+	if err == nil {
+		t.Error("ToInteger() Should fail for nil elements")
+	}
 }
 
 func TestColumn_FillColum(t *testing.T) {
-	//colname := "TestColumn"
-	//col := Column{
-	//colName:  colname,
-	//numChars: len(colname),
-	//}
-	//a := []string{"C", "D"}
-	//aa := Strings("A", "B", a, 1, 2, []int{3, 4, 5}, 6.0, []float64{7.0, 8.0}, time.Now())
-	//col.FillColumn(aa)
-	//fmt.Println(col)
+	colname := "TestColumn"
+	col := Column{
+		colName:  colname,
+		numChars: len(colname),
+	}
+	a := []string{"C", "D"}
+	aa := Strings("A", "B", a, 1, 2, []int{3, 4, 5}, 6.0, []float64{7.0, 8.0})
+	col.FillColumn(aa)
+	expected := "[A B C D 1 2 3 4 5 6.000000 7.000000 8.000000]"
+	received := fmt.Sprint(col.row)
+	if received != expected {
+		t.Error(
+			"[]String value not being properly inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 
-	//// Make sure that a modification on the original slice don't affect the column
-	//// values.
-	//str1 := fmt.Sprint(col)
-	//a[0] = "D"
-	//str2 := fmt.Sprint(col)
-	//if str1 != str2 {
-	//t.Error("Changes on the source elements should not affect loaded values")
-	//}
+	// Make sure that a modification on the original slice don't affect the column
+	// values.
+	a[0] = "D"
+	expected = "[A B C D 1 2 3 4 5 6.000000 7.000000 8.000000]"
+	received = fmt.Sprint(col.row)
+	if expected != received {
+		t.Error(
+			"Changes on the source elements should not affect loaded values",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 
-	//k := []int{1, 2, 3}
-	//kk := []float64{4, 2, 3}
-	//kkk := []string{"1", "2"}
-	//b := Ints(1, 2.0, "3", k, nil, kk, nil, kkk)
-	//col.FillColumn(b)
-	//fmt.Println(col)
+	// Empty column errors
+	err := col.FillColumn(Strings())
+	if err == nil {
+		t.Error("Trying to fill an empty column should fail")
+	}
+
+	err = col.FillColumn(nil)
+	if err == nil {
+		t.Error("Trying to fill an empty column should fail")
+	}
+
+	// Not complying with the interface
+	err = col.FillColumn([]string{"A", "B"})
+	if err == nil {
+		t.Error("Values passed to FillColumn should comply with the necessary interface")
+	}
+	err = col.FillColumn("A")
+	if err == nil {
+		t.Error("Values passed to FillColumn should comply with the necessary interface")
+	}
+
+	err = col.FillColumn(String{"ABCDEFGHIJKLMNOPQRSTU"})
+	expected = "[ABCDEFGHIJKLMNOPQRSTU]"
+	received = fmt.Sprint(col.row)
+	if expected != received {
+		t.Error(
+			"Single element not being introduced properly",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	err = col.FillColumn(Strings("ABCDEFGHIJKLMNOPQRSTU"))
 }

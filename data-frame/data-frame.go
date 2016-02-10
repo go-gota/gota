@@ -116,6 +116,8 @@ func Strings(args ...interface{}) []String {
 			for k := range varr {
 				ret = append(ret, String{varr[k]})
 			}
+		case nil:
+			ret = append(ret, String{""})
 		default:
 			// This should only happen if v (or its elements in case of a slice)
 			// implements Stringer.
@@ -187,6 +189,8 @@ func Ints(args ...interface{}) []Int {
 			} else {
 				ret = append(ret, Int{&i})
 			}
+		case nil:
+			ret = append(ret, Int{nil})
 		default:
 			s := reflect.ValueOf(v)
 			tointer := reflect.TypeOf((*tointeger)(nil)).Elem()
@@ -1014,6 +1018,13 @@ type Columns map[string]Column
 
 // FillColumn will use reflection to fill the column with the given values
 func (c *Column) FillColumn(values interface{}) error {
+	switch values.(type) {
+	case nil:
+		return errors.New("Can't create empty column")
+	}
+
+	rowableType := reflect.TypeOf((*rowable)(nil)).Elem()
+	numChars := len(c.colName)
 	switch reflect.TypeOf(values).Kind() {
 	case reflect.Slice:
 		s := reflect.ValueOf(values)
@@ -1022,7 +1033,6 @@ func (c *Column) FillColumn(values interface{}) error {
 		}
 
 		// The given elements should implement the rowable interface
-		rowableType := reflect.TypeOf((*rowable)(nil)).Elem()
 		if s.Index(0).Type().Implements(rowableType) {
 			sarr := reflect.MakeSlice(
 				reflect.SliceOf(s.Index(0).Type()),
@@ -1030,7 +1040,6 @@ func (c *Column) FillColumn(values interface{}) error {
 				s.Len(),
 			)
 			t := s.Index(0).Type()
-			numChars := c.numChars
 			for i := 0; i < s.Len(); i++ {
 				// Check that all the elements on a column hsarre the same type
 				if t != s.Index(i).Type() {
@@ -1038,7 +1047,7 @@ func (c *Column) FillColumn(values interface{}) error {
 				}
 
 				// Update Column.numChars if necessary
-				rowStr := s.Index(i).String()
+				rowStr := formatCell(s.Index(i).Interface())
 				if len(rowStr) > numChars {
 					numChars = len(rowStr)
 				}
@@ -1053,15 +1062,22 @@ func (c *Column) FillColumn(values interface{}) error {
 			return errors.New("The given values don't comply with the rowable interface")
 		}
 	default:
-		//s := reflect.ValueOf(values)
-		//c.row = make([]interface{}, 0)
-		//cell = s.Interface()
-		//setCharLength()
-		//if s.Type().Kind() == reflect.Ptr {
-		//c.row = append(c.row, cell)
-		//} else {
-		//c.row = append(c.row, s.Addr().Interface())
-		//}
+		s := reflect.ValueOf(values)
+		if s.Type().Implements(rowableType) {
+			sarr := reflect.MakeSlice(reflect.SliceOf(s.Type()), 0, 1)
+			rowStr := formatCell(s.Interface())
+			if len(rowStr) > numChars {
+				numChars = len(rowStr)
+			}
+			sarr = reflect.Append(sarr, s)
+
+			// Update column variables on success
+			c.row = sarr.Interface()
+			c.colType = s.Type().String()
+			c.numChars = numChars
+		} else {
+			return errors.New("The given values don't comply with the rowable interface")
+		}
 	}
 
 	return nil
