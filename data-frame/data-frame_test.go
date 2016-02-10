@@ -266,3 +266,53 @@ func TestColumn_Len(t *testing.T) {
 		)
 	}
 }
+
+func TestNew(t *testing.T) {
+	df, err := New(
+		C{"A", Strings("aa", "b")},
+		C{"B", Strings("a", "bbb")},
+	)
+	if err != nil {
+		t.Error("Error when creating DataFrame:", err)
+	}
+	expected := "   A   B    \n\n0: aa  a    \n1: b   bbb  \n"
+	received := fmt.Sprint(df)
+	if expected != received {
+		t.Error(
+			"DataFrame created by New() is not correct",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	df, err = New(
+		C{"A", Strings("a", "b")},
+		C{"B", Strings("a", "b", "c")},
+	)
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
+	df, err = New(
+		C{"A", Strings()},
+		C{"B", Strings("a", "b", "c")},
+	)
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
+}
+
+func TestColumn_elementAtIndex(t *testing.T) {
+	col := Column{}
+	_, err := col.elementAtIndex(3)
+	if err == nil {
+		t.Error("Error when retrieving an element for an empty column not being thrown")
+	}
+
+	col.FillColumn(Strings("a", "b"))
+	_, err = col.elementAtIndex(8)
+	if err == nil {
+		t.Error("Error when retrieving an element out of bounds not being thrown")
+	}
+}

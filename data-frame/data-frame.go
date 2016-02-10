@@ -43,12 +43,43 @@ type C struct {
 }
 
 // New is a constructor for DataFrames
-func New(cols ...C) {
-	// TODO: Check that the length of all elements is the same
+func New(colConst ...interface{}) (*DataFrame, error) {
 	// TODO: Check that it is not an empty dataframe, or should we allow it?
-	for _, v := range cols {
-		fmt.Println(NewCol(v.Colname, v.Elements))
+	var colLength int
+	colNames := []string{}
+	colTypes := []string{}
+	cols := make(Columns)
+	for k, v := range colConst {
+		switch v.(type) {
+		case C:
+			val := v.(C)
+			col, err := NewCol(val.Colname, val.Elements)
+			if err != nil {
+				return nil, err
+			}
+
+			// Check that the length of all columns are the same
+			if k == 0 {
+				colLength = col.Len()
+			} else {
+				if colLength != col.Len() {
+					return nil, errors.New("Columns don't have the same dimensions")
+				}
+			}
+			cols[val.Colname] = *col
+			colNames = append(colNames, col.colName)
+			colTypes = append(colTypes, col.colType)
+		}
 	}
+	df := &DataFrame{
+		colNames: colNames,
+		colTypes: colTypes,
+		Columns:  cols,
+		nRows:    colLength,
+		nCols:    len(colNames),
+	}
+
+	return df, nil
 }
 
 // String is an alias for string to be able to implement custom methods
@@ -905,64 +936,41 @@ type Columns map[string]Column
 //}
 
 //// Implementing the Stringer interface for DataFrame
-//func (df DataFrame) String() (str string) {
-//addLeftPadding := func(s string, nchar int) string {
-//if len(s) < nchar {
-//return strings.Repeat(" ", nchar-len(s)) + s
-//}
-//return s
-//}
-//addRightPadding := func(s string, nchar int) string {
-//if len(s) < nchar {
-//return s + strings.Repeat(" ", nchar-len(s))
-//}
-//return s
-//}
+func (df DataFrame) String() (str string) {
+	addLeftPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return strings.Repeat(" ", nchar-len(s)) + s
+		}
+		return s
+	}
+	addRightPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return s + strings.Repeat(" ", nchar-len(s))
+		}
+		return s
+	}
 
-//nRowsPadding := len(fmt.Sprint(df.nRows))
-//if len(df.colNames) != 0 {
-//str += addLeftPadding("  ", nRowsPadding+2)
-//for _, v := range df.colNames {
-//str += addRightPadding(v, df.Columns[v].numChars)
-//str += "  "
-//}
-//str += "\n"
-//str += "\n"
-//}
-//for i := 0; i < df.nRows; i++ {
-//str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
-//for _, v := range df.colNames {
-//switch df.Columns[v].colType {
-//case "int":
-//s := df.Columns[v].row[i].(*int)
-//if s != nil {
-//str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
-//} else {
-//str += addRightPadding("NA", df.Columns[v].numChars)
-//}
-//case "float64":
-//s := df.Columns[v].row[i].(*float64)
-//if s != nil {
-//str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
-//} else {
-//str += addRightPadding("NA", df.Columns[v].numChars)
-//}
-//case "date":
-//s := df.Columns[v].row[i].(*time.Time)
-//if s != nil {
-//str += addRightPadding(fmt.Sprint(*s), df.Columns[v].numChars)
-//} else {
-//str += addRightPadding("NA", df.Columns[v].numChars)
-//}
-//default:
-//str += addRightPadding(fmt.Sprint(df.Columns[v].row[i]), df.Columns[v].numChars)
-//}
-//str += "  "
-//}
-//str += "\n"
-//}
-//return str
-//}
+	nRowsPadding := len(fmt.Sprint(df.nRows))
+	if len(df.colNames) != 0 {
+		str += addLeftPadding("  ", nRowsPadding+2)
+		for _, v := range df.colNames {
+			str += addRightPadding(v, df.Columns[v].numChars)
+			str += "  "
+		}
+		str += "\n"
+		str += "\n"
+	}
+	for i := 0; i < df.nRows; i++ {
+		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
+		for _, v := range df.colNames {
+			elem, _ := df.Columns[v].elementAtIndex(i)
+			str += addRightPadding(formatCell(elem), df.Columns[v].numChars)
+			str += "  "
+		}
+		str += "\n"
+	}
+	return str
+}
 
 //// ----------------------------------------------------------------------
 //// Column Methods
@@ -1158,6 +1166,18 @@ func (c *Column) FillColumn(values interface{}) error {
 //func (c Column) getRowStr(i int) string {
 //return formatCell(c.row[i])
 //}
+
+func (c Column) elementAtIndex(i int) (interface{}, error) {
+	if c.row == nil {
+		return nil, errors.New("Empty column")
+	}
+	s := reflect.ValueOf(c.row)
+	if i > s.Len() {
+		return nil, errors.New(fmt.Sprint("Index out of bounds", i))
+	}
+
+	return s.Index(i).Interface(), nil
+}
 
 // Implementing the Stringer interface for Column
 func (c Column) String() string {
