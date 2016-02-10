@@ -44,7 +44,9 @@ type C struct {
 
 // New is a constructor for DataFrames
 func New(colConst ...interface{}) (*DataFrame, error) {
-	// TODO: Check that it is not an empty dataframe, or should we allow it?
+	if len(colConst) == 0 {
+		return nil, errors.New("Can't create empty DataFrame")
+	}
 	var colLength int
 	colNames := []string{}
 	colTypes := []string{}
@@ -261,6 +263,7 @@ type Column struct {
 	numChars int
 }
 
+// Len returns the length of the rows slice
 func (c Column) Len() int {
 	var l int
 	switch c.row.(type) {
@@ -276,6 +279,7 @@ func (c Column) Len() int {
 	return l
 }
 
+// NewCol is the constructor for a new Column with the given colName and elements
 func NewCol(colName string, elements interface{}) (*Column, error) {
 	col := &Column{
 		colName: colName,
@@ -336,75 +340,78 @@ type Columns map[string]Column
 ////Etc
 ////)
 
-//// ----------------------------------------------------------------------
-//// DataFrame methods
-//// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// DataFrame methods
+// ----------------------------------------------------------------------
 
-//// LoadData will load the data from a multidimensional array of strings into
-//// a DataFrame object.
-//func (df *DataFrame) LoadData(records [][]string) error {
-//// Calculate DataFrame dimensions
-//nRows := len(records) - 1
-//if nRows <= 0 {
-//return errors.New("Empty dataframe")
-//}
-//colnames := records[0]
-//nCols := len(colnames)
+// LoadData will load the data from a multidimensional array of strings into
+// a DataFrame object.
+func (df *DataFrame) LoadData(records [][]string) error {
+	// Calculate DataFrame dimensions
+	nRows := len(records) - 1
+	if nRows <= 0 {
+		return errors.New("Empty dataframe")
+	}
+	colnames := records[0]
+	nCols := len(colnames)
 
-//// If colNames has empty elements we must fill it with unique colnames
-//colnamesMap := make(map[string]bool)
-//auxCounter := 0
-//// Get unique columnenames
-//for _, v := range colnames {
-//if v != "" {
-//if _, ok := colnamesMap[v]; !ok {
-//colnamesMap[v] = true
-//} else {
-//return errors.New("Duplicated column names: " + v)
-//}
-//}
-//}
-//for k, v := range colnames {
-//if v == "" {
-//for {
-//newColname := fmt.Sprint("V", auxCounter)
-//auxCounter++
-//if _, ok := colnamesMap[newColname]; !ok {
-//colnames[k] = newColname
-//colnamesMap[newColname] = true
-//break
-//}
-//}
-//}
-//}
+	// If colNames has empty elements we must fill it with unique colnames
+	colnamesMap := make(map[string]bool)
+	auxCounter := 0
+	// Get unique columnenames
+	for _, v := range colnames {
+		if v != "" {
+			if _, ok := colnamesMap[v]; !ok {
+				colnamesMap[v] = true
+			} else {
+				return errors.New("Duplicated column names: " + v)
+			}
+		}
+	}
+	for k, v := range colnames {
+		if v == "" {
+			for {
+				newColname := fmt.Sprint("V", auxCounter)
+				auxCounter++
+				if _, ok := colnamesMap[newColname]; !ok {
+					colnames[k] = newColname
+					colnamesMap[newColname] = true
+					break
+				}
+			}
+		}
+	}
 
-//// Generate a df to store the temporary values
-//newDf := DataFrame{
-//Columns:  initColumns(colnames),
-//nRows:    nRows,
-//nCols:    nCols,
-//colNames: colnames,
-//colTypes: []string{},
-//}
+	// Generate a df to store the temporary values
+	newDf := DataFrame{
+		nRows:    nRows,
+		nCols:    nCols,
+		colNames: colnames,
+		colTypes: []string{},
+	}
 
-//// Fill the columns on the DataFrame
-//for j := 0; j < nCols; j++ {
-//col := []string{}
-//for i := 1; i < nRows+1; i++ {
-//col = append(col, records[i][j])
-//}
-//colName := colnames[j]
-//column := Column{}
-//column.colName = colName
-//column.numChars = len(colName)
-//column.FillColumn(col)
-//newDf.colTypes = append(newDf.colTypes, column.colType)
-//newDf.Columns[colName] = column
-//}
+	cols := make(Columns)
+	// Fill the columns on the DataFrame
+	for j := 0; j < nCols; j++ {
+		colstrarr := []string{}
+		for i := 1; i < nRows+1; i++ {
+			colstrarr = append(colstrarr, records[i][j])
+		}
 
-//*df = newDf
-//return nil
-//}
+		col, err := NewCol(colnames[j], colstrarr)
+		if err != nil {
+			return err
+		}
+
+		cols[colnames[j]] = *col
+
+		newDf.colTypes = append(newDf.colTypes, col.colType)
+	}
+
+	newDf.Columns = cols
+	*df = newDf
+	return nil
+}
 
 //// LoadAndParse will load the data from a multidimensional array of strings and
 //// parse it accordingly with the given types element. The types element can be

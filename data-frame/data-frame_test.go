@@ -287,6 +287,11 @@ func TestNew(t *testing.T) {
 		)
 	}
 
+	df, err = New()
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
+
 	df, err = New(
 		C{"A", Strings("a", "b")},
 		C{"B", Strings("a", "b", "c")},
@@ -294,6 +299,7 @@ func TestNew(t *testing.T) {
 	if err == nil {
 		t.Error("Error when creating DataFrame not being thrown")
 	}
+
 	df, err = New(
 		C{"A", Strings()},
 		C{"B", Strings("a", "b", "c")},
