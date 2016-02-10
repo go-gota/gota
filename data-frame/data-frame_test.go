@@ -215,3 +215,54 @@ func TestColumn_FillColum(t *testing.T) {
 
 	err = col.FillColumn(Strings("ABCDEFGHIJKLMNOPQRSTU"))
 }
+
+func TestNewCol(t *testing.T) {
+	col, err := NewCol("TestCol", Strings("A", "B"))
+	if err != nil || col == nil {
+		t.Error("NewCol has failed unexpectedly:", err)
+	}
+	expected := "[A B]"
+	received := fmt.Sprint(col.row)
+	if expected != received {
+		t.Error(
+			"Single element not being introduced properly",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	col, err = NewCol("TestCol", Strings())
+	if col != nil || err == nil {
+		t.Error("NewCol hasn't failed when it should")
+	}
+}
+
+func TestColumn_Len(t *testing.T) {
+	col, _ := NewCol("TestCol", Strings("A", "B"))
+	expected := 2
+	received := col.Len()
+	if expected != received {
+		t.Error(
+			"Column.Len() doesn't give the right value",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	col = &Column{}
+	expected = 0
+	received = col.Len()
+	if expected != received {
+		t.Error(
+			"Column.Len() on empty column should return 0",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+}

@@ -47,7 +47,7 @@ func New(cols ...C) {
 	// TODO: Check that the length of all elements is the same
 	// TODO: Check that it is not an empty dataframe, or should we allow it?
 	for _, v := range cols {
-		fmt.Println(newColumn(v.Colname, v.Elements))
+		fmt.Println(NewCol(v.Colname, v.Elements))
 	}
 }
 
@@ -222,7 +222,7 @@ func Ints(args ...interface{}) []Int {
 	return ret
 }
 
-// Column is a column inside a DataFrame
+// Column is a column inside a DataFrame, err
 type Column struct {
 	row      interface{}
 	colType  string
@@ -230,10 +230,24 @@ type Column struct {
 	numChars int
 }
 
-func newColumn(colName string, elements interface{}) (*Column, error) {
+func (c Column) Len() int {
+	var l int
+	switch c.row.(type) {
+	case nil:
+		l = 0
+	default:
+		if reflect.TypeOf(c.row).Kind() == reflect.Slice {
+			v := reflect.ValueOf(c.row)
+			l = v.Len()
+		}
+	}
+
+	return l
+}
+
+func NewCol(colName string, elements interface{}) (*Column, error) {
 	col := &Column{
-		colName:  colName,
-		numChars: len(colName),
+		colName: colName,
 	}
 	err := col.FillColumn(elements)
 	if err != nil {
