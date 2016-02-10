@@ -398,7 +398,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 			colstrarr = append(colstrarr, records[i][j])
 		}
 
-		col, err := NewCol(colnames[j], colstrarr)
+		col, err := NewCol(colnames[j], Strings(colstrarr))
 		if err != nil {
 			return err
 		}
