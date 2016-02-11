@@ -315,8 +315,8 @@ func NewCol(colName string, elements interface{}) (*Column, error) {
 // Columns is an alias for multiple columns
 type Columns map[string]Column
 
-//// T is used to represent the association between a column and it't type
-//type T map[string]string
+// T is used to represent the association between a column and it't type
+type T map[string]string
 
 ////type Error struct {
 ////errorType Err
@@ -413,51 +413,53 @@ func (df *DataFrame) LoadData(records [][]string) error {
 	return nil
 }
 
-//// LoadAndParse will load the data from a multidimensional array of strings and
-//// parse it accordingly with the given types element. The types element can be
-//// a string array with matching dimensions to the number of columns or
-//// a DataFrame.T object.
-//func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
-//// Initialize the DataFrame with all columns as string type
-//err := df.LoadData(records)
-//if err != nil {
-//return err
-//}
+func parseColumn(col Column, t string) (*Column, error) {
 
-//// Parse the DataFrame columns acording to the given types
-//switch types.(type) {
-//case []string:
-//types := types.([]string)
-//if df.nCols != len(types) {
-//return errors.New("Number of columns different from number of types")
-//}
-//for k, v := range df.colNames {
-//col := df.Columns[v]
-//err := col.ParseType(types[k])
-//if err != nil {
-//return err
-//}
-//col.colType = types[k]
-//df.colTypes[k] = types[k]
-//df.Columns[v] = col
-//}
-//case T:
-//types := types.(T)
-//for k, v := range types {
-//col := df.Columns[k]
-//err := col.ParseType(v)
-//if err != nil {
-//return err
-//}
-//col.colType = v
-//colIndex, _ := df.colIndex(k)
-//df.colTypes[*colIndex] = v
-//df.Columns[k] = col
-//}
-//}
+	return nil, nil
+}
 
-//return nil
-//}
+// LoadAndParse will load the data from a multidimensional array of strings and
+// parse it accordingly with the given types element. The types element can be
+// a string array with matching dimensions to the number of columns or
+// a DataFrame.T object.
+func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
+	// Initialize the DataFrame with all columns as string type
+	err := df.LoadData(records)
+	if err != nil {
+		return err
+	}
+
+	// Parse the DataFrame columns acording to the given types
+	switch types.(type) {
+	case []string:
+		types := types.([]string)
+		if df.nCols != len(types) {
+			return errors.New("Number of columns different from number of types")
+		}
+		for k, v := range df.colNames {
+			col, err := parseColumn(df.Columns[v], types[k])
+			if err != nil {
+				return err
+			}
+			df.colTypes[k] = col.colType
+			df.Columns[v] = *col
+		}
+	case T:
+		types := types.(T)
+		for k, v := range types {
+			col, err := parseColumn(df.Columns[k], v)
+			if err != nil {
+				return err
+			}
+			col.colType = v
+			colIndex, _ := df.colIndex(k)
+			df.colTypes[*colIndex] = v
+			df.Columns[k] = col
+		}
+	}
+
+	return nil
+}
 
 //// SaveRecords will save data to records in [][]string format
 //func (df DataFrame) SaveRecords() [][]string {
