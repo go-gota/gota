@@ -145,7 +145,13 @@ func (c Column) String() string {
 func parseColumn(col Column, t string, options interface{}) (*Column, error) {
 	switch t {
 	case "string":
+		newrows := Strings(col.row)
+		newcol, err := NewCol(col.colName, newrows)
+		return newcol, err
 	case "int":
+		newrows := Ints(col.row)
+		newcol, err := NewCol(col.colName, newrows)
+		return newcol, err
 	case "float":
 	case "time":
 	}

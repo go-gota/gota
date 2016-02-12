@@ -142,3 +142,62 @@ func TestNewCol(t *testing.T) {
 		t.Error("NewCol hasn't failed when it should")
 	}
 }
+
+func TestColumn_parseColumn(t *testing.T) {
+	// String to Int
+	cola, _ := NewCol("TestCol", Strings("1", "2"))
+	colb, err := parseColumn(*cola, "int", nil)
+	if err != nil {
+		t.Error("Error parsing a df.String column into df.Int:", err)
+	}
+	if colb.Len() != cola.Len() ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Int" ||
+		fmt.Sprint(colb.row) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\ncola.Len():", cola.Len(),
+			"\ncolb.Len():", colb.Len(),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// String to String
+	cola, _ = NewCol("TestCol", Strings("1", "2"))
+	colb, err = parseColumn(*cola, "string", nil)
+	if err != nil {
+		t.Error("Error parsing a df.String column into df.String:", err)
+	}
+	if colb.Len() != cola.Len() ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.String" ||
+		fmt.Sprint(colb.row) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\ncola.Len():", cola.Len(),
+			"\ncolb.Len():", colb.Len(),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// Int to String
+	cola, _ = NewCol("TestCol", Ints(1, 2))
+	colb, err = parseColumn(*cola, "string", nil)
+	if err != nil {
+		t.Error("Error parsing a df.Int column into df.String:", err)
+	}
+	if colb.Len() != cola.Len() ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.String" ||
+		fmt.Sprint(colb.row) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\ncola.Len():", cola.Len(),
+			"\ncolb.Len():", colb.Len(),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+}
