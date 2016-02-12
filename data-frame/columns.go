@@ -8,6 +8,7 @@ import (
 )
 
 // Column is a column inside a DataFrame, err
+// TODO: Should this be unexported?
 type Column struct {
 	row      interface{}
 	colType  string
@@ -160,7 +161,96 @@ func parseColumn(col Column, t string) (*Column, error) {
 }
 
 // Append will add a value or values to a column
-func Append(col Column, values interface{}) error {
+// TODO: Enforce that the values is a slice of rowable values
+func Append(col Column, values interface{}) (*Column, error) {
+	switch values.(type) {
+	case nil:
+		return &col, nil
+	}
 
-	return nil
+	rowableType := reflect.TypeOf((*rowable)(nil)).Elem()
+	var numChars int
+	if col.numChars == 0 {
+		col.numChars = len(col.colName)
+	}
+
+	var c reflect.Value
+	switch reflect.TypeOf(values).Kind() {
+	case reflect.Slice:
+		s := reflect.ValueOf(values)
+		slen := s.Len()
+		if slen == 0 {
+			return &col, nil
+		}
+
+		// The given elements should implement the rowable interface
+		if s.Index(0).Type().Implements(rowableType) {
+			return nil, errors.New("The given values don't comply with the rowable interface")
+		}
+		if col.row == nil {
+			c = reflect.MakeSlice(s.Type(), 0, slen)
+		} else {
+			c = reflect.ValueOf(col.row)
+			if s.Type() != c.Type() {
+				return nil, errors.New(
+					fmt.Sprint(
+						"Conflicting column types.\n",
+						"Current:", c.Type(), "\n",
+						"To insert:", s.Type(),
+					),
+				)
+			}
+		}
+
+		t := s.Index(0).Type()
+		for i := 0; i < s.Len(); i++ {
+			// Check that all the elements on a column hsarre the same type
+			if t != s.Index(i).Type() {
+				return nil, errors.New("Can't use different types on a column")
+			}
+
+			// Update Column.numChars if necessary
+			rowStr := formatCell(s.Index(i).Interface())
+			if len(rowStr) > numChars {
+				numChars = len(rowStr)
+			}
+			c = reflect.Append(c, s.Index(i))
+		}
+
+		// Update column variables on success
+		col.row = c.Interface()
+		col.colType = t.String()
+		col.numChars = numChars
+	default:
+		s := reflect.ValueOf(values)
+		if !s.Type().Implements(rowableType) {
+			return nil, errors.New("The given values don't comply with the rowable interface")
+		}
+		if col.row == nil {
+			c = reflect.MakeSlice(s.Type(), 0, 1)
+		} else {
+			c = reflect.ValueOf(col.row)
+			if s.Type() != c.Index(0).Type() {
+				return nil, errors.New(
+					fmt.Sprint(
+						"Conflicting column types.\n",
+						"Current:", c.Type(), "\n",
+						"To insert:", s.Type(),
+					),
+				)
+			}
+		}
+		rowStr := formatCell(s.Interface())
+		if len(rowStr) > numChars {
+			numChars = len(rowStr)
+		}
+		c = reflect.Append(c, s)
+
+		// Update column variables on success
+		col.row = c.Interface()
+		col.colType = s.Type().String()
+		col.numChars = numChars
+	}
+
+	return &col, nil
 }

@@ -5,7 +5,25 @@ import (
 	"testing"
 )
 
+func TestAppend(t *testing.T) {
+	//colname := "TestColumn"
+	//col := &Column{
+	//colName:  colname,
+	//numChars: len(colname),
+	//}
+	//col, _ = Append(*col, Strings("A", "B"))
+	//fmt.Println(col)
+	//col, _ = Append(*col, Strings("A", "B"))
+	//fmt.Println(col)
+	//col, err := Append(*col, Ints(1, 2, 3, 4))
+	//if err != nil {
+	//fmt.Println(err)
+	//}
+	fmt.Println(Strings())
+}
+
 func TestColumn_FillColum(t *testing.T) {
+	// TODO: Make test tables
 	colname := "TestColumn"
 	col := Column{
 		colName:  colname,
@@ -19,21 +37,6 @@ func TestColumn_FillColum(t *testing.T) {
 	if received != expected {
 		t.Error(
 			"[]String value not being properly inserted\n",
-			"Expected:\n",
-			expected, "\n",
-			"Received:\n",
-			received,
-		)
-	}
-
-	// Make sure that a modification on the original slice don't affect the column
-	// values.
-	a[0] = "D"
-	expected = "[A B C D 1 2 3 4 5 6.000000 7.000000 8.000000]"
-	received = fmt.Sprint(col.row)
-	if expected != received {
-		t.Error(
-			"Changes on the source elements should not affect loaded values",
 			"Expected:\n",
 			expected, "\n",
 			"Received:\n",

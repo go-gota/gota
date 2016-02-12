@@ -717,6 +717,8 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return &newDf, nil
 //}
 
+// TODO: We should truncate the maximum length of shown columns and scape newline
+// characters'
 // Implementing the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
 	addLeftPadding := func(s string, nchar int) string {
