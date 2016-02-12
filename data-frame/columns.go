@@ -114,7 +114,8 @@ func (c *Column) FillColumn(values interface{}) error {
 	return nil
 }
 
-func (c Column) elementAtIndex(i int) (interface{}, error) {
+// Index will return the element at a given index
+func (c Column) Index(i int) (interface{}, error) {
 	if c.row == nil {
 		return nil, errors.New("Empty column")
 	}
@@ -142,7 +143,7 @@ func (c Column) String() string {
 	)
 }
 
-func parseColumn(col Column, t string, options interface{}) (*Column, error) {
+func parseColumn(col Column, t string) (*Column, error) {
 	switch t {
 	case "string":
 		newrows := Strings(col.row)
@@ -155,124 +156,11 @@ func parseColumn(col Column, t string, options interface{}) (*Column, error) {
 	case "float":
 	case "time":
 	}
-	return nil, nil
+	return nil, errors.New("Can't parse the given type")
 }
 
-//// AddValues will add a value or values to a column
-//func (c *Column) AddValues(values interface{}) error {
-//if len(c.row) == 0 {
-//c.FillColumn(values)
-//return nil
-//}
-//var cell interface{}
-//checkColumnType := func() error {
-//rowStr := ""
-//switch cell.(type) {
-//case *int:
-//if c.colType != "int" {
-//return errors.New("Wrong type passed to column, 'int' expected")
-//}
-//if cell.(*int) != nil {
-//rowStr = fmt.Sprint(*cell.(*int))
-//}
-//case *float64:
-//if c.colType != "float64" {
-//return errors.New("Wrong type passed to column, 'float64' expected")
-//}
-//if cell.(*float64) != nil {
-//rowStr = fmt.Sprint(*cell.(*float64))
-//}
-//case *time.Time:
-//if c.colType != "date" {
-//return errors.New("Wrong type passed to column, 'date' expected")
-//}
-//if cell.(*time.Time) != nil {
-//rowStr = fmt.Sprint(*cell.(*time.Time))
-//}
-//case string:
-//rowStr = fmt.Sprint(cell)
-//default:
-//return errors.New("Unknown type")
-//}
+// Append will add a value or values to a column
+func Append(col Column, values interface{}) error {
 
-//// Adjust c.numChars if necessary
-//if len(rowStr) > c.numChars {
-//c.numChars = len(rowStr)
-//}
-
-//return nil
-//}
-//switch reflect.TypeOf(values).Kind() {
-//case reflect.Slice:
-//s := reflect.ValueOf(values)
-//for i := 0; i < s.Len(); i++ {
-//cell = s.Index(i).Interface()
-//checkColumnType()
-//c.row = append(c.row, cell)
-//}
-//default:
-//s := reflect.ValueOf(values)
-//cell = s.Interface()
-//checkColumnType()
-//c.row = append(c.row, cell)
-//}
-
-//return nil
-//}
-
-//// ParseType will parse the column based on the given type
-//func (c *Column) ParseType(t string) error {
-//var newRows interface{}
-//switch t {
-//case "int":
-//newRows = []*int{}
-//case "float64":
-//newRows = []*float64{}
-//case "string":
-//newRows = []string{}
-//case "date":
-//newRows = []*time.Time{}
-//default:
-//return errors.New("Unknown type")
-//}
-
-//// TODO: Retrieve all formatting errors to return it as warnings and in case
-//// of errors we use NA by default
-
-//c.numChars = len(c.colName)
-//for _, v := range c.row {
-//r := fmt.Sprint(v)
-//if len(r) > c.numChars {
-//c.numChars = len(r)
-//}
-//switch t {
-//case "int":
-//i, err := strconv.Atoi(r)
-//if err != nil {
-//newRows = append(newRows.([]*int), nil)
-//} else {
-//newRows = append(newRows.([]*int), &i)
-//}
-//case "float64":
-//i, err := strconv.ParseFloat(r, 64)
-//if err != nil {
-//newRows = append(newRows.([]*float64), nil)
-//} else {
-//newRows = append(newRows.([]*float64), &i)
-//}
-//case "string":
-//newRows = append(newRows.([]string), r)
-//case "date":
-//i, err := time.Parse(defaultDateFormat, r)
-//if err != nil {
-//newRows = append(newRows.([]*time.Time), nil)
-//} else {
-//newRows = append(newRows.([]*time.Time), &i)
-//}
-//default:
-//return errors.New("Unknown type")
-//}
-//}
-//c.FillColumn(newRows)
-//return nil
-//}
+	return nil
+}

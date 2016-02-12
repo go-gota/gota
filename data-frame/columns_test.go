@@ -106,15 +106,15 @@ func TestColumn_Len(t *testing.T) {
 	}
 }
 
-func TestColumn_elementAtIndex(t *testing.T) {
+func TestColumn_Index(t *testing.T) {
 	col := Column{}
-	_, err := col.elementAtIndex(3)
+	_, err := col.Index(3)
 	if err == nil {
 		t.Error("Error when retrieving an element for an empty column not being thrown")
 	}
 
 	col.FillColumn(Strings("a", "b"))
-	_, err = col.elementAtIndex(8)
+	_, err = col.Index(8)
 	if err == nil {
 		t.Error("Error when retrieving an element out of bounds not being thrown")
 	}
@@ -146,7 +146,7 @@ func TestNewCol(t *testing.T) {
 func TestColumn_parseColumn(t *testing.T) {
 	// String to Int
 	cola, _ := NewCol("TestCol", Strings("1", "2"))
-	colb, err := parseColumn(*cola, "int", nil)
+	colb, err := parseColumn(*cola, "int")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.Int:", err)
 	}
@@ -165,7 +165,7 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// String to String
 	cola, _ = NewCol("TestCol", Strings("1", "2"))
-	colb, err = parseColumn(*cola, "string", nil)
+	colb, err = parseColumn(*cola, "string")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.String:", err)
 	}
@@ -184,7 +184,7 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Int to String
 	cola, _ = NewCol("TestCol", Ints(1, 2))
-	colb, err = parseColumn(*cola, "string", nil)
+	colb, err = parseColumn(*cola, "string")
 	if err != nil {
 		t.Error("Error parsing a df.Int column into df.String:", err)
 	}
@@ -200,4 +200,12 @@ func TestColumn_parseColumn(t *testing.T) {
 			"\ncolb.colType:", colb.colType,
 		)
 	}
+
+	// Unknown type
+	cola, _ = NewCol("TestCol", Ints(1, 2))
+	colb, err = parseColumn(*cola, "asdfg")
+	if err == nil {
+		t.Error("Error parsing an unknown type, error not thrown.")
+	}
+
 }

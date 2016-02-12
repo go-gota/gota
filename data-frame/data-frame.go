@@ -210,7 +210,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			return errors.New("Number of columns different from number of types")
 		}
 		for k, v := range df.colNames {
-			col, err := parseColumn(df.Columns[v], types[k], nil)
+			col, err := parseColumn(df.Columns[v], types[k])
 			if err != nil {
 				return err
 			}
@@ -220,7 +220,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	case T:
 		types := types.(T)
 		for k, v := range types {
-			col, err := parseColumn(df.Columns[k], v, nil)
+			col, err := parseColumn(df.Columns[k], v)
 			if err != nil {
 				return err
 			}
@@ -745,7 +745,7 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
 		for _, v := range df.colNames {
-			elem, _ := df.Columns[v].elementAtIndex(i)
+			elem, _ := df.Columns[v].Index(i)
 			str += addRightPadding(formatCell(elem), df.Columns[v].numChars)
 			str += "  "
 		}
