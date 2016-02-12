@@ -154,7 +154,7 @@ func parseColumn(col Column, t string) (*Column, error) {
 		newcol, err := NewCol(col.colName, newrows)
 		return newcol, err
 	case "float":
-	case "time":
+	case "date":
 	}
 	return nil, errors.New("Can't parse the given type")
 }
