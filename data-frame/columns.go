@@ -16,6 +16,13 @@ type Column struct {
 	numChars int
 }
 
+type column struct {
+	cells    cells
+	colType  string
+	colName  string
+	numChars int
+}
+
 // Columns is an alias for multiple columns
 type Columns map[string]Column
 
@@ -161,96 +168,34 @@ func parseColumn(col Column, t string) (*Column, error) {
 }
 
 // Append will add a value or values to a column
-// TODO: Enforce that the values is a slice of rowable values
-func Append(col Column, values interface{}) (*Column, error) {
-	switch values.(type) {
-	case nil:
-		return &col, nil
+func (col column) append(values ...cell) (column, error) {
+	if len(values) == 0 {
+		// TODO: Should this be an error?
+		return col, nil
 	}
 
-	rowableType := reflect.TypeOf((*rowable)(nil)).Elem()
-	var numChars int
+	numChars := 0
 	if col.numChars == 0 {
-		col.numChars = len(col.colName)
+		numChars = len(col.colName)
+	}
+	for _, v := range values {
+		t := reflect.TypeOf(v).String()
+		if col.colType == "" {
+			col.colType = t
+		} else {
+			if t != col.colType {
+				return col, errors.New("Can't have elements of different type on the same column")
+			}
+		}
+		cellStr := formatCell(v)
+		if len(cellStr) > numChars {
+			numChars = len(cellStr)
+		}
+
+		col.cells = append(col.cells, v)
 	}
 
-	var c reflect.Value
-	switch reflect.TypeOf(values).Kind() {
-	case reflect.Slice:
-		s := reflect.ValueOf(values)
-		slen := s.Len()
-		if slen == 0 {
-			return &col, nil
-		}
+	col.numChars = numChars
 
-		// The given elements should implement the rowable interface
-		if s.Index(0).Type().Implements(rowableType) {
-			return nil, errors.New("The given values don't comply with the rowable interface")
-		}
-		if col.row == nil {
-			c = reflect.MakeSlice(s.Type(), 0, slen)
-		} else {
-			c = reflect.ValueOf(col.row)
-			if s.Type() != c.Type() {
-				return nil, errors.New(
-					fmt.Sprint(
-						"Conflicting column types.\n",
-						"Current:", c.Type(), "\n",
-						"To insert:", s.Type(),
-					),
-				)
-			}
-		}
-
-		t := s.Index(0).Type()
-		for i := 0; i < s.Len(); i++ {
-			// Check that all the elements on a column hsarre the same type
-			if t != s.Index(i).Type() {
-				return nil, errors.New("Can't use different types on a column")
-			}
-
-			// Update Column.numChars if necessary
-			rowStr := formatCell(s.Index(i).Interface())
-			if len(rowStr) > numChars {
-				numChars = len(rowStr)
-			}
-			c = reflect.Append(c, s.Index(i))
-		}
-
-		// Update column variables on success
-		col.row = c.Interface()
-		col.colType = t.String()
-		col.numChars = numChars
-	default:
-		s := reflect.ValueOf(values)
-		if !s.Type().Implements(rowableType) {
-			return nil, errors.New("The given values don't comply with the rowable interface")
-		}
-		if col.row == nil {
-			c = reflect.MakeSlice(s.Type(), 0, 1)
-		} else {
-			c = reflect.ValueOf(col.row)
-			if s.Type() != c.Index(0).Type() {
-				return nil, errors.New(
-					fmt.Sprint(
-						"Conflicting column types.\n",
-						"Current:", c.Type(), "\n",
-						"To insert:", s.Type(),
-					),
-				)
-			}
-		}
-		rowStr := formatCell(s.Interface())
-		if len(rowStr) > numChars {
-			numChars = len(rowStr)
-		}
-		c = reflect.Append(c, s)
-
-		// Update column variables on success
-		col.row = c.Interface()
-		col.colType = s.Type().String()
-		col.numChars = numChars
-	}
-
-	return &col, nil
+	return col, nil
 }

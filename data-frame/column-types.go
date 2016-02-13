@@ -43,8 +43,8 @@ func (s Int) String() string {
 }
 
 // Strings is a constructor for a String array
-func Strings(args ...interface{}) []String {
-	ret := make([]String, 0, len(args))
+func Strings(args ...interface{}) cells {
+	ret := make([]cell, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case int:
@@ -104,8 +104,8 @@ func Strings(args ...interface{}) []String {
 }
 
 // Ints is a constructor for an Int array
-func Ints(args ...interface{}) []Int {
-	ret := make([]Int, 0, len(args))
+func Ints(args ...interface{}) cells {
+	ret := make(cells, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case int:

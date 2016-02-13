@@ -18,6 +18,12 @@ type rowable interface {
 	String() string
 }
 
+type cell interface {
+	String() string
+}
+
+type cells []cell
+
 type tointeger interface {
 	ToInteger() (int, error)
 }
