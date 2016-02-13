@@ -21,25 +21,17 @@ func (s String) ToInteger() (int, error) {
 	return str, nil
 }
 
+// ToFloat returns the float value of String
+func (s String) ToFloat() (float64, error) {
+	f, err := strconv.ParseFloat(s.s, 64)
+	if err != nil {
+		return 0, errors.New("Could't convert to float64")
+	}
+	return f, nil
+}
+
 func (s String) String() string {
 	return s.s
-}
-
-// Int is an alias for string to be able to implement custom methods
-type Int struct {
-	i *int
-}
-
-// ToInteger returns the integer value of Int
-func (s Int) ToInteger() (int, error) {
-	if s.i != nil {
-		return *s.i, nil
-	}
-	return 0, errors.New("Could't convert to int")
-}
-
-func (s Int) String() string {
-	return formatCell(s.i)
 }
 
 // Strings is a constructor for a String array
@@ -101,6 +93,32 @@ func Strings(args ...interface{}) cells {
 	}
 
 	return ret
+}
+
+// Int is an alias for int to be able to implement custom methods
+type Int struct {
+	i *int
+}
+
+// ToInteger returns the integer value of Int
+func (i Int) ToInteger() (int, error) {
+	if i.i != nil {
+		return *i.i, nil
+	}
+	return 0, errors.New("Could't convert to int")
+}
+
+// ToFloat returns the float value of Int
+func (i Int) ToFloat() (float64, error) {
+	if i.i != nil {
+		f := float64(*i.i)
+		return f, nil
+	}
+	return 0, errors.New("Could't convert to float")
+}
+
+func (i Int) String() string {
+	return formatCell(i.i)
 }
 
 // Ints is a constructor for an Int array
@@ -171,6 +189,107 @@ func Ints(args ...interface{}) cells {
 				}
 			default:
 				ret = append(ret, Int{nil})
+			}
+		}
+	}
+
+	return ret
+}
+
+// Float is an alias for float64 to be able to implement custom methods
+type Float struct {
+	f *float64
+}
+
+func (f Float) String() string {
+	return formatCell(f.f)
+}
+
+// ToInteger returns the integer value of Float
+func (f Float) ToInteger() (int, error) {
+	if f.f != nil {
+		return int(*f.f), nil
+	}
+	return 0, errors.New("Could't convert to int")
+}
+
+// ToFloat returns the float value of Float
+func (f Float) ToFloat() (float64, error) {
+	if f.f != nil {
+		return *f.f, nil
+	}
+	return 0, errors.New("Could't convert to float64")
+}
+
+// Floats is a constructor for a Float array
+func Floats(args ...interface{}) cells {
+	ret := make(cells, 0, len(args))
+	for _, v := range args {
+		switch v.(type) {
+		case []int:
+			varr := v.([]int)
+			for k := range varr {
+				i := varr[k]
+				f := float64(i)
+				ret = append(ret, Float{&f})
+			}
+		case int:
+			i := v.(int)
+			f := float64(i)
+			ret = append(ret, Float{&f})
+		case []float64:
+			varr := v.([]float64)
+			for k := range varr {
+				f := varr[k]
+				ret = append(ret, Float{&f})
+			}
+		case float64:
+			f := v.(float64)
+			ret = append(ret, Float{&f})
+		case []string:
+			varr := v.([]string)
+			for k := range varr {
+				s := varr[k]
+				f, err := strconv.ParseFloat(s, 64)
+				if err != nil {
+					ret = append(ret, Float{nil})
+				} else {
+					ret = append(ret, Float{&f})
+				}
+			}
+		case string:
+			f, err := strconv.ParseFloat(v.(string), 64)
+			if err != nil {
+				ret = append(ret, Float{nil})
+			} else {
+				ret = append(ret, Float{&f})
+			}
+		case nil:
+			ret = append(ret, Float{nil})
+		default:
+			s := reflect.ValueOf(v)
+			tofloat := reflect.TypeOf((*tofloat)(nil)).Elem()
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Slice:
+				if s.Len() > 0 {
+					for i := 0; i < s.Len(); i++ {
+						if s.Index(i).Type().Implements(tofloat) {
+							m := s.Index(i).MethodByName("ToFloat")
+							resolvedMethod := m.Call([]reflect.Value{})
+							j := resolvedMethod[0].Interface().(float64)
+							err := resolvedMethod[1].Interface()
+							if err != nil {
+								ret = append(ret, Float{nil})
+							} else {
+								ret = append(ret, Float{&j})
+							}
+						} else {
+							ret = append(ret, Float{nil})
+						}
+					}
+				}
+			default:
+				ret = append(ret, Float{nil})
 			}
 		}
 	}

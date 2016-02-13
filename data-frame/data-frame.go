@@ -21,12 +21,17 @@ type rowable interface {
 type cell interface {
 	String() string
 	ToInteger() (int, error)
+	ToFloat() (float64, error)
 }
 
 type cells []cell
 
 type tointeger interface {
 	ToInteger() (int, error)
+}
+
+type tofloat interface {
+	ToFloat() (float64, error)
 }
 
 // DataFrame is the base data structure
@@ -46,6 +51,37 @@ type C struct {
 
 // T is used to represent the association between a column and it't type
 type T map[string]string
+
+// R represent a range from a number to another
+type R struct {
+	From int
+	To   int
+}
+
+// u represents if an element is unique or if it appears on more than one place in
+// addition to the index where it appears.
+type u struct {
+	unique  bool
+	appears []int
+}
+
+//type Error struct {
+//errorType Err
+//}
+
+//const defaultDateFormat = "2006-01-02"
+
+// TODO: Implement a custom Error type that stores information about the type of
+// error and the severity of it (Warning vs Error)
+// Error types
+//type Err int
+
+//const (
+//FormatError Err = iota
+//UnknownType
+//Warning
+//Etc
+//)
 
 // New is a constructor for DataFrames
 func New(colConst ...C) (*DataFrame, error) {
@@ -85,37 +121,6 @@ func New(colConst ...C) (*DataFrame, error) {
 
 	return df, nil
 }
-
-// R represent a range from a number to another
-type R struct {
-	From int
-	To   int
-}
-
-// u represents if an element is unique or if it appears on more than one place in
-// addition to the index where it appears.
-type u struct {
-	unique  bool
-	appears []int
-}
-
-////type Error struct {
-////errorType Err
-////}
-
-//const defaultDateFormat = "2006-01-02"
-
-//// TODO: Implement a custom Error type that stores information about the type of
-//// error and the severity of it (Warning vs Error)
-//// Error types
-////type Err int
-
-////const (
-////FormatError Err = iota
-////UnknownType
-////Warning
-////Etc
-////)
 
 // LoadData will load the data from a multidimensional array of strings into
 // a DataFrame object.
@@ -285,28 +290,6 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 	}
 	return nil, errors.New("Can't find the given column")
 }
-
-//// getRow tries to return the Row for a given row number
-//func (df DataFrame) getRow(i int) (*Row, error) {
-//if i >= df.nRows {
-//return nil, errors.New("Row out of range")
-//}
-
-//row := Row{
-//columns:  initColumns(df.colNames),
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//nCols:    df.nCols,
-//}
-//for _, v := range df.colNames {
-//col := Column{}
-//r := df.columns[v].row[i]
-//col.FillColumn(r)
-//row.columns[v] = col
-//}
-
-//return &row, nil
-//}
 
 // Subset will return a DataFrame that contains only the columns and rows contained
 // on the given subset
