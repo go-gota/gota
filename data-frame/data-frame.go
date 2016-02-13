@@ -86,26 +86,18 @@ func New(colConst ...C) (*DataFrame, error) {
 	return df, nil
 }
 
-//// Row represents a single row on a DataFrame
-//type Row struct {
-//columns  columns
-//colNames []string
-//colTypes []string
-//nCols    int
-//}
-
 // R represent a range from a number to another
 type R struct {
 	From int
 	To   int
 }
 
-//// u represents if an element is unique or if it appears on more than one place in
-//// addition to the index where it appears.
-//type u struct {
-//unique  bool
-//appears []int
-//}
+// u represents if an element is unique or if it appears on more than one place in
+// addition to the index where it appears.
+type u struct {
+	unique  bool
+	appears []int
+}
 
 ////type Error struct {
 ////errorType Err
@@ -573,52 +565,41 @@ func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	return &dfA, nil
 }
 
-//// uniqueRowsMap is a helper function that will get a map of unique or duplicated
-//// rows for a given DataFrame
-//func uniqueRowsMap(df DataFrame) map[string]u {
-//uniqueRows := make(map[string]u)
-//for i := 0; i < df.nRows; i++ {
-//str := ""
-//for _, v := range df.colNames {
-//col := df.columns[v]
-//str += col.colType
-//str += col.getRowStr(i)
-//}
-//if a, ok := uniqueRows[str]; ok {
-//a.unique = false
-//a.appears = append(a.appears, i)
-//uniqueRows[str] = a
-//} else {
-//uniqueRows[str] = u{true, []int{i}}
-//}
-//}
+// uniqueRowsMap is a helper function that will get a map of unique or duplicated
+// rows for a given DataFrame
+func uniqueRowsMap(df DataFrame) map[string]u {
+	uniqueRows := make(map[string]u)
+	for i := 0; i < df.nRows; i++ {
+		str := ""
+		for _, v := range df.columns {
+			str += v.colType
+			str += v.cells[i].String()
+		}
+		if a, ok := uniqueRows[str]; ok {
+			a.unique = false
+			a.appears = append(a.appears, i)
+			uniqueRows[str] = a
+		} else {
+			uniqueRows[str] = u{true, []int{i}}
+		}
+	}
 
-//return uniqueRows
-//}
+	return uniqueRows
+}
 
-//// Unique will return all unique rows inside a DataFrame. The order of the rows
-//// will not be preserved.
-//func (df DataFrame) Unique() (*DataFrame, error) {
-//newDf := DataFrame{
-//columns:  initColumns(df.colNames),
-//nCols:    df.nCols,
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//}
+// Unique will return all unique rows inside a DataFrame. The order of the rows
+// will not be preserved.
+func (df DataFrame) Unique() (*DataFrame, error) {
+	uniqueRows := uniqueRowsMap(df)
+	appears := []int{}
+	for _, v := range uniqueRows {
+		if v.unique {
+			appears = append(appears, v.appears[0])
+		}
+	}
 
-//uniqueRows := uniqueRowsMap(df)
-//for _, v := range uniqueRows {
-//if v.unique {
-//row, err := df.getRow(v.appears[0])
-//if err != nil {
-//return nil, err
-//}
-//newDf.addRow(*row)
-//}
-//}
-
-//return &newDf, nil
-//}
+	return df.SubsetRows(appears)
+}
 
 //// Duplicated will return all duplicated rows inside a DataFrame
 //func (df DataFrame) Duplicated() (*DataFrame, error) {
