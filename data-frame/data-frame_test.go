@@ -217,3 +217,29 @@ func TestDataFrame_Rbind(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestDataFrame_Cbind(t *testing.T) {
+	dataA := [][]string{
+		[]string{"A", "B"},
+		[]string{"1", "2"},
+		[]string{"5", "6"},
+		[]string{"9", "10"},
+	}
+	dataB := [][]string{
+		[]string{"C", "D"},
+		[]string{"3", "4"},
+		[]string{"7", "8"},
+		[]string{"11", "12"},
+	}
+
+	// Test parsing two columns as integers
+	dfA := DataFrame{}
+	dfA.LoadData(dataA)
+	dfB := DataFrame{}
+	dfB.LoadData(dataB)
+
+	_, err := Cbind(dfA, dfB)
+	if err != nil {
+		t.Error(err)
+	}
+}

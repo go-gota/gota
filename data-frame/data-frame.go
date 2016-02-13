@@ -546,45 +546,32 @@ func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	return &dfA, nil
 }
 
-//// Cbind combines the columns of two DataFrames
-//func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
-//// Check that the two DataFrames contains the same number of rows
-//if dfA.nRows != dfB.nRows {
-//return nil, errors.New("Different number of rows")
-//}
+// Cbind combines the columns of two DataFrames
+func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+	// Check that the two DataFrames contains the same number of rows
+	if dfA.nRows != dfB.nRows {
+		return nil, errors.New("Different number of rows")
+	}
 
-//// Check that the column names are unique when combined
-//colNameMap := make(map[string]bool)
-//for _, v := range dfA.colNames {
-//colNameMap[v] = true
-//}
+	// Check that the column names are unique when combined
+	colNameMap := make(map[string]bool)
+	for _, v := range dfA.colNames {
+		colNameMap[v] = true
+	}
 
-//for _, v := range dfB.colNames {
-//if _, ok := colNameMap[v]; ok {
-//return nil, errors.New("Conflicting column names")
-//}
-//}
+	for _, v := range dfB.colNames {
+		if _, ok := colNameMap[v]; ok {
+			return nil, errors.New("Conflicting column names")
+		}
+	}
 
-//colnames := append(dfA.colNames, dfB.colNames...)
-//coltypes := append(dfA.colTypes, dfB.colTypes...)
+	dfA.colNames = append(dfA.colNames, dfB.colNames...)
+	dfA.colTypes = append(dfA.colTypes, dfB.colTypes...)
+	dfA.nCols = len(dfA.colNames)
+	dfA.columns = append(dfA.columns, dfB.columns...)
 
-//newDf := DataFrame{
-//columns:  initColumns(colnames),
-//nRows:    dfA.nRows,
-//nCols:    len(colnames),
-//colNames: colnames,
-//colTypes: coltypes,
-//}
-
-//for _, v := range dfA.colNames {
-//newDf.columns[v] = dfA.columns[v]
-//}
-//for _, v := range dfB.colNames {
-//newDf.columns[v] = dfB.columns[v]
-//}
-
-//return &newDf, nil
-//}
+	return &dfA, nil
+}
 
 //// uniqueRowsMap is a helper function that will get a map of unique or duplicated
 //// rows for a given DataFrame
