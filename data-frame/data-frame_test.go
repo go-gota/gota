@@ -136,3 +136,38 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 		t.Error("Recovered records differ from original")
 	}
 }
+
+func TestDataFrame_SubsetColumns(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+
+	fmt.Println(df)
+	// Subset by column and rearrange the columns by name on the given order
+	d1, err := df.SubsetColumns([]string{"A", "B"})
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(d1)
+
+	// Subset by column using a range element
+	d2, err := df.SubsetColumns(R{0, 3})
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(d2)
+
+	// Subset by column using an array of column numbers
+	d3, err := df.SubsetColumns([]int{0, 3, 1})
+	if err != nil {
+		t.Error(err)
+	} else {
+		fmt.Println(d3)
+	}
+}

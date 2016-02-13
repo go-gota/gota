@@ -94,11 +94,11 @@ func New(colConst ...C) (*DataFrame, error) {
 //nCols    int
 //}
 
-//// R represent a range from a number to another
-//type R struct {
-//From int
-//To   int
-//}
+// R represent a range from a number to another
+type R struct {
+	From int
+	To   int
+}
 
 //// u represents if an element is unique or if it appears on more than one place in
 //// addition to the index where it appears.
@@ -331,108 +331,108 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return dfB, nil
 //}
 
-//// SubsetColumns will return a DataFrame that contains only the columns contained
-//// on the given subset
-//func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
-//// Generate a DataFrame to store the temporary values
-//newDf := DataFrame{
-//columns:  make(columns),
-//nRows:    df.nRows,
-//colNames: []string{},
-//colTypes: []string{},
-//}
+// SubsetColumns will return a DataFrame that contains only the columns contained
+// on the given subset
+func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
+	// Generate a DataFrame to store the temporary values
+	newDf := DataFrame{
+		columns:  columns{},
+		nRows:    df.nRows,
+		colNames: []string{},
+		colTypes: []string{},
+	}
 
-//switch subset.(type) {
-//case R:
-//s := subset.(R)
-//// Check for errors
-//if s.From > s.To {
-//return nil, errors.New("Bad subset: Start greater than Beginning")
-//}
-//if s.From == s.To {
-//return nil, errors.New("Empty subset")
-//}
-//if s.To > df.nCols || s.To < 0 || s.From < 0 {
-//return nil, errors.New("Subset out of range")
-//}
+	switch subset.(type) {
+	case R:
+		s := subset.(R)
+		// Check for errors
+		if s.From > s.To {
+			return nil, errors.New("Bad subset: Start greater than Beginning")
+		}
+		if s.From == s.To {
+			return nil, errors.New("Empty subset")
+		}
+		if s.To > df.nCols || s.To < 0 || s.From < 0 {
+			return nil, errors.New("Subset out of range")
+		}
 
-//newDf.nCols = s.To - s.From
-//newDf.colNames = df.colNames[s.From:s.To]
-//newDf.colTypes = df.colTypes[s.From:s.To]
-//for _, v := range df.colNames[s.From:s.To] {
-//col := df.columns[v]
-//newDf.columns[v] = col
-//}
-//case []int:
-//colNums := subset.([]int)
-//if len(colNums) == 0 {
-//return nil, errors.New("Empty subset")
-//}
+		newDf.nCols = s.To - s.From
+		newDf.colNames = df.colNames[s.From:s.To]
+		newDf.colTypes = df.colTypes[s.From:s.To]
+		newDf.columns = df.columns[s.From:s.To]
+	case []int:
+		colNums := subset.([]int)
+		if len(colNums) == 0 {
+			return nil, errors.New("Empty subset")
+		}
 
-//// Check for errors
-//colNumsMap := make(map[int]bool)
-//for _, v := range colNums {
-//if v >= df.nCols || v < 0 {
-//return nil, errors.New("Subset out of range")
-//}
-//if _, ok := colNumsMap[v]; !ok {
-//colNumsMap[v] = true
-//} else {
-//return nil, errors.New("Duplicated column numbers")
-//}
-//}
+		// Check for errors
+		colNumsMap := make(map[int]bool)
+		for _, v := range colNums {
+			if v >= df.nCols || v < 0 {
+				return nil, errors.New("Subset out of range")
+			}
+			if _, ok := colNumsMap[v]; !ok {
+				colNumsMap[v] = true
+			} else {
+				return nil, errors.New("Duplicated column numbers")
+			}
+		}
 
-//newDf.nCols = len(colNums)
-//for _, v := range colNums {
-//col := df.columns[df.colNames[v]]
-//newDf.columns[df.colNames[v]] = col
-//newDf.colNames = append(newDf.colNames, df.colNames[v])
-//newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
-//}
-//case []string:
-//columns := subset.([]string)
-//if len(columns) == 0 {
-//return nil, errors.New("Empty subset")
-//}
+		for _, v := range colNums {
+			col := df.columns[v]
+			newDf.columns = append(newDf.columns, col)
+			newDf.colNames = append(newDf.colNames, df.colNames[v])
+			newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
+		}
+		newDf.nCols = len(colNums)
+	case []string:
+		columns := subset.([]string)
+		if len(columns) == 0 {
+			return nil, errors.New("Empty subset")
+		}
 
-//// Initialize variables to store possible errors
-//noCols := []string{}
-//dupedCols := []string{}
+		// Check for duplicated columns
+		colnamesMap := make(map[string]bool)
+		dupedColnames := []string{}
+		for _, v := range columns {
+			if v != "" {
+				if _, ok := colnamesMap[v]; !ok {
+					colnamesMap[v] = true
+				} else {
+					dupedColnames = append(dupedColnames, v)
+				}
+			}
+		}
+		if len(dupedColnames) != 0 {
+			return nil, errors.New(fmt.Sprint("Duplicated column names:", dupedColnames))
+		}
 
-//// Select the desired subset of columns
-//for _, v := range columns {
-//if col, ok := df.columns[v]; ok {
-//if _, ok := newDf.columns[v]; ok {
-//dupedCols = append(dupedCols, v)
-//}
-//newDf.colNames = append(newDf.colNames, v)
-//colindex, err := df.colIndex(v)
-//if err != nil {
-//return nil, err
-//}
-//newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
-//newDf.columns[v] = col
-//} else {
-//noCols = append(noCols, v)
-//}
-//}
+		// Select the desired subset of columns
+		for _, v := range columns {
+			i, err := df.columnIndex(v)
+			if err != nil {
+				return nil, err
+			}
 
-//if len(dupedCols) != 0 {
-//errStr := "The following columns appear more than once:\n" + strings.Join(dupedCols, ", ")
-//return nil, errors.New(errStr)
-//}
-//if len(noCols) != 0 {
-//errStr := "The following columns are not present on the DataFrame:\n" + strings.Join(noCols, ", ")
-//return nil, errors.New(errStr)
-//}
-//default:
-//return nil, errors.New("Unknown subsetting option")
-//}
+			col := df.columns[i]
+			newDf.colNames = append(newDf.colNames, v)
+			colindex, err := df.colIndex(v)
+			if err != nil {
+				return nil, err
+			}
 
-//newDf.nCols = len(newDf.colNames)
+			newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
+			newDf.columns = append(newDf.columns, col)
+		}
+	default:
+		return nil, errors.New("Unknown subsetting option")
+	}
 
-//return &newDf, nil
-//}
+	newDf.nCols = len(newDf.colNames)
+
+	return &newDf, nil
+}
 
 //// SubsetRows will return a DataFrame that contains only the selected rows
 //func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
