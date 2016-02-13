@@ -601,77 +601,45 @@ func (df DataFrame) Unique() (*DataFrame, error) {
 	return df.SubsetRows(appears)
 }
 
-//// Duplicated will return all duplicated rows inside a DataFrame
-//func (df DataFrame) Duplicated() (*DataFrame, error) {
-//newDf := DataFrame{
-//columns:  initColumns(df.colNames),
-//nCols:    df.nCols,
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//}
+// RemoveUnique will return all duplicated rows inside a DataFrame
+func (df DataFrame) RemoveUnique() (*DataFrame, error) {
+	uniqueRows := uniqueRowsMap(df)
+	appears := []int{}
+	for _, v := range uniqueRows {
+		if !v.unique {
+			appears = append(appears, v.appears...)
+		}
+	}
 
-//uniqueRows := uniqueRowsMap(df)
-//for _, v := range uniqueRows {
-//if !v.unique {
-//for _, i := range v.appears {
-//row, err := df.getRow(i)
-//if err != nil {
-//return nil, err
-//}
-//newDf.addRow(*row)
-//}
-//}
-//}
+	return df.SubsetRows(appears)
+}
 
-//return &newDf, nil
-//}
+// RemoveDuplicated will return all unique rows in a DataFrame and the first
+// appearance of all duplicated rows. The order of the rows will not be
+// preserved.
+func (df DataFrame) RemoveDuplicated() (*DataFrame, error) {
+	uniqueRows := uniqueRowsMap(df)
+	appears := []int{}
+	for _, v := range uniqueRows {
+		appears = append(appears, v.appears[0])
+	}
 
-//// RemoveDuplicates will return all unique rows in a DataFrame and the first
-//// appearance of all duplicated rows. The order of the rows will not be
-//// preserved.
-//func (df DataFrame) RemoveDuplicates() (*DataFrame, error) {
-//newDf := DataFrame{
-//columns:  initColumns(df.colNames),
-//nCols:    df.nCols,
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//}
+	return df.SubsetRows(appears)
+}
 
-//uniqueRows := uniqueRowsMap(df)
-//for _, v := range uniqueRows {
-//row, err := df.getRow(v.appears[0])
-//if err != nil {
-//return nil, err
-//}
-//newDf.addRow(*row)
-//}
+// Duplicated will return the first appearance of the duplicated rows in
+// a DataFrame. The order of the rows will not be preserved.
+func (df DataFrame) Duplicated() (*DataFrame, error) {
+	uniqueRows := uniqueRowsMap(df)
+	appears := []int{}
+	for _, v := range uniqueRows {
+		if !v.unique {
+			appears = append(appears, v.appears[0])
+		}
+	}
 
-//return &newDf, nil
-//}
-
-//// RemoveUnique will return the first appearance of the duplicated rows in
-//// a DataFrame. The order of the rows will not be preserved.
-//func (df DataFrame) RemoveUnique() (*DataFrame, error) {
-//newDf := DataFrame{
-//columns:  initColumns(df.colNames),
-//nCols:    df.nCols,
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//}
-
-//uniqueRows := uniqueRowsMap(df)
-//for _, v := range uniqueRows {
-//if !v.unique {
-//row, err := df.getRow(v.appears[0])
-//if err != nil {
-//return nil, err
-//}
-//newDf.addRow(*row)
-//}
-//}
-
-//return &newDf, nil
-//}
+	return df.SubsetRows(appears)
+}
 
 // TODO: We should truncate the maximum length of shown columns and scape newline
 // characters'

@@ -260,5 +260,74 @@ func TestDataFrame_Unique(t *testing.T) {
 	df := DataFrame{}
 	df.LoadData(data)
 
-	fmt.Println(df.Unique())
+	_, err := df.Unique()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDataFrame_Duplicated(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"5", "7", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+
+	_, err := df.Duplicated()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDataFrame_RemoveDuplicated(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"5", "7", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+
+	_, err := df.RemoveDuplicated()
+	if err != nil {
+		t.Error(err)
+	}
+}
+
+func TestDataFrame_RemoveUnique(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"9", "10", "11", "12"},
+		[]string{"5", "7", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+
+	_, err := df.RemoveUnique()
+	if err != nil {
+		t.Error(err)
+	}
 }
