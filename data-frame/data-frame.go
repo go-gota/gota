@@ -193,48 +193,61 @@ func (df *DataFrame) LoadData(records [][]string) error {
 	return nil
 }
 
-//// LoadAndParse will load the data from a multidimensional array of strings and
-//// parse it accordingly with the given types element. The types element can be
-//// a string array with matching dimensions to the number of columns or
-//// a DataFrame.T object.
-//func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
-//// Initialize the DataFrame with all columns as string type
-//err := df.LoadData(records)
-//if err != nil {
-//return err
-//}
+// LoadAndParse will load the data from a multidimensional array of strings and
+// parse it accordingly with the given types element. The types element can be
+// a string array with matching dimensions to the number of columns or
+// a DataFrame.T object.
+func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
+	// Initialize the DataFrame with all columns as string type
+	err := df.LoadData(records)
+	if err != nil {
+		return err
+	}
 
-//// Parse the DataFrame columns acording to the given types
-//switch types.(type) {
-//case []string:
-//types := types.([]string)
-//if df.nCols != len(types) {
-//return errors.New("Number of columns different from number of types")
-//}
-//for k, v := range df.colNames {
-//col, err := parseColumn(df.columns[v], types[k])
-//if err != nil {
-//return err
-//}
-//df.colTypes[k] = col.colType
-//df.columns[v] = *col
-//}
-//case T:
-//types := types.(T)
-//for k, v := range types {
-//col, err := parseColumn(df.columns[k], v)
-//if err != nil {
-//return err
-//}
-//col.colType = v
-//colIndex, _ := df.colIndex(k)
-//df.colTypes[*colIndex] = col.colType
-//df.columns[k] = *col
-//}
-//}
+	// Parse the DataFrame columns acording to the given types
+	switch types.(type) {
+	case []string:
+		types := types.([]string)
+		if df.nCols != len(types) {
+			return errors.New("Number of columns different from number of types")
+		}
+		for k, v := range df.columns {
+			col, err := parseColumn(v, types[k])
+			if err != nil {
+				return err
+			}
+			df.colTypes[k] = col.colType
+			df.columns[k] = *col
+		}
+	case T:
+		types := types.(T)
+		for k, v := range types {
+			i, err := df.columnIndex(k)
+			if err != nil {
+				return err
+			}
+			col, err := parseColumn(df.columns[i], v)
+			if err != nil {
+				return err
+			}
+			col.colType = v
+			colIndex, _ := df.colIndex(k)
+			df.colTypes[*colIndex] = col.colType
+			df.columns[i] = *col
+		}
+	}
 
-//return nil
-//}
+	return nil
+}
+
+func (df DataFrame) columnIndex(colName string) (int, error) {
+	for k, v := range df.colNames {
+		if v == colName {
+			return k, nil
+		}
+	}
+	return -1, errors.New("Index out of range")
+}
 
 //// SaveRecords will save data to records in [][]string format
 //func (df DataFrame) SaveRecords() [][]string {
