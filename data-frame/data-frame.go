@@ -316,20 +316,20 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return &row, nil
 //}
 
-//// Subset will return a DataFrame that contains only the columns and rows contained
-//// on the given subset
-//func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*DataFrame, error) {
-//dfA, err := df.SubsetColumns(subsetCols)
-//if err != nil {
-//return nil, err
-//}
-//dfB, err := dfA.SubsetRows(subsetRows)
-//if err != nil {
-//return nil, err
-//}
+// Subset will return a DataFrame that contains only the columns and rows contained
+// on the given subset
+func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*DataFrame, error) {
+	dfA, err := df.SubsetColumns(subsetCols)
+	if err != nil {
+		return nil, err
+	}
+	dfB, err := dfA.SubsetRows(subsetRows)
+	if err != nil {
+		return nil, err
+	}
 
-//return dfB, nil
-//}
+	return dfB, nil
+}
 
 // SubsetColumns will return a DataFrame that contains only the columns contained
 // on the given subset
@@ -434,66 +434,70 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	return &newDf, nil
 }
 
-//// SubsetRows will return a DataFrame that contains only the selected rows
-//func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
-//// Generate a DataFrame to store the temporary values
-//newDf := DataFrame{
-//columns:  initColumns(df.colNames),
-//nCols:    df.nCols,
-//colNames: df.colNames,
-//colTypes: df.colTypes,
-//}
+// SubsetRows will return a DataFrame that contains only the selected rows
+func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
+	// Generate a DataFrame to store the temporary values
+	newDf := DataFrame{
+		columns:  columns{},
+		nCols:    df.nCols,
+		colNames: df.colNames,
+		colTypes: df.colTypes,
+	}
 
-//switch subset.(type) {
-//case R:
-//s := subset.(R)
-//// Check for errors
-//if s.From > s.To {
-//return nil, errors.New("Bad subset: Start greater than Beginning")
-//}
-//if s.From == s.To {
-//return nil, errors.New("Empty subset")
-//}
-//if s.To > df.nRows || s.To < 0 || s.From < 0 {
-//return nil, errors.New("Subset out of range")
-//}
+	switch subset.(type) {
+	case R:
+		s := subset.(R)
+		// Check for errors
+		if s.From > s.To {
+			return nil, errors.New("Bad subset: Start greater than Beginning")
+		}
+		if s.From == s.To {
+			return nil, errors.New("Empty subset")
+		}
+		if s.To > df.nRows || s.To < 0 || s.From < 0 {
+			return nil, errors.New("Subset out of range")
+		}
 
-//newDf.nRows = s.To - s.From
-//for _, v := range df.colNames {
-//col := df.columns[v]
-//col.FillColumn(col.row[s.From:s.To])
-//newDf.columns[v] = col
-//}
-//case []int:
-//rowNums := subset.([]int)
+		newDf.nRows = s.To - s.From
+		for _, v := range df.columns {
+			col, err := newCol(v.colName, v.cells[s.From:s.To])
+			if err != nil {
+				return nil, err
+			}
+			newDf.columns = append(newDf.columns, *col)
+		}
+	case []int:
+		rowNums := subset.([]int)
 
-//if len(rowNums) == 0 {
-//return nil, errors.New("Empty subset")
-//}
+		if len(rowNums) == 0 {
+			return nil, errors.New("Empty subset")
+		}
 
-//// Check for errors
-//for _, v := range rowNums {
-//if v >= df.nRows || v < 0 {
-//return nil, errors.New("Subset out of range")
-//}
-//}
+		// Check for errors
+		for _, v := range rowNums {
+			if v >= df.nRows || v < 0 {
+				return nil, errors.New("Subset out of range")
+			}
+		}
 
-//newDf.nRows = len(rowNums)
-//for _, v := range df.colNames {
-//col := df.columns[v]
-//var row []interface{}
-//for _, v := range rowNums {
-//row = append(row, col.row[v])
-//}
-//col.FillColumn(row)
-//newDf.columns[v] = col
-//}
-//default:
-//return nil, errors.New("Unknown subsetting option")
-//}
+		newDf.nRows = len(rowNums)
+		for _, v := range df.columns {
+			col, err := newCol(v.colName, nil)
+			if err != nil {
+				return nil, err
+			}
 
-//return &newDf, nil
-//}
+			for _, i := range rowNums {
+				col.cells = append(col.cells, v.cells[i])
+			}
+			newDf.columns = append(newDf.columns, *col)
+		}
+	default:
+		return nil, errors.New("Unknown subsetting option")
+	}
+
+	return &newDf, nil
+}
 
 //// addRow adds a single Row to the DataFrame
 //func (df *DataFrame) addRow(row Row) error {

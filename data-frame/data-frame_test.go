@@ -148,26 +148,46 @@ func TestDataFrame_SubsetColumns(t *testing.T) {
 	df := DataFrame{}
 	df.LoadData(data)
 
-	fmt.Println(df)
 	// Subset by column and rearrange the columns by name on the given order
-	d1, err := df.SubsetColumns([]string{"A", "B"})
+	_, err := df.SubsetColumns([]string{"A", "B"})
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(d1)
 
 	// Subset by column using a range element
-	d2, err := df.SubsetColumns(R{0, 3})
+	_, err = df.SubsetColumns(R{0, 3})
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(d2)
 
 	// Subset by column using an array of column numbers
-	d3, err := df.SubsetColumns([]int{0, 3, 1})
+	_, err = df.SubsetColumns([]int{0, 3, 1})
 	if err != nil {
 		t.Error(err)
-	} else {
-		fmt.Println(d3)
+	}
+}
+
+func TestDataFrame_SubsetRows(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"9", "10", "11", "12"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+
+	// Subset by column using a range element
+	_, err := df.SubsetRows(R{1, 2})
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Subset by column using an array of column numbers
+	_, err = df.SubsetRows([]int{0, 2, 1})
+	if err != nil {
+		t.Error(err)
 	}
 }
