@@ -105,3 +105,34 @@ func TestDataFrame_LoadData(t *testing.T) {
 		t.Error("Duplicated headers but no error")
 	}
 }
+
+func TestDataFrame_LoadAndParse(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadAndParse(data, T{"A": "int", "C": "int"})
+	if fmt.Sprint(df.colTypes) != "[df.Int df.String df.Int df.String]" {
+		t.Error("Incorrect type parsing")
+	}
+}
+
+func TestDataFrame_SaveRecords(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+	datab := df.SaveRecords()
+	if fmt.Sprint(data) != fmt.Sprint(datab) {
+		t.Error("Recovered records differ from original")
+	}
+}

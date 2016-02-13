@@ -230,7 +230,6 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			if err != nil {
 				return err
 			}
-			col.colType = v
 			colIndex, _ := df.colIndex(k)
 			df.colTypes[*colIndex] = col.colType
 			df.columns[i] = *col
@@ -249,30 +248,30 @@ func (df DataFrame) columnIndex(colName string) (int, error) {
 	return -1, errors.New("Index out of range")
 }
 
-//// SaveRecords will save data to records in [][]string format
-//func (df DataFrame) SaveRecords() [][]string {
-//if df.nCols == 0 {
-//return make([][]string, 0)
-//}
-//if df.nRows == 0 {
-//records := make([][]string, 1)
-//records[0] = df.colNames
-//return records
-//}
+// SaveRecords will save data to records in [][]string format
+func (df DataFrame) SaveRecords() [][]string {
+	if df.nCols == 0 {
+		return make([][]string, 0)
+	}
+	if df.nRows == 0 {
+		records := make([][]string, 1)
+		records[0] = df.colNames
+		return records
+	}
 
-//var records [][]string
+	var records [][]string
 
-//records = append(records, df.colNames)
-//for i := 0; i < df.nRows; i++ {
-//r := []string{}
-//for _, v := range df.colNames {
-//r = append(r, df.columns[v].getRowStr(i))
-//}
-//records = append(records, r)
-//}
+	records = append(records, df.colNames)
+	for i := 0; i < df.nRows; i++ {
+		r := []string{}
+		for _, v := range df.columns {
+			r = append(r, v.cells[i].String())
+		}
+		records = append(records, r)
+	}
 
-//return records
-//}
+	return records
+}
 
 //// TODO: Save to other formats. JSON? XML?
 
