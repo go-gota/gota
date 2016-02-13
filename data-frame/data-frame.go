@@ -4,8 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strconv"
-	"strings"
 )
 
 // NOTE: The concept of NA is represented by nil pointers
@@ -30,7 +28,7 @@ type tointeger interface {
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	Columns  Columns
+	columns  []column
 	colNames []string
 	colTypes []string
 	nCols    int
@@ -44,47 +42,50 @@ type C struct {
 	Elements interface{}
 }
 
-// New is a constructor for DataFrames
-func New(colConst ...interface{}) (*DataFrame, error) {
-	if len(colConst) == 0 {
-		return nil, errors.New("Can't create empty DataFrame")
-	}
-	var colLength int
-	colNames := []string{}
-	colTypes := []string{}
-	cols := make(Columns)
-	for k, v := range colConst {
-		switch v.(type) {
-		case C:
-			val := v.(C)
-			col, err := NewCol(val.Colname, val.Elements)
-			if err != nil {
-				return nil, err
-			}
+// T is used to represent the association between a column and it't type
+type T map[string]string
 
-			// Check that the length of all columns are the same
-			if k == 0 {
-				colLength = col.Len()
-			} else {
-				if colLength != col.Len() {
-					return nil, errors.New("Columns don't have the same dimensions")
-				}
-			}
-			cols[val.Colname] = *col
-			colNames = append(colNames, col.colName)
-			colTypes = append(colTypes, col.colType)
-		}
-	}
-	df := &DataFrame{
-		colNames: colNames,
-		colTypes: colTypes,
-		Columns:  cols,
-		nRows:    colLength,
-		nCols:    len(colNames),
-	}
+//// New is a constructor for DataFrames
+//func New(colConst ...interface{}) (*DataFrame, error) {
+//if len(colConst) == 0 {
+//return nil, errors.New("Can't create empty DataFrame")
+//}
+//var colLength int
+//colNames := []string{}
+//colTypes := []string{}
+//cols := make(Columns)
+//for k, v := range colConst {
+//switch v.(type) {
+//case C:
+//val := v.(C)
+//col, err := NewCol(val.Colname, val.Elements)
+//if err != nil {
+//return nil, err
+//}
 
-	return df, nil
-}
+//// Check that the length of all columns are the same
+//if k == 0 {
+//colLength = col.Len()
+//} else {
+//if colLength != col.Len() {
+//return nil, errors.New("Columns don't have the same dimensions")
+//}
+//}
+//cols[val.Colname] = *col
+//colNames = append(colNames, col.colName)
+//colTypes = append(colTypes, col.colType)
+//}
+//}
+//df := &DataFrame{
+//colNames: colNames,
+//colTypes: colTypes,
+//Columns:  cols,
+//nRows:    colLength,
+//nCols:    len(colNames),
+//}
+
+//return df, nil
+//}
 
 //// Row represents a single row on a DataFrame
 //type Row struct {
@@ -107,9 +108,6 @@ func New(colConst ...interface{}) (*DataFrame, error) {
 //appears []int
 //}
 
-// T is used to represent the association between a column and it't type
-type T map[string]string
-
 ////type Error struct {
 ////errorType Err
 ////}
@@ -128,117 +126,117 @@ type T map[string]string
 ////Etc
 ////)
 
-// LoadData will load the data from a multidimensional array of strings into
-// a DataFrame object.
-func (df *DataFrame) LoadData(records [][]string) error {
-	// Calculate DataFrame dimensions
-	nRows := len(records) - 1
-	if nRows <= 0 {
-		return errors.New("Empty dataframe")
-	}
-	colnames := records[0]
-	nCols := len(colnames)
+//// LoadData will load the data from a multidimensional array of strings into
+//// a DataFrame object.
+//func (df *DataFrame) LoadData(records [][]string) error {
+//// Calculate DataFrame dimensions
+//nRows := len(records) - 1
+//if nRows <= 0 {
+//return errors.New("Empty dataframe")
+//}
+//colnames := records[0]
+//nCols := len(colnames)
 
-	// If colNames has empty elements we must fill it with unique colnames
-	colnamesMap := make(map[string]bool)
-	auxCounter := 0
-	// Get unique columnenames
-	for _, v := range colnames {
-		if v != "" {
-			if _, ok := colnamesMap[v]; !ok {
-				colnamesMap[v] = true
-			} else {
-				return errors.New("Duplicated column names: " + v)
-			}
-		}
-	}
-	for k, v := range colnames {
-		if v == "" {
-			for {
-				newColname := fmt.Sprint("V", auxCounter)
-				auxCounter++
-				if _, ok := colnamesMap[newColname]; !ok {
-					colnames[k] = newColname
-					colnamesMap[newColname] = true
-					break
-				}
-			}
-		}
-	}
+//// If colNames has empty elements we must fill it with unique colnames
+//colnamesMap := make(map[string]bool)
+//auxCounter := 0
+//// Get unique columnenames
+//for _, v := range colnames {
+//if v != "" {
+//if _, ok := colnamesMap[v]; !ok {
+//colnamesMap[v] = true
+//} else {
+//return errors.New("Duplicated column names: " + v)
+//}
+//}
+//}
+//for k, v := range colnames {
+//if v == "" {
+//for {
+//newColname := fmt.Sprint("V", auxCounter)
+//auxCounter++
+//if _, ok := colnamesMap[newColname]; !ok {
+//colnames[k] = newColname
+//colnamesMap[newColname] = true
+//break
+//}
+//}
+//}
+//}
 
-	// Generate a df to store the temporary values
-	newDf := DataFrame{
-		nRows:    nRows,
-		nCols:    nCols,
-		colNames: colnames,
-		colTypes: []string{},
-	}
+//// Generate a df to store the temporary values
+//newDf := DataFrame{
+//nRows:    nRows,
+//nCols:    nCols,
+//colNames: colnames,
+//colTypes: []string{},
+//}
 
-	cols := make(Columns)
-	// Fill the columns on the DataFrame
-	for j := 0; j < nCols; j++ {
-		colstrarr := []string{}
-		for i := 1; i < nRows+1; i++ {
-			colstrarr = append(colstrarr, records[i][j])
-		}
+//cols := make(Columns)
+//// Fill the columns on the DataFrame
+//for j := 0; j < nCols; j++ {
+//colstrarr := []string{}
+//for i := 1; i < nRows+1; i++ {
+//colstrarr = append(colstrarr, records[i][j])
+//}
 
-		col, err := NewCol(colnames[j], Strings(colstrarr))
-		if err != nil {
-			return err
-		}
+//col, err := NewCol(colnames[j], Strings(colstrarr))
+//if err != nil {
+//return err
+//}
 
-		cols[colnames[j]] = *col
+//cols[colnames[j]] = *col
 
-		newDf.colTypes = append(newDf.colTypes, col.colType)
-	}
+//newDf.colTypes = append(newDf.colTypes, col.colType)
+//}
 
-	newDf.Columns = cols
-	*df = newDf
-	return nil
-}
+//newDf.Columns = cols
+//*df = newDf
+//return nil
+//}
 
-// LoadAndParse will load the data from a multidimensional array of strings and
-// parse it accordingly with the given types element. The types element can be
-// a string array with matching dimensions to the number of columns or
-// a DataFrame.T object.
-func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
-	// Initialize the DataFrame with all columns as string type
-	err := df.LoadData(records)
-	if err != nil {
-		return err
-	}
+//// LoadAndParse will load the data from a multidimensional array of strings and
+//// parse it accordingly with the given types element. The types element can be
+//// a string array with matching dimensions to the number of columns or
+//// a DataFrame.T object.
+//func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
+//// Initialize the DataFrame with all columns as string type
+//err := df.LoadData(records)
+//if err != nil {
+//return err
+//}
 
-	// Parse the DataFrame columns acording to the given types
-	switch types.(type) {
-	case []string:
-		types := types.([]string)
-		if df.nCols != len(types) {
-			return errors.New("Number of columns different from number of types")
-		}
-		for k, v := range df.colNames {
-			col, err := parseColumn(df.Columns[v], types[k])
-			if err != nil {
-				return err
-			}
-			df.colTypes[k] = col.colType
-			df.Columns[v] = *col
-		}
-	case T:
-		types := types.(T)
-		for k, v := range types {
-			col, err := parseColumn(df.Columns[k], v)
-			if err != nil {
-				return err
-			}
-			col.colType = v
-			colIndex, _ := df.colIndex(k)
-			df.colTypes[*colIndex] = col.colType
-			df.Columns[k] = *col
-		}
-	}
+//// Parse the DataFrame columns acording to the given types
+//switch types.(type) {
+//case []string:
+//types := types.([]string)
+//if df.nCols != len(types) {
+//return errors.New("Number of columns different from number of types")
+//}
+//for k, v := range df.colNames {
+//col, err := parseColumn(df.Columns[v], types[k])
+//if err != nil {
+//return err
+//}
+//df.colTypes[k] = col.colType
+//df.Columns[v] = *col
+//}
+//case T:
+//types := types.(T)
+//for k, v := range types {
+//col, err := parseColumn(df.Columns[k], v)
+//if err != nil {
+//return err
+//}
+//col.colType = v
+//colIndex, _ := df.colIndex(k)
+//df.colTypes[*colIndex] = col.colType
+//df.Columns[k] = *col
+//}
+//}
 
-	return nil
-}
+//return nil
+//}
 
 //// SaveRecords will save data to records in [][]string format
 //func (df DataFrame) SaveRecords() [][]string {
@@ -723,44 +721,44 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return &newDf, nil
 //}
 
-// TODO: We should truncate the maximum length of shown columns and scape newline
-// characters'
-// Implementing the Stringer interface for DataFrame
-func (df DataFrame) String() (str string) {
-	addLeftPadding := func(s string, nchar int) string {
-		if len(s) < nchar {
-			return strings.Repeat(" ", nchar-len(s)) + s
-		}
-		return s
-	}
-	addRightPadding := func(s string, nchar int) string {
-		if len(s) < nchar {
-			return s + strings.Repeat(" ", nchar-len(s))
-		}
-		return s
-	}
+//// TODO: We should truncate the maximum length of shown columns and scape newline
+//// characters'
+//// Implementing the Stringer interface for DataFrame
+//func (df DataFrame) String() (str string) {
+//addLeftPadding := func(s string, nchar int) string {
+//if len(s) < nchar {
+//return strings.Repeat(" ", nchar-len(s)) + s
+//}
+//return s
+//}
+//addRightPadding := func(s string, nchar int) string {
+//if len(s) < nchar {
+//return s + strings.Repeat(" ", nchar-len(s))
+//}
+//return s
+//}
 
-	nRowsPadding := len(fmt.Sprint(df.nRows))
-	if len(df.colNames) != 0 {
-		str += addLeftPadding("  ", nRowsPadding+2)
-		for _, v := range df.colNames {
-			str += addRightPadding(v, df.Columns[v].numChars)
-			str += "  "
-		}
-		str += "\n"
-		str += "\n"
-	}
-	for i := 0; i < df.nRows; i++ {
-		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
-		for _, v := range df.colNames {
-			elem, _ := df.Columns[v].Index(i)
-			str += addRightPadding(formatCell(elem), df.Columns[v].numChars)
-			str += "  "
-		}
-		str += "\n"
-	}
-	return str
-}
+//nRowsPadding := len(fmt.Sprint(df.nRows))
+//if len(df.colNames) != 0 {
+//str += addLeftPadding("  ", nRowsPadding+2)
+//for _, v := range df.colNames {
+//str += addRightPadding(v, df.Columns[v].numChars)
+//str += "  "
+//}
+//str += "\n"
+//str += "\n"
+//}
+//for i := 0; i < df.nRows; i++ {
+//str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
+//for _, v := range df.colNames {
+//elem, _ := df.Columns[v].Index(i)
+//str += addRightPadding(formatCell(elem), df.Columns[v].numChars)
+//str += "  "
+//}
+//str += "\n"
+//}
+//return str
+//}
 
 // formatCell returns the value of a given element in string format. In case of
 // a nil pointer the value returned will be NA.
