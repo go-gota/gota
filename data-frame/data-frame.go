@@ -125,74 +125,73 @@ func New(colConst ...C) (*DataFrame, error) {
 ////Etc
 ////)
 
-//// LoadData will load the data from a multidimensional array of strings into
-//// a DataFrame object.
-//func (df *DataFrame) LoadData(records [][]string) error {
-//// Calculate DataFrame dimensions
-//nRows := len(records) - 1
-//if nRows <= 0 {
-//return errors.New("Empty dataframe")
-//}
-//colnames := records[0]
-//nCols := len(colnames)
+// LoadData will load the data from a multidimensional array of strings into
+// a DataFrame object.
+func (df *DataFrame) LoadData(records [][]string) error {
+	// Calculate DataFrame dimensions
+	nRows := len(records) - 1
+	if nRows <= 0 {
+		return errors.New("Empty dataframe")
+	}
+	colnames := records[0]
+	nCols := len(colnames)
 
-//// If colNames has empty elements we must fill it with unique colnames
-//colnamesMap := make(map[string]bool)
-//auxCounter := 0
-//// Get unique columnenames
-//for _, v := range colnames {
-//if v != "" {
-//if _, ok := colnamesMap[v]; !ok {
-//colnamesMap[v] = true
-//} else {
-//return errors.New("Duplicated column names: " + v)
-//}
-//}
-//}
-//for k, v := range colnames {
-//if v == "" {
-//for {
-//newColname := fmt.Sprint("V", auxCounter)
-//auxCounter++
-//if _, ok := colnamesMap[newColname]; !ok {
-//colnames[k] = newColname
-//colnamesMap[newColname] = true
-//break
-//}
-//}
-//}
-//}
+	// If colNames has empty elements we must fill it with unique colnames
+	colnamesMap := make(map[string]bool)
+	auxCounter := 0
+	// Get unique columnenames
+	for _, v := range colnames {
+		if v != "" {
+			if _, ok := colnamesMap[v]; !ok {
+				colnamesMap[v] = true
+			} else {
+				return errors.New("Duplicated column names: " + v)
+			}
+		}
+	}
+	for k, v := range colnames {
+		if v == "" {
+			for {
+				newColname := fmt.Sprint("V", auxCounter)
+				auxCounter++
+				if _, ok := colnamesMap[newColname]; !ok {
+					colnames[k] = newColname
+					colnamesMap[newColname] = true
+					break
+				}
+			}
+		}
+	}
 
-//// Generate a df to store the temporary values
-//newDf := DataFrame{
-//nRows:    nRows,
-//nCols:    nCols,
-//colNames: colnames,
-//colTypes: []string{},
-//}
+	// Generate a df to store the temporary values
+	newDf := DataFrame{
+		nRows:    nRows,
+		nCols:    nCols,
+		colNames: colnames,
+		colTypes: []string{},
+	}
 
-//cols := make(columns)
-//// Fill the columns on the DataFrame
-//for j := 0; j < nCols; j++ {
-//colstrarr := []string{}
-//for i := 1; i < nRows+1; i++ {
-//colstrarr = append(colstrarr, records[i][j])
-//}
+	cols := columns{}
+	// Fill the columns on the DataFrame
+	for j := 0; j < nCols; j++ {
+		colstrarr := []string{}
+		for i := 1; i < nRows+1; i++ {
+			colstrarr = append(colstrarr, records[i][j])
+		}
 
-//col, err := NewCol(colnames[j], Strings(colstrarr))
-//if err != nil {
-//return err
-//}
+		col, err := newCol(colnames[j], Strings(colstrarr))
+		if err != nil {
+			return err
+		}
 
-//cols[colnames[j]] = *col
+		cols = append(cols, *col)
+		newDf.colTypes = append(newDf.colTypes, col.colType)
+	}
 
-//newDf.colTypes = append(newDf.colTypes, col.colType)
-//}
-
-//newDf.columns = cols
-//*df = newDf
-//return nil
-//}
+	newDf.columns = cols
+	*df = newDf
+	return nil
+}
 
 //// LoadAndParse will load the data from a multidimensional array of strings and
 //// parse it accordingly with the given types element. The types element can be
