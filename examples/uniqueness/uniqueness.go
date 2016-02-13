@@ -24,7 +24,7 @@ func main() {
 		return
 	}
 
-	err = d.LoadAndParse(records, df.T{"Age": "int", "Date": "date", "Amount": "float64"})
+	err = d.LoadAndParse(records, df.T{"Age": "int", "Amount": "float"})
 	if err != nil {
 		fmt.Println(err)
 		return

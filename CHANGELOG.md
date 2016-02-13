@@ -2,13 +2,13 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.2.0] - 2016-02-13
 ### Added
 - Added a lot of unit tests
 
 ### Changed
-- The base types are now df.String, df.Int, df.Float and df.Date
-- Restructured the project in different files
+- The base types are now `df.String`, `df.Int`, and `df.Float`.
+- Restructured the project in different files.
 - Refactored the project so that it will allow columns to be of any
   type as long as it complies with the necessary interfaces.
 
@@ -21,3 +21,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Row/Column subsetting (Indexing, column names, row numbers, range).
 - Unique/Duplicated row subsetting.
 - DataFrame combinations by rows and columns (cbind/rbind).
+
+[0.1.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.1.0
+[0.2.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.2.0

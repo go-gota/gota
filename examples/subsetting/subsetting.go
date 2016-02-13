@@ -24,17 +24,11 @@ func main() {
 		return
 	}
 
-	err = d.LoadAndParse(records, df.T{"Age": "int", "Date": "date", "Amount": "float64"})
+	err = d.LoadAndParse(records, df.T{"Age": "int", "Amount": "float"})
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-
-	// Print df.Column to console
-	fmt.Println(d.Columns["Age"])
-	fmt.Println(d.Columns["Country"])
-	fmt.Println(d.Columns["Date"])
-	fmt.Println(d.Columns["Amount"])
 
 	// Print a DataFrame to console
 	fmt.Println(d)

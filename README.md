@@ -52,7 +52,7 @@ a package that:
 - [ ] Load/save XML data
 - [ ] Load/save JSON data
 - [x] Parse loaded data to the given types (Currently supported:
-  `int`, `float64`, `date` & `string`)
+  `Int`, `Float`, & `String`)
 - [x] Row/Column subsetting (Indexing, column names, row numbers, range)
 - [x] Unique/Duplicate row subsetting
 - [ ] Conditional subsetting (i.e.:`Age > 35 && City == "London"`)
@@ -66,6 +66,19 @@ a package that:
 
 Usage
 -----
+### Types
+Each column in a DataFrame can only have elements of a given type. To
+be able parse columns to different types, sort them and keep
+everything compatible the types included into a column have to comply
+with the `cell` interface. Right now the `cell` interface have the
+following methods:
+```
+type cell interface {
+	String() string
+	ToInteger() (int, error)
+	ToFloat() (float64, error)
+}
+```
 
 ### Loading data
 ```
@@ -91,23 +104,36 @@ if err != nil {
 }
 
 // Load and parse the features to the given format
-err = d.LoadAndParse(records, df.T{"Age": "int", "Date": "date", "Amount": "float64"})
+err = d.LoadAndParse(records, df.T{"Age": "int", "Amount": "float"})
 if err != nil {
     fmt.Println(err)
     return
 }
+
+// Create a new DataFrame with a custom constructor
+d, err := df.New(
+    df.C{"A", df.Strings("a", "b", "c")},
+    df.C{"B", df.Ints(1, nil, 2)},
+    df.C{"C", df.Ints(1, 2, 3)},
+)
 ```
 
 ### Print to console
 ```
-// Print df.Column to console
-fmt.Println(d.Columns["Age"])
-fmt.Println(d.Columns["Country"])
-fmt.Println(d.Columns["Date"])
-fmt.Println(d.Columns["Amount"])
-
 // Print a DataFrame to console
 fmt.Println(d)
+
+>      Country         Date        Age  Amount  Id
+>
+>   0: United States   2012-02-01  50   112.1   01234
+>   1: United States   2012-02-01  32   321.31  54320
+>   2: United Kingdom  2012-02-01  17   18.2    12345
+>   3: United States   2012-02-01  32   321.31  54320
+>   4: United Kingdom  2012-02-01  NA   18.2    12345
+>   5: United States   2012-02-01  32   321.31  54320
+>   6: United States   2012-02-01  32   321.31  54320
+>   7: Spain           2012-02-01  66   555.42  00241
+
 ```
     
 ### Subsetting

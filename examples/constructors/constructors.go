@@ -1,7 +1,7 @@
 package main
 
 import (
-	"time"
+	"fmt"
 
 	"github.com/kniren/gota/data-frame"
 )
@@ -13,12 +13,11 @@ type test struct {
 }
 
 func main() {
-	num := 1
-	df.New(
-		df.C{"A", []string{"a", "b", "c"}},
-		df.C{"B", []*int{&num, nil, &num}},
-		df.C{"C", []int{1, 2, 3}},
-		df.C{"D", []time.Time{time.Now(), time.Now(), time.Now()}},
-		df.C{"E", []test{test{1, "2", 3.4}}},
+	d, _ := df.New(
+		df.C{"A", df.Strings("a", "b", "c")},
+		df.C{"B", df.Ints(1, nil, 2)},
+		df.C{"C", df.Ints(1, 2, 3)},
 	)
+
+	fmt.Println(d)
 }
