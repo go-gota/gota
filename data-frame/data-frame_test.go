@@ -191,3 +191,29 @@ func TestDataFrame_SubsetRows(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestDataFrame_Rbind(t *testing.T) {
+	dataA := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"9", "10", "11", "12"},
+	}
+	dataB := [][]string{
+		[]string{"B", "A", "D", "C"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"9", "10", "11", "12"},
+	}
+
+	// Test parsing two columns as integers
+	dfA := DataFrame{}
+	dfA.LoadData(dataA)
+	dfB := DataFrame{}
+	dfB.LoadData(dataB)
+
+	_, err := Rbind(dfA, dfB)
+	if err != nil {
+		t.Error(err)
+	}
+}

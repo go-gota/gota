@@ -499,43 +499,52 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	return &newDf, nil
 }
 
-//// addRow adds a single Row to the DataFrame
-//func (df *DataFrame) addRow(row Row) error {
-//// Check that the given row contains the same number of columns that the
-//// current dataframe.
-//if df.nCols != row.nCols {
-//return errors.New("Different number of columns")
-//}
+// Rbind combines the rows of two dataframes
+func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+	// Check that the given DataFrame contains the same number of columns that the
+	// current dataframe.
+	if dfA.nCols != dfB.nCols {
+		return nil, errors.New("Different number of columns")
+	}
 
-//// Check that the names and the types of all columns are the same
-//colNameTypeMap := make(map[string]string)
-//for k, v := range df.colNames {
-//colNameTypeMap[v] = df.colTypes[k]
-//}
-//for k, v := range row.colNames {
-//if dfType, ok := colNameTypeMap[v]; ok {
-//if dfType != row.colTypes[k] {
-//return errors.New("Mismatching column types")
-//}
-//} else {
-//return errors.New("Mismatching column names")
-//}
-//}
+	// Check that the names and the types of all columns are the same
+	colNameTypeMap := make(map[string]string)
+	for k, v := range dfA.colNames {
+		colNameTypeMap[v] = dfA.colTypes[k]
+	}
 
-//cols := make(columns)
-//for _, v := range df.colNames {
-//col := df.columns[v]
-//err := col.AddValues(row.columns[v].row)
-//if err != nil {
-//return err
-//}
-//cols[v] = col
-//}
-//df.columns = cols
-//df.nRows++
+	for k, v := range dfB.colNames {
+		if dfType, ok := colNameTypeMap[v]; ok {
+			if dfType != dfB.colTypes[k] {
+				return nil, errors.New("Mismatching column types")
+			}
+		} else {
+			return nil, errors.New("Mismatching column names")
+		}
+	}
 
-//return nil
-//}
+	cols := columns{}
+	for _, v := range dfA.colNames {
+		i, err := dfA.colIndex(v)
+		if err != nil {
+			return nil, err
+		}
+		j, err := dfB.colIndex(v)
+		if err != nil {
+			return nil, err
+		}
+		col := dfA.columns[*i]
+		col, err = col.append(dfB.columns[*j].cells...)
+		if err != nil {
+			return nil, err
+		}
+		cols = append(cols, col)
+	}
+	dfA.columns = cols
+	dfA.nRows += dfB.nRows
+
+	return &dfA, nil
+}
 
 //// Cbind combines the columns of two DataFrames
 //func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
@@ -575,45 +584,6 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 //}
 
 //return &newDf, nil
-//}
-
-//// Rbind combines the rows of two dataframes
-//func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
-//// Check that the given DataFrame contains the same number of columns that the
-//// current dataframe.
-//if dfA.nCols != dfB.nCols {
-//return nil, errors.New("Different number of columns")
-//}
-
-//// Check that the names and the types of all columns are the same
-//colNameTypeMap := make(map[string]string)
-//for k, v := range dfA.colNames {
-//colNameTypeMap[v] = dfA.colTypes[k]
-//}
-
-//for k, v := range dfB.colNames {
-//if dfType, ok := colNameTypeMap[v]; ok {
-//if dfType != dfB.colTypes[k] {
-//return nil, errors.New("Mismatching column types")
-//}
-//} else {
-//return nil, errors.New("Mismatching column names")
-//}
-//}
-
-//cols := make(columns)
-//for _, v := range dfA.colNames {
-//col := dfA.columns[v]
-//err := col.AddValues(dfB.columns[v].row)
-//if err != nil {
-//return nil, err
-//}
-//cols[v] = col
-//}
-//dfA.columns = cols
-//dfA.nRows += dfB.nRows
-
-//return &dfA, nil
 //}
 
 //// uniqueRowsMap is a helper function that will get a map of unique or duplicated
