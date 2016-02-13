@@ -39,10 +39,10 @@ func TestAppend(t *testing.T) {
 	}
 }
 
-func TestNewCol(t *testing.T) {
+func TestnewCol(t *testing.T) {
 	col, err := newCol("TestCol", Strings("A", "B"))
 	if err != nil || col == nil {
-		t.Error("NewCol has failed unexpectedly:", err)
+		t.Error("newCol has failed unexpectedly:", err)
 	}
 	expected := "[A B]"
 	received := fmt.Sprint(col.cells)
@@ -59,67 +59,66 @@ func TestNewCol(t *testing.T) {
 
 func TestColumn_parseColumn(t *testing.T) {
 	// String to Int
-	//cola, _ := NewCol("TestCol", Strings("1", "2"))
-	//colb, err := parseColumn(*cola, "int")
-	//if err != nil {
-	//t.Error("Error parsing a df.String column into df.Int:", err)
-	//}
-	//if colb.Len() != cola.Len() ||
-	//colb.colName != cola.colName ||
-	//colb.colType != "df.Int" ||
-	//fmt.Sprint(colb.row) != "[1 2]" {
-	//t.Error("Error parsing a df.String column into df.Int",
-	//"\ncola.Len():", cola.Len(),
-	//"\ncolb.Len():", colb.Len(),
-	//"\ncola.colName:", cola.colName,
-	//"\ncolb.colName:", colb.colName,
-	//"\ncolb.colType:", colb.colType,
-	//)
-	//}
+	cola, _ := newCol("TestCol", Strings("1", "2"))
+	colb, err := parseColumn(*cola, "int")
+	if err != nil {
+		t.Error("Error parsing a df.String column into df.Int:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Int" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
 
 	// String to String
-	//cola, _ = NewCol("TestCol", Strings("1", "2"))
-	//colb, err = parseColumn(*cola, "string")
-	//if err != nil {
-	//t.Error("Error parsing a df.String column into df.String:", err)
-	//}
-	//if colb.Len() != cola.Len() ||
-	//colb.colName != cola.colName ||
-	//colb.colType != "df.String" ||
-	//fmt.Sprint(colb.row) != "[1 2]" {
-	//t.Error("Error parsing a df.String column into df.Int",
-	//"\ncola.Len():", cola.Len(),
-	//"\ncolb.Len():", colb.Len(),
-	//"\ncola.colName:", cola.colName,
-	//"\ncolb.colName:", colb.colName,
-	//"\ncolb.colType:", colb.colType,
-	//)
-	//}
+	cola, _ = newCol("TestCol", Strings("1", "2"))
+	colb, err = parseColumn(*cola, "string")
+	if err != nil {
+		t.Error("Error parsing a df.String column into df.String:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.String" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
 
-	//// Int to String
-	//cola, _ = NewCol("TestCol", Ints(1, 2))
-	//colb, err = parseColumn(*cola, "string")
-	//if err != nil {
-	//t.Error("Error parsing a df.Int column into df.String:", err)
-	//}
-	//if colb.Len() != cola.Len() ||
-	//colb.colName != cola.colName ||
-	//colb.colType != "df.String" ||
-	//fmt.Sprint(colb.row) != "[1 2]" {
-	//t.Error("Error parsing a df.String column into df.Int",
-	//"\ncola.Len():", cola.Len(),
-	//"\ncolb.Len():", colb.Len(),
-	//"\ncola.colName:", cola.colName,
-	//"\ncolb.colName:", colb.colName,
-	//"\ncolb.colType:", colb.colType,
-	//)
-	//}
+	// Int to String
+	cola, _ = newCol("TestCol", Ints(1, 2))
+	colb, err = parseColumn(*cola, "string")
+	if err != nil {
+		t.Error("Error parsing a df.Int column into df.String:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.String" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
 
-	//// Unknown type
-	//cola, _ = NewCol("TestCol", Ints(1, 2))
-	//colb, err = parseColumn(*cola, "asdfg")
-	//if err == nil {
-	//t.Error("Error parsing an unknown type, error not thrown.")
-	//}
-
+	// Unknown type
+	cola, _ = newCol("TestCol", Ints(1, 2))
+	colb, err = parseColumn(*cola, "asdfg")
+	if err == nil {
+		t.Error("Error parsing an unknown type, error not thrown.")
+	}
 }
