@@ -18,6 +18,7 @@ type rowable interface {
 
 type cell interface {
 	String() string
+	ToInteger() (int, error)
 }
 
 type cells []cell
@@ -28,7 +29,7 @@ type tointeger interface {
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns  []column
+	columns  columns
 	colNames []string
 	colTypes []string
 	nCols    int
