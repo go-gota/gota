@@ -96,6 +96,44 @@ func TestColumn_parseColumn(t *testing.T) {
 		)
 	}
 
+	// Float to String
+	cola, _ = newCol("TestCol", Floats(1, 2))
+	colb, err = parseColumn(*cola, "string")
+	if err != nil {
+		t.Error("Error parsing a df.Float column into df.String:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.String" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.Float column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// Float to Int
+	cola, _ = newCol("TestCol", Floats(1, 2))
+	colb, err = parseColumn(*cola, "int")
+	if err != nil {
+		t.Error("Error parsing a df.Float column into df.Int:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Int" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.Float column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
 	// Int to String
 	cola, _ = newCol("TestCol", Ints(1, 2))
 	colb, err = parseColumn(*cola, "string")
@@ -106,7 +144,64 @@ func TestColumn_parseColumn(t *testing.T) {
 		colb.colName != cola.colName ||
 		colb.colType != "df.String" ||
 		fmt.Sprint(colb.cells) != "[1 2]" {
-		t.Error("Error parsing a df.String column into df.Int",
+		t.Error("Error parsing a df.Int column into df.String",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// String to Float
+	cola, _ = newCol("TestCol", Strings("1", "2"))
+	colb, err = parseColumn(*cola, "float")
+	if err != nil {
+		t.Error("Error parsing a df.String column into df.Float:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Float" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Float",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// Int to Float
+	cola, _ = newCol("TestCol", Ints(1, 2))
+	colb, err = parseColumn(*cola, "float")
+	if err != nil {
+		t.Error("Error parsing a df.Int column into df.Float:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Float" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.Int column into df.Float",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
+
+	// Float to Float
+	cola, _ = newCol("TestCol", Floats(1, 2))
+	colb, err = parseColumn(*cola, "float")
+	if err != nil {
+		t.Error("Error parsing a df.Float column into df.Float:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Float" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.Float column into df.Float",
 			"\nlen(cola.cells):", len(cola.cells),
 			"\nlen(colb.cells):", len(colb.cells),
 			"\ncola.colName:", cola.colName,
