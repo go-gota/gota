@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 // NOTE: The concept of NA is represented by nil pointers
@@ -34,63 +36,59 @@ type DataFrame struct {
 	colTypes []string
 	nCols    int
 	nRows    int
-	keys     []string
 }
 
 // C represents a way to pass Colname and Elements to a DF constructor
 type C struct {
 	Colname  string
-	Elements interface{}
+	Elements cells
 }
 
 // T is used to represent the association between a column and it't type
 type T map[string]string
 
-//// New is a constructor for DataFrames
-//func New(colConst ...interface{}) (*DataFrame, error) {
-//if len(colConst) == 0 {
-//return nil, errors.New("Can't create empty DataFrame")
-//}
-//var colLength int
-//colNames := []string{}
-//colTypes := []string{}
-//cols := make(Columns)
-//for k, v := range colConst {
-//switch v.(type) {
-//case C:
-//val := v.(C)
-//col, err := NewCol(val.Colname, val.Elements)
-//if err != nil {
-//return nil, err
-//}
+// New is a constructor for DataFrames
+func New(colConst ...C) (*DataFrame, error) {
+	if len(colConst) == 0 {
+		return nil, errors.New("Can't create empty DataFrame")
+	}
 
-//// Check that the length of all columns are the same
-//if k == 0 {
-//colLength = col.Len()
-//} else {
-//if colLength != col.Len() {
-//return nil, errors.New("Columns don't have the same dimensions")
-//}
-//}
-//cols[val.Colname] = *col
-//colNames = append(colNames, col.colName)
-//colTypes = append(colTypes, col.colType)
-//}
-//}
-//df := &DataFrame{
-//colNames: colNames,
-//colTypes: colTypes,
-//Columns:  cols,
-//nRows:    colLength,
-//nCols:    len(colNames),
-//}
+	var colLength int
+	colNames := []string{}
+	colTypes := []string{}
+	cols := columns{}
+	for k, val := range colConst {
+		col, err := newCol(val.Colname, val.Elements)
+		if err != nil {
+			return nil, err
+		}
 
-//return df, nil
-//}
+		// Check that the length of all columns are the same
+		if k == 0 {
+			colLength = len(col.cells)
+		} else {
+			if colLength != len(col.cells) {
+				return nil, errors.New("columns don't have the same dimensions")
+			}
+		}
+		cols = append(cols, *col)
+		colNames = append(colNames, col.colName)
+		colTypes = append(colTypes, col.colType)
+	}
+	df := &DataFrame{
+		colNames: colNames,
+		colTypes: colTypes,
+		columns:  cols,
+		nRows:    colLength,
+		nCols:    len(colNames),
+	}
+
+	return df, nil
+}
 
 //// Row represents a single row on a DataFrame
 //type Row struct {
-//Columns  Columns
+//columns  columns
 //colNames []string
 //colTypes []string
 //nCols    int
@@ -173,7 +171,7 @@ type T map[string]string
 //colTypes: []string{},
 //}
 
-//cols := make(Columns)
+//cols := make(columns)
 //// Fill the columns on the DataFrame
 //for j := 0; j < nCols; j++ {
 //colstrarr := []string{}
@@ -191,7 +189,7 @@ type T map[string]string
 //newDf.colTypes = append(newDf.colTypes, col.colType)
 //}
 
-//newDf.Columns = cols
+//newDf.columns = cols
 //*df = newDf
 //return nil
 //}
@@ -215,24 +213,24 @@ type T map[string]string
 //return errors.New("Number of columns different from number of types")
 //}
 //for k, v := range df.colNames {
-//col, err := parseColumn(df.Columns[v], types[k])
+//col, err := parseColumn(df.columns[v], types[k])
 //if err != nil {
 //return err
 //}
 //df.colTypes[k] = col.colType
-//df.Columns[v] = *col
+//df.columns[v] = *col
 //}
 //case T:
 //types := types.(T)
 //for k, v := range types {
-//col, err := parseColumn(df.Columns[k], v)
+//col, err := parseColumn(df.columns[k], v)
 //if err != nil {
 //return err
 //}
 //col.colType = v
 //colIndex, _ := df.colIndex(k)
 //df.colTypes[*colIndex] = col.colType
-//df.Columns[k] = *col
+//df.columns[k] = *col
 //}
 //}
 
@@ -256,7 +254,7 @@ type T map[string]string
 //for i := 0; i < df.nRows; i++ {
 //r := []string{}
 //for _, v := range df.colNames {
-//r = append(r, df.Columns[v].getRowStr(i))
+//r = append(r, df.columns[v].getRowStr(i))
 //}
 //records = append(records, r)
 //}
@@ -292,16 +290,16 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //}
 
 //row := Row{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //colNames: df.colNames,
 //colTypes: df.colTypes,
 //nCols:    df.nCols,
 //}
 //for _, v := range df.colNames {
 //col := Column{}
-//r := df.Columns[v].row[i]
+//r := df.columns[v].row[i]
 //col.FillColumn(r)
-//row.Columns[v] = col
+//row.columns[v] = col
 //}
 
 //return &row, nil
@@ -327,7 +325,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 //// Generate a DataFrame to store the temporary values
 //newDf := DataFrame{
-//Columns:  make(Columns),
+//columns:  make(columns),
 //nRows:    df.nRows,
 //colNames: []string{},
 //colTypes: []string{},
@@ -351,8 +349,8 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //newDf.colNames = df.colNames[s.From:s.To]
 //newDf.colTypes = df.colTypes[s.From:s.To]
 //for _, v := range df.colNames[s.From:s.To] {
-//col := df.Columns[v]
-//newDf.Columns[v] = col
+//col := df.columns[v]
+//newDf.columns[v] = col
 //}
 //case []int:
 //colNums := subset.([]int)
@@ -375,8 +373,8 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 
 //newDf.nCols = len(colNums)
 //for _, v := range colNums {
-//col := df.Columns[df.colNames[v]]
-//newDf.Columns[df.colNames[v]] = col
+//col := df.columns[df.colNames[v]]
+//newDf.columns[df.colNames[v]] = col
 //newDf.colNames = append(newDf.colNames, df.colNames[v])
 //newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
 //}
@@ -392,8 +390,8 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 
 //// Select the desired subset of columns
 //for _, v := range columns {
-//if col, ok := df.Columns[v]; ok {
-//if _, ok := newDf.Columns[v]; ok {
+//if col, ok := df.columns[v]; ok {
+//if _, ok := newDf.columns[v]; ok {
 //dupedCols = append(dupedCols, v)
 //}
 //newDf.colNames = append(newDf.colNames, v)
@@ -402,7 +400,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return nil, err
 //}
 //newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
-//newDf.Columns[v] = col
+//newDf.columns[v] = col
 //} else {
 //noCols = append(noCols, v)
 //}
@@ -429,7 +427,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 //// Generate a DataFrame to store the temporary values
 //newDf := DataFrame{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //nCols:    df.nCols,
 //colNames: df.colNames,
 //colTypes: df.colTypes,
@@ -451,9 +449,9 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 
 //newDf.nRows = s.To - s.From
 //for _, v := range df.colNames {
-//col := df.Columns[v]
+//col := df.columns[v]
 //col.FillColumn(col.row[s.From:s.To])
-//newDf.Columns[v] = col
+//newDf.columns[v] = col
 //}
 //case []int:
 //rowNums := subset.([]int)
@@ -471,13 +469,13 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 
 //newDf.nRows = len(rowNums)
 //for _, v := range df.colNames {
-//col := df.Columns[v]
+//col := df.columns[v]
 //var row []interface{}
 //for _, v := range rowNums {
 //row = append(row, col.row[v])
 //}
 //col.FillColumn(row)
-//newDf.Columns[v] = col
+//newDf.columns[v] = col
 //}
 //default:
 //return nil, errors.New("Unknown subsetting option")
@@ -509,16 +507,16 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //}
 //}
 
-//cols := make(Columns)
+//cols := make(columns)
 //for _, v := range df.colNames {
-//col := df.Columns[v]
-//err := col.AddValues(row.Columns[v].row)
+//col := df.columns[v]
+//err := col.AddValues(row.columns[v].row)
 //if err != nil {
 //return err
 //}
 //cols[v] = col
 //}
-//df.Columns = cols
+//df.columns = cols
 //df.nRows++
 
 //return nil
@@ -547,7 +545,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //coltypes := append(dfA.colTypes, dfB.colTypes...)
 
 //newDf := DataFrame{
-//Columns:  initColumns(colnames),
+//columns:  initColumns(colnames),
 //nRows:    dfA.nRows,
 //nCols:    len(colnames),
 //colNames: colnames,
@@ -555,10 +553,10 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //}
 
 //for _, v := range dfA.colNames {
-//newDf.Columns[v] = dfA.Columns[v]
+//newDf.columns[v] = dfA.columns[v]
 //}
 //for _, v := range dfB.colNames {
-//newDf.Columns[v] = dfB.Columns[v]
+//newDf.columns[v] = dfB.columns[v]
 //}
 
 //return &newDf, nil
@@ -588,16 +586,16 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //}
 //}
 
-//cols := make(Columns)
+//cols := make(columns)
 //for _, v := range dfA.colNames {
-//col := dfA.Columns[v]
-//err := col.AddValues(dfB.Columns[v].row)
+//col := dfA.columns[v]
+//err := col.AddValues(dfB.columns[v].row)
 //if err != nil {
 //return nil, err
 //}
 //cols[v] = col
 //}
-//dfA.Columns = cols
+//dfA.columns = cols
 //dfA.nRows += dfB.nRows
 
 //return &dfA, nil
@@ -610,7 +608,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //for i := 0; i < df.nRows; i++ {
 //str := ""
 //for _, v := range df.colNames {
-//col := df.Columns[v]
+//col := df.columns[v]
 //str += col.colType
 //str += col.getRowStr(i)
 //}
@@ -630,7 +628,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //// will not be preserved.
 //func (df DataFrame) Unique() (*DataFrame, error) {
 //newDf := DataFrame{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //nCols:    df.nCols,
 //colNames: df.colNames,
 //colTypes: df.colTypes,
@@ -653,7 +651,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //// Duplicated will return all duplicated rows inside a DataFrame
 //func (df DataFrame) Duplicated() (*DataFrame, error) {
 //newDf := DataFrame{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //nCols:    df.nCols,
 //colNames: df.colNames,
 //colTypes: df.colTypes,
@@ -680,7 +678,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //// preserved.
 //func (df DataFrame) RemoveDuplicates() (*DataFrame, error) {
 //newDf := DataFrame{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //nCols:    df.nCols,
 //colNames: df.colNames,
 //colTypes: df.colTypes,
@@ -702,7 +700,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //// a DataFrame. The order of the rows will not be preserved.
 //func (df DataFrame) RemoveUnique() (*DataFrame, error) {
 //newDf := DataFrame{
-//Columns:  initColumns(df.colNames),
+//columns:  initColumns(df.colNames),
 //nCols:    df.nCols,
 //colNames: df.colNames,
 //colTypes: df.colTypes,
@@ -722,44 +720,45 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 //return &newDf, nil
 //}
 
-//// TODO: We should truncate the maximum length of shown columns and scape newline
-//// characters'
-//// Implementing the Stringer interface for DataFrame
-//func (df DataFrame) String() (str string) {
-//addLeftPadding := func(s string, nchar int) string {
-//if len(s) < nchar {
-//return strings.Repeat(" ", nchar-len(s)) + s
-//}
-//return s
-//}
-//addRightPadding := func(s string, nchar int) string {
-//if len(s) < nchar {
-//return s + strings.Repeat(" ", nchar-len(s))
-//}
-//return s
-//}
+// TODO: We should truncate the maximum length of shown columns and scape newline
+// characters'
+// Implementing the Stringer interface for DataFrame
+func (df DataFrame) String() (str string) {
+	addLeftPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return strings.Repeat(" ", nchar-len(s)) + s
+		}
+		return s
+	}
+	addRightPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return s + strings.Repeat(" ", nchar-len(s))
+		}
+		return s
+	}
 
-//nRowsPadding := len(fmt.Sprint(df.nRows))
-//if len(df.colNames) != 0 {
-//str += addLeftPadding("  ", nRowsPadding+2)
-//for _, v := range df.colNames {
-//str += addRightPadding(v, df.Columns[v].numChars)
-//str += "  "
-//}
-//str += "\n"
-//str += "\n"
-//}
-//for i := 0; i < df.nRows; i++ {
-//str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
-//for _, v := range df.colNames {
-//elem, _ := df.Columns[v].Index(i)
-//str += addRightPadding(formatCell(elem), df.Columns[v].numChars)
-//str += "  "
-//}
-//str += "\n"
-//}
-//return str
-//}
+	nRowsPadding := len(fmt.Sprint(df.nRows))
+	if len(df.colNames) != 0 {
+		str += addLeftPadding("  ", nRowsPadding+2)
+		for k, v := range df.colNames {
+			str += addRightPadding(v, df.columns[k].numChars)
+			str += "  "
+		}
+		str += "\n"
+		str += "\n"
+	}
+	for i := 0; i < df.nRows; i++ {
+		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
+		for _, v := range df.columns {
+			elem := v.cells[i]
+			str += addRightPadding(formatCell(elem), v.numChars)
+			str += "  "
+		}
+		str += "\n"
+	}
+
+	return str
+}
 
 // formatCell returns the value of a given element in string format. In case of
 // a nil pointer the value returned will be NA.

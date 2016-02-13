@@ -1,46 +1,51 @@
 package df
 
-//func TestNew(t *testing.T) {
-//df, err := New(
-//C{"A", Strings("aa", "b")},
-//C{"B", Strings("a", "bbb")},
-//)
-//if err != nil {
-//t.Error("Error when creating DataFrame:", err)
-//}
-//expected := "   A   B    \n\n0: aa  a    \n1: b   bbb  \n"
-//received := fmt.Sprint(df)
-//if expected != received {
-//t.Error(
-//"DataFrame created by New() is not correct",
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
+import (
+	"fmt"
+	"testing"
+)
 
-//df, err = New()
-//if err == nil {
-//t.Error("Error when creating DataFrame not being thrown")
-//}
+func TestNew(t *testing.T) {
+	df, err := New(
+		C{"A", Strings("aa", "b")},
+		C{"B", Strings("a", "bbb")},
+	)
+	if err != nil {
+		t.Error("Error when creating DataFrame:", err)
+	}
+	expected := "   A   B    \n\n0: aa  a    \n1: b   bbb  \n"
+	received := fmt.Sprint(df)
+	if expected != received {
+		t.Error(
+			"DataFrame created by New() is not correct",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 
-//df, err = New(
-//C{"A", Strings("a", "b")},
-//C{"B", Strings("a", "b", "c")},
-//)
-//if err == nil {
-//t.Error("Error when creating DataFrame not being thrown")
-//}
+	df, err = New()
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
 
-//df, err = New(
-//C{"A", Strings()},
-//C{"B", Strings("a", "b", "c")},
-//)
-//if err == nil {
-//t.Error("Error when creating DataFrame not being thrown")
-//}
-//}
+	df, err = New(
+		C{"A", Strings("a", "b")},
+		C{"B", Strings("a", "b", "c")},
+	)
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
+
+	df, err = New(
+		C{"A", Strings()},
+		C{"B", Strings("a", "b", "c")},
+	)
+	if err == nil {
+		t.Error("Error when creating DataFrame not being thrown")
+	}
+}
 
 //func TestDataFrame_LoadData(t *testing.T) {
 //data := [][]string{

@@ -15,7 +15,7 @@ type column struct {
 	numChars int
 }
 
-type columns map[string]column
+type columns []column
 
 // newCol is the constructor for a new Column with the given colName and elements
 func newCol(colName string, elements cells) (*column, error) {
