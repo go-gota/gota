@@ -75,8 +75,8 @@ following methods:
 ```
 type cell interface {
 	String() string
-	ToInteger() (int, error)
-	ToFloat() (float64, error)
+	ToInteger() (*int, error)
+	ToFloat() (*float64, error)
 }
 ```
 
