@@ -689,3 +689,38 @@ func formatCell(cell interface{}) string {
 	}
 	return fmt.Sprint(cell)
 }
+
+func innerMerge(dfa DataFrame, dfb DataFrame, key string) (*DataFrame, error) {
+	// NOTE: For now just considering one key for merging
+	colia, err := dfa.columnIndex(key)
+	if err != nil {
+		return nil, err
+	}
+	colib, err := dfb.columnIndex(key)
+	if err != nil {
+		return nil, err
+	}
+
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for ka, v := range dfa.columns[colia].cells {
+		vala := v.Checksum()
+		for kb, vv := range dfb.columns[colib].cells {
+			valb := vv.Checksum()
+			if vala == valb {
+				dfaIndexes = append(dfaIndexes, ka)
+				dfbIndexes = append(dfbIndexes, kb)
+			}
+		}
+	}
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+
+	bCols := []string{}
+	for _, v := range dfb.colNames {
+		if v != key {
+			bCols = append(bCols, v)
+		}
+	}
+	newdfb, _ := dfb.Subset(bCols, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}

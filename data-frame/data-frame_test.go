@@ -331,3 +331,23 @@ func TestDataFrame_RemoveUnique(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestDataFrame_innerMerge(t *testing.T) {
+	dataa := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"9", "10", "11", "12"},
+	}
+	datab := [][]string{
+		[]string{"A", "E", "F"},
+		[]string{"9", "9", "8"},
+		[]string{"1", "1", "2"},
+	}
+	dfa := DataFrame{}
+	dfa.LoadData(dataa)
+	dfb := DataFrame{}
+	dfb.LoadData(datab)
+	fmt.Println(innerMerge(dfa, dfb, "A"))
+}
