@@ -2,6 +2,11 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.2.1] - 2016-02-14
+### Fixed
+- Fixed a bug when the maximum number of characters on a column was
+  not being updated properly when subsetting.
+
 ## [0.2.0] - 2016-02-13
 ### Added
 - Added a lot of unit tests
