@@ -20,18 +20,18 @@ type rowable interface {
 
 type cell interface {
 	String() string
-	ToInteger() (int, error)
-	ToFloat() (float64, error)
+	ToInteger() (*int, error)
+	ToFloat() (*float64, error)
 }
 
 type cells []cell
 
 type tointeger interface {
-	ToInteger() (int, error)
+	ToInteger() (*int, error)
 }
 
 type tofloat interface {
-	ToFloat() (float64, error)
+	ToFloat() (*float64, error)
 }
 
 // DataFrame is the base data structure

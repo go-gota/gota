@@ -13,21 +13,21 @@ type String struct {
 }
 
 // ToInteger returns the integer value of String
-func (s String) ToInteger() (int, error) {
+func (s String) ToInteger() (*int, error) {
 	str, err := strconv.Atoi(s.s)
 	if err != nil {
-		return 0, errors.New("Could't convert to int")
+		return nil, errors.New("Could't convert to int")
 	}
-	return str, nil
+	return &str, nil
 }
 
 // ToFloat returns the float value of String
-func (s String) ToFloat() (float64, error) {
+func (s String) ToFloat() (*float64, error) {
 	f, err := strconv.ParseFloat(s.s, 64)
 	if err != nil {
-		return 0, errors.New("Could't convert to float64")
+		return nil, errors.New("Could't convert to float64")
 	}
-	return f, nil
+	return &f, nil
 }
 
 func (s String) String() string {
@@ -101,20 +101,20 @@ type Int struct {
 }
 
 // ToInteger returns the integer value of Int
-func (i Int) ToInteger() (int, error) {
+func (i Int) ToInteger() (*int, error) {
 	if i.i != nil {
-		return *i.i, nil
+		return i.i, nil
 	}
-	return 0, errors.New("Could't convert to int")
+	return nil, errors.New("Could't convert to int")
 }
 
 // ToFloat returns the float value of Int
-func (i Int) ToFloat() (float64, error) {
+func (i Int) ToFloat() (*float64, error) {
 	if i.i != nil {
 		f := float64(*i.i)
-		return f, nil
+		return &f, nil
 	}
-	return 0, errors.New("Could't convert to float")
+	return nil, errors.New("Could't convert to float")
 }
 
 func (i Int) String() string {
@@ -175,12 +175,12 @@ func Ints(args ...interface{}) cells {
 						if s.Index(i).Type().Implements(tointer) {
 							m := s.Index(i).MethodByName("ToInteger")
 							resolvedMethod := m.Call([]reflect.Value{})
-							j := resolvedMethod[0].Interface().(int)
+							j := resolvedMethod[0].Interface().(*int)
 							err := resolvedMethod[1].Interface()
 							if err != nil {
 								ret = append(ret, Int{nil})
 							} else {
-								ret = append(ret, Int{&j})
+								ret = append(ret, Int{j})
 							}
 						} else {
 							ret = append(ret, Int{nil})
@@ -206,19 +206,20 @@ func (f Float) String() string {
 }
 
 // ToInteger returns the integer value of Float
-func (f Float) ToInteger() (int, error) {
+func (f Float) ToInteger() (*int, error) {
 	if f.f != nil {
-		return int(*f.f), nil
+		i := int(*f.f)
+		return &i, nil
 	}
-	return 0, errors.New("Could't convert to int")
+	return nil, errors.New("Could't convert to int")
 }
 
 // ToFloat returns the float value of Float
-func (f Float) ToFloat() (float64, error) {
+func (f Float) ToFloat() (*float64, error) {
 	if f.f != nil {
-		return *f.f, nil
+		return f.f, nil
 	}
-	return 0, errors.New("Could't convert to float64")
+	return nil, errors.New("Could't convert to float64")
 }
 
 // Floats is a constructor for a Float array
@@ -276,12 +277,12 @@ func Floats(args ...interface{}) cells {
 						if s.Index(i).Type().Implements(tofloat) {
 							m := s.Index(i).MethodByName("ToFloat")
 							resolvedMethod := m.Call([]reflect.Value{})
-							j := resolvedMethod[0].Interface().(float64)
+							j := resolvedMethod[0].Interface().(*float64)
 							err := resolvedMethod[1].Interface()
 							if err != nil {
 								ret = append(ret, Float{nil})
 							} else {
-								ret = append(ret, Float{&j})
+								ret = append(ret, Float{j})
 							}
 						} else {
 							ret = append(ret, Float{nil})
