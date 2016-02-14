@@ -228,30 +228,21 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	case T:
 		types := types.(T)
 		for k, v := range types {
-			i, err := df.columnIndex(k)
+			i, err := df.colIndex(k)
 			if err != nil {
 				return err
 			}
-			col, err := parseColumn(df.columns[i], v)
+			col, err := parseColumn(df.columns[*i], v)
 			if err != nil {
 				return err
 			}
 			colIndex, _ := df.colIndex(k)
 			df.colTypes[*colIndex] = col.colType
-			df.columns[i] = *col
+			df.columns[*i] = *col
 		}
 	}
 
 	return nil
-}
-
-func (df DataFrame) columnIndex(colName string) (int, error) {
-	for k, v := range df.colNames {
-		if v == colName {
-			return k, nil
-		}
-	}
-	return -1, errors.New("Index out of range")
 }
 
 // SaveRecords will save data to records in [][]string format
@@ -394,12 +385,12 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 		// Select the desired subset of columns
 		for _, v := range columns {
-			i, err := df.columnIndex(v)
+			i, err := df.colIndex(v)
 			if err != nil {
 				return nil, err
 			}
 
-			col := df.columns[i]
+			col := df.columns[*i]
 			newDf.colNames = append(newDf.colNames, v)
 			colindex, err := df.colIndex(v)
 			if err != nil {
@@ -420,7 +411,6 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 // SubsetRows will return a DataFrame that contains only the selected rows
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
-	// TODO: Must update numChars in every column after subsetting
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		columns:  columns{},
@@ -694,20 +684,20 @@ func formatCell(cell interface{}) string {
 
 func innerMerge(dfa DataFrame, dfb DataFrame, key string) (*DataFrame, error) {
 	// NOTE: For now just considering one key for merging
-	colia, err := dfa.columnIndex(key)
+	colia, err := dfa.colIndex(key)
 	if err != nil {
 		return nil, err
 	}
-	colib, err := dfb.columnIndex(key)
+	colib, err := dfb.colIndex(key)
 	if err != nil {
 		return nil, err
 	}
 
 	dfaIndexes := []int{}
 	dfbIndexes := []int{}
-	for ka, v := range dfa.columns[colia].cells {
+	for ka, v := range dfa.columns[*colia].cells {
 		vala := v.Checksum()
-		for kb, vv := range dfb.columns[colib].cells {
+		for kb, vv := range dfb.columns[*colib].cells {
 			valb := vv.Checksum()
 			if vala == valb {
 				dfaIndexes = append(dfaIndexes, ka)

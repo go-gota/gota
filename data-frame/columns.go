@@ -2,9 +2,7 @@ package df
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
-	"strings"
 )
 
 // column represents a column inside a DataFrame
@@ -28,21 +26,6 @@ func newCol(colName string, elements cells) (*column, error) {
 	}
 
 	return &col, nil
-}
-
-// Implementing the Stringer interface for Column
-func (col column) String() string {
-	strArray := []string{}
-
-	for i := 0; i < len(col.cells); i++ {
-		strArray = append(strArray, col.cells[i].String())
-	}
-
-	return fmt.Sprintln(
-		col.colName,
-		"(", col.colType, "):\n",
-		strings.Join(strArray, "\n "),
-	)
 }
 
 func parseColumn(col column, t string) (*column, error) {
