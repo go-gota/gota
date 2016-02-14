@@ -83,6 +83,14 @@ type u struct {
 //Etc
 //)
 
+// TODO: Use enumns for type parsing declaration:
+//   type parseType int
+//   const (
+//       String int = iota
+//       Int
+//       Float
+//   )
+
 // New is a constructor for DataFrames
 func New(colConst ...C) (*DataFrame, error) {
 	if len(colConst) == 0 {
@@ -411,6 +419,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 // SubsetRows will return a DataFrame that contains only the selected rows
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
+	// TODO: Must update numChars in every column after subsetting
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		columns:  columns{},
@@ -551,6 +560,8 @@ func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 // uniqueRowsMap is a helper function that will get a map of unique or duplicated
 // rows for a given DataFrame
 func uniqueRowsMap(df DataFrame) map[string]u {
+	// TODO: Maybe cell should comply with a UniqueName() []bytes interface to not
+	// rely on string representation of the unique elements
 	uniqueRows := make(map[string]u)
 	for i := 0; i < df.nRows; i++ {
 		str := ""
@@ -624,10 +635,10 @@ func (df DataFrame) Duplicated() (*DataFrame, error) {
 	return df.SubsetRows(appears)
 }
 
-// TODO: We should truncate the maximum length of shown columns and scape newline
-// characters'
 // Implementing the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
+	// TODO: We should truncate the maximum length of shown columns and scape newline
+	// characters'
 	addLeftPadding := func(s string, nchar int) string {
 		if len(s) < nchar {
 			return strings.Repeat(" ", nchar-len(s)) + s
