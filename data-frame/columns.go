@@ -59,20 +59,26 @@ func parseColumn(col column, t string) (*column, error) {
 		newcells := Floats(col.cells)
 		newcol, err := newCol(col.colName, newcells)
 		return newcol, err
-	case "date":
 	}
 	return nil, errors.New("Can't parse the given type")
 }
 
-// Append will add a value or values to a column
-func (col column) append(values ...cell) (column, error) {
-	numChars := 0
-	if col.numChars == 0 {
-		numChars = len(col.colName)
+func (col *column) recountNumChars() {
+	numChars := len(col.colName)
+	for _, cell := range col.cells {
+		cellStr := cell.String()
+		if len(cellStr) > numChars {
+			numChars = len(cellStr)
+		}
 	}
 
+	col.numChars = numChars
+}
+
+// Append will add a value or values to a column
+func (col column) append(values ...cell) (column, error) {
 	if len(values) == 0 {
-		col.numChars = numChars
+		col.recountNumChars()
 		return col, nil
 	}
 
@@ -85,15 +91,11 @@ func (col column) append(values ...cell) (column, error) {
 				return col, errors.New("Can't have elements of different type on the same column")
 			}
 		}
-		cellStr := formatCell(v)
-		if len(cellStr) > numChars {
-			numChars = len(cellStr)
-		}
 
 		col.cells = append(col.cells, v)
 	}
 
-	col.numChars = numChars
+	col.recountNumChars()
 
 	return col, nil
 }

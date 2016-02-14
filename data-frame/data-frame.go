@@ -449,6 +449,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 			if err != nil {
 				return nil, err
 			}
+			col.recountNumChars()
 			newDf.columns = append(newDf.columns, *col)
 		}
 	case []int:
@@ -475,6 +476,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 			for _, i := range rowNums {
 				col.cells = append(col.cells, v.cells[i])
 			}
+			col.recountNumChars()
 			newDf.columns = append(newDf.columns, *col)
 		}
 	default:
