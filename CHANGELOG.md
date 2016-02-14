@@ -11,6 +11,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Using cell.Checksum() for identification of unique elements instead
   of raw strings.
 
+## [0.2.1] - 2016-02-14
+### Fixed
+- Fixed a bug when the maximum number of characters on a column was
+  not being updated properly when subsetting.
+
 ## [0.2.0] - 2016-02-13
 ### Added
 - Added a lot of unit tests
@@ -33,3 +38,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 [0.1.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.1.0
 [0.2.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.2.0
+[0.2.1]:https://github.com/kniren/gota/compare/v0.2.0...v0.2.1
