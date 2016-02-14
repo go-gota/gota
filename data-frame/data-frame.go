@@ -22,6 +22,7 @@ type cell interface {
 	String() string
 	ToInteger() (*int, error)
 	ToFloat() (*float64, error)
+	Checksum() [16]byte
 }
 
 type cells []cell
@@ -557,18 +558,19 @@ func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	return &dfA, nil
 }
 
+type b []byte
+
 // uniqueRowsMap is a helper function that will get a map of unique or duplicated
 // rows for a given DataFrame
 func uniqueRowsMap(df DataFrame) map[string]u {
-	// TODO: Maybe cell should comply with a UniqueName() []bytes interface to not
-	// rely on string representation of the unique elements
 	uniqueRows := make(map[string]u)
 	for i := 0; i < df.nRows; i++ {
-		str := ""
+		mdarr := []byte{}
 		for _, v := range df.columns {
-			str += v.colType
-			str += v.cells[i].String()
+			cs := v.cells[i].Checksum()
+			mdarr = append(mdarr, cs[:]...)
 		}
+		str := string(mdarr)
 		if a, ok := uniqueRows[str]; ok {
 			a.unique = false
 			a.appears = append(a.appears, i)

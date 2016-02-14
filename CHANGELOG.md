@@ -2,6 +2,15 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Changed
+- The `cell` interface has changed. ToInteger() and ToFloat() now
+  return pointers instead of values to prevent future conflicts when
+  returning an error. 
+- The `cell` interface has changed. Checksum() [16]byte added.
+- Using cell.Checksum() for identification of unique elements instead
+  of raw strings.
+
 ## [0.2.0] - 2016-02-13
 ### Added
 - Added a lot of unit tests

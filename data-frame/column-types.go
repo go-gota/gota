@@ -1,6 +1,7 @@
 package df
 
 import (
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"reflect"
@@ -32,6 +33,12 @@ func (s String) ToFloat() (*float64, error) {
 
 func (s String) String() string {
 	return s.s
+}
+
+// Checksum generates a pseudo-unique 16 byte array
+func (s String) Checksum() [16]byte {
+	b := []byte(s.s + "String")
+	return md5.Sum(b)
 }
 
 // Strings is a constructor for a String array
@@ -119,6 +126,13 @@ func (i Int) ToFloat() (*float64, error) {
 
 func (i Int) String() string {
 	return formatCell(i.i)
+}
+
+// Checksum generates a pseudo-unique 16 byte array
+func (i Int) Checksum() [16]byte {
+	s := i.String()
+	b := []byte(s + "Int")
+	return md5.Sum(b)
 }
 
 // Ints is a constructor for an Int array
@@ -220,6 +234,13 @@ func (f Float) ToFloat() (*float64, error) {
 		return f.f, nil
 	}
 	return nil, errors.New("Could't convert to float64")
+}
+
+// Checksum generates a pseudo-unique 16 byte array
+func (f Float) Checksum() [16]byte {
+	s := f.String()
+	b := []byte(s + "Float")
+	return md5.Sum(b)
 }
 
 // Floats is a constructor for a Float array

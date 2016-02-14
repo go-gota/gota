@@ -77,6 +77,7 @@ type cell interface {
 	String() string
 	ToInteger() (*int, error)
 	ToFloat() (*float64, error)
+	Checksum() [16]byte
 }
 ```
 
