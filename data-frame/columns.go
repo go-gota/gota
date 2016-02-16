@@ -59,6 +59,10 @@ func parseColumn(col column, t string) (*column, error) {
 		newcells := Floats(col.cells)
 		newcol, err := newCol(col.colName, newcells)
 		return newcol, err
+	case "bool":
+		newcells := Bools(col.cells)
+		newcol, err := newCol(col.colName, newcells)
+		return newcol, err
 	}
 	return nil, errors.New("Can't parse the given type")
 }
