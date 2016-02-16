@@ -3,6 +3,9 @@ All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- Getter and setter methods for the column names of a DataFrame
+
 ### Changed
 - The `cell` interface has changed. ToInteger() and ToFloat() now
   return pointers instead of values to prevent future conflicts when
