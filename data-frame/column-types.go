@@ -31,6 +31,19 @@ func (s String) ToFloat() (*float64, error) {
 	return &f, nil
 }
 
+// ToBool returns the bool value of String
+func (s String) ToBool() (*bool, error) {
+	t := true
+	f := false
+	if s.s == "false" {
+		return &f, nil
+	}
+	if s.s == "true" {
+		return &t, nil
+	}
+	return nil, errors.New("Can't convert to Bool")
+}
+
 func (s String) String() string {
 	return s.s
 }
@@ -126,6 +139,22 @@ func (i Int) ToFloat() (*float64, error) {
 
 func (i Int) String() string {
 	return formatCell(i.i)
+}
+
+// ToBool returns the bool value of Int
+func (i Int) ToBool() (*bool, error) {
+	t := true
+	f := false
+	if i.i == nil {
+		return nil, errors.New("Can't convert to Bool")
+	}
+	if *i.i == 1 {
+		return &t, nil
+	}
+	if *i.i == 0 {
+		return &f, nil
+	}
+	return nil, errors.New("Can't convert to Bool")
 }
 
 // Checksum generates a pseudo-unique 16 byte array
@@ -236,6 +265,22 @@ func (f Float) ToFloat() (*float64, error) {
 	return nil, errors.New("Could't convert to float64")
 }
 
+// ToBool returns the bool value of Float
+func (f Float) ToBool() (*bool, error) {
+	t := true
+	fa := false
+	if f.f == nil {
+		return nil, errors.New("Can't convert to Bool")
+	}
+	if *f.f == 1.0 {
+		return &t, nil
+	}
+	if *f.f == 0.0 {
+		return &fa, nil
+	}
+	return nil, errors.New("Can't convert to Bool")
+}
+
 // Checksum generates a pseudo-unique 16 byte array
 func (f Float) Checksum() [16]byte {
 	s := f.String()
@@ -307,6 +352,182 @@ func Floats(args ...interface{}) cells {
 							}
 						} else {
 							ret = append(ret, Float{nil})
+						}
+					}
+				}
+			default:
+				ret = append(ret, Float{nil})
+			}
+		}
+	}
+
+	return ret
+}
+
+// Bool is an alias for string to be able to implement custom methods
+type Bool struct {
+	b *bool
+}
+
+// ToInteger returns the integer value of Bool
+func (b Bool) ToInteger() (*int, error) {
+	if b.b == nil {
+		return nil, errors.New("Empty value")
+	}
+	if *b.b {
+		one := 1
+		return &one, nil
+	}
+	zero := 0
+	return &zero, nil
+}
+
+// ToFloat returns the float value of Bool
+func (b Bool) ToFloat() (*float64, error) {
+	if b.b == nil {
+		return nil, errors.New("Empty value")
+	}
+	if *b.b {
+		one := 1.0
+		return &one, nil
+	}
+	zero := 0.0
+	return &zero, nil
+}
+
+func (b Bool) String() string {
+	if b.b == nil {
+		return "NA"
+	}
+	if *b.b {
+		return "true"
+	}
+	return "false"
+}
+
+// ToBool returns the bool value of Bool
+func (b Bool) ToBool() (*bool, error) {
+	t := true
+	f := false
+	if b.b == nil {
+		return nil, errors.New("Can't convert to Bool")
+	}
+	if *b.b {
+		return &t, nil
+	}
+	if *b.b {
+		return &f, nil
+	}
+	return nil, errors.New("Can't convert to Bool")
+}
+
+// Checksum generates a pseudo-unique 16 byte array
+func (b Bool) Checksum() [16]byte {
+	bs := []byte(b.String() + "Bool")
+	return md5.Sum(bs)
+}
+
+// Bools is a constructor for a bools array
+func Bools(args ...interface{}) cells {
+	ret := make(cells, 0, len(args))
+	for _, v := range args {
+		switch v.(type) {
+		case []int:
+			varr := v.([]int)
+			for k := range varr {
+				i := varr[k]
+				t := true
+				f := false
+				if i == 1 {
+					ret = append(ret, Bool{&t})
+				} else if i == 0 {
+					ret = append(ret, Bool{&f})
+				} else {
+					ret = append(ret, Bool{nil})
+				}
+			}
+		case int:
+			i := v.(int)
+			t := true
+			f := false
+			if i == 1 {
+				ret = append(ret, Bool{&t})
+			} else if i == 0 {
+				ret = append(ret, Bool{&f})
+			} else {
+				ret = append(ret, Bool{nil})
+			}
+		case []float64:
+			varr := v.([]float64)
+			for k := range varr {
+				i := varr[k]
+				t := true
+				f := false
+				if i == 1 {
+					ret = append(ret, Bool{&t})
+				} else if i == 0 {
+					ret = append(ret, Bool{&f})
+				} else {
+					ret = append(ret, Bool{nil})
+				}
+			}
+		case float64:
+			i := v.(float64)
+			t := true
+			f := false
+			if i == 1 {
+				ret = append(ret, Bool{&t})
+			} else if i == 0 {
+				ret = append(ret, Bool{&f})
+			} else {
+				ret = append(ret, Bool{nil})
+			}
+		case []string:
+			varr := v.([]string)
+			for k := range varr {
+				i := varr[k]
+				t := true
+				f := false
+				if i == "true" {
+					ret = append(ret, Bool{&t})
+				} else if i == "false" {
+					ret = append(ret, Bool{&f})
+				} else {
+					ret = append(ret, Bool{nil})
+				}
+			}
+		case string:
+			i := v.(string)
+			t := true
+			f := false
+			if i == "true" {
+				ret = append(ret, Bool{&t})
+			} else if i == "false" {
+				ret = append(ret, Bool{&f})
+			} else {
+				ret = append(ret, Bool{nil})
+			}
+		case nil:
+			ret = append(ret, Bool{nil})
+		default:
+			s := reflect.ValueOf(v)
+			tobool := reflect.TypeOf((*tobool)(nil)).Elem()
+			switch reflect.TypeOf(v).Kind() {
+			case reflect.Slice:
+				if s.Len() > 0 {
+					for i := 0; i < s.Len(); i++ {
+						if s.Index(i).Type().Implements(tobool) {
+							m := s.Index(i).MethodByName("ToBool")
+							resolvedMethod := m.Call([]reflect.Value{})
+							j := resolvedMethod[0].Interface().(*bool)
+							err := resolvedMethod[1].Interface()
+							if err != nil {
+								ret = append(ret, Bool{nil})
+							} else {
+								ret = append(ret, Bool{j})
+							}
+						} else {
+							ret = append(ret, Bool{nil})
 						}
 					}
 				}

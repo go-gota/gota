@@ -214,3 +214,75 @@ func TestFloats(t *testing.T) {
 		t.Error("ToFloat() Should fail for nil elements")
 	}
 }
+
+func TestBools(t *testing.T) {
+	a := []string{"C", "D", "true"}
+	aa := Bools("A", "B", a, "false")
+	expected := "[NA NA NA NA true false]"
+	received := fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"string and/or []string not being propery inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	b := []int{1, 2}
+	aa = Bools(b, 1, 0)
+	expected = "[true NA true false]"
+	received = fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"int and/or []int not being propery inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	c := []float64{0.0, 0.01}
+	aa = Bools(1.0, 2.2, c)
+	expected = "[true NA false NA]"
+	received = fmt.Sprint(aa)
+	if expected != received {
+		t.Error(
+			"float64 and/or []float64 not being propery inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	type T struct {
+		x int
+		y int
+	}
+	d := T{
+		1,
+		2,
+	}
+	dd := []T{d, d}
+	bb := Strings("true", "false")
+	aa = Bools(dd, aa, d, bb, nil)
+	expected = "[NA NA true NA NA NA NA true false NA]"
+	received = fmt.Sprint(aa)
+	if received != expected {
+		t.Error(
+			"otherStructs and/or []otherStructs not being propery inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	_, err := aa[0].ToFloat()
+	if err == nil {
+		t.Error("ToFloat() Should fail for nil elements")
+	}
+}

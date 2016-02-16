@@ -210,6 +210,26 @@ func TestColumn_parseColumn(t *testing.T) {
 		)
 	}
 
+	// Float to Bool
+	cola, _ = newCol("TestCol", Floats(1, 0))
+	colb, err = parseColumn(*cola, "bool")
+	if err != nil {
+		t.Error("Error parsing a df.Float column into df.Float:", err)
+	}
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Bool" ||
+		fmt.Sprint(colb.cells) != "[true false]" {
+		t.Error("Error parsing a df.Float column into df.Float",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+			"\ncolb.cells:", colb.cells,
+		)
+	}
+
 	// Unknown type
 	cola, _ = newCol("TestCol", Ints(1, 2))
 	colb, err = parseColumn(*cola, "asdfg")
