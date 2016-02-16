@@ -131,6 +131,24 @@ func New(colConst ...C) (*DataFrame, error) {
 	return df, nil
 }
 
+// Names is the getter method for the column names
+func (df DataFrame) Names() []string {
+	return df.colNames
+}
+
+// SetNames let us specify the column names of a DataFrame
+func (df *DataFrame) SetNames(colnames []string) error {
+	if len(df.colNames) != len(colnames) {
+		return errors.New("Different sizes for colnames array")
+	}
+
+	for k, v := range df.columns {
+		v.colName = colnames[k]
+	}
+	df.colNames = colnames
+	return nil
+}
+
 // LoadData will load the data from a multidimensional array of strings into
 // a DataFrame object.
 func (df *DataFrame) LoadData(records [][]string) error {
