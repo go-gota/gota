@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Getter and setter methods for the column names of a DataFrame
+- Bool column type has been made available
+- New ToBool() interface
 
 ### Changed
 - The `cell` interface has changed. ToInteger() and ToFloat() now
@@ -13,6 +15,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - The `cell` interface has changed. Checksum() [16]byte added.
 - Using cell.Checksum() for identification of unique elements instead
   of raw strings.
+- The `cell` interface has changed, now also requires ToBool() method.
 
 ## [0.2.1] - 2016-02-14
 ### Fixed

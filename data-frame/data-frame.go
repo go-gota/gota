@@ -22,6 +22,7 @@ type cell interface {
 	String() string
 	ToInteger() (*int, error)
 	ToFloat() (*float64, error)
+	ToBool() (*bool, error)
 	Checksum() [16]byte
 }
 
@@ -33,6 +34,10 @@ type tointeger interface {
 
 type tofloat interface {
 	ToFloat() (*float64, error)
+}
+
+type tobool interface {
+	ToBool() (*bool, error)
 }
 
 // DataFrame is the base data structure
