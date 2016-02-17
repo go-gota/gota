@@ -23,6 +23,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - Bool type constructor function Bools now parses `bool` and `[]bool`
   elements correctly.
+- Int type constructor function Ints now parses `bool` and `[]bool`
+  elements correctly.
+- Float type constructor function Floats now parses `bool` and `[]bool`
+  elements correctly.
+- String type constructor function Strings now parses `bool` and `[]bool`
+  elements correctly.
 
 ## [0.2.1] - 2016-02-14
 ### Fixed

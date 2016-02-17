@@ -78,31 +78,52 @@ func Strings(args ...interface{}) cells {
 	ret := make([]cell, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
-		case int:
-			s := strconv.Itoa(v.(int))
-			ret = append(ret, String{&s})
-		case float64:
-			s := strconv.FormatFloat(v.(float64), 'f', 6, 64)
-			ret = append(ret, String{&s})
 		case []int:
 			varr := v.([]int)
 			for k := range varr {
 				s := strconv.Itoa(varr[k])
 				ret = append(ret, String{&s})
 			}
+		case int:
+			s := strconv.Itoa(v.(int))
+			ret = append(ret, String{&s})
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
 				s := strconv.FormatFloat(varr[k], 'f', 6, 64)
 				ret = append(ret, String{&s})
 			}
-		case string:
-			s := v.(string)
+		case float64:
+			s := strconv.FormatFloat(v.(float64), 'f', 6, 64)
 			ret = append(ret, String{&s})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
 				s := varr[k]
+				ret = append(ret, String{&s})
+			}
+		case string:
+			s := v.(string)
+			ret = append(ret, String{&s})
+		case []bool:
+			varr := v.([]bool)
+			for k := range varr {
+				b := varr[k]
+				if b {
+					s := "true"
+					ret = append(ret, String{&s})
+				} else {
+					s := "false"
+					ret = append(ret, String{&s})
+				}
+			}
+		case bool:
+			b := v.(bool)
+			if b {
+				s := "true"
+				ret = append(ret, String{&s})
+			} else {
+				s := "false"
 				ret = append(ret, String{&s})
 			}
 		case nil:
@@ -201,18 +222,14 @@ func Ints(args ...interface{}) cells {
 	ret := make(cells, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
-		case int:
-			i := v.(int)
-			ret = append(ret, Int{&i})
-		case float64:
-			f := v.(float64)
-			i := int(f)
-			ret = append(ret, Int{&i})
 		case []int:
 			varr := v.([]int)
 			for k := range varr {
 				ret = append(ret, Int{&varr[k]})
 			}
+		case int:
+			i := v.(int)
+			ret = append(ret, Int{&i})
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
@@ -220,6 +237,10 @@ func Ints(args ...interface{}) cells {
 				i := int(f)
 				ret = append(ret, Int{&i})
 			}
+		case float64:
+			f := v.(float64)
+			i := int(f)
+			ret = append(ret, Int{&i})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
@@ -236,6 +257,27 @@ func Ints(args ...interface{}) cells {
 			if err != nil {
 				ret = append(ret, Int{nil})
 			} else {
+				ret = append(ret, Int{&i})
+			}
+		case []bool:
+			varr := v.([]bool)
+			for k := range varr {
+				b := varr[k]
+				if b {
+					i := 1
+					ret = append(ret, Int{&i})
+				} else {
+					i := 0
+					ret = append(ret, Int{&i})
+				}
+			}
+		case bool:
+			b := v.(bool)
+			if b {
+				i := 1
+				ret = append(ret, Int{&i})
+			} else {
+				i := 0
 				ret = append(ret, Int{&i})
 			}
 		case nil:
@@ -369,6 +411,27 @@ func Floats(args ...interface{}) cells {
 				ret = append(ret, Float{nil})
 			} else {
 				ret = append(ret, Float{&f})
+			}
+		case []bool:
+			varr := v.([]bool)
+			for k := range varr {
+				b := varr[k]
+				if b {
+					i := 1.0
+					ret = append(ret, Float{&i})
+				} else {
+					i := 0.0
+					ret = append(ret, Float{&i})
+				}
+			}
+		case bool:
+			b := v.(bool)
+			if b {
+				i := 1.0
+				ret = append(ret, Float{&i})
+			} else {
+				i := 0.0
+				ret = append(ret, Float{&i})
 			}
 		case nil:
 			ret = append(ret, Float{nil})
