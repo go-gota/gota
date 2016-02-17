@@ -10,12 +10,15 @@ import (
 
 // String is an alias for string to be able to implement custom methods
 type String struct {
-	s string
+	s *string
 }
 
 // ToInteger returns the integer value of String
 func (s String) ToInteger() (*int, error) {
-	str, err := strconv.Atoi(s.s)
+	if s.s == nil {
+		return nil, errors.New("Could't convert to int")
+	}
+	str, err := strconv.Atoi(*s.s)
 	if err != nil {
 		return nil, errors.New("Could't convert to int")
 	}
@@ -24,7 +27,10 @@ func (s String) ToInteger() (*int, error) {
 
 // ToFloat returns the float value of String
 func (s String) ToFloat() (*float64, error) {
-	f, err := strconv.ParseFloat(s.s, 64)
+	if s.s == nil {
+		return nil, errors.New("Could't convert to float64")
+	}
+	f, err := strconv.ParseFloat(*s.s, 64)
 	if err != nil {
 		return nil, errors.New("Could't convert to float64")
 	}
@@ -33,24 +39,30 @@ func (s String) ToFloat() (*float64, error) {
 
 // ToBool returns the bool value of String
 func (s String) ToBool() (*bool, error) {
+	if s.s == nil {
+		return nil, errors.New("Could't convert to bool")
+	}
 	t := true
 	f := false
-	if s.s == "false" {
+	if *s.s == "false" {
 		return &f, nil
 	}
-	if s.s == "true" {
+	if *s.s == "true" {
 		return &t, nil
 	}
 	return nil, errors.New("Can't convert to Bool")
 }
 
 func (s String) String() string {
-	return s.s
+	if s.s == nil {
+		return "NA"
+	}
+	return *s.s
 }
 
 // Checksum generates a pseudo-unique 16 byte array
 func (s String) Checksum() [16]byte {
-	b := []byte(s.s + "String")
+	b := []byte(s.String() + "String")
 	return md5.Sum(b)
 }
 
@@ -61,31 +73,33 @@ func Strings(args ...interface{}) cells {
 		switch v.(type) {
 		case int:
 			s := strconv.Itoa(v.(int))
-			ret = append(ret, String{s})
+			ret = append(ret, String{&s})
 		case float64:
 			s := strconv.FormatFloat(v.(float64), 'f', 6, 64)
-			ret = append(ret, String{s})
+			ret = append(ret, String{&s})
 		case []int:
 			varr := v.([]int)
 			for k := range varr {
 				s := strconv.Itoa(varr[k])
-				ret = append(ret, String{s})
+				ret = append(ret, String{&s})
 			}
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
 				s := strconv.FormatFloat(varr[k], 'f', 6, 64)
-				ret = append(ret, String{s})
+				ret = append(ret, String{&s})
 			}
 		case string:
-			ret = append(ret, String{v.(string)})
+			s := v.(string)
+			ret = append(ret, String{&s})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
-				ret = append(ret, String{varr[k]})
+				s := varr[k]
+				ret = append(ret, String{&s})
 			}
 		case nil:
-			ret = append(ret, String{""})
+			ret = append(ret, String{nil})
 		default:
 			// This should only happen if v (or its elements in case of a slice)
 			// implements Stringer.
@@ -96,17 +110,21 @@ func Strings(args ...interface{}) cells {
 				if s.Len() > 0 {
 					for i := 0; i < s.Len(); i++ {
 						if s.Index(i).Type().Implements(stringer) {
-							ret = append(ret, String{fmt.Sprint(s.Index(i).Interface())})
+							s := fmt.Sprint(s.Index(i).Interface())
+							ret = append(ret, String{&s})
 						} else {
-							ret = append(ret, String{"NA"})
+							s := "NA"
+							ret = append(ret, String{&s})
 						}
 					}
 				}
 			default:
 				if s.Type().Implements(stringer) {
-					ret = append(ret, String{fmt.Sprint(v)})
+					s := fmt.Sprint(v)
+					ret = append(ret, String{&s})
 				} else {
-					ret = append(ret, String{"NA"})
+					s := "NA"
+					ret = append(ret, String{&s})
 				}
 			}
 		}

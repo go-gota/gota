@@ -57,8 +57,9 @@ func TestStrings(t *testing.T) {
 		2,
 	}
 	dd := []T{d, d}
-	aa = Strings(dd, aa, d, String{"B"}, nil)
-	expected = "[NA NA 1.000000 2.000000 3.000000 4.000000 NA B ]"
+	s := "B"
+	aa = Strings(dd, aa, d, String{&s}, nil)
+	expected = "[NA NA 1.000000 2.000000 3.000000 4.000000 NA B NA]"
 	received = fmt.Sprint(aa)
 	if received != expected {
 		t.Error(

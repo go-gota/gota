@@ -16,6 +16,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Using cell.Checksum() for identification of unique elements instead
   of raw strings.
 - The `cell` interface has changed, now also requires ToBool() method.
+- String type now does not contain a string, but a pointer to a string.
 
 ## [0.2.1] - 2016-02-14
 ### Fixed

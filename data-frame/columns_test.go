@@ -33,7 +33,8 @@ func TestAppend(t *testing.T) {
 				"Received Length:", receivedLen)
 		}
 	}
-	_, err := col.append(Int{nil}, String{"A"})
+	s := "A"
+	_, err := col.append(Int{nil}, String{&s})
 	if err == nil {
 		t.Error("Should throw an error: Conflicting types")
 	}
