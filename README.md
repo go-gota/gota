@@ -75,8 +75,10 @@ following methods:
 ```
 type cell interface {
 	String() string
-	ToInteger() (*int, error)
-	ToFloat() (*float64, error)
+	Int() (*int, error)
+	Float() (*float64, error)
+	Bool() (*bool, error)
+	NA() bool
 	Checksum() [16]byte
 }
 ```
