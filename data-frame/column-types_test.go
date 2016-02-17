@@ -138,9 +138,9 @@ func TestInts(t *testing.T) {
 		)
 	}
 
-	_, err := aa[0].ToInteger()
+	_, err := aa[0].Int()
 	if err == nil {
-		t.Error("ToInteger() Should fail for nil elements")
+		t.Error("Int() Should fail for nil elements")
 	}
 }
 
@@ -210,9 +210,9 @@ func TestFloats(t *testing.T) {
 		)
 	}
 
-	_, err := aa[0].ToFloat()
+	_, err := aa[0].Float()
 	if err == nil {
-		t.Error("ToFloat() Should fail for nil elements")
+		t.Error("Float() Should fail for nil elements")
 	}
 }
 
@@ -282,8 +282,8 @@ func TestBools(t *testing.T) {
 		)
 	}
 
-	_, err := aa[0].ToFloat()
+	_, err := aa[0].Float()
 	if err == nil {
-		t.Error("ToFloat() Should fail for nil elements")
+		t.Error("Float() Should fail for nil elements")
 	}
 }

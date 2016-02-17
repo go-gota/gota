@@ -20,9 +20,9 @@ type rowable interface {
 
 type cell interface {
 	String() string
-	ToInteger() (*int, error)
-	ToFloat() (*float64, error)
-	ToBool() (*bool, error)
+	Int() (*int, error)
+	Float() (*float64, error)
+	Bool() (*bool, error)
 	NA() bool
 	Checksum() [16]byte
 }
@@ -30,15 +30,15 @@ type cell interface {
 type cells []cell
 
 type tointeger interface {
-	ToInteger() (*int, error)
+	Int() (*int, error)
 }
 
 type tofloat interface {
-	ToFloat() (*float64, error)
+	Float() (*float64, error)
 }
 
 type tobool interface {
-	ToBool() (*bool, error)
+	Bool() (*bool, error)
 }
 
 // DataFrame is the base data structure

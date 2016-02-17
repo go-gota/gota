@@ -13,8 +13,8 @@ type String struct {
 	s *string
 }
 
-// ToInteger returns the integer value of String
-func (s String) ToInteger() (*int, error) {
+// Int returns the integer value of String
+func (s String) Int() (*int, error) {
 	if s.s == nil {
 		return nil, errors.New("Could't convert to int")
 	}
@@ -25,8 +25,8 @@ func (s String) ToInteger() (*int, error) {
 	return &str, nil
 }
 
-// ToFloat returns the float value of String
-func (s String) ToFloat() (*float64, error) {
+// Float returns the float value of String
+func (s String) Float() (*float64, error) {
 	if s.s == nil {
 		return nil, errors.New("Could't convert to float64")
 	}
@@ -37,8 +37,8 @@ func (s String) ToFloat() (*float64, error) {
 	return &f, nil
 }
 
-// ToBool returns the bool value of String
-func (s String) ToBool() (*bool, error) {
+// Bool returns the bool value of String
+func (s String) Bool() (*bool, error) {
 	if s.s == nil {
 		return nil, errors.New("Could't convert to bool")
 	}
@@ -166,16 +166,16 @@ type Int struct {
 	i *int
 }
 
-// ToInteger returns the integer value of Int
-func (i Int) ToInteger() (*int, error) {
+// Int returns the integer value of Int
+func (i Int) Int() (*int, error) {
 	if i.i != nil {
 		return i.i, nil
 	}
 	return nil, errors.New("Could't convert to int")
 }
 
-// ToFloat returns the float value of Int
-func (i Int) ToFloat() (*float64, error) {
+// Float returns the float value of Int
+func (i Int) Float() (*float64, error) {
 	if i.i != nil {
 		f := float64(*i.i)
 		return &f, nil
@@ -187,8 +187,8 @@ func (i Int) String() string {
 	return formatCell(i.i)
 }
 
-// ToBool returns the bool value of Int
-func (i Int) ToBool() (*bool, error) {
+// Bool returns the bool value of Int
+func (i Int) Bool() (*bool, error) {
 	t := true
 	f := false
 	if i.i == nil {
@@ -290,7 +290,7 @@ func Ints(args ...interface{}) cells {
 				if s.Len() > 0 {
 					for i := 0; i < s.Len(); i++ {
 						if s.Index(i).Type().Implements(tointer) {
-							m := s.Index(i).MethodByName("ToInteger")
+							m := s.Index(i).MethodByName("Int")
 							resolvedMethod := m.Call([]reflect.Value{})
 							j := resolvedMethod[0].Interface().(*int)
 							err := resolvedMethod[1].Interface()
@@ -322,8 +322,8 @@ func (f Float) String() string {
 	return formatCell(f.f)
 }
 
-// ToInteger returns the integer value of Float
-func (f Float) ToInteger() (*int, error) {
+// Int returns the integer value of Float
+func (f Float) Int() (*int, error) {
 	if f.f != nil {
 		i := int(*f.f)
 		return &i, nil
@@ -331,16 +331,16 @@ func (f Float) ToInteger() (*int, error) {
 	return nil, errors.New("Could't convert to int")
 }
 
-// ToFloat returns the float value of Float
-func (f Float) ToFloat() (*float64, error) {
+// Float returns the float value of Float
+func (f Float) Float() (*float64, error) {
 	if f.f != nil {
 		return f.f, nil
 	}
 	return nil, errors.New("Could't convert to float64")
 }
 
-// ToBool returns the bool value of Float
-func (f Float) ToBool() (*bool, error) {
+// Bool returns the bool value of Float
+func (f Float) Bool() (*bool, error) {
 	t := true
 	fa := false
 	if f.f == nil {
@@ -443,7 +443,7 @@ func Floats(args ...interface{}) cells {
 				if s.Len() > 0 {
 					for i := 0; i < s.Len(); i++ {
 						if s.Index(i).Type().Implements(tofloat) {
-							m := s.Index(i).MethodByName("ToFloat")
+							m := s.Index(i).MethodByName("Float")
 							resolvedMethod := m.Call([]reflect.Value{})
 							j := resolvedMethod[0].Interface().(*float64)
 							err := resolvedMethod[1].Interface()
@@ -471,8 +471,8 @@ type Bool struct {
 	b *bool
 }
 
-// ToInteger returns the integer value of Bool
-func (b Bool) ToInteger() (*int, error) {
+// Int returns the integer value of Bool
+func (b Bool) Int() (*int, error) {
 	if b.b == nil {
 		return nil, errors.New("Empty value")
 	}
@@ -484,8 +484,8 @@ func (b Bool) ToInteger() (*int, error) {
 	return &zero, nil
 }
 
-// ToFloat returns the float value of Bool
-func (b Bool) ToFloat() (*float64, error) {
+// Float returns the float value of Bool
+func (b Bool) Float() (*float64, error) {
 	if b.b == nil {
 		return nil, errors.New("Empty value")
 	}
@@ -507,8 +507,8 @@ func (b Bool) String() string {
 	return "false"
 }
 
-// ToBool returns the bool value of Bool
-func (b Bool) ToBool() (*bool, error) {
+// Bool returns the bool value of Bool
+func (b Bool) Bool() (*bool, error) {
 	t := true
 	f := false
 	if b.b == nil {
@@ -647,7 +647,7 @@ func Bools(args ...interface{}) cells {
 				if s.Len() > 0 {
 					for i := 0; i < s.Len(); i++ {
 						if s.Index(i).Type().Implements(tobool) {
-							m := s.Index(i).MethodByName("ToBool")
+							m := s.Index(i).MethodByName("Bool")
 							resolvedMethod := m.Call([]reflect.Value{})
 							j := resolvedMethod[0].Interface().(*bool)
 							err := resolvedMethod[1].Interface()

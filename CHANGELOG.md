@@ -19,6 +19,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   of raw strings.
 - The `cell` interface has changed, now also requires ToBool() method.
 - String type now does not contain a string, but a pointer to a string.
+- Renamed `cell` interface elements to be more idiomatic:
+    - ToInteger() is now Int()
+    - ToFloat() is now Float()
+    - ToBool() is now Bool()
 
 ### Fixed
 - Bool type constructor function Bools now parses `bool` and `[]bool`
