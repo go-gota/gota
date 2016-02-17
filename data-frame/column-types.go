@@ -66,6 +66,13 @@ func (s String) Checksum() [16]byte {
 	return md5.Sum(b)
 }
 
+func (s String) NA() bool {
+	if s.s == nil {
+		return true
+	}
+	return false
+}
+
 // Strings is a constructor for a String array
 func Strings(args ...interface{}) cells {
 	ret := make([]cell, 0, len(args))
@@ -180,6 +187,13 @@ func (i Int) Checksum() [16]byte {
 	s := i.String()
 	b := []byte(s + "Int")
 	return md5.Sum(b)
+}
+
+func (i Int) NA() bool {
+	if i.i == nil {
+		return true
+	}
+	return false
 }
 
 // Ints is a constructor for an Int array
@@ -304,6 +318,13 @@ func (f Float) Checksum() [16]byte {
 	s := f.String()
 	b := []byte(s + "Float")
 	return md5.Sum(b)
+}
+
+func (f Float) NA() bool {
+	if f.f == nil {
+		return true
+	}
+	return false
 }
 
 // Floats is a constructor for a Float array
@@ -445,6 +466,13 @@ func (b Bool) Checksum() [16]byte {
 	return md5.Sum(bs)
 }
 
+func (b Bool) NA() bool {
+	if b.b == nil {
+		return true
+	}
+	return false
+}
+
 // Bools is a constructor for a bools array
 func Bools(args ...interface{}) cells {
 	ret := make(cells, 0, len(args))
@@ -524,6 +552,27 @@ func Bools(args ...interface{}) cells {
 				ret = append(ret, Bool{&f})
 			} else {
 				ret = append(ret, Bool{nil})
+			}
+		case []bool:
+			varr := v.([]bool)
+			for k := range varr {
+				i := varr[k]
+				t := true
+				f := false
+				if i {
+					ret = append(ret, Bool{&t})
+				} else {
+					ret = append(ret, Bool{&f})
+				}
+			}
+		case bool:
+			i := v.(bool)
+			t := true
+			f := false
+			if i {
+				ret = append(ret, Bool{&t})
+			} else {
+				ret = append(ret, Bool{&f})
 			}
 		case nil:
 			ret = append(ret, Bool{nil})

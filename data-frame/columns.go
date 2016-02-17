@@ -103,3 +103,24 @@ func (col column) append(values ...cell) (column, error) {
 
 	return col, nil
 }
+
+func (col column) hasNa() bool {
+	for _, v := range col.cells {
+		if v.NA() {
+			return true
+		}
+	}
+	return false
+}
+
+func (col column) na() []bool {
+	naArray := make([]bool, len(col.cells))
+	for k, v := range col.cells {
+		if v.NA() {
+			naArray[k] = true
+		} else {
+			naArray[k] = false
+		}
+	}
+	return naArray
+}
