@@ -23,6 +23,7 @@ type cell interface {
 	ToInteger() (*int, error)
 	ToFloat() (*float64, error)
 	ToBool() (*bool, error)
+	NA() bool
 	Checksum() [16]byte
 }
 

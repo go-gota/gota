@@ -66,6 +66,13 @@ func (s String) Checksum() [16]byte {
 	return md5.Sum(b)
 }
 
+func (s String) NA() bool {
+	if s.s == nil {
+		return true
+	}
+	return false
+}
+
 // Strings is a constructor for a String array
 func Strings(args ...interface{}) cells {
 	ret := make([]cell, 0, len(args))
@@ -180,6 +187,13 @@ func (i Int) Checksum() [16]byte {
 	s := i.String()
 	b := []byte(s + "Int")
 	return md5.Sum(b)
+}
+
+func (i Int) NA() bool {
+	if i.i == nil {
+		return true
+	}
+	return false
 }
 
 // Ints is a constructor for an Int array
@@ -304,6 +318,13 @@ func (f Float) Checksum() [16]byte {
 	s := f.String()
 	b := []byte(s + "Float")
 	return md5.Sum(b)
+}
+
+func (f Float) NA() bool {
+	if f.f == nil {
+		return true
+	}
+	return false
 }
 
 // Floats is a constructor for a Float array
@@ -443,6 +464,13 @@ func (b Bool) ToBool() (*bool, error) {
 func (b Bool) Checksum() [16]byte {
 	bs := []byte(b.String() + "Bool")
 	return md5.Sum(bs)
+}
+
+func (b Bool) NA() bool {
+	if b.b == nil {
+		return true
+	}
+	return false
 }
 
 // Bools is a constructor for a bools array
