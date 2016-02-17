@@ -2,6 +2,7 @@ package df
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -237,4 +238,67 @@ func TestColumn_parseColumn(t *testing.T) {
 	if err == nil {
 		t.Error("Error parsing an unknown type, error not thrown.")
 	}
+}
+
+func TestColumn_na(t *testing.T) {
+	var tests = []struct {
+		data     column
+		expNa    []bool
+		expHasNa bool
+	}{
+		{data: column{
+			cells:    Strings("A", "B"),
+			colType:  "df.String",
+			colName:  "A",
+			numChars: 1,
+		},
+			expNa:    []bool{false, false},
+			expHasNa: false,
+		},
+		{data: column{
+			cells:    Ints(1, 2, 3, 4),
+			colType:  "df.Int",
+			colName:  "B",
+			numChars: 1,
+		},
+			expNa:    []bool{false, false, false, false},
+			expHasNa: false,
+		},
+		{data: column{
+			cells:    Floats(1.0, 2.0, nil, 3.0),
+			colType:  "df.Float",
+			colName:  "C",
+			numChars: 1,
+		},
+			expNa:    []bool{false, false, true, false},
+			expHasNa: true,
+		},
+		{data: column{
+			cells:    Bools(true, nil, false),
+			colType:  "df.Bool",
+			colName:  "A",
+			numChars: 1,
+		},
+			expNa:    []bool{false, true, false},
+			expHasNa: true,
+		},
+	}
+	for k, v := range tests {
+		hasna := v.data.hasNa()
+		na := v.data.na()
+		exphasna := v.expHasNa
+		expna := v.expNa
+		if hasna != exphasna ||
+			!reflect.DeepEqual(na, expna) {
+			t.Error(
+				"Test:", k,
+				"\nExpected col.na:", expna,
+				"\nReceived col.na:", na,
+				"\nExpected col.hasNa:", exphasna,
+				"\nReceived col.hasNa:", hasna,
+			)
+		}
+	}
+	col, _ := newCol("TestCol", Ints(1, 2, nil, 3, nil))
+	fmt.Println(col.hasNa())
 }

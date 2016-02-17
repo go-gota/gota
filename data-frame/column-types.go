@@ -553,6 +553,27 @@ func Bools(args ...interface{}) cells {
 			} else {
 				ret = append(ret, Bool{nil})
 			}
+		case []bool:
+			varr := v.([]bool)
+			for k := range varr {
+				i := varr[k]
+				t := true
+				f := false
+				if i {
+					ret = append(ret, Bool{&t})
+				} else {
+					ret = append(ret, Bool{&f})
+				}
+			}
+		case bool:
+			i := v.(bool)
+			t := true
+			f := false
+			if i {
+				ret = append(ret, Bool{&t})
+			} else {
+				ret = append(ret, Bool{&f})
+			}
 		case nil:
 			ret = append(ret, Bool{nil})
 		default:

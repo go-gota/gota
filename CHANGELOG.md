@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Getter and setter methods for the column names of a DataFrame
 - Bool column type has been made available
 - New ToBool() interface
+- A `column` now can now if any of it's elements is NA and a list of
+  said NA elements ([]bool).
 
 ### Changed
 - The `cell` interface has changed. ToInteger() and ToFloat() now
@@ -17,6 +19,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   of raw strings.
 - The `cell` interface has changed, now also requires ToBool() method.
 - String type now does not contain a string, but a pointer to a string.
+
+### Fixed
+- Bool type constructor function Bools now parses `bool` and `[]bool`
+  elements correctly.
 
 ## [0.2.1] - 2016-02-14
 ### Fixed
