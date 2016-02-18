@@ -20,18 +20,25 @@ type rowable interface {
 
 type cell interface {
 	String() string
-	ToInteger() (int, error)
-	ToFloat() (float64, error)
+	Int() (*int, error)
+	Float() (*float64, error)
+	Bool() (*bool, error)
+	NA() bool
+	Checksum() [16]byte
 }
 
 type cells []cell
 
 type tointeger interface {
-	ToInteger() (int, error)
+	Int() (*int, error)
 }
 
 type tofloat interface {
-	ToFloat() (float64, error)
+	Float() (*float64, error)
+}
+
+type tobool interface {
+	Bool() (*bool, error)
 }
 
 // DataFrame is the base data structure
@@ -83,6 +90,14 @@ type u struct {
 //Etc
 //)
 
+// TODO: Use enumns for type parsing declaration:
+//   type parseType int
+//   const (
+//       String int = iota
+//       Int
+//       Float
+//   )
+
 // New is a constructor for DataFrames
 func New(colConst ...C) (*DataFrame, error) {
 	if len(colConst) == 0 {
@@ -120,6 +135,24 @@ func New(colConst ...C) (*DataFrame, error) {
 	}
 
 	return df, nil
+}
+
+// Names is the getter method for the column names
+func (df DataFrame) Names() []string {
+	return df.colNames
+}
+
+// SetNames let us specify the column names of a DataFrame
+func (df *DataFrame) SetNames(colnames []string) error {
+	if len(df.colNames) != len(colnames) {
+		return errors.New("Different sizes for colnames array")
+	}
+
+	for k, v := range df.columns {
+		v.colName = colnames[k]
+	}
+	df.colNames = colnames
+	return nil
 }
 
 // LoadData will load the data from a multidimensional array of strings into
@@ -411,6 +444,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 // SubsetRows will return a DataFrame that contains only the selected rows
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
+	// TODO: Must update numChars in every column after subsetting
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		columns:  columns{},
@@ -550,16 +584,19 @@ func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	return &dfA, nil
 }
 
+type b []byte
+
 // uniqueRowsMap is a helper function that will get a map of unique or duplicated
 // rows for a given DataFrame
 func uniqueRowsMap(df DataFrame) map[string]u {
 	uniqueRows := make(map[string]u)
 	for i := 0; i < df.nRows; i++ {
-		str := ""
+		mdarr := []byte{}
 		for _, v := range df.columns {
-			str += v.colType
-			str += v.cells[i].String()
+			cs := v.cells[i].Checksum()
+			mdarr = append(mdarr, cs[:]...)
 		}
+		str := string(mdarr)
 		if a, ok := uniqueRows[str]; ok {
 			a.unique = false
 			a.appears = append(a.appears, i)
@@ -626,10 +663,10 @@ func (df DataFrame) Duplicated() (*DataFrame, error) {
 	return df.SubsetRows(appears)
 }
 
-// TODO: We should truncate the maximum length of shown columns and scape newline
-// characters'
 // Implementing the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
+	// TODO: We should truncate the maximum length of shown columns and scape newline
+	// characters'
 	addLeftPadding := func(s string, nchar int) string {
 		if len(s) < nchar {
 			return strings.Repeat(" ", nchar-len(s)) + s

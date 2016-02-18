@@ -331,3 +331,31 @@ func TestDataFrame_RemoveUnique(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestDataFrame_Colnames(t *testing.T) {
+	data := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+	}
+
+	// Test parsing two columns as integers
+	df := DataFrame{}
+	df.LoadData(data)
+	if fmt.Sprint(df.Names()) != "[A B C D]" {
+		t.Error("Mismatched colnames")
+	}
+
+	err := df.SetNames([]string{})
+	if err == nil {
+		t.Error("Error didn't fired")
+	}
+	err = df.SetNames([]string{"B", "C", "D", "E"})
+	if err != nil {
+		t.Error("Error when setting colnames")
+	}
+
+	if fmt.Sprint(df.Names()) != "[B C D E]" {
+		t.Error("Setter didn't work properly")
+	}
+}
