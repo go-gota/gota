@@ -2,16 +2,19 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [0.3.0] - 2016-02-18
 ### Added
 - Getter and setter methods for the column names of a DataFrame
 - Bool column type has been made available
-- New ToBool() interface
+- New Bool() interface
 - A `column` now can now if any of it's elements is NA and a list of
   said NA elements ([]bool).
 
 ### Changed
-- The `cell` interface has changed. ToInteger() and ToFloat() now
+- Renamed `cell` interface elements to be more idiomatic:
+    - ToInteger() is now Int()
+    - ToFloat() is now Float()
+- The `cell` interface has changed. Int() and Float() now
   return pointers instead of values to prevent future conflicts when
   returning an error. 
 - The `cell` interface has changed. Checksum() [16]byte added.
@@ -19,10 +22,6 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   of raw strings.
 - The `cell` interface has changed, now also requires ToBool() method.
 - String type now does not contain a string, but a pointer to a string.
-- Renamed `cell` interface elements to be more idiomatic:
-    - ToInteger() is now Int()
-    - ToFloat() is now Float()
-    - ToBool() is now Bool()
 
 ### Fixed
 - Bool type constructor function Bools now parses `bool` and `[]bool`
@@ -62,3 +61,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.1.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.1.0
 [0.2.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.2.0
 [0.2.1]:https://github.com/kniren/gota/compare/v0.2.0...v0.2.1
+[0.3.0]:https://github.com/kniren/gota/compare/v0.2.1...v0.3.0

@@ -195,4 +195,3 @@ permissions and limitations under the License.
 
 [1]: https://github.com/gonum
 [2]: https://github.com/kniren/gota
-
