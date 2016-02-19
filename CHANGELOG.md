@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+### Added
+- Getter methods for nrows and ncols
+- An innerMerge function that performs an Inner Merge/Join of two
+  DataFrames by the given keys
+
 ## [0.3.0] - 2016-02-18
 ### Added
 - Getter and setter methods for the column names of a DataFrame

@@ -305,6 +305,16 @@ func (df DataFrame) Dim() (dim [2]int) {
 	return
 }
 
+// NRows is the getter method for the number of rows in a DataFrame
+func (df DataFrame) NRows() int {
+	return df.nRows
+}
+
+// NCols is the getter method for the number of rows in a DataFrame
+func (df DataFrame) NCols() int {
+	return df.nCols
+}
+
 // colIndex tries to find the column index for a given column name
 func (df DataFrame) colIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
@@ -712,30 +722,13 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 	// TODO: If the matching keys on the columns have different types an error
 	// should be reported.
 
-	inStrSlice := func(str string, s []string) bool {
-		for _, v := range s {
-			if v == str {
-				return true
-			}
-		}
-		return false
-	}
-	inStrSliceIndex := func(str string, s []string) (bool, *int) {
-		for k, v := range s {
-			if v == str {
-				return true, &k
-			}
-		}
-		return false, nil
-	}
-
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
-		if !inStrSlice(key, dfa.colNames) {
+		if !inStringSlice(key, dfa.colNames) {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
-		if !inStrSlice(key, dfb.colNames) {
+		if !inStringSlice(key, dfb.colNames) {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
 		}
 	}
@@ -747,9 +740,8 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 	colnamesa := dfa.colNames
 	colnamesb := dfb.colNames
 	for k, v := range colnamesa {
-		// TODO: Use colIndex instead?
-		if in, idx := inStrSliceIndex(v, colnamesb); in {
-			if !inStrSlice(v, keys) {
+		if idx, err := dfb.colIndex(v); err == nil {
+			if !inStringSlice(v, keys) {
 				colnamesa[k] = v + ".x"
 				colnamesb[*idx] = v + ".y"
 			}
@@ -803,7 +795,7 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 	// Get the names of the elements that are not keys on the right DataFrame
 	nokeynamesb := []string{}
 	for _, v := range dfb.colNames {
-		if !inStrSlice(v, keys) {
+		if !inStringSlice(v, keys) {
 			nokeynamesb = append(nokeynamesb, v)
 		}
 	}
