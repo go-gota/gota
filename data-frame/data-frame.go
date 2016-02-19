@@ -720,28 +720,28 @@ type mergeType int
 
 // These constants represent the types of allowed merge operations
 const (
-	InnerMerge mergeType = iota
-	NotInnerMerge
-	LeftMerge
-	RightMerge
-	FullOuterMerge
+	InnerJoin mergeType = iota
+	NotInnerJoin
+	LeftJoin
+	RightJoin
+	FullOuterJoin
 	CartesianJoin
 )
 
-// Merge is a wrapper over the different merge functions
-func Merge(t mergeType, dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+// Join is a wrapper over the different merge functions
+func Join(t mergeType, dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	switch {
-	case t == InnerMerge:
-		return innerMerge(dfa, dfb, keys...)
+	case t == InnerJoin:
+		return innerJoin(dfa, dfb, keys...)
 	case t == CartesianJoin:
 		return crossJoin(dfa, dfb)
 	}
 	return nil, errors.New("Unrecognized merge operation")
 }
 
-// innerMerge returns a DataFrame containing the inner merge of two other DataFrames.
+// innerJoin returns a DataFrame containing the inner merge of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {

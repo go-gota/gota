@@ -4,9 +4,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 ### Added
-- Getter methods for nrows and ncols
-- An innerMerge function that performs an Inner Merge/Join of two
-  DataFrames by the given keys
+- Getter methods for nrows and ncols.
+- An innerJoin function that performs an Inner Merge/Join of two
+  DataFrames by the given keys.
+- A crossJoin function that performs an Cross Merge/Join of two
+  DataFrames.
 
 ## [0.3.0] - 2016-02-18
 ### Added
