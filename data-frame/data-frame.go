@@ -719,17 +719,24 @@ func formatCell(cell interface{}) string {
 // innerMerge returns a DataFrame containing the inner merge of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
 func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
-	// TODO: If the matching keys on the columns have different types an error
-	// should be reported.
-
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
-		if !inStringSlice(key, dfa.colNames) {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra != nil {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
-		if !inStringSlice(key, dfb.colNames) {
+		if errb != nil {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+		// Check that the column types are the same between DataFrames
+		if ia != nil && ib != nil {
+			ta := dfa.colTypes[*ia]
+			tb := dfb.colTypes[*ib]
+			if ta != tb {
+				errorArr = append(errorArr, fmt.Sprint("Different types for key\"", key, "\". Left:", ta, " Right:", tb))
+			}
 		}
 	}
 	if len(errorArr) != 0 {
