@@ -341,15 +341,24 @@ func TestDataFrame_innerMerge(t *testing.T) {
 		[]string{"9", "10", "11", "12"},
 	}
 	datab := [][]string{
-		[]string{"A", "E", "F"},
-		[]string{"9", "9", "8"},
+		[]string{"A", "C", "F"},
+		[]string{"9", "1", "8"},
+		[]string{"9", "11", "8"},
+		[]string{"1", "3", "2"},
 		[]string{"1", "1", "2"},
 	}
 	dfa := DataFrame{}
 	dfa.LoadData(dataa)
 	dfb := DataFrame{}
 	dfb.LoadData(datab)
-	fmt.Println(innerMerge(dfa, dfb, "A"))
+	_, err := innerMerge(dfa, dfb, "A", "X")
+	if err == nil {
+		t.Error("Should have failed: Key X not in left or right DataFrame")
+	}
+	_, err = innerMerge(dfa, dfb, "A")
+	if err != nil {
+		t.Error(err)
+	}
 }
 
 func TestDataFrame_Colnames(t *testing.T) {

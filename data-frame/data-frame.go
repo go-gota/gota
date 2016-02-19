@@ -312,7 +312,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 			return &k, nil
 		}
 	}
-	return nil, errors.New("Can't find the given column")
+	return nil, errors.New("Can't find the given column:")
 }
 
 // Subset will return a DataFrame that contains only the columns and rows contained
@@ -708,46 +708,107 @@ func formatCell(cell interface{}) string {
 
 // innerMerge returns a DataFrame containing the inner merge of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func innerMerge(dfa DataFrame, dfb DataFrame, key string) (*DataFrame, error) {
-
-	// TODO: Rename all columns on both dataframes that have the same name and are
-	// not keys
-
+func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	// TODO: If the matching keys on the columns have different types an error
 	// should be reported.
 
-	// NOTE: For now just considering one key for merging
+	inStrSlice := func(str string, s []string) bool {
+		for _, v := range s {
+			if v == str {
+				return true
+			}
+		}
+		return false
+	}
+	inStrSliceIndex := func(str string, s []string) (bool, *int) {
+		for k, v := range s {
+			if v == str {
+				return true, &k
+			}
+		}
+		return false, nil
+	}
+
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	for _, key := range keys {
+		if !inStrSlice(key, dfa.colNames) {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		if !inStrSlice(key, dfb.colNames) {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+	}
+	if len(errorArr) != 0 {
+		return nil, errors.New(strings.Join(errorArr, "\n"))
+	}
+
+	// Rename non key coumns with the same name on both DataFrames
+	colnamesa := dfa.colNames
+	colnamesb := dfb.colNames
+	for k, v := range colnamesa {
+		// TODO: Use colIndex instead?
+		if in, idx := inStrSliceIndex(v, colnamesb); in {
+			if !inStrSlice(v, keys) {
+				colnamesa[k] = v + ".x"
+				colnamesb[*idx] = v + ".y"
+			}
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
 
 	// Get the column indexes of both columns for the given keys
-	colia, err := dfa.colIndex(key)
-	if err != nil {
-		return nil, err
+	colIdxa := []int{}
+	colIdxb := []int{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra == nil && errb == nil {
+			colIdxa = append(colIdxa, *ia)
+			colIdxb = append(colIdxb, *ib)
+		}
 	}
-	colib, err := dfb.colIndex(key)
-	if err != nil {
-		return nil, err
+
+	checksumsa := make([][]byte, dfa.nRows)
+	checksumsb := make([][]byte, dfb.nRows)
+	for _, i := range colIdxa {
+		for k, v := range dfa.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsa[k] = append(checksumsa[k], b...)
+		}
+	}
+	for _, i := range colIdxb {
+		for k, v := range dfb.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsb[k] = append(checksumsb[k], b...)
+		}
 	}
 
 	dfaIndexes := []int{}
 	dfbIndexes := []int{}
-	for ka, v := range dfa.columns[*colia].cells {
-		vala := v.Checksum()
-		for kb, vv := range dfb.columns[*colib].cells {
-			valb := vv.Checksum()
-			if vala == valb {
+	for ka, ca := range checksumsa {
+		for kb, cb := range checksumsb {
+			if string(ca) == string(cb) {
 				dfaIndexes = append(dfaIndexes, ka)
 				dfbIndexes = append(dfbIndexes, kb)
 			}
 		}
 	}
-	newdfa, _ := dfa.SubsetRows(dfaIndexes)
 
-	bCols := []string{}
+	// Get the names of the elements that are not keys on the right DataFrame
+	nokeynamesb := []string{}
 	for _, v := range dfb.colNames {
-		if v != key {
-			bCols = append(bCols, v)
+		if !inStrSlice(v, keys) {
+			nokeynamesb = append(nokeynamesb, v)
 		}
 	}
-	newdfb, _ := dfb.Subset(bCols, dfbIndexes)
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
 	return Cbind(*newdfa, *newdfb)
 }
