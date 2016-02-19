@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   DataFrames by the given keys.
 - A crossJoin function that performs an Cross Merge/Join of two
   DataFrames.
+- Cell interface now have to implement the NA() method that will
+  return a empty cell for the given type.
+
+### Changed
+- The `cell` interface is now exported: `Cell`.
+- Cell method NA() is now IsNA().
 
 ## [0.3.0] - 2016-02-18
 ### Added

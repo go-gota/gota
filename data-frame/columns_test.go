@@ -12,7 +12,7 @@ func TestAppend(t *testing.T) {
 		colName: colname,
 	}
 	var tests = []struct {
-		data        cells
+		data        Cells
 		expectedLen int
 	}{
 		{Strings("A", "B"), 2},

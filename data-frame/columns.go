@@ -7,7 +7,7 @@ import (
 
 // column represents a column inside a DataFrame
 type column struct {
-	cells    cells
+	cells    Cells
 	colType  string
 	colName  string
 	numChars int
@@ -16,7 +16,7 @@ type column struct {
 type columns []column
 
 // newCol is the constructor for a new Column with the given colName and elements
-func newCol(colName string, elements cells) (*column, error) {
+func newCol(colName string, elements Cells) (*column, error) {
 	col := column{
 		colName: colName,
 	}
@@ -63,7 +63,7 @@ func (col *column) recountNumChars() {
 }
 
 // Append will add a value or values to a column
-func (col column) append(values ...cell) (column, error) {
+func (col column) append(values ...Cell) (column, error) {
 	if len(values) == 0 {
 		col.recountNumChars()
 		return col, nil
@@ -89,7 +89,7 @@ func (col column) append(values ...cell) (column, error) {
 
 func (col column) hasNa() bool {
 	for _, v := range col.cells {
-		if v.NA() {
+		if v.IsNA() {
 			return true
 		}
 	}
@@ -99,7 +99,7 @@ func (col column) hasNa() bool {
 func (col column) na() []bool {
 	naArray := make([]bool, len(col.cells))
 	for k, v := range col.cells {
-		if v.NA() {
+		if v.IsNA() {
 			naArray[k] = true
 		} else {
 			naArray[k] = false

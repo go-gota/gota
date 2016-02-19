@@ -18,16 +18,19 @@ type rowable interface {
 	String() string
 }
 
-type cell interface {
+// Cell is the interface that every cell in a DataFrame needs to comply with
+type Cell interface {
 	String() string
 	Int() (*int, error)
 	Float() (*float64, error)
 	Bool() (*bool, error)
-	NA() bool
+	NA() Cell
+	IsNA() bool
 	Checksum() [16]byte
 }
 
-type cells []cell
+// Cells is a wrapper for a slice of Cells
+type Cells []Cell
 
 type tointeger interface {
 	Int() (*int, error)
@@ -53,7 +56,7 @@ type DataFrame struct {
 // C represents a way to pass Colname and Elements to a DF constructor
 type C struct {
 	Colname  string
-	Elements cells
+	Elements Cells
 }
 
 // T is used to represent the association between a column and it't type

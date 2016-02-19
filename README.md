@@ -52,12 +52,12 @@ a package that:
 - [ ] Load/save XML data
 - [ ] Load/save JSON data
 - [x] Parse loaded data to the given types (Currently supported:
-  `Int`, `Float`, & `String`)
+  `Int`, `Float`, `Bool`, & `String`)
 - [x] Row/Column subsetting (Indexing, column names, row numbers, range)
 - [x] Unique/Duplicate row subsetting
 - [ ] Conditional subsetting (i.e.:`Age > 35 && City == "London"`)
 - [x] DataFrame combinations by rows and columns (cbind/rbind)
-- [ ] DataFrame merging by keys (Inner, Outer, Left, Right, Cross)
+- [ ] DataFrame joining by keys (Inner, Outer, Left, Right, Cross)
 - [ ] Function application over rows
 - [ ] Function application over columns
 - [ ] Statistics and summaries over the different features (Type dependant)
@@ -70,15 +70,16 @@ Usage
 Each column in a DataFrame can only have elements of a given type. To
 be able parse columns to different types, sort them and keep
 everything compatible the types included into a column have to comply
-with the `cell` interface. Right now the `cell` interface have the
+with the `Cell` interface. Right now the `Cell` interface have the
 following methods:
 ```
-type cell interface {
+type Cell interface {
 	String() string
 	Int() (*int, error)
 	Float() (*float64, error)
 	Bool() (*bool, error)
-	NA() bool
+	NA() Cell
+	IsNA() bool
 	Checksum() [16]byte
 }
 ```
