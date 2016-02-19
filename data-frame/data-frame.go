@@ -791,8 +791,14 @@ func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 	}
 
 	// Rename non key coumns with the same name on both DataFrames
-	colnamesa := dfa.colNames
-	colnamesb := dfb.colNames
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfa.colNames {
+		colnamesa[k] = v
+	}
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
 	for k, v := range colnamesa {
 		if idx, err := dfb.colIndex(v); err == nil {
 			if !inStringSlice(v, keys) {
@@ -865,7 +871,7 @@ func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 // both DataFrames.
 func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
 	colnamesa := make([]string, len(dfa.colNames))
-	colnamesb := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
 	for k, v := range dfb.colNames {
 		colnamesb[k] = v
 	}
@@ -897,8 +903,8 @@ func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
 
 // leftJoin returns a DataFrame containing the left join of two other DataFrames.
 // This operation matches all rows that appear on the left DataFrame and matches
-// it with the existing ones on the right one, filling the missing cells with an
-// empty value.
+// it with the existing ones on the right one, filling the missing rows on the
+// right with an empty value.
 func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
@@ -926,7 +932,7 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 
 	// Rename non key coumns with the same name on both DataFrames
 	colnamesa := make([]string, len(dfa.colNames))
-	colnamesb := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
 	for k, v := range dfa.colNames {
 		colnamesa[k] = v
 	}
@@ -934,8 +940,8 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 		colnamesb[k] = v
 	}
 	for k, v := range colnamesa {
-		if idx, err := dfb.colIndex(v); err == nil {
-			if !inStringSlice(v, keys) {
+		if !inStringSlice(v, keys) {
+			if idx, err := dfb.colIndex(v); err == nil {
 				colnamesa[k] = v + ".x"
 				colnamesb[*idx] = v + ".y"
 			}
@@ -980,13 +986,18 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 	dfaIndexes := []int{}
 	dfbIndexes := []int{}
 	for ka, ca := range checksumsa {
+		found := false
 		for kb, cb := range checksumsb {
-			dfaIndexes = append(dfaIndexes, ka)
 			if string(ca) == string(cb) {
+				dfaIndexes = append(dfaIndexes, ka)
 				dfbIndexes = append(dfbIndexes, kb)
-			} else {
-				dfbIndexes = append(dfbIndexes, -1)
+				found = true
 			}
+		}
+		if !found {
+			dfaIndexes = append(dfaIndexes, ka)
+			dfbIndexes = append(dfbIndexes, -1)
+
 		}
 	}
 
