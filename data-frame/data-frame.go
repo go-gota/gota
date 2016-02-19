@@ -682,8 +682,19 @@ func formatCell(cell interface{}) string {
 	return fmt.Sprint(cell)
 }
 
+// innerMerge returns a DataFrame containing the inner merge of two other DataFrames.
+// This operation matches all rows that appear on both dataframes.
 func innerMerge(dfa DataFrame, dfb DataFrame, key string) (*DataFrame, error) {
+
+	// TODO: Rename all columns on both dataframes that have the same name and are
+	// not keys
+
+	// TODO: If the matching keys on the columns have different types an error
+	// should be reported.
+
 	// NOTE: For now just considering one key for merging
+
+	// Get the column indexes of both columns for the given keys
 	colia, err := dfa.colIndex(key)
 	if err != nil {
 		return nil, err
