@@ -11,6 +11,7 @@ type column struct {
 	colType  string
 	colName  string
 	numChars int
+	empty    Cell
 }
 
 type columns []column
@@ -69,6 +70,7 @@ func (col column) append(values ...Cell) (column, error) {
 		return col, nil
 	}
 
+	col.empty = values[0].NA()
 	for _, v := range values {
 		t := reflect.TypeOf(v).String()
 		if col.colType == "" {

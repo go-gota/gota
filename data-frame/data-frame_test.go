@@ -363,10 +363,16 @@ func TestDataFrame_Join(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	_, err = crossJoin(dfa, dfb)
+	d, err := crossJoin(dfa, dfb)
 	if err != nil {
 		t.Error(err)
 	}
+	fmt.Println(d)
+	d, err = leftJoin(dfa, dfb, "A")
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(d)
 }
 
 func TestDataFrame_Colnames(t *testing.T) {
