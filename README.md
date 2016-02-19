@@ -75,8 +75,10 @@ following methods:
 ```
 type cell interface {
 	String() string
-	ToInteger() (*int, error)
-	ToFloat() (*float64, error)
+	Int() (*int, error)
+	Float() (*float64, error)
+	Bool() (*bool, error)
+	NA() bool
 	Checksum() [16]byte
 }
 ```
@@ -174,6 +176,22 @@ dd, _ := d.SubsetColumns([]string{"Date"})
 fmt.Println(df.Rbind(*da, *db))
 fmt.Println(df.Cbind(*dc, *dd))
 ```
+
+License
+-------
+Copyright 2016 Alejandro Sanchez Brotons
+
+Licensed under the Apache License, Version 2.0 (the "License"); you
+may not use this file except in compliance with the License.  You may
+obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+implied. See the License for the specific language governing
+permissions and limitations under the License.
 
 [1]: https://github.com/gonum
 [2]: https://github.com/kniren/gota

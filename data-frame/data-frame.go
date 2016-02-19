@@ -20,19 +20,25 @@ type rowable interface {
 
 type cell interface {
 	String() string
-	ToInteger() (*int, error)
-	ToFloat() (*float64, error)
+	Int() (*int, error)
+	Float() (*float64, error)
+	Bool() (*bool, error)
+	NA() bool
 	Checksum() [16]byte
 }
 
 type cells []cell
 
 type tointeger interface {
-	ToInteger() (*int, error)
+	Int() (*int, error)
 }
 
 type tofloat interface {
-	ToFloat() (*float64, error)
+	Float() (*float64, error)
+}
+
+type tobool interface {
+	Bool() (*bool, error)
 }
 
 // DataFrame is the base data structure
@@ -129,6 +135,24 @@ func New(colConst ...C) (*DataFrame, error) {
 	}
 
 	return df, nil
+}
+
+// Names is the getter method for the column names
+func (df DataFrame) Names() []string {
+	return df.colNames
+}
+
+// SetNames let us specify the column names of a DataFrame
+func (df *DataFrame) SetNames(colnames []string) error {
+	if len(df.colNames) != len(colnames) {
+		return errors.New("Different sizes for colnames array")
+	}
+
+	for k, v := range df.columns {
+		v.colName = colnames[k]
+	}
+	df.colNames = colnames
+	return nil
 }
 
 // LoadData will load the data from a multidimensional array of strings into

@@ -42,6 +42,10 @@ func parseColumn(col column, t string) (*column, error) {
 		newcells := Floats(col.cells)
 		newcol, err := newCol(col.colName, newcells)
 		return newcol, err
+	case "bool":
+		newcells := Bools(col.cells)
+		newcol, err := newCol(col.colName, newcells)
+		return newcol, err
 	}
 	return nil, errors.New("Can't parse the given type")
 }
@@ -81,4 +85,25 @@ func (col column) append(values ...cell) (column, error) {
 	col.recountNumChars()
 
 	return col, nil
+}
+
+func (col column) hasNa() bool {
+	for _, v := range col.cells {
+		if v.NA() {
+			return true
+		}
+	}
+	return false
+}
+
+func (col column) na() []bool {
+	naArray := make([]bool, len(col.cells))
+	for k, v := range col.cells {
+		if v.NA() {
+			naArray[k] = true
+		} else {
+			naArray[k] = false
+		}
+	}
+	return naArray
 }
