@@ -332,7 +332,7 @@ func TestDataFrame_RemoveUnique(t *testing.T) {
 	}
 }
 
-func TestDataFrame_innerMerge(t *testing.T) {
+func TestDataFrame_Merge(t *testing.T) {
 	dataa := [][]string{
 		[]string{"A", "B", "C", "D"},
 		[]string{"1", "2", "3", "4"},
@@ -356,6 +356,14 @@ func TestDataFrame_innerMerge(t *testing.T) {
 		t.Error("Should have failed: Key X not in left or right DataFrame")
 	}
 	_, err = innerMerge(dfa, dfb, "A")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = Merge(InnerMerge, dfa, dfb, "A")
+	if err != nil {
+		t.Error(err)
+	}
+	_, err = crossJoin(dfa, dfb)
 	if err != nil {
 		t.Error(err)
 	}

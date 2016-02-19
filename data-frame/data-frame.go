@@ -716,6 +716,29 @@ func formatCell(cell interface{}) string {
 	return fmt.Sprint(cell)
 }
 
+type mergeType int
+
+// These constants represent the types of allowed merge operations
+const (
+	InnerMerge mergeType = iota
+	NotInnerMerge
+	LeftMerge
+	RightMerge
+	FullOuterMerge
+	CartesianJoin
+)
+
+// Merge is a wrapper over the different merge functions
+func Merge(t mergeType, dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+	switch {
+	case t == InnerMerge:
+		return innerMerge(dfa, dfb, keys...)
+	case t == CartesianJoin:
+		return crossJoin(dfa, dfb)
+	}
+	return nil, errors.New("Unrecognized merge operation")
+}
+
 // innerMerge returns a DataFrame containing the inner merge of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
 func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
@@ -769,6 +792,7 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 		}
 	}
 
+	// Get the combined checksum for all keys in both DataFrames
 	checksumsa := make([][]byte, dfa.nRows)
 	checksumsb := make([][]byte, dfb.nRows)
 	for _, i := range colIdxa {
@@ -788,6 +812,7 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 		}
 	}
 
+	// Get the indexes of the rows we want to merge
 	dfaIndexes := []int{}
 	dfbIndexes := []int{}
 	for ka, ca := range checksumsa {
@@ -809,5 +834,34 @@ func innerMerge(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error
 
 	newdfa, _ := dfa.SubsetRows(dfaIndexes)
 	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}
+
+// crossjoin returns a DataFrame containing the cartesian product of the rows on
+// both DataFrames.
+func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
+	colnamesa := dfa.colNames
+	colnamesb := dfb.colNames
+	for k, v := range colnamesa {
+		if idx, err := dfb.colIndex(v); err == nil {
+			colnamesa[k] = v + ".x"
+			colnamesb[*idx] = v + ".y"
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the indexes of the rows we want to merge
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for i := 0; i < dfa.nRows; i++ {
+		for j := 0; j < dfb.nRows; j++ {
+			dfaIndexes = append(dfaIndexes, i)
+			dfbIndexes = append(dfbIndexes, j)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.SubsetRows(dfbIndexes)
 	return Cbind(*newdfa, *newdfb)
 }
