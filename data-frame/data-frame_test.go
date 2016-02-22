@@ -355,21 +355,26 @@ func TestDataFrame_Join(t *testing.T) {
 	if err == nil {
 		t.Error("Should have failed: Key X not in left or right DataFrame")
 	}
-	d, err := innerJoin(dfa, dfb, "A", "C")
+	_, err = innerJoin(dfa, dfb, "A", "C")
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(d)
-	d, err = Join(InnerJoin, dfa, dfb, "A")
+	//fmt.Println(d)
+	//_, err = Join(InnerJoin, dfa, dfb, "A")
+	//if err != nil {
+	//t.Error(err)
+	//}
+	//fmt.Println(d)
+	//_, err = crossJoin(dfa, dfb)
+	//if err != nil {
+	//t.Error(err)
+	//}
+	_, err = leftJoin(dfa, dfb, "A", "C")
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(d)
-	d, err = crossJoin(dfa, dfb)
-	if err != nil {
-		t.Error(err)
-	}
-	d, err = leftJoin(dfa, dfb, "A", "C")
+	//fmt.Println(d)
+	d, err := rightJoin(dfa, dfb, "C", "A")
 	if err != nil {
 		t.Error(err)
 	}

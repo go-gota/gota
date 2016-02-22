@@ -170,8 +170,8 @@ func (df *DataFrame) SetNames(colnames []string) error {
 	for k := range df.columns {
 		df.columns[k].colName = colnames[k]
 		df.columns[k].recountNumChars()
+		df.colNames[k] = colnames[k]
 	}
-	df.colNames = colnames
 	return nil
 }
 
@@ -944,6 +944,119 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 			if idx, err := dfb.colIndex(v); err == nil {
 				colnamesa[k] = v + ".x"
 				colnamesb[*idx] = v + ".y"
+			}
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the column indexes of both columns for the given keys
+	colIdxa := []int{}
+	colIdxb := []int{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra == nil && errb == nil {
+			colIdxa = append(colIdxa, *ia)
+			colIdxb = append(colIdxb, *ib)
+		}
+	}
+
+	// Get the combined checksum for all keys in both DataFrames
+	checksumsa := make([][]byte, dfa.nRows)
+	checksumsb := make([][]byte, dfb.nRows)
+	for _, i := range colIdxa {
+		for k, v := range dfa.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsa[k] = append(checksumsa[k], b...)
+		}
+	}
+	for _, i := range colIdxb {
+		for k, v := range dfb.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsb[k] = append(checksumsb[k], b...)
+		}
+	}
+
+	// Get the indexes of the rows we want to join
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for ka, ca := range checksumsa {
+		found := false
+		for kb, cb := range checksumsb {
+			if string(ca) == string(cb) {
+				dfaIndexes = append(dfaIndexes, ka)
+				dfbIndexes = append(dfbIndexes, kb)
+				found = true
+			}
+		}
+		if !found {
+			dfaIndexes = append(dfaIndexes, ka)
+			dfbIndexes = append(dfbIndexes, -1)
+
+		}
+	}
+
+	// Get the names of the elements that are not keys on the right DataFrame
+	nokeynamesb := []string{}
+	for _, v := range dfb.colNames {
+		if !inStringSlice(v, keys) {
+			nokeynamesb = append(nokeynamesb, v)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}
+
+// rightJoin returns a DataFrame containing the right join of two other DataFrames.
+// This operation matches all rows that appear on the right DataFrame and matches
+// it with the existing ones on the left one, filling the missing rows on the
+// left with an empty value.
+func rightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error) {
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		if errb != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+		// Check that the column types are the same between DataFrames
+		if ia != nil && ib != nil {
+			ta := dfa.colTypes[*ia]
+			tb := dfb.colTypes[*ib]
+			if ta != tb {
+				errorArr = append(errorArr, fmt.Sprint("Different types for key\"", key, "\". Left:", ta, " Right:", tb))
+			}
+		}
+	}
+	if len(errorArr) != 0 {
+		return nil, errors.New(strings.Join(errorArr, "\n"))
+	}
+
+	// Rename non key coumns with the same name on both DataFrames
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfa.colNames {
+		colnamesa[k] = v
+	}
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
+	for k, v := range colnamesa {
+		if !inStringSlice(v, keys) {
+			if idx, err := dfb.colIndex(v); err == nil {
+				colnamesa[k] = v + ".y"
+				colnamesb[*idx] = v + ".x"
 			}
 		}
 	}
