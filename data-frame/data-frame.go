@@ -18,16 +18,19 @@ type rowable interface {
 	String() string
 }
 
-type cell interface {
+// Cell is the interface that every cell in a DataFrame needs to comply with
+type Cell interface {
 	String() string
 	Int() (*int, error)
 	Float() (*float64, error)
 	Bool() (*bool, error)
-	NA() bool
+	NA() Cell
+	IsNA() bool
 	Checksum() [16]byte
 }
 
-type cells []cell
+// Cells is a wrapper for a slice of Cells
+type Cells []Cell
 
 type tointeger interface {
 	Int() (*int, error)
@@ -53,7 +56,7 @@ type DataFrame struct {
 // C represents a way to pass Colname and Elements to a DF constructor
 type C struct {
 	Colname  string
-	Elements cells
+	Elements Cells
 }
 
 // T is used to represent the association between a column and it't type
@@ -142,16 +145,33 @@ func (df DataFrame) Names() []string {
 	return df.colNames
 }
 
+func copy(df DataFrame) DataFrame {
+	colnames := make([]string, len(df.colNames))
+	for k, v := range df.colNames {
+		colnames[k] = v
+	}
+	dfc := DataFrame{
+		colNames: colnames,
+		colTypes: df.colTypes,
+		columns:  df.columns,
+		nRows:    df.nRows,
+		nCols:    df.nCols,
+	}
+
+	return dfc
+}
+
 // SetNames let us specify the column names of a DataFrame
 func (df *DataFrame) SetNames(colnames []string) error {
 	if len(df.colNames) != len(colnames) {
 		return errors.New("Different sizes for colnames array")
 	}
 
-	for k, v := range df.columns {
-		v.colName = colnames[k]
+	for k := range df.columns {
+		df.columns[k].colName = colnames[k]
+		df.columns[k].recountNumChars()
+		df.colNames[k] = colnames[k]
 	}
-	df.colNames = colnames
 	return nil
 }
 
@@ -252,30 +272,21 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	case T:
 		types := types.(T)
 		for k, v := range types {
-			i, err := df.columnIndex(k)
+			i, err := df.colIndex(k)
 			if err != nil {
 				return err
 			}
-			col, err := parseColumn(df.columns[i], v)
+			col, err := parseColumn(df.columns[*i], v)
 			if err != nil {
 				return err
 			}
 			colIndex, _ := df.colIndex(k)
 			df.colTypes[*colIndex] = col.colType
-			df.columns[i] = *col
+			df.columns[*i] = *col
 		}
 	}
 
 	return nil
-}
-
-func (df DataFrame) columnIndex(colName string) (int, error) {
-	for k, v := range df.colNames {
-		if v == colName {
-			return k, nil
-		}
-	}
-	return -1, errors.New("Index out of range")
 }
 
 // SaveRecords will save data to records in [][]string format
@@ -314,6 +325,16 @@ func (df DataFrame) Dim() (dim [2]int) {
 	return
 }
 
+// NRows is the getter method for the number of rows in a DataFrame
+func (df DataFrame) NRows() int {
+	return df.nRows
+}
+
+// NCols is the getter method for the number of rows in a DataFrame
+func (df DataFrame) NCols() int {
+	return df.nCols
+}
+
 // colIndex tries to find the column index for a given column name
 func (df DataFrame) colIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
@@ -321,7 +342,7 @@ func (df DataFrame) colIndex(colname string) (*int, error) {
 			return &k, nil
 		}
 	}
-	return nil, errors.New("Can't find the given column")
+	return nil, errors.New("Can't find the given column:")
 }
 
 // Subset will return a DataFrame that contains only the columns and rows contained
@@ -418,12 +439,12 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 		// Select the desired subset of columns
 		for _, v := range columns {
-			i, err := df.columnIndex(v)
+			i, err := df.colIndex(v)
 			if err != nil {
 				return nil, err
 			}
 
-			col := df.columns[i]
+			col := df.columns[*i]
 			newDf.colNames = append(newDf.colNames, v)
 			colindex, err := df.colIndex(v)
 			if err != nil {
@@ -444,7 +465,6 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 
 // SubsetRows will return a DataFrame that contains only the selected rows
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
-	// TODO: Must update numChars in every column after subsetting
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
 		columns:  columns{},
@@ -485,7 +505,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 
 		// Check for errors
 		for _, v := range rowNums {
-			if v >= df.nRows || v < 0 {
+			if v >= df.nRows {
 				return nil, errors.New("Subset out of range")
 			}
 		}
@@ -498,7 +518,11 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 			}
 
 			for _, i := range rowNums {
-				col.cells = append(col.cells, v.cells[i])
+				if i < 0 {
+					col.cells = append(col.cells, v.empty)
+				} else {
+					col.cells = append(col.cells, v.cells[i])
+				}
 			}
 			col.recountNumChars()
 			newDf.columns = append(newDf.columns, *col)
@@ -714,4 +738,391 @@ func formatCell(cell interface{}) string {
 		return fmt.Sprint(val)
 	}
 	return fmt.Sprint(cell)
+}
+
+type mergeType int
+
+// These constants represent the types of allowed join operations
+const (
+	InnerJoin mergeType = iota
+	NotInnerJoin
+	LeftJoin
+	RightJoin
+	FullOuterJoin
+	CartesianJoin
+)
+
+// Join is a wrapper over the different join functions
+func Join(t mergeType, dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+	switch {
+	case t == InnerJoin:
+		return innerJoin(dfa, dfb, keys...)
+	case t == CartesianJoin:
+		return crossJoin(dfa, dfb)
+	}
+	return nil, errors.New("Unrecognized join operation")
+}
+
+// innerJoin returns a DataFrame containing the inner join of two other DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		if errb != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+		// Check that the column types are the same between DataFrames
+		if ia != nil && ib != nil {
+			ta := dfa.colTypes[*ia]
+			tb := dfb.colTypes[*ib]
+			if ta != tb {
+				errorArr = append(errorArr, fmt.Sprint("Different types for key\"", key, "\". Left:", ta, " Right:", tb))
+			}
+		}
+	}
+	if len(errorArr) != 0 {
+		return nil, errors.New(strings.Join(errorArr, "\n"))
+	}
+
+	// Rename non key coumns with the same name on both DataFrames
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfa.colNames {
+		colnamesa[k] = v
+	}
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
+	for k, v := range colnamesa {
+		if idx, err := dfb.colIndex(v); err == nil {
+			if !inStringSlice(v, keys) {
+				colnamesa[k] = v + ".x"
+				colnamesb[*idx] = v + ".y"
+			}
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the column indexes of both columns for the given keys
+	colIdxa := []int{}
+	colIdxb := []int{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra == nil && errb == nil {
+			colIdxa = append(colIdxa, *ia)
+			colIdxb = append(colIdxb, *ib)
+		}
+	}
+
+	// Get the combined checksum for all keys in both DataFrames
+	checksumsa := make([][]byte, dfa.nRows)
+	checksumsb := make([][]byte, dfb.nRows)
+	for _, i := range colIdxa {
+		for k, v := range dfa.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsa[k] = append(checksumsa[k], b...)
+		}
+	}
+	for _, i := range colIdxb {
+		for k, v := range dfb.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsb[k] = append(checksumsb[k], b...)
+		}
+	}
+
+	// Get the indexes of the rows we want to join
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for ka, ca := range checksumsa {
+		for kb, cb := range checksumsb {
+			if string(ca) == string(cb) {
+				dfaIndexes = append(dfaIndexes, ka)
+				dfbIndexes = append(dfbIndexes, kb)
+			}
+		}
+	}
+
+	// Get the names of the elements that are not keys on the right DataFrame
+	nokeynamesb := []string{}
+	for _, v := range dfb.colNames {
+		if !inStringSlice(v, keys) {
+			nokeynamesb = append(nokeynamesb, v)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}
+
+// crossjoin returns a DataFrame containing the cartesian product of the rows on
+// both DataFrames.
+func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
+	for k, v := range dfa.colNames {
+		if idx, err := dfb.colIndex(v); err == nil {
+			colnamesa[k] = v + ".x"
+			colnamesb[*idx] = v + ".y"
+		} else {
+			colnamesa[k] = v
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the indexes of the rows we want to join
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for i := 0; i < dfa.nRows; i++ {
+		for j := 0; j < dfb.nRows; j++ {
+			dfaIndexes = append(dfaIndexes, i)
+			dfbIndexes = append(dfbIndexes, j)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.SubsetRows(dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}
+
+// leftJoin returns a DataFrame containing the left join of two other DataFrames.
+// This operation matches all rows that appear on the left DataFrame and matches
+// it with the existing ones on the right one, filling the missing rows on the
+// right with an empty value.
+func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		if errb != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+		// Check that the column types are the same between DataFrames
+		if ia != nil && ib != nil {
+			ta := dfa.colTypes[*ia]
+			tb := dfb.colTypes[*ib]
+			if ta != tb {
+				errorArr = append(errorArr, fmt.Sprint("Different types for key\"", key, "\". Left:", ta, " Right:", tb))
+			}
+		}
+	}
+	if len(errorArr) != 0 {
+		return nil, errors.New(strings.Join(errorArr, "\n"))
+	}
+
+	// Rename non key coumns with the same name on both DataFrames
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfa.colNames {
+		colnamesa[k] = v
+	}
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
+	for k, v := range colnamesa {
+		if !inStringSlice(v, keys) {
+			if idx, err := dfb.colIndex(v); err == nil {
+				colnamesa[k] = v + ".x"
+				colnamesb[*idx] = v + ".y"
+			}
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the column indexes of both columns for the given keys
+	colIdxa := []int{}
+	colIdxb := []int{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra == nil && errb == nil {
+			colIdxa = append(colIdxa, *ia)
+			colIdxb = append(colIdxb, *ib)
+		}
+	}
+
+	// Get the combined checksum for all keys in both DataFrames
+	checksumsa := make([][]byte, dfa.nRows)
+	checksumsb := make([][]byte, dfb.nRows)
+	for _, i := range colIdxa {
+		for k, v := range dfa.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsa[k] = append(checksumsa[k], b...)
+		}
+	}
+	for _, i := range colIdxb {
+		for k, v := range dfb.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsb[k] = append(checksumsb[k], b...)
+		}
+	}
+
+	// Get the indexes of the rows we want to join
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for ka, ca := range checksumsa {
+		found := false
+		for kb, cb := range checksumsb {
+			if string(ca) == string(cb) {
+				dfaIndexes = append(dfaIndexes, ka)
+				dfbIndexes = append(dfbIndexes, kb)
+				found = true
+			}
+		}
+		if !found {
+			dfaIndexes = append(dfaIndexes, ka)
+			dfbIndexes = append(dfbIndexes, -1)
+
+		}
+	}
+
+	// Get the names of the elements that are not keys on the right DataFrame
+	nokeynamesb := []string{}
+	for _, v := range dfb.colNames {
+		if !inStringSlice(v, keys) {
+			nokeynamesb = append(nokeynamesb, v)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
+}
+
+// rightJoin returns a DataFrame containing the right join of two other DataFrames.
+// This operation matches all rows that appear on the right DataFrame and matches
+// it with the existing ones on the left one, filling the missing rows on the
+// left with an empty value.
+func rightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error) {
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		if errb != nil {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on right DataFrame"))
+		}
+		// Check that the column types are the same between DataFrames
+		if ia != nil && ib != nil {
+			ta := dfa.colTypes[*ia]
+			tb := dfb.colTypes[*ib]
+			if ta != tb {
+				errorArr = append(errorArr, fmt.Sprint("Different types for key\"", key, "\". Left:", ta, " Right:", tb))
+			}
+		}
+	}
+	if len(errorArr) != 0 {
+		return nil, errors.New(strings.Join(errorArr, "\n"))
+	}
+
+	// Rename non key coumns with the same name on both DataFrames
+	colnamesa := make([]string, len(dfa.colNames))
+	colnamesb := make([]string, len(dfb.colNames))
+	for k, v := range dfa.colNames {
+		colnamesa[k] = v
+	}
+	for k, v := range dfb.colNames {
+		colnamesb[k] = v
+	}
+	for k, v := range colnamesa {
+		if !inStringSlice(v, keys) {
+			if idx, err := dfb.colIndex(v); err == nil {
+				colnamesa[k] = v + ".y"
+				colnamesb[*idx] = v + ".x"
+			}
+		}
+	}
+	dfa.SetNames(colnamesa)
+	dfb.SetNames(colnamesb)
+
+	// Get the column indexes of both columns for the given keys
+	colIdxa := []int{}
+	colIdxb := []int{}
+	for _, key := range keys {
+		ia, erra := dfa.colIndex(key)
+		ib, errb := dfb.colIndex(key)
+		if erra == nil && errb == nil {
+			colIdxa = append(colIdxa, *ia)
+			colIdxb = append(colIdxb, *ib)
+		}
+	}
+
+	// Get the combined checksum for all keys in both DataFrames
+	checksumsa := make([][]byte, dfa.nRows)
+	checksumsb := make([][]byte, dfb.nRows)
+	for _, i := range colIdxa {
+		for k, v := range dfa.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsa[k] = append(checksumsa[k], b...)
+		}
+	}
+	for _, i := range colIdxb {
+		for k, v := range dfb.columns[i].cells {
+			b := []byte{}
+			cs := v.Checksum()
+			b = append(b, cs[:]...)
+			checksumsb[k] = append(checksumsb[k], b...)
+		}
+	}
+
+	// Get the indexes of the rows we want to join
+	dfaIndexes := []int{}
+	dfbIndexes := []int{}
+	for ka, ca := range checksumsa {
+		found := false
+		for kb, cb := range checksumsb {
+			if string(ca) == string(cb) {
+				dfaIndexes = append(dfaIndexes, ka)
+				dfbIndexes = append(dfbIndexes, kb)
+				found = true
+			}
+		}
+		if !found {
+			dfaIndexes = append(dfaIndexes, ka)
+			dfbIndexes = append(dfbIndexes, -1)
+
+		}
+	}
+
+	// Get the names of the elements that are not keys on the right DataFrame
+	nokeynamesb := []string{}
+	for _, v := range dfb.colNames {
+		if !inStringSlice(v, keys) {
+			nokeynamesb = append(nokeynamesb, v)
+		}
+	}
+
+	newdfa, _ := dfa.SubsetRows(dfaIndexes)
+	newdfb, _ := dfb.Subset(nokeynamesb, dfbIndexes)
+	return Cbind(*newdfa, *newdfb)
 }

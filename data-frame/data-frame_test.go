@@ -332,6 +332,55 @@ func TestDataFrame_RemoveUnique(t *testing.T) {
 	}
 }
 
+func TestDataFrame_Join(t *testing.T) {
+	dataa := [][]string{
+		[]string{"A", "B", "C", "D"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"5", "6", "7", "8"},
+		[]string{"1", "2", "3", "4"},
+		[]string{"9", "10", "11", "12"},
+	}
+	datab := [][]string{
+		[]string{"A", "C", "F"},
+		[]string{"9", "1", "8"},
+		[]string{"9", "11", "8"},
+		[]string{"1", "3", "2"},
+		[]string{"1", "1", "2"},
+	}
+	dfa := DataFrame{}
+	dfa.LoadData(dataa)
+	dfb := DataFrame{}
+	dfb.LoadData(datab)
+	_, err := innerJoin(dfa, dfb, "A", "X")
+	if err == nil {
+		t.Error("Should have failed: Key X not in left or right DataFrame")
+	}
+	_, err = innerJoin(dfa, dfb, "A", "C")
+	if err != nil {
+		t.Error(err)
+	}
+	//fmt.Println(d)
+	//_, err = Join(InnerJoin, dfa, dfb, "A")
+	//if err != nil {
+	//t.Error(err)
+	//}
+	//fmt.Println(d)
+	//_, err = crossJoin(dfa, dfb)
+	//if err != nil {
+	//t.Error(err)
+	//}
+	_, err = leftJoin(dfa, dfb, "A", "C")
+	if err != nil {
+		t.Error(err)
+	}
+	//fmt.Println(d)
+	d, err := rightJoin(dfa, dfb, "C", "A")
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(d)
+}
+
 func TestDataFrame_Colnames(t *testing.T) {
 	data := [][]string{
 		[]string{"A", "B", "C", "D"},

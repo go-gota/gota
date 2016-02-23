@@ -66,7 +66,13 @@ func (s String) Checksum() [16]byte {
 	return md5.Sum(b)
 }
 
-func (s String) NA() bool {
+// NA returns the empty element for this type
+func (s String) NA() Cell {
+	return String{nil}
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (s String) IsNA() bool {
 	if s.s == nil {
 		return true
 	}
@@ -74,8 +80,8 @@ func (s String) NA() bool {
 }
 
 // Strings is a constructor for a String array
-func Strings(args ...interface{}) cells {
-	ret := make([]cell, 0, len(args))
+func Strings(args ...interface{}) Cells {
+	ret := make([]Cell, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -210,7 +216,13 @@ func (i Int) Checksum() [16]byte {
 	return md5.Sum(b)
 }
 
-func (i Int) NA() bool {
+// NA returns the empty element for this type
+func (i Int) NA() Cell {
+	return Int{nil}
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (i Int) IsNA() bool {
 	if i.i == nil {
 		return true
 	}
@@ -218,8 +230,8 @@ func (i Int) NA() bool {
 }
 
 // Ints is a constructor for an Int array
-func Ints(args ...interface{}) cells {
-	ret := make(cells, 0, len(args))
+func Ints(args ...interface{}) Cells {
+	ret := make(Cells, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -362,7 +374,13 @@ func (f Float) Checksum() [16]byte {
 	return md5.Sum(b)
 }
 
-func (f Float) NA() bool {
+// NA returns the empty element for this type
+func (f Float) NA() Cell {
+	return Float{nil}
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (f Float) IsNA() bool {
 	if f.f == nil {
 		return true
 	}
@@ -370,8 +388,8 @@ func (f Float) NA() bool {
 }
 
 // Floats is a constructor for a Float array
-func Floats(args ...interface{}) cells {
-	ret := make(cells, 0, len(args))
+func Floats(args ...interface{}) Cells {
+	ret := make(Cells, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -529,7 +547,13 @@ func (b Bool) Checksum() [16]byte {
 	return md5.Sum(bs)
 }
 
-func (b Bool) NA() bool {
+// NA returns the empty element for this type
+func (b Bool) NA() Cell {
+	return Bool{nil}
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (b Bool) IsNA() bool {
 	if b.b == nil {
 		return true
 	}
@@ -537,8 +561,8 @@ func (b Bool) NA() bool {
 }
 
 // Bools is a constructor for a bools array
-func Bools(args ...interface{}) cells {
-	ret := make(cells, 0, len(args))
+func Bools(args ...interface{}) Cells {
+	ret := make(Cells, 0, len(args))
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
