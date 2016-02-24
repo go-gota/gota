@@ -27,6 +27,7 @@ type Cell interface {
 	NA() Cell
 	IsNA() bool
 	Checksum() [16]byte
+	Copy() Cell
 }
 
 // Cells is a wrapper for a slice of Cells

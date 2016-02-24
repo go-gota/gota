@@ -13,6 +13,14 @@ type String struct {
 	s *string
 }
 
+func (s String) Copy() Cell {
+	if s.s == nil {
+		return String{nil}
+	}
+	j := *s.s
+	return String{&j}
+}
+
 // Int returns the integer value of String
 func (s String) Int() (*int, error) {
 	if s.s == nil {
@@ -170,6 +178,14 @@ func Strings(args ...interface{}) Cells {
 // Int is an alias for int to be able to implement custom methods
 type Int struct {
 	i *int
+}
+
+func (i Int) Copy() Cell {
+	if i.i == nil {
+		return Int{nil}
+	}
+	j := *i.i
+	return Int{&j}
 }
 
 // Int returns the integer value of Int
@@ -330,6 +346,14 @@ type Float struct {
 	f *float64
 }
 
+func (f Float) Copy() Cell {
+	if f.f == nil {
+		return Float{nil}
+	}
+	j := *f.f
+	return Float{&j}
+}
+
 func (f Float) String() string {
 	return formatCell(f.f)
 }
@@ -487,6 +511,14 @@ func Floats(args ...interface{}) Cells {
 // Bool is an alias for string to be able to implement custom methods
 type Bool struct {
 	b *bool
+}
+
+func (b Bool) Copy() Cell {
+	if b.b == nil {
+		return Bool{nil}
+	}
+	j := *b.b
+	return Bool{&j}
 }
 
 // Int returns the integer value of Bool

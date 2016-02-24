@@ -104,6 +104,21 @@ func (col column) append(values ...Cell) (column, error) {
 	return col, nil
 }
 
+func (col column) copy() column {
+	cs := make(Cells, 0, len(col.cells))
+	for _, v := range col.cells {
+		cs = append(cs, v.Copy())
+	}
+	newcol := column{
+		cells:    cs,
+		colType:  col.colType,
+		colName:  col.colName,
+		numChars: col.numChars,
+		empty:    col.empty.Copy(),
+	}
+	return newcol
+}
+
 func (col column) HasNA() bool {
 	for _, v := range col.cells {
 		if v.IsNA() {

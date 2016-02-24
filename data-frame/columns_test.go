@@ -62,24 +62,24 @@ func TestnewCol(t *testing.T) {
 func TestColumn_ParseColumn(t *testing.T) {
 	// String to Int
 	cola, _ := newCol("TestCol", Strings("1", "2"))
-	fmt.Println(cola)
-	err := cola.ParseColumn("int")
+	colb := cola.copy()
+	err := colb.ParseColumn("int")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.Int:", err)
 	}
-	fmt.Println(cola)
-	//if len(colb.cells) != len(cola.cells) ||
-	//colb.colName != cola.colName ||
-	//colb.colType != "df.Int" ||
-	//fmt.Sprint(colb.cells) != "[1 2]" {
-	//t.Error("Error parsing a df.String column into df.Int",
-	//"\nlen(cola.cells):", len(cola.cells),
-	//"\nlen(colb.cells):", len(colb.cells),
-	//"\ncola.colName:", cola.colName,
-	//"\ncolb.colName:", colb.colName,
-	//"\ncolb.colType:", colb.colType,
-	//)
-	//}
+
+	if len(colb.cells) != len(cola.cells) ||
+		colb.colName != cola.colName ||
+		colb.colType != "df.Int" ||
+		fmt.Sprint(colb.cells) != "[1 2]" {
+		t.Error("Error parsing a df.String column into df.Int",
+			"\nlen(cola.cells):", len(cola.cells),
+			"\nlen(colb.cells):", len(colb.cells),
+			"\ncola.colName:", cola.colName,
+			"\ncolb.colName:", colb.colName,
+			"\ncolb.colType:", colb.colType,
+		)
+	}
 
 	//// String to String
 	//cola, _ = newCol("TestCol", Strings("1", "2"))
