@@ -117,7 +117,7 @@ func TestDataFrame_LoadAndParse(t *testing.T) {
 	df := DataFrame{}
 	df.LoadAndParse(data, T{"A": "int", "C": "int"})
 	if fmt.Sprint(df.colTypes) != "[df.Int df.String df.Int df.String]" {
-		t.Error("Incorrect type parsing")
+		t.Error("Incorrect type parsing" + fmt.Sprint(df.colTypes))
 	}
 }
 
@@ -374,11 +374,11 @@ func TestDataFrame_Join(t *testing.T) {
 		t.Error(err)
 	}
 	//fmt.Println(d)
-	d, err := RightJoin(dfa, dfb, "C", "A")
+	_, err = RightJoin(dfa, dfb, "C", "A")
 	if err != nil {
 		t.Error(err)
 	}
-	fmt.Println(d)
+	//fmt.Println(d)
 }
 
 func TestDataFrame_Colnames(t *testing.T) {

@@ -29,26 +29,41 @@ func newCol(colName string, elements Cells) (*column, error) {
 	return &col, nil
 }
 
-func ParseColumn(col column, t string) (*column, error) {
+func (col *column) ParseColumn(t string) error {
 	switch t {
 	case "string":
 		newcells := Strings(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "int":
 		newcells := Ints(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "float":
 		newcells := Floats(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "bool":
 		newcells := Bools(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
+	default:
+		return errors.New("Can't parse the given type")
 	}
-	return nil, errors.New("Can't parse the given type")
+
+	return nil
 }
 
 func (col *column) recountNumChars() {

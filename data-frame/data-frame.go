@@ -261,13 +261,12 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 		if df.nCols != len(types) {
 			return errors.New("Number of columns different from number of types")
 		}
-		for k, v := range df.Columns {
-			col, err := ParseColumn(v, types[k])
+		for k, col := range df.Columns {
+			err := col.ParseColumn(types[k])
 			if err != nil {
 				return err
 			}
 			df.colTypes[k] = col.colType
-			df.Columns[k] = *col
 		}
 	case T:
 		types := types.(T)
@@ -276,13 +275,13 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			if err != nil {
 				return err
 			}
-			col, err := ParseColumn(df.Columns[*i], v)
+			col := df.Columns[*i]
+			err = col.ParseColumn(v)
 			if err != nil {
 				return err
 			}
 			colIndex, _ := df.colIndex(k)
 			df.colTypes[*colIndex] = col.colType
-			df.Columns[*i] = *col
 		}
 	}
 
