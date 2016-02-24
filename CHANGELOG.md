@@ -5,18 +5,21 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 ### Added
 - Getter methods for nrows and ncols.
-- An innerJoin function that performs an Inner Merge/Join of two
+- An InnerJoin function that performs an Inner Merge/Join of two
   DataFrames by the given keys.
-- An rightJoin and leftJoin functions that performs outer right/outer
+- An RightJoin and LeftJoin functions that performs outer right/outer
   left joins of two DataFrames by the given keys.
-- A crossJoin function that performs an Cross Merge/Join of two
+- A CrossJoin function that performs an Cross Merge/Join of two
   DataFrames.
 - Cell interface now have to implement the NA() method that will
   return a empty cell for the given type.
+- Cell interface now have to implement a Copy method.
 
 ### Changed
 - The `cell` interface is now exported: `Cell`.
 - Cell method NA() is now IsNA().
+- The function parseColumn is now a method.
+- A number of fields and methods are now expoted.
 
 ## [0.3.0] - 2016-02-18
 ### Added
