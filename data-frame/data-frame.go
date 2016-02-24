@@ -151,14 +151,21 @@ func copy(df DataFrame) DataFrame {
 	for k, v := range df.colNames {
 		colnames[k] = v
 	}
+	coltypes := make([]string, len(df.colTypes))
+	for k, v := range df.colTypes {
+		coltypes[k] = v
+	}
+	columns := make(columns, len(df.Columns))
+	for k, v := range df.Columns {
+		columns[k] = v.copy()
+	}
 	dfc := DataFrame{
 		colNames: colnames,
-		colTypes: df.colTypes,
-		Columns:  df.Columns,
+		colTypes: coltypes,
+		Columns:  columns,
 		nRows:    df.nRows,
 		nCols:    df.nCols,
 	}
-
 	return dfc
 }
 
