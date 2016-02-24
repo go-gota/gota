@@ -29,7 +29,7 @@ func newCol(colName string, elements Cells) (*column, error) {
 	return &col, nil
 }
 
-func parseColumn(col column, t string) (*column, error) {
+func ParseColumn(col column, t string) (*column, error) {
 	switch t {
 	case "string":
 		newcells := Strings(col.cells)
@@ -89,7 +89,7 @@ func (col column) append(values ...Cell) (column, error) {
 	return col, nil
 }
 
-func (col column) hasNa() bool {
+func (col column) HasNA() bool {
 	for _, v := range col.cells {
 		if v.IsNA() {
 			return true
@@ -98,7 +98,7 @@ func (col column) hasNa() bool {
 	return false
 }
 
-func (col column) na() []bool {
+func (col column) NA() []bool {
 	naArray := make([]bool, len(col.cells))
 	for k, v := range col.cells {
 		if v.IsNA() {

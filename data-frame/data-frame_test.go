@@ -351,11 +351,11 @@ func TestDataFrame_Join(t *testing.T) {
 	dfa.LoadData(dataa)
 	dfb := DataFrame{}
 	dfb.LoadData(datab)
-	_, err := innerJoin(dfa, dfb, "A", "X")
+	_, err := InnerJoin(dfa, dfb, "A", "X")
 	if err == nil {
 		t.Error("Should have failed: Key X not in left or right DataFrame")
 	}
-	_, err = innerJoin(dfa, dfb, "A", "C")
+	_, err = InnerJoin(dfa, dfb, "A", "C")
 	if err != nil {
 		t.Error(err)
 	}
@@ -369,12 +369,12 @@ func TestDataFrame_Join(t *testing.T) {
 	//if err != nil {
 	//t.Error(err)
 	//}
-	_, err = leftJoin(dfa, dfb, "A", "C")
+	_, err = LeftJoin(dfa, dfb, "A", "C")
 	if err != nil {
 		t.Error(err)
 	}
 	//fmt.Println(d)
-	d, err := rightJoin(dfa, dfb, "C", "A")
+	d, err := RightJoin(dfa, dfb, "C", "A")
 	if err != nil {
 		t.Error(err)
 	}

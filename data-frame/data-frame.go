@@ -46,7 +46,7 @@ type tobool interface {
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns  columns
+	Columns  columns
 	colNames []string
 	colTypes []string
 	nCols    int
@@ -132,7 +132,7 @@ func New(colConst ...C) (*DataFrame, error) {
 	df := &DataFrame{
 		colNames: colNames,
 		colTypes: colTypes,
-		columns:  cols,
+		Columns:  cols,
 		nRows:    colLength,
 		nCols:    len(colNames),
 	}
@@ -153,7 +153,7 @@ func copy(df DataFrame) DataFrame {
 	dfc := DataFrame{
 		colNames: colnames,
 		colTypes: df.colTypes,
-		columns:  df.columns,
+		Columns:  df.Columns,
 		nRows:    df.nRows,
 		nCols:    df.nCols,
 	}
@@ -167,9 +167,9 @@ func (df *DataFrame) SetNames(colnames []string) error {
 		return errors.New("Different sizes for colnames array")
 	}
 
-	for k := range df.columns {
-		df.columns[k].colName = colnames[k]
-		df.columns[k].recountNumChars()
+	for k := range df.Columns {
+		df.Columns[k].colName = colnames[k]
+		df.Columns[k].recountNumChars()
 		df.colNames[k] = colnames[k]
 	}
 	return nil
@@ -238,7 +238,7 @@ func (df *DataFrame) LoadData(records [][]string) error {
 		newDf.colTypes = append(newDf.colTypes, col.colType)
 	}
 
-	newDf.columns = cols
+	newDf.Columns = cols
 	*df = newDf
 	return nil
 }
@@ -261,13 +261,13 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 		if df.nCols != len(types) {
 			return errors.New("Number of columns different from number of types")
 		}
-		for k, v := range df.columns {
-			col, err := parseColumn(v, types[k])
+		for k, v := range df.Columns {
+			col, err := ParseColumn(v, types[k])
 			if err != nil {
 				return err
 			}
 			df.colTypes[k] = col.colType
-			df.columns[k] = *col
+			df.Columns[k] = *col
 		}
 	case T:
 		types := types.(T)
@@ -276,13 +276,13 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			if err != nil {
 				return err
 			}
-			col, err := parseColumn(df.columns[*i], v)
+			col, err := ParseColumn(df.Columns[*i], v)
 			if err != nil {
 				return err
 			}
 			colIndex, _ := df.colIndex(k)
 			df.colTypes[*colIndex] = col.colType
-			df.columns[*i] = *col
+			df.Columns[*i] = *col
 		}
 	}
 
@@ -305,7 +305,7 @@ func (df DataFrame) SaveRecords() [][]string {
 	records = append(records, df.colNames)
 	for i := 0; i < df.nRows; i++ {
 		r := []string{}
-		for _, v := range df.columns {
+		for _, v := range df.Columns {
 			r = append(r, v.cells[i].String())
 		}
 		records = append(records, r)
@@ -365,7 +365,7 @@ func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*Dat
 func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
-		columns:  columns{},
+		Columns:  columns{},
 		nRows:    df.nRows,
 		colNames: []string{},
 		colTypes: []string{},
@@ -388,7 +388,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		newDf.nCols = s.To - s.From
 		newDf.colNames = df.colNames[s.From:s.To]
 		newDf.colTypes = df.colTypes[s.From:s.To]
-		newDf.columns = df.columns[s.From:s.To]
+		newDf.Columns = df.Columns[s.From:s.To]
 	case []int:
 		colNums := subset.([]int)
 		if len(colNums) == 0 {
@@ -409,8 +409,8 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		}
 
 		for _, v := range colNums {
-			col := df.columns[v]
-			newDf.columns = append(newDf.columns, col)
+			col := df.Columns[v]
+			newDf.Columns = append(newDf.Columns, col)
 			newDf.colNames = append(newDf.colNames, df.colNames[v])
 			newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
 		}
@@ -444,7 +444,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 				return nil, err
 			}
 
-			col := df.columns[*i]
+			col := df.Columns[*i]
 			newDf.colNames = append(newDf.colNames, v)
 			colindex, err := df.colIndex(v)
 			if err != nil {
@@ -452,7 +452,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 			}
 
 			newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
-			newDf.columns = append(newDf.columns, col)
+			newDf.Columns = append(newDf.Columns, col)
 		}
 	default:
 		return nil, errors.New("Unknown subsetting option")
@@ -467,7 +467,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
 	newDf := DataFrame{
-		columns:  columns{},
+		Columns:  columns{},
 		nCols:    df.nCols,
 		colNames: df.colNames,
 		colTypes: df.colTypes,
@@ -488,13 +488,13 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		}
 
 		newDf.nRows = s.To - s.From
-		for _, v := range df.columns {
+		for _, v := range df.Columns {
 			col, err := newCol(v.colName, v.cells[s.From:s.To])
 			if err != nil {
 				return nil, err
 			}
 			col.recountNumChars()
-			newDf.columns = append(newDf.columns, *col)
+			newDf.Columns = append(newDf.Columns, *col)
 		}
 	case []int:
 		rowNums := subset.([]int)
@@ -511,7 +511,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		}
 
 		newDf.nRows = len(rowNums)
-		for _, v := range df.columns {
+		for _, v := range df.Columns {
 			col, err := newCol(v.colName, nil)
 			if err != nil {
 				return nil, err
@@ -525,7 +525,7 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 				}
 			}
 			col.recountNumChars()
-			newDf.columns = append(newDf.columns, *col)
+			newDf.Columns = append(newDf.Columns, *col)
 		}
 	default:
 		return nil, errors.New("Unknown subsetting option")
@@ -568,14 +568,14 @@ func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 		if err != nil {
 			return nil, err
 		}
-		col := dfA.columns[*i]
-		col, err = col.append(dfB.columns[*j].cells...)
+		col := dfA.Columns[*i]
+		col, err = col.append(dfB.Columns[*j].cells...)
 		if err != nil {
 			return nil, err
 		}
 		cols = append(cols, col)
 	}
-	dfA.columns = cols
+	dfA.Columns = cols
 	dfA.nRows += dfB.nRows
 
 	return &dfA, nil
@@ -603,7 +603,7 @@ func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	dfA.colNames = append(dfA.colNames, dfB.colNames...)
 	dfA.colTypes = append(dfA.colTypes, dfB.colTypes...)
 	dfA.nCols = len(dfA.colNames)
-	dfA.columns = append(dfA.columns, dfB.columns...)
+	dfA.Columns = append(dfA.Columns, dfB.Columns...)
 
 	return &dfA, nil
 }
@@ -616,7 +616,7 @@ func uniqueRowsMap(df DataFrame) map[string]u {
 	uniqueRows := make(map[string]u)
 	for i := 0; i < df.nRows; i++ {
 		mdarr := []byte{}
-		for _, v := range df.columns {
+		for _, v := range df.Columns {
 			cs := v.cells[i].Checksum()
 			mdarr = append(mdarr, cs[:]...)
 		}
@@ -708,7 +708,7 @@ func (df DataFrame) String() (str string) {
 	if len(df.colNames) != 0 {
 		str += addLeftPadding("  ", nRowsPadding+2)
 		for k, v := range df.colNames {
-			str += addRightPadding(v, df.columns[k].numChars)
+			str += addRightPadding(v, df.Columns[k].numChars)
 			str += "  "
 		}
 		str += "\n"
@@ -716,7 +716,7 @@ func (df DataFrame) String() (str string) {
 	}
 	for i := 0; i < df.nRows; i++ {
 		str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
-		for _, v := range df.columns {
+		for _, v := range df.Columns {
 			elem := v.cells[i]
 			str += addRightPadding(formatCell(elem), v.numChars)
 			str += "  "
@@ -740,32 +740,9 @@ func formatCell(cell interface{}) string {
 	return fmt.Sprint(cell)
 }
 
-type mergeType int
-
-// These constants represent the types of allowed join operations
-const (
-	InnerJoin mergeType = iota
-	NotInnerJoin
-	LeftJoin
-	RightJoin
-	FullOuterJoin
-	CartesianJoin
-)
-
-// Join is a wrapper over the different join functions
-func Join(t mergeType, dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
-	switch {
-	case t == InnerJoin:
-		return innerJoin(dfa, dfb, keys...)
-	case t == CartesianJoin:
-		return crossJoin(dfa, dfb)
-	}
-	return nil, errors.New("Unrecognized join operation")
-}
-
 // innerJoin returns a DataFrame containing the inner join of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+func InnerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
@@ -826,7 +803,7 @@ func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 	checksumsa := make([][]byte, dfa.nRows)
 	checksumsb := make([][]byte, dfb.nRows)
 	for _, i := range colIdxa {
-		for k, v := range dfa.columns[i].cells {
+		for k, v := range dfa.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
@@ -834,7 +811,7 @@ func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 		}
 	}
 	for _, i := range colIdxb {
-		for k, v := range dfb.columns[i].cells {
+		for k, v := range dfb.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
@@ -869,7 +846,7 @@ func innerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 
 // crossjoin returns a DataFrame containing the cartesian product of the rows on
 // both DataFrames.
-func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
+func CrossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
 	colnamesa := make([]string, len(dfa.colNames))
 	colnamesb := make([]string, len(dfb.colNames))
 	for k, v := range dfb.colNames {
@@ -905,7 +882,7 @@ func crossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
 // This operation matches all rows that appear on the left DataFrame and matches
 // it with the existing ones on the right one, filling the missing rows on the
 // right with an empty value.
-func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+func LeftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
@@ -966,7 +943,7 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 	checksumsa := make([][]byte, dfa.nRows)
 	checksumsb := make([][]byte, dfb.nRows)
 	for _, i := range colIdxa {
-		for k, v := range dfa.columns[i].cells {
+		for k, v := range dfa.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
@@ -974,7 +951,7 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 		}
 	}
 	for _, i := range colIdxb {
-		for k, v := range dfb.columns[i].cells {
+		for k, v := range dfb.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
@@ -1018,7 +995,7 @@ func leftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 // This operation matches all rows that appear on the right DataFrame and matches
 // it with the existing ones on the left one, filling the missing rows on the
 // left with an empty value.
-func rightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error) {
+func RightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
@@ -1079,7 +1056,7 @@ func rightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error)
 	checksumsa := make([][]byte, dfa.nRows)
 	checksumsb := make([][]byte, dfb.nRows)
 	for _, i := range colIdxa {
-		for k, v := range dfa.columns[i].cells {
+		for k, v := range dfa.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
@@ -1087,7 +1064,7 @@ func rightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error)
 		}
 	}
 	for _, i := range colIdxb {
-		for k, v := range dfb.columns[i].cells {
+		for k, v := range dfb.Columns[i].cells {
 			b := []byte{}
 			cs := v.Checksum()
 			b = append(b, cs[:]...)
