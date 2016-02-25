@@ -146,7 +146,7 @@ func (df DataFrame) Names() []string {
 	return df.colNames
 }
 
-func copy(df DataFrame) DataFrame {
+func (df DataFrame) copy() DataFrame {
 	colnames := make([]string, len(df.colNames))
 	for k, v := range df.colNames {
 		colnames[k] = v
@@ -373,12 +373,7 @@ func (df DataFrame) Subset(subsetCols interface{}, subsetRows interface{}) (*Dat
 // on the given subset
 func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
-	newDf := DataFrame{
-		Columns:  columns{},
-		nRows:    df.nRows,
-		colNames: []string{},
-		colTypes: []string{},
-	}
+	newDf := df.copy()
 
 	switch subset.(type) {
 	case R:
@@ -395,9 +390,9 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		}
 
 		newDf.nCols = s.To - s.From
-		newDf.colNames = df.colNames[s.From:s.To]
-		newDf.colTypes = df.colTypes[s.From:s.To]
-		newDf.Columns = df.Columns[s.From:s.To]
+		newDf.colNames = newDf.colNames[s.From:s.To]
+		newDf.colTypes = newDf.colTypes[s.From:s.To]
+		newDf.Columns = newDf.Columns[s.From:s.To]
 	case []int:
 		colNums := subset.([]int)
 		if len(colNums) == 0 {
@@ -407,7 +402,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		// Check for errors
 		colNumsMap := make(map[int]bool)
 		for _, v := range colNums {
-			if v >= df.nCols || v < 0 {
+			if v >= newDf.nCols || v < 0 {
 				return nil, errors.New("Subset out of range")
 			}
 			if _, ok := colNumsMap[v]; !ok {
@@ -417,23 +412,28 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 			}
 		}
 
+		cols := columns{}
+		colNames := []string{}
+		colTypes := []string{}
 		for _, v := range colNums {
-			col := df.Columns[v]
-			newDf.Columns = append(newDf.Columns, col)
-			newDf.colNames = append(newDf.colNames, df.colNames[v])
-			newDf.colTypes = append(newDf.colTypes, df.colTypes[v])
+			col := newDf.Columns[v]
+			cols = append(cols, col)
+			colNames = append(colNames, newDf.colNames[v])
+			colTypes = append(colTypes, newDf.colTypes[v])
 		}
-		newDf.nCols = len(colNums)
+		newDf.Columns = cols
+		newDf.colNames = colNames
+		newDf.colTypes = colTypes
 	case []string:
-		columns := subset.([]string)
-		if len(columns) == 0 {
+		cols := subset.([]string)
+		if len(cols) == 0 {
 			return nil, errors.New("Empty subset")
 		}
 
-		// Check for duplicated columns
+		// Check for duplicated cols
 		colnamesMap := make(map[string]bool)
 		dupedColnames := []string{}
-		for _, v := range columns {
+		for _, v := range cols {
 			if v != "" {
 				if _, ok := colnamesMap[v]; !ok {
 					colnamesMap[v] = true
@@ -447,22 +447,23 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		}
 
 		// Select the desired subset of columns
-		for _, v := range columns {
-			i, err := df.colIndex(v)
+		columns := columns{}
+		colNames := []string{}
+		colTypes := []string{}
+		for _, v := range cols {
+			i, err := newDf.colIndex(v)
 			if err != nil {
 				return nil, err
 			}
 
-			col := df.Columns[*i]
-			newDf.colNames = append(newDf.colNames, v)
-			colindex, err := df.colIndex(v)
-			if err != nil {
-				return nil, err
-			}
-
-			newDf.colTypes = append(newDf.colTypes, df.colTypes[*colindex])
-			newDf.Columns = append(newDf.Columns, col)
+			col := newDf.Columns[*i]
+			columns = append(columns, col)
+			colNames = append(colNames, v)
+			colTypes = append(colTypes, newDf.colTypes[*i])
 		}
+		newDf.Columns = columns
+		newDf.colNames = colNames
+		newDf.colTypes = colTypes
 	default:
 		return nil, errors.New("Unknown subsetting option")
 	}
@@ -475,12 +476,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 // SubsetRows will return a DataFrame that contains only the selected rows
 func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 	// Generate a DataFrame to store the temporary values
-	newDf := DataFrame{
-		Columns:  columns{},
-		nCols:    df.nCols,
-		colNames: df.colNames,
-		colTypes: df.colTypes,
-	}
+	newDf := df.copy()
 
 	switch subset.(type) {
 	case R:
@@ -497,14 +493,16 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		}
 
 		newDf.nRows = s.To - s.From
-		for _, v := range df.Columns {
+		columns := columns{}
+		for _, v := range newDf.Columns {
 			col, err := newCol(v.colName, v.cells[s.From:s.To])
 			if err != nil {
 				return nil, err
 			}
 			col.recountNumChars()
-			newDf.Columns = append(newDf.Columns, *col)
+			columns = append(columns, *col)
 		}
+		newDf.Columns = columns
 	case []int:
 		rowNums := subset.([]int)
 
@@ -520,7 +518,8 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		}
 
 		newDf.nRows = len(rowNums)
-		for _, v := range df.Columns {
+		columns := columns{}
+		for _, v := range newDf.Columns {
 			col, err := newCol(v.colName, nil)
 			if err != nil {
 				return nil, err
@@ -534,8 +533,9 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 				}
 			}
 			col.recountNumChars()
-			newDf.Columns = append(newDf.Columns, *col)
+			columns = append(columns, *col)
 		}
+		newDf.Columns = columns
 	default:
 		return nil, errors.New("Unknown subsetting option")
 	}
@@ -544,22 +544,24 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 }
 
 // Rbind combines the rows of two dataframes
-func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+func Rbind(a DataFrame, b DataFrame) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	// Check that the given DataFrame contains the same number of columns that the
 	// current dataframe.
-	if dfA.nCols != dfB.nCols {
+	if dfa.nCols != dfb.nCols {
 		return nil, errors.New("Different number of columns")
 	}
 
 	// Check that the names and the types of all columns are the same
 	colNameTypeMap := make(map[string]string)
-	for k, v := range dfA.colNames {
-		colNameTypeMap[v] = dfA.colTypes[k]
+	for k, v := range dfa.colNames {
+		colNameTypeMap[v] = dfa.colTypes[k]
 	}
 
-	for k, v := range dfB.colNames {
+	for k, v := range dfb.colNames {
 		if dfType, ok := colNameTypeMap[v]; ok {
-			if dfType != dfB.colTypes[k] {
+			if dfType != dfb.colTypes[k] {
 				return nil, errors.New("Mismatching column types")
 			}
 		} else {
@@ -568,53 +570,55 @@ func Rbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
 	}
 
 	cols := columns{}
-	for _, v := range dfA.colNames {
-		i, err := dfA.colIndex(v)
+	for _, v := range dfa.colNames {
+		i, err := dfa.colIndex(v)
 		if err != nil {
 			return nil, err
 		}
-		j, err := dfB.colIndex(v)
+		j, err := dfb.colIndex(v)
 		if err != nil {
 			return nil, err
 		}
-		col := dfA.Columns[*i]
-		col, err = col.append(dfB.Columns[*j].cells...)
+		col := dfa.Columns[*i]
+		col, err = col.append(dfb.Columns[*j].cells...)
 		if err != nil {
 			return nil, err
 		}
 		cols = append(cols, col)
 	}
-	dfA.Columns = cols
-	dfA.nRows += dfB.nRows
+	dfa.Columns = cols
+	dfa.nRows += dfb.nRows
 
-	return &dfA, nil
+	return &dfa, nil
 }
 
 // Cbind combines the columns of two DataFrames
-func Cbind(dfA DataFrame, dfB DataFrame) (*DataFrame, error) {
+func Cbind(a DataFrame, b DataFrame) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	// Check that the two DataFrames contains the same number of rows
-	if dfA.nRows != dfB.nRows {
+	if dfa.nRows != dfb.nRows {
 		return nil, errors.New("Different number of rows")
 	}
 
 	// Check that the column names are unique when combined
 	colNameMap := make(map[string]bool)
-	for _, v := range dfA.colNames {
+	for _, v := range dfa.colNames {
 		colNameMap[v] = true
 	}
 
-	for _, v := range dfB.colNames {
+	for _, v := range dfb.colNames {
 		if _, ok := colNameMap[v]; ok {
 			return nil, errors.New("Conflicting column names")
 		}
 	}
 
-	dfA.colNames = append(dfA.colNames, dfB.colNames...)
-	dfA.colTypes = append(dfA.colTypes, dfB.colTypes...)
-	dfA.nCols = len(dfA.colNames)
-	dfA.Columns = append(dfA.Columns, dfB.Columns...)
+	dfa.colNames = append(dfa.colNames, dfb.colNames...)
+	dfa.colTypes = append(dfa.colTypes, dfb.colTypes...)
+	dfa.nCols = len(dfa.colNames)
+	dfa.Columns = append(dfa.Columns, dfb.Columns...)
 
-	return &dfA, nil
+	return &dfa, nil
 }
 
 type b []byte
@@ -749,9 +753,11 @@ func formatCell(cell interface{}) string {
 	return fmt.Sprint(cell)
 }
 
-// innerJoin returns a DataFrame containing the inner join of two other DataFrames.
+// InnerJoin returns a DataFrame containing the inner join of two other DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func InnerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+func InnerJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
@@ -853,9 +859,11 @@ func InnerJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error)
 	return Cbind(*newdfa, *newdfb)
 }
 
-// crossjoin returns a DataFrame containing the cartesian product of the rows on
+// Crossjoin returns a DataFrame containing the cartesian product of the rows on
 // both DataFrames.
-func CrossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
+func CrossJoin(a DataFrame, b DataFrame) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	colnamesa := make([]string, len(dfa.colNames))
 	colnamesb := make([]string, len(dfb.colNames))
 	for k, v := range dfb.colNames {
@@ -887,11 +895,13 @@ func CrossJoin(dfa DataFrame, dfb DataFrame) (*DataFrame, error) {
 	return Cbind(*newdfa, *newdfb)
 }
 
-// leftJoin returns a DataFrame containing the left join of two other DataFrames.
+// LeftJoin returns a DataFrame containing the left join of two other DataFrames.
 // This operation matches all rows that appear on the left DataFrame and matches
 // it with the existing ones on the right one, filling the missing rows on the
 // right with an empty value.
-func LeftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) {
+func LeftJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
@@ -1000,11 +1010,13 @@ func LeftJoin(dfa DataFrame, dfb DataFrame, keys ...string) (*DataFrame, error) 
 	return Cbind(*newdfa, *newdfb)
 }
 
-// rightJoin returns a DataFrame containing the right join of two other DataFrames.
+// RightJoin returns a DataFrame containing the right join of two other DataFrames.
 // This operation matches all rows that appear on the right DataFrame and matches
 // it with the existing ones on the left one, filling the missing rows on the
 // left with an empty value.
-func RightJoin(dfb DataFrame, dfa DataFrame, keys ...string) (*DataFrame, error) {
+func RightJoin(b DataFrame, a DataFrame, keys ...string) (*DataFrame, error) {
+	dfa := a.copy()
+	dfb := b.copy()
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {

@@ -311,5 +311,7 @@ func TestColumn_na(t *testing.T) {
 		}
 	}
 	col, _ := newCol("TestCol", Ints(1, 2, nil, 3, nil))
-	fmt.Println(col.HasNA())
+	if !col.HasNA() {
+		t.Error("Should return true")
+	}
 }
