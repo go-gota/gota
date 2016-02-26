@@ -12,7 +12,7 @@ func TestAppend(t *testing.T) {
 		colName: colname,
 	}
 	var tests = []struct {
-		data        cells
+		data        Cells
 		expectedLen int
 	}{
 		{Strings("A", "B"), 2},
@@ -59,13 +59,15 @@ func TestnewCol(t *testing.T) {
 	}
 }
 
-func TestColumn_parseColumn(t *testing.T) {
+func TestColumn_ParseColumn(t *testing.T) {
 	// String to Int
 	cola, _ := newCol("TestCol", Strings("1", "2"))
-	colb, err := parseColumn(*cola, "int")
+	colb := cola.copy()
+	err := colb.ParseColumn("int")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.Int:", err)
 	}
+
 	if len(colb.cells) != len(cola.cells) ||
 		colb.colName != cola.colName ||
 		colb.colType != "df.Int" ||
@@ -81,7 +83,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// String to String
 	cola, _ = newCol("TestCol", Strings("1", "2"))
-	colb, err = parseColumn(*cola, "string")
+	colb = cola.copy()
+	err = colb.ParseColumn("string")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.String:", err)
 	}
@@ -100,7 +103,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Float to String
 	cola, _ = newCol("TestCol", Floats(1, 2))
-	colb, err = parseColumn(*cola, "string")
+	colb = cola.copy()
+	err = colb.ParseColumn("string")
 	if err != nil {
 		t.Error("Error parsing a df.Float column into df.String:", err)
 	}
@@ -119,7 +123,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Float to Int
 	cola, _ = newCol("TestCol", Floats(1, 2))
-	colb, err = parseColumn(*cola, "int")
+	colb = cola.copy()
+	err = colb.ParseColumn("int")
 	if err != nil {
 		t.Error("Error parsing a df.Float column into df.Int:", err)
 	}
@@ -138,7 +143,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Int to String
 	cola, _ = newCol("TestCol", Ints(1, 2))
-	colb, err = parseColumn(*cola, "string")
+	colb = cola.copy()
+	err = colb.ParseColumn("string")
 	if err != nil {
 		t.Error("Error parsing a df.Int column into df.String:", err)
 	}
@@ -157,7 +163,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// String to Float
 	cola, _ = newCol("TestCol", Strings("1", "2"))
-	colb, err = parseColumn(*cola, "float")
+	colb = cola.copy()
+	err = colb.ParseColumn("float")
 	if err != nil {
 		t.Error("Error parsing a df.String column into df.Float:", err)
 	}
@@ -176,7 +183,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Int to Float
 	cola, _ = newCol("TestCol", Ints(1, 2))
-	colb, err = parseColumn(*cola, "float")
+	colb = cola.copy()
+	err = colb.ParseColumn("float")
 	if err != nil {
 		t.Error("Error parsing a df.Int column into df.Float:", err)
 	}
@@ -195,7 +203,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Float to Float
 	cola, _ = newCol("TestCol", Floats(1, 2))
-	colb, err = parseColumn(*cola, "float")
+	colb = cola.copy()
+	err = colb.ParseColumn("float")
 	if err != nil {
 		t.Error("Error parsing a df.Float column into df.Float:", err)
 	}
@@ -214,7 +223,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Float to Bool
 	cola, _ = newCol("TestCol", Floats(1, 0))
-	colb, err = parseColumn(*cola, "bool")
+	colb = cola.copy()
+	err = colb.ParseColumn("bool")
 	if err != nil {
 		t.Error("Error parsing a df.Float column into df.Float:", err)
 	}
@@ -234,7 +244,8 @@ func TestColumn_parseColumn(t *testing.T) {
 
 	// Unknown type
 	cola, _ = newCol("TestCol", Ints(1, 2))
-	colb, err = parseColumn(*cola, "asdfg")
+	colb = cola.copy()
+	err = colb.ParseColumn("asdfasdfsa")
 	if err == nil {
 		t.Error("Error parsing an unknown type, error not thrown.")
 	}
@@ -284,8 +295,8 @@ func TestColumn_na(t *testing.T) {
 		},
 	}
 	for k, v := range tests {
-		hasna := v.data.hasNa()
-		na := v.data.na()
+		hasna := v.data.HasNA()
+		na := v.data.NA()
 		exphasna := v.expHasNa
 		expna := v.expNa
 		if hasna != exphasna ||
@@ -300,5 +311,7 @@ func TestColumn_na(t *testing.T) {
 		}
 	}
 	col, _ := newCol("TestCol", Ints(1, 2, nil, 3, nil))
-	fmt.Println(col.hasNa())
+	if !col.HasNA() {
+		t.Error("Should return true")
+	}
 }

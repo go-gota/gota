@@ -2,6 +2,29 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.4.0] - 2016-02-18
+### Added
+- Getter methods for nrows and ncols.
+- An InnerJoin function that performs an Inner Merge/Join of two
+  DataFrames by the given keys.
+- An RightJoin and LeftJoin functions that performs outer right/outer
+  left joins of two DataFrames by the given keys.
+- A CrossJoin function that performs an Cross Merge/Join of two
+  DataFrames.
+- Cell interface now have to implement the NA() method that will
+  return a empty cell for the given type.
+- Cell interface now have to implement a Copy method.
+
+### Changed
+- The `cell` interface is now exported: `Cell`.
+- Cell method NA() is now IsNA().
+- The function parseColumn is now a method.
+- A number of fields and methods are now expoted.
+
+### Fixed
+- Now ensuring that generated subsets are in fact new copies entirely,
+  not copying pointers to the same memory address.
+
 ## [0.3.0] - 2016-02-18
 ### Added
 - Getter and setter methods for the column names of a DataFrame
@@ -62,3 +85,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.2.0]:https://github.com/kniren/gota/compare/v0.1.0...v0.2.0
 [0.2.1]:https://github.com/kniren/gota/compare/v0.2.0...v0.2.1
 [0.3.0]:https://github.com/kniren/gota/compare/v0.2.1...v0.3.0
+[0.4.0]:https://github.com/kniren/gota/compare/v0.3.0...v0.4.0

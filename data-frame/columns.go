@@ -2,23 +2,22 @@ package df
 
 import (
 	"errors"
-	"fmt"
 	"reflect"
-	"strings"
 )
 
 // column represents a column inside a DataFrame
 type column struct {
-	cells    cells
+	cells    Cells
 	colType  string
 	colName  string
 	numChars int
+	empty    Cell
 }
 
 type columns []column
 
 // newCol is the constructor for a new Column with the given colName and elements
-func newCol(colName string, elements cells) (*column, error) {
+func newCol(colName string, elements Cells) (*column, error) {
 	col := column{
 		colName: colName,
 	}
@@ -30,41 +29,41 @@ func newCol(colName string, elements cells) (*column, error) {
 	return &col, nil
 }
 
-// Implementing the Stringer interface for Column
-func (col column) String() string {
-	strArray := []string{}
-
-	for i := 0; i < len(col.cells); i++ {
-		strArray = append(strArray, col.cells[i].String())
-	}
-
-	return fmt.Sprintln(
-		col.colName,
-		"(", col.colType, "):\n",
-		strings.Join(strArray, "\n "),
-	)
-}
-
-func parseColumn(col column, t string) (*column, error) {
+func (col *column) ParseColumn(t string) error {
 	switch t {
 	case "string":
 		newcells := Strings(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "int":
 		newcells := Ints(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "float":
 		newcells := Floats(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
 	case "bool":
 		newcells := Bools(col.cells)
 		newcol, err := newCol(col.colName, newcells)
-		return newcol, err
+		if err != nil {
+			return err
+		}
+		*col = *newcol
+	default:
+		return errors.New("Can't parse the given type")
 	}
-	return nil, errors.New("Can't parse the given type")
+
+	return nil
 }
 
 func (col *column) recountNumChars() {
@@ -80,12 +79,13 @@ func (col *column) recountNumChars() {
 }
 
 // Append will add a value or values to a column
-func (col column) append(values ...cell) (column, error) {
+func (col column) append(values ...Cell) (column, error) {
 	if len(values) == 0 {
 		col.recountNumChars()
 		return col, nil
 	}
 
+	col.empty = values[0].NA()
 	for _, v := range values {
 		t := reflect.TypeOf(v).String()
 		if col.colType == "" {
@@ -104,19 +104,34 @@ func (col column) append(values ...cell) (column, error) {
 	return col, nil
 }
 
-func (col column) hasNa() bool {
+func (col column) copy() column {
+	cs := make(Cells, 0, len(col.cells))
 	for _, v := range col.cells {
-		if v.NA() {
+		cs = append(cs, v.Copy())
+	}
+	newcol := column{
+		cells:    cs,
+		colType:  col.colType,
+		colName:  col.colName,
+		numChars: col.numChars,
+		empty:    col.empty.Copy(),
+	}
+	return newcol
+}
+
+func (col column) HasNA() bool {
+	for _, v := range col.cells {
+		if v.IsNA() {
 			return true
 		}
 	}
 	return false
 }
 
-func (col column) na() []bool {
+func (col column) NA() []bool {
 	naArray := make([]bool, len(col.cells))
 	for k, v := range col.cells {
-		if v.NA() {
+		if v.IsNA() {
 			naArray[k] = true
 		} else {
 			naArray[k] = false
