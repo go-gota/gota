@@ -862,7 +862,7 @@ func InnerJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	return Cbind(*newdfa, *newdfb)
 }
 
-// Crossjoin returns a DataFrame containing the cartesian product of the rows on
+// CrossJoin returns a DataFrame containing the cartesian product of the rows on
 // both DataFrames.
 func CrossJoin(a DataFrame, b DataFrame) (*DataFrame, error) {
 	dfa := a.copy()
