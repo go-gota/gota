@@ -520,18 +520,21 @@ func (df DataFrame) SubsetRows(subset interface{}) (*DataFrame, error) {
 		newDf.nRows = len(rowNums)
 		columns := columns{}
 		for _, v := range newDf.Columns {
-			col, err := newCol(v.colName, nil)
+			cells := Cells{}
+
+			for _, i := range rowNums {
+				if i < 0 {
+					cells = append(cells, v.empty)
+				} else {
+					cells = append(cells, v.cells[i])
+				}
+			}
+
+			col, err := newCol(v.colName, cells)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, i := range rowNums {
-				if i < 0 {
-					col.cells = append(col.cells, v.empty)
-				} else {
-					col.cells = append(col.cells, v.cells[i])
-				}
-			}
 			col.recountNumChars()
 			columns = append(columns, *col)
 		}
