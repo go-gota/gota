@@ -13,6 +13,7 @@ type String struct {
 	s *string
 }
 
+// Copy returns a copy of a given Cell
 func (s String) Copy() Cell {
 	if s.s == nil {
 		return String{nil}
@@ -180,6 +181,7 @@ type Int struct {
 	i *int
 }
 
+// Copy returns a copy of a given Cell
 func (i Int) Copy() Cell {
 	if i.i == nil {
 		return Int{nil}
@@ -346,6 +348,7 @@ type Float struct {
 	f *float64
 }
 
+// Copy returns a copy of a given Cell
 func (f Float) Copy() Cell {
 	if f.f == nil {
 		return Float{nil}
@@ -513,6 +516,7 @@ type Bool struct {
 	b *bool
 }
 
+// Copy returns a copy of a given Cell
 func (b Bool) Copy() Cell {
 	if b.b == nil {
 		return Bool{nil}
