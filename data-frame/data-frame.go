@@ -18,6 +18,17 @@ type rowable interface {
 	String() string
 }
 
+type comparator int
+
+const (
+	eq comparator = iota
+	neq
+	gt
+	lt
+	get
+	let
+)
+
 // Cell is the interface that every cell in a DataFrame needs to comply with
 type Cell interface {
 	String() string
@@ -28,6 +39,7 @@ type Cell interface {
 	IsNA() bool
 	Checksum() [16]byte
 	Copy() Cell
+	Compare(Cell, comparator) (*bool, error)
 }
 
 // Cells is a wrapper for a slice of Cells
