@@ -57,7 +57,9 @@ a package that:
 - [x] Unique/Duplicate row subsetting
 - [ ] Conditional subsetting (i.e.:`Age > 35 && City == "London"`)
 - [x] DataFrame combinations by rows and columns (cbind/rbind)
-- [ ] DataFrame joining by keys (Inner, Outer, Left, Right, Cross)
+- [x] DataFrame joining by keys (InnerJoin, LeftJoin, RightJoin)
+- [x] DataFrame joining CrossJoin
+- [ ] DataFrame joining by keys FullOuterJoin
 - [ ] Function application over rows
 - [ ] Function application over columns
 - [ ] Statistics and summaries over the different features (Type dependant)
@@ -81,6 +83,7 @@ type Cell interface {
 	NA() Cell
 	IsNA() bool
 	Checksum() [16]byte
+	Copy() Cell
 }
 ```
 
