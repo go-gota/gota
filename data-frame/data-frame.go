@@ -292,7 +292,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 	case T:
 		types := types.(T)
 		for k, v := range types {
-			i, err := df.colIndex(k)
+			i, err := df.ColIndex(k)
 			if err != nil {
 				return err
 			}
@@ -301,7 +301,7 @@ func (df *DataFrame) LoadAndParse(records [][]string, types interface{}) error {
 			if err != nil {
 				return err
 			}
-			colIndex, _ := df.colIndex(k)
+			colIndex, _ := df.ColIndex(k)
 			df.colTypes[*colIndex] = col.colType
 			df.Columns[*colIndex] = col
 		}
@@ -357,7 +357,7 @@ func (df DataFrame) NCols() int {
 }
 
 // colIndex tries to find the column index for a given column name
-func (df DataFrame) colIndex(colname string) (*int, error) {
+func (df DataFrame) ColIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
 		if v == colname {
 			return &k, nil
@@ -463,7 +463,7 @@ func (df DataFrame) SubsetColumns(subset interface{}) (*DataFrame, error) {
 		colNames := []string{}
 		colTypes := []string{}
 		for _, v := range cols {
-			i, err := newDf.colIndex(v)
+			i, err := newDf.ColIndex(v)
 			if err != nil {
 				return nil, err
 			}
@@ -586,11 +586,11 @@ func Rbind(a DataFrame, b DataFrame) (*DataFrame, error) {
 
 	cols := columns{}
 	for _, v := range dfa.colNames {
-		i, err := dfa.colIndex(v)
+		i, err := dfa.ColIndex(v)
 		if err != nil {
 			return nil, err
 		}
-		j, err := dfb.colIndex(v)
+		j, err := dfb.ColIndex(v)
 		if err != nil {
 			return nil, err
 		}
@@ -776,8 +776,8 @@ func InnerJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra != nil {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -807,7 +807,7 @@ func InnerJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 		colnamesb[k] = v
 	}
 	for k, v := range colnamesa {
-		if idx, err := dfb.colIndex(v); err == nil {
+		if idx, err := dfb.ColIndex(v); err == nil {
 			if !inStringSlice(v, keys) {
 				colnamesa[k] = v + ".x"
 				colnamesb[*idx] = v + ".y"
@@ -821,8 +821,8 @@ func InnerJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	colIdxa := []int{}
 	colIdxb := []int{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra == nil && errb == nil {
 			colIdxa = append(colIdxa, *ia)
 			colIdxb = append(colIdxb, *ib)
@@ -885,7 +885,7 @@ func CrossJoin(a DataFrame, b DataFrame) (*DataFrame, error) {
 		colnamesb[k] = v
 	}
 	for k, v := range dfa.colNames {
-		if idx, err := dfb.colIndex(v); err == nil {
+		if idx, err := dfb.ColIndex(v); err == nil {
 			colnamesa[k] = v + ".x"
 			colnamesb[*idx] = v + ".y"
 		} else {
@@ -920,8 +920,8 @@ func LeftJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra != nil {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -952,7 +952,7 @@ func LeftJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	}
 	for k, v := range colnamesa {
 		if !inStringSlice(v, keys) {
-			if idx, err := dfb.colIndex(v); err == nil {
+			if idx, err := dfb.ColIndex(v); err == nil {
 				colnamesa[k] = v + ".x"
 				colnamesb[*idx] = v + ".y"
 			}
@@ -965,8 +965,8 @@ func LeftJoin(a DataFrame, b DataFrame, keys ...string) (*DataFrame, error) {
 	colIdxa := []int{}
 	colIdxb := []int{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra == nil && errb == nil {
 			colIdxa = append(colIdxa, *ia)
 			colIdxb = append(colIdxb, *ib)
@@ -1035,8 +1035,8 @@ func RightJoin(b DataFrame, a DataFrame, keys ...string) (*DataFrame, error) {
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra != nil {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -1067,7 +1067,7 @@ func RightJoin(b DataFrame, a DataFrame, keys ...string) (*DataFrame, error) {
 	}
 	for k, v := range colnamesa {
 		if !inStringSlice(v, keys) {
-			if idx, err := dfb.colIndex(v); err == nil {
+			if idx, err := dfb.ColIndex(v); err == nil {
 				colnamesa[k] = v + ".y"
 				colnamesb[*idx] = v + ".x"
 			}
@@ -1080,8 +1080,8 @@ func RightJoin(b DataFrame, a DataFrame, keys ...string) (*DataFrame, error) {
 	colIdxa := []int{}
 	colIdxb := []int{}
 	for _, key := range keys {
-		ia, erra := dfa.colIndex(key)
-		ib, errb := dfb.colIndex(key)
+		ia, erra := dfa.ColIndex(key)
+		ib, errb := dfb.ColIndex(key)
 		if erra == nil && errb == nil {
 			colIdxa = append(colIdxa, *ia)
 			colIdxb = append(colIdxb, *ib)
