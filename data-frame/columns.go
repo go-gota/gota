@@ -139,3 +139,15 @@ func (col column) NA() []bool {
 	}
 	return naArray
 }
+
+func (col column) compare(val Cell, op comparator) ([]bool, error) {
+	retArr := make([]bool, len(col.cells))
+	for k, v := range col.cells {
+		x, err := v.Compare(val, op)
+		if err != nil {
+			return nil, err
+		}
+		retArr[k] = *x
+	}
+	return retArr, nil
+}

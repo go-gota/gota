@@ -315,3 +315,68 @@ func TestColumn_na(t *testing.T) {
 		t.Error("Should return true")
 	}
 }
+
+func TestColumn_compare(t *testing.T) {
+	var tests = []struct {
+		data     column
+		val      Cell
+		op       comparator
+		expected []bool
+	}{
+		{data: column{
+			cells:    Strings("0", "1", "2"),
+			colType:  "df.String",
+			colName:  "A",
+			numChars: 1,
+		},
+			expected: []bool{false, true, false},
+			val:      Ints(1)[0],
+			op:       eq,
+		},
+		{data: column{
+			cells:    Ints(0, 1, 2),
+			colType:  "df.Int",
+			colName:  "A",
+			numChars: 1,
+		},
+			expected: []bool{false, true, false},
+			val:      Ints(1)[0],
+			op:       eq,
+		},
+		{data: column{
+			cells:    Ints(0, 1, 2),
+			colType:  "df.Int",
+			colName:  "A",
+			numChars: 1,
+		},
+			expected: []bool{false, true, true},
+			val:      Ints(1)[0],
+			op:       get,
+		},
+		{data: column{
+			cells:    Floats(0, 1, 2),
+			colType:  "df.Float",
+			colName:  "A",
+			numChars: 1,
+		},
+			expected: []bool{false, true, true},
+			val:      Ints(1)[0],
+			op:       get,
+		},
+	}
+	for k, v := range tests {
+		expected := v.expected
+		received, err := v.data.compare(v.val, v.op)
+		if err != nil {
+			t.Error("Error on test", k, ":", err)
+		} else {
+			if !reflect.DeepEqual(expected, received) {
+				t.Error(
+					"Test:", k,
+					"\nExpected:", expected,
+					"\nReceived:", received,
+				)
+			}
+		}
+	}
+}
