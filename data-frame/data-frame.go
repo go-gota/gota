@@ -18,15 +18,15 @@ type rowable interface {
 	String() string
 }
 
-type comparator int
+type comparator string
 
 const (
-	eq comparator = iota
-	neq
-	gt
-	lt
-	get
-	let
+	eq  comparator = "=="
+	neq            = "!="
+	gt             = ">"
+	lt             = "<"
+	get            = ">="
+	let            = "<="
 )
 
 // Cell is the interface that every cell in a DataFrame needs to comply with
