@@ -366,7 +366,7 @@ func TestColumn_compare(t *testing.T) {
 	}
 	for k, v := range tests {
 		expected := v.expected
-		received, err := v.data.compare(v.val, v.op)
+		received, err := v.data.Compare(v.val, v.op)
 		if err != nil {
 			t.Error("Error on test", k, ":", err)
 		} else {
