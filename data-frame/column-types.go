@@ -23,7 +23,52 @@ func (s String) Copy() Cell {
 }
 
 func (s String) Compare(cell Cell, op comparator) (*bool, error) {
-	return nil, nil
+	switch op {
+	case eq:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a == b
+			return &comp, nil
+		}
+	case neq:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a != b
+			return &comp, nil
+		}
+	case gt:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a > b
+			return &comp, nil
+		}
+	case lt:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a < b
+			return &comp, nil
+		}
+	case get:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a >= b
+			return &comp, nil
+		}
+	case let:
+		if !s.IsNA() && !cell.IsNA() {
+			a := s.String()
+			b := cell.String()
+			comp := a <= b
+			return &comp, nil
+		}
+	}
+
+	return nil, errors.New("Invalid comparator operation")
 }
 
 // Int returns the integer value of String
@@ -197,14 +242,33 @@ func (i Int) Copy() Cell {
 func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
 	switch op {
 	case eq:
-		comp := i.Checksum() == cell.Checksum()
+		a, err := i.Int()
+		if err != nil {
+			return nil, err
+		}
+		b, err := cell.Int()
+		if err != nil {
+			return nil, err
+		}
+		comp := *a == *b
 		return &comp, nil
 	case neq:
-		comp := i.Checksum() != cell.Checksum()
+		a, err := i.Int()
+		if err != nil {
+			return nil, err
+		}
+		b, err := cell.Int()
+		if err != nil {
+			return nil, err
+		}
+		comp := *a != *b
 		return &comp, nil
 	case gt:
 		if !i.IsNA() && !cell.IsNA() {
-			a, _ := i.Int()
+			a, err := i.Int()
+			if err != nil {
+				return nil, err
+			}
 			b, err := cell.Int()
 			if err != nil {
 				return nil, err
@@ -214,7 +278,10 @@ func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
 		}
 	case lt:
 		if !i.IsNA() && !cell.IsNA() {
-			a, _ := i.Int()
+			a, err := i.Int()
+			if err != nil {
+				return nil, err
+			}
 			b, err := cell.Int()
 			if err != nil {
 				return nil, err
@@ -224,7 +291,10 @@ func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
 		}
 	case get:
 		if !i.IsNA() && !cell.IsNA() {
-			a, _ := i.Int()
+			a, err := i.Int()
+			if err != nil {
+				return nil, err
+			}
 			b, err := cell.Int()
 			if err != nil {
 				return nil, err
@@ -234,7 +304,10 @@ func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
 		}
 	case let:
 		if !i.IsNA() && !cell.IsNA() {
-			a, _ := i.Int()
+			a, err := i.Int()
+			if err != nil {
+				return nil, err
+			}
 			b, err := cell.Int()
 			if err != nil {
 				return nil, err
@@ -415,7 +488,84 @@ func (f Float) Copy() Cell {
 }
 
 func (f Float) Compare(cell Cell, op comparator) (*bool, error) {
-	return nil, nil
+	switch op {
+	case eq:
+		a, err := f.Float()
+		if err != nil {
+			return nil, err
+		}
+		b, err := cell.Float()
+		if err != nil {
+			return nil, err
+		}
+		comp := *a == *b
+		return &comp, nil
+	case neq:
+		a, err := f.Float()
+		if err != nil {
+			return nil, err
+		}
+		b, err := cell.Float()
+		if err != nil {
+			return nil, err
+		}
+		comp := *a != *b
+		return &comp, nil
+	case gt:
+		if !f.IsNA() && !cell.IsNA() {
+			a, err := f.Float()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Float()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a > *b
+			return &comp, nil
+		}
+	case lt:
+		if !f.IsNA() && !cell.IsNA() {
+			a, err := f.Float()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Float()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a < *b
+			return &comp, nil
+		}
+	case get:
+		if !f.IsNA() && !cell.IsNA() {
+			a, err := f.Float()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Float()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a >= *b
+			return &comp, nil
+		}
+	case let:
+		if !f.IsNA() && !cell.IsNA() {
+			a, err := f.Float()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Float()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a <= *b
+			return &comp, nil
+		}
+	}
+
+	return nil, errors.New("Invalid comparator operation")
 }
 
 func (f Float) String() string {
@@ -587,7 +737,40 @@ func (b Bool) Copy() Cell {
 }
 
 func (b Bool) Compare(cell Cell, op comparator) (*bool, error) {
-	return nil, nil
+	switch op {
+	case eq:
+		if !b.IsNA() && !cell.IsNA() {
+			a, err := b.Bool()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Bool()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a == *b
+			return &comp, nil
+		}
+	case neq:
+		if !b.IsNA() && !cell.IsNA() {
+			a, err := b.Bool()
+			if err != nil {
+				return nil, err
+			}
+			b, err := cell.Bool()
+			if err != nil {
+				return nil, err
+			}
+			comp := *a != *b
+			return &comp, nil
+		}
+	case gt:
+	case lt:
+	case get:
+	case let:
+	}
+
+	return nil, errors.New("Invalid comparator operation")
 }
 
 // Int returns the integer value of Bool
@@ -636,7 +819,7 @@ func (b Bool) Bool() (*bool, error) {
 	if *b.b {
 		return &t, nil
 	}
-	if *b.b {
+	if !*b.b {
 		return &f, nil
 	}
 	return nil, errors.New("Can't convert to Bool")

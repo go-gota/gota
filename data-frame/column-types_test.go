@@ -270,7 +270,7 @@ func TestBools(t *testing.T) {
 	dd := []T{d, d}
 	bb := Strings("true", "false")
 	aa = Bools(dd, aa, d, bb, nil)
-	expected = "[NA NA true NA NA NA NA true false NA]"
+	expected = "[NA NA true NA false NA NA true false NA]"
 	received = fmt.Sprint(aa)
 	if received != expected {
 		t.Error(
@@ -285,5 +285,338 @@ func TestBools(t *testing.T) {
 	_, err := aa[0].Float()
 	if err == nil {
 		t.Error("Float() Should fail for nil elements")
+	}
+}
+
+func TestInt_Compare(t *testing.T) {
+	var tests = []struct {
+		a        Cell
+		b        Cell
+		op       comparator
+		expected bool
+	}{
+		{Ints(1)[0], Ints(1)[0], eq, true},
+		{Ints(1)[0], Ints(1)[0], neq, false},
+		{Ints(1)[0], Ints(1)[0], gt, false},
+		{Ints(1)[0], Ints(1)[0], lt, false},
+		{Ints(1)[0], Ints(1)[0], get, true},
+		{Ints(1)[0], Ints(1)[0], let, true},
+
+		{Ints(1)[0], Ints(2)[0], eq, false},
+		{Ints(1)[0], Ints(2)[0], neq, true},
+		{Ints(1)[0], Ints(2)[0], gt, false},
+		{Ints(1)[0], Ints(2)[0], lt, true},
+		{Ints(1)[0], Ints(2)[0], get, false},
+		{Ints(1)[0], Ints(2)[0], let, true},
+
+		{Ints(2)[0], Ints(1)[0], eq, false},
+		{Ints(2)[0], Ints(1)[0], neq, true},
+		{Ints(2)[0], Ints(1)[0], gt, true},
+		{Ints(2)[0], Ints(1)[0], lt, false},
+		{Ints(2)[0], Ints(1)[0], get, true},
+		{Ints(2)[0], Ints(1)[0], let, false},
+
+		{Ints(1)[0], Strings("1")[0], eq, true},
+		{Ints(1)[0], Strings("1")[0], neq, false},
+		{Ints(1)[0], Strings("1")[0], gt, false},
+		{Ints(1)[0], Strings("1")[0], lt, false},
+		{Ints(1)[0], Strings("1")[0], get, true},
+		{Ints(1)[0], Strings("1")[0], let, true},
+
+		{Ints(1)[0], Strings("2")[0], eq, false},
+		{Ints(1)[0], Strings("2")[0], neq, true},
+		{Ints(1)[0], Strings("2")[0], gt, false},
+		{Ints(1)[0], Strings("2")[0], lt, true},
+		{Ints(1)[0], Strings("2")[0], get, false},
+		{Ints(1)[0], Strings("2")[0], let, true},
+
+		{Ints(1)[0], Floats(1)[0], eq, true},
+		{Ints(1)[0], Floats(1)[0], neq, false},
+		{Ints(1)[0], Floats(1)[0], gt, false},
+		{Ints(1)[0], Floats(1)[0], lt, false},
+		{Ints(1)[0], Floats(1)[0], get, true},
+		{Ints(1)[0], Floats(1)[0], let, true},
+
+		{Ints(1)[0], Floats(2)[0], eq, false},
+		{Ints(1)[0], Floats(2)[0], neq, true},
+		{Ints(1)[0], Floats(2)[0], gt, false},
+		{Ints(1)[0], Floats(2)[0], lt, true},
+		{Ints(1)[0], Floats(2)[0], get, false},
+		{Ints(1)[0], Floats(2)[0], let, true},
+
+		{Ints(1)[0], Bools(1)[0], eq, true},
+		{Ints(1)[0], Bools(1)[0], neq, false},
+		{Ints(1)[0], Bools(1)[0], gt, false},
+		{Ints(1)[0], Bools(1)[0], lt, false},
+		{Ints(1)[0], Bools(1)[0], get, true},
+		{Ints(1)[0], Bools(1)[0], let, true},
+
+		{Ints(-1)[0], Bools(0)[0], eq, false},
+		{Ints(-1)[0], Bools(0)[0], neq, true},
+		{Ints(-1)[0], Bools(0)[0], gt, false},
+		{Ints(-1)[0], Bools(0)[0], lt, true},
+		{Ints(-1)[0], Bools(0)[0], get, false},
+		{Ints(-1)[0], Bools(0)[0], let, true},
+	}
+	for k, v := range tests {
+		res, err := v.a.Compare(v.b, v.op)
+		if err != nil {
+			t.Error("Error on test", k, ":", err)
+		} else {
+			if *res != v.expected {
+				t.Error("Error on test", k,
+					"\nExpected:", v.expected,
+					"\nReceived:", *res,
+				)
+			}
+		}
+	}
+}
+
+func TestFloat_Compare(t *testing.T) {
+	var tests = []struct {
+		a        Cell
+		b        Cell
+		op       comparator
+		expected bool
+	}{
+		{Floats(1)[0], Ints(1)[0], eq, true},
+		{Floats(1)[0], Ints(1)[0], neq, false},
+		{Floats(1)[0], Ints(1)[0], gt, false},
+		{Floats(1)[0], Ints(1)[0], lt, false},
+		{Floats(1)[0], Ints(1)[0], get, true},
+		{Floats(1)[0], Ints(1)[0], let, true},
+
+		{Floats(1)[0], Ints(2)[0], eq, false},
+		{Floats(1)[0], Ints(2)[0], neq, true},
+		{Floats(1)[0], Ints(2)[0], gt, false},
+		{Floats(1)[0], Ints(2)[0], lt, true},
+		{Floats(1)[0], Ints(2)[0], get, false},
+		{Floats(1)[0], Ints(2)[0], let, true},
+
+		{Floats(2)[0], Ints(1)[0], eq, false},
+		{Floats(2)[0], Ints(1)[0], neq, true},
+		{Floats(2)[0], Ints(1)[0], gt, true},
+		{Floats(2)[0], Ints(1)[0], lt, false},
+		{Floats(2)[0], Ints(1)[0], get, true},
+		{Floats(2)[0], Ints(1)[0], let, false},
+
+		{Floats(1)[0], Strings("1")[0], eq, true},
+		{Floats(1)[0], Strings("1")[0], neq, false},
+		{Floats(1)[0], Strings("1")[0], gt, false},
+		{Floats(1)[0], Strings("1")[0], lt, false},
+		{Floats(1)[0], Strings("1")[0], get, true},
+		{Floats(1)[0], Strings("1")[0], let, true},
+
+		{Floats(1)[0], Strings("2")[0], eq, false},
+		{Floats(1)[0], Strings("2")[0], neq, true},
+		{Floats(1)[0], Strings("2")[0], gt, false},
+		{Floats(1)[0], Strings("2")[0], lt, true},
+		{Floats(1)[0], Strings("2")[0], get, false},
+		{Floats(1)[0], Strings("2")[0], let, true},
+
+		{Floats(1)[0], Floats(1)[0], eq, true},
+		{Floats(1)[0], Floats(1)[0], neq, false},
+		{Floats(1)[0], Floats(1)[0], gt, false},
+		{Floats(1)[0], Floats(1)[0], lt, false},
+		{Floats(1)[0], Floats(1)[0], get, true},
+		{Floats(1)[0], Floats(1)[0], let, true},
+
+		{Floats(1)[0], Floats(2)[0], eq, false},
+		{Floats(1)[0], Floats(2)[0], neq, true},
+		{Floats(1)[0], Floats(2)[0], gt, false},
+		{Floats(1)[0], Floats(2)[0], lt, true},
+		{Floats(1)[0], Floats(2)[0], get, false},
+		{Floats(1)[0], Floats(2)[0], let, true},
+
+		{Floats(1)[0], Bools(1)[0], eq, true},
+		{Floats(1)[0], Bools(1)[0], neq, false},
+		{Floats(1)[0], Bools(1)[0], gt, false},
+		{Floats(1)[0], Bools(1)[0], lt, false},
+		{Floats(1)[0], Bools(1)[0], get, true},
+		{Floats(1)[0], Bools(1)[0], let, true},
+
+		{Floats(-1)[0], Bools(0)[0], eq, false},
+		{Floats(-1)[0], Bools(0)[0], neq, true},
+		{Floats(-1)[0], Bools(0)[0], gt, false},
+		{Floats(-1)[0], Bools(0)[0], lt, true},
+		{Floats(-1)[0], Bools(0)[0], get, false},
+		{Floats(-1)[0], Bools(0)[0], let, true},
+	}
+	for k, v := range tests {
+		res, err := v.a.Compare(v.b, v.op)
+		if err != nil {
+			t.Error("Error on test", k, ":", err)
+		} else {
+			if *res != v.expected {
+				t.Error("Error on test", k,
+					"\nExpected:", v.expected,
+					"\nReceived:", *res,
+				)
+			}
+		}
+	}
+}
+
+func TestString_Compare(t *testing.T) {
+	var tests = []struct {
+		a        Cell
+		b        Cell
+		op       comparator
+		expected bool
+	}{
+		{Strings(1)[0], Ints(1)[0], eq, true},
+		{Strings(1)[0], Ints(1)[0], neq, false},
+		{Strings(1)[0], Ints(1)[0], gt, false},
+		{Strings(1)[0], Ints(1)[0], lt, false},
+		{Strings(1)[0], Ints(1)[0], get, true},
+		{Strings(1)[0], Ints(1)[0], let, true},
+
+		{Strings(1)[0], Ints(2)[0], eq, false},
+		{Strings(1)[0], Ints(2)[0], neq, true},
+		{Strings(1)[0], Ints(2)[0], gt, false},
+		{Strings(1)[0], Ints(2)[0], lt, true},
+		{Strings(1)[0], Ints(2)[0], get, false},
+		{Strings(1)[0], Ints(2)[0], let, true},
+
+		{Strings(2)[0], Ints(1)[0], eq, false},
+		{Strings(2)[0], Ints(1)[0], neq, true},
+		{Strings(2)[0], Ints(1)[0], gt, true},
+		{Strings(2)[0], Ints(1)[0], lt, false},
+		{Strings(2)[0], Ints(1)[0], get, true},
+		{Strings(2)[0], Ints(1)[0], let, false},
+
+		{Strings(1)[0], Strings("1")[0], eq, true},
+		{Strings(1)[0], Strings("1")[0], neq, false},
+		{Strings(1)[0], Strings("1")[0], gt, false},
+		{Strings(1)[0], Strings("1")[0], lt, false},
+		{Strings(1)[0], Strings("1")[0], get, true},
+		{Strings(1)[0], Strings("1")[0], let, true},
+
+		{Strings(1)[0], Strings("2")[0], eq, false},
+		{Strings(1)[0], Strings("2")[0], neq, true},
+		{Strings(1)[0], Strings("2")[0], gt, false},
+		{Strings(1)[0], Strings("2")[0], lt, true},
+		{Strings(1)[0], Strings("2")[0], get, false},
+		{Strings(1)[0], Strings("2")[0], let, true},
+
+		{Strings(1)[0], Floats(1)[0], eq, true},
+		{Strings(1)[0], Floats(1)[0], neq, false},
+		{Strings(1)[0], Floats(1)[0], gt, false},
+		{Strings(1)[0], Floats(1)[0], lt, false},
+		{Strings(1)[0], Floats(1)[0], get, true},
+		{Strings(1)[0], Floats(1)[0], let, true},
+
+		{Strings(1)[0], Floats(2)[0], eq, false},
+		{Strings(1)[0], Floats(2)[0], neq, true},
+		{Strings(1)[0], Floats(2)[0], gt, false},
+		{Strings(1)[0], Floats(2)[0], lt, true},
+		{Strings(1)[0], Floats(2)[0], get, false},
+		{Strings(1)[0], Floats(2)[0], let, true},
+
+		{Strings("true")[0], Bools(1)[0], eq, true},
+		{Strings("true")[0], Bools(1)[0], neq, false},
+		{Strings("true")[0], Bools(1)[0], gt, false},
+		{Strings("true")[0], Bools(1)[0], lt, false},
+		{Strings("true")[0], Bools(1)[0], get, true},
+		{Strings("true")[0], Bools(1)[0], let, true},
+
+		{Strings("true")[0], Bools(0)[0], eq, false},
+		{Strings("true")[0], Bools(0)[0], neq, true},
+		{Strings("true")[0], Bools(0)[0], gt, true},
+		{Strings("true")[0], Bools(0)[0], lt, false},
+		{Strings("true")[0], Bools(0)[0], get, true},
+		{Strings("true")[0], Bools(0)[0], let, false},
+
+		{Strings("abc")[0], Strings("def")[0], eq, false},
+		{Strings("abc")[0], Strings("def")[0], neq, true},
+		{Strings("abc")[0], Strings("def")[0], gt, false},
+		{Strings("abc")[0], Strings("def")[0], lt, true},
+		{Strings("abc")[0], Strings("def")[0], get, false},
+		{Strings("abc")[0], Strings("def")[0], let, true},
+
+		{Strings("abc")[0], Strings("ab")[0], eq, false},
+		{Strings("abc")[0], Strings("ab")[0], neq, true},
+		{Strings("abc")[0], Strings("ab")[0], gt, true},
+		{Strings("abc")[0], Strings("ab")[0], lt, false},
+		{Strings("abc")[0], Strings("ab")[0], get, true},
+		{Strings("abc")[0], Strings("ab")[0], let, false},
+	}
+	for k, v := range tests {
+		res, err := v.a.Compare(v.b, v.op)
+		if err != nil {
+			t.Error("Error on test", k, ":", err)
+		} else {
+			if *res != v.expected {
+				t.Error("Error on test", k,
+					"\nExpected:", v.expected,
+					"\nReceived:", *res,
+				)
+			}
+		}
+	}
+}
+
+func TestBool_Compare(t *testing.T) {
+	var tests = []struct {
+		a        Cell
+		b        Cell
+		op       comparator
+		expected bool
+	}{
+		{Bools(1)[0], Ints(1)[0], eq, true},
+		{Bools(1)[0], Ints(1)[0], neq, false},
+
+		{Bools(1)[0], Ints(0)[0], eq, false},
+		{Bools(1)[0], Ints(0)[0], neq, true},
+
+		{Bools(1)[0], Strings("true")[0], eq, true},
+		{Bools(1)[0], Strings("true")[0], neq, false},
+
+		{Bools(1)[0], Strings("false")[0], eq, false},
+		{Bools(1)[0], Strings("false")[0], neq, true},
+
+		{Bools(1)[0], Floats(1)[0], eq, true},
+		{Bools(1)[0], Floats(1)[0], neq, false},
+
+		{Bools(1)[0], Floats(0)[0], eq, false},
+		{Bools(1)[0], Floats(0)[0], neq, true},
+
+		{Bools(1)[0], Bools(1)[0], eq, true},
+		{Bools(1)[0], Bools(1)[0], neq, false},
+
+		{Bools(0)[0], Ints(0)[0], eq, true},
+		{Bools(0)[0], Ints(0)[0], neq, false},
+
+		{Bools(0)[0], Ints(1)[0], eq, false},
+		{Bools(0)[0], Ints(1)[0], neq, true},
+
+		{Bools(0)[0], Strings("false")[0], eq, true},
+		{Bools(0)[0], Strings("false")[0], neq, false},
+
+		{Bools(0)[0], Strings("true")[0], eq, false},
+		{Bools(0)[0], Strings("true")[0], neq, true},
+
+		{Bools(0)[0], Floats(0)[0], eq, true},
+		{Bools(0)[0], Floats(0)[0], neq, false},
+
+		{Bools(0)[0], Floats(1)[0], eq, false},
+		{Bools(0)[0], Floats(1)[0], neq, true},
+
+		{Bools(0)[0], Bools(0)[0], eq, true},
+		{Bools(0)[0], Bools(0)[0], neq, false},
+	}
+	for k, v := range tests {
+		res, err := v.a.Compare(v.b, v.op)
+		if err != nil {
+			t.Error("Error on test", k, ":", err)
+		} else {
+			if *res != v.expected {
+				t.Error("Error on test", k,
+					"\nExpected:", v.expected,
+					"\nReceived:", *res,
+				)
+			}
+		}
 	}
 }
