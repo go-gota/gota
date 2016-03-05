@@ -22,6 +22,7 @@ func (s String) Copy() Cell {
 	return String{&j}
 }
 
+// Compare tries to compare a Cell with the current element
 func (s String) Compare(cell Cell, op comparator) (*bool, error) {
 	switch op {
 	case eq:
@@ -239,6 +240,7 @@ func (i Int) Copy() Cell {
 	return Int{&j}
 }
 
+// Compare tries to compare a Cell with the current element
 func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
 	switch op {
 	case eq:
@@ -487,6 +489,7 @@ func (f Float) Copy() Cell {
 	return Float{&j}
 }
 
+// Compare tries to compare a Cell with the current element
 func (f Float) Compare(cell Cell, op comparator) (*bool, error) {
 	switch op {
 	case eq:
@@ -736,6 +739,7 @@ func (b Bool) Copy() Cell {
 	return Bool{&j}
 }
 
+// Compare tries to compare a Cell with the current element
 func (b Bool) Compare(cell Cell, op comparator) (*bool, error) {
 	switch op {
 	case eq:

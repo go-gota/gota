@@ -356,7 +356,7 @@ func (df DataFrame) NCols() int {
 	return df.nCols
 }
 
-// colIndex tries to find the column index for a given column name
+// ColIndex tries to find the column index for a given column name
 func (df DataFrame) ColIndex(colname string) (*int, error) {
 	for k, v := range df.colNames {
 		if v == colname {

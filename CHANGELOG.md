@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## Unreleased
+### Changed
+- The `Cell` interface now have to implement a Compare method.
+- DataFrame.ColIndex is now an exported method.
+
+### Add
+- Compare methods for current primary types
+
 ## [0.4.0] - 2016-02-18
 ### Added
 - Getter methods for nrows and ncols.

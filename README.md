@@ -84,6 +84,7 @@ type Cell interface {
 	IsNA() bool
 	Checksum() [16]byte
 	Copy() Cell
+	Compare(Cell, comparator) (*bool, error)
 }
 ```
 
