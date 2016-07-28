@@ -382,6 +382,189 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 			return nil, errors.New("Unknown comparator")
 		}
 
+	case "float":
+		elements := s.Elements.(FloatElements)
+		ret := []bool{}
+		comparando := Floats(comparando)
+		compElements := comparando.Elements.(FloatElements)
+		switch comparator {
+		case "==":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sFloat == *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sFloat == *compFloat)
+			}
+			return ret, nil
+		case "!=":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, true)
+						continue
+					}
+					ret = append(ret, *sFloat != *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, true)
+					continue
+				}
+				ret = append(ret, *sFloat != *compFloat)
+			}
+			return ret, nil
+		case ">":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sFloat > *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sFloat > *compFloat)
+			}
+			return ret, nil
+		case ">=":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sFloat >= *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sFloat >= *compFloat)
+			}
+			return ret, nil
+		case "<":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sFloat < *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sFloat < *compFloat)
+			}
+			return ret, nil
+		case "<=":
+			if Len(comparando) == 1 {
+				compFloat := compElements[0].Float()
+				for _, v := range elements {
+					sFloat := v.Float()
+					if sFloat == nil || compFloat == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sFloat <= *compFloat)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sFloat := elements[i].Float()
+				compFloat := compElements[i].Float()
+				if sFloat == nil || compFloat == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sFloat <= *compFloat)
+			}
+			return ret, nil
+		case "in":
+			for _, v := range elements {
+				sFloat := v.Float()
+				found := false
+				for _, w := range compElements {
+					compFloat := w.Float()
+					if sFloat == nil || compFloat == nil {
+						continue
+					}
+					if *sFloat == *compFloat {
+						found = true
+						break
+					}
+				}
+				ret = append(ret, found)
+			}
+			return ret, nil
+		default:
+			return nil, errors.New("Unknown comparator")
+		}
+
 	}
 	return nil, nil
 }
