@@ -88,24 +88,6 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 	return nil, errors.New("Unknown Series type")
 }
 
-func Len(s Series) int {
-	switch s.t {
-	case "string":
-		elems := s.Elements.(StringElements)
-		return (len(elems))
-	case "int":
-		elems := s.Elements.(IntElements)
-		return (len(elems))
-	case "float":
-		elems := s.Elements.(FloatElements)
-		return (len(elems))
-	case "bool":
-		elems := s.Elements.(BoolElements)
-		return (len(elems))
-	}
-	return -1
-}
-
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
 	// TODO: What to do in case of NAs?
 	// TODO: Handle logic to convert to series and the logic will only compare
@@ -216,6 +198,190 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		default:
 			return nil, errors.New("Unknown comparator")
 		}
+
+	case "int":
+		elements := s.Elements.(IntElements)
+		ret := []bool{}
+		comparando := Ints(comparando)
+		compElements := comparando.Elements.(IntElements)
+		switch comparator {
+		case "==":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sInt == *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sInt == *compInt)
+			}
+			return ret, nil
+		case "!=":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, true)
+						continue
+					}
+					ret = append(ret, *sInt != *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, true)
+					continue
+				}
+				ret = append(ret, *sInt != *compInt)
+			}
+			return ret, nil
+		case ">":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sInt > *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sInt > *compInt)
+			}
+			return ret, nil
+		case ">=":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sInt >= *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sInt >= *compInt)
+			}
+			return ret, nil
+		case "<":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sInt < *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sInt < *compInt)
+			}
+			return ret, nil
+		case "<=":
+			if Len(comparando) == 1 {
+				compInt := compElements[0].Int()
+				for _, v := range elements {
+					sInt := v.Int()
+					if sInt == nil || compInt == nil {
+						ret = append(ret, false)
+						continue
+					}
+					ret = append(ret, *sInt <= *compInt)
+				}
+				return ret, nil
+			}
+			if Len(s) != Len(comparando) {
+				return nil, errors.New("Can't compare Series: Different dimensions")
+			}
+			for i := 0; i < Len(s); i++ {
+				sInt := elements[i].Int()
+				compInt := compElements[i].Int()
+				if sInt == nil || compInt == nil {
+					ret = append(ret, false)
+					continue
+				}
+				ret = append(ret, *sInt <= *compInt)
+			}
+			return ret, nil
+		case "in":
+			for _, v := range elements {
+				sInt := v.Int()
+				found := false
+				for _, w := range compElements {
+					compInt := w.Int()
+					if sInt == nil || compInt == nil {
+						continue
+					}
+					if *sInt == *compInt {
+						found = true
+						break
+					}
+				}
+				ret = append(ret, found)
+			}
+			return ret, nil
+		default:
+			return nil, errors.New("Unknown comparator")
+		}
+
 	}
 	return nil, nil
 }
@@ -940,6 +1106,24 @@ func Str(s Series) string {
 	// TODO: If name print name
 	// TODO: Print summary of the elements. i.e. string[1:20] "a", "b", ...
 	return fmt.Sprint(s)
+}
+
+func Len(s Series) int {
+	switch s.t {
+	case "string":
+		elems := s.Elements.(StringElements)
+		return (len(elems))
+	case "int":
+		elems := s.Elements.(IntElements)
+		return (len(elems))
+	case "float":
+		elems := s.Elements.(FloatElements)
+		return (len(elems))
+	case "bool":
+		elems := s.Elements.(BoolElements)
+		return (len(elems))
+	}
+	return -1
 }
 
 //// Copy returns a copy of a given Cell

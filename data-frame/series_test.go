@@ -61,6 +61,41 @@ func TestSeries_Compare(t *testing.T) {
 			)
 		}
 	}
+
+	c := Ints(1, 2, 3, 2, 1)
+	testData3 := []struct {
+		comparator string
+		comparando []int
+		expected   []bool
+	}{
+		{"==", []int{1}, []bool{true, false, false, false, true}},
+		{"==", []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
+		{"!=", []int{3}, []bool{true, true, false, true, true}},
+		{"!=", []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
+		{"in", []int{5, 6, 7}, []bool{false, false, false, false, false}},
+		{"in", []int{2, 3}, []bool{false, true, true, true, false}},
+		{"<", []int{2}, []bool{true, false, false, false, true}},
+		{"<", []int{3}, []bool{true, true, false, true, true}},
+		{"<", []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
+		{"<=", []int{2}, []bool{true, true, false, true, true}},
+		{"<=", []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
+		{">", []int{2}, []bool{false, false, true, false, false}},
+		{">", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
+		{">=", []int{2}, []bool{false, true, true, true, false}},
+		{">=", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
+	}
+	for k, v := range testData3 {
+		received, _ := c.Compare(v.comparator, v.comparando)
+		if !reflect.DeepEqual(v.expected, received) {
+			t.Error(
+				"\nTest: ", k+1, "\n",
+				"Expected:\n",
+				v.expected, "\n",
+				"Received:\n",
+				received,
+			)
+		}
+	}
 }
 
 func TestSeries_Index(t *testing.T) {
