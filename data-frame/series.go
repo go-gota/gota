@@ -17,6 +17,7 @@ type Series struct {
 
 type Elements interface {
 	String() string
+	Copy() Elements
 }
 
 func (s Series) Index(indexes interface{}) (*Series, error) {
@@ -1035,6 +1036,38 @@ func Copy(s Series) Series {
 	return copy
 }
 
+func (s StringElements) Copy() Elements {
+	var elements StringElements
+	for _, elem := range s {
+		elements = append(elements, elem.Copy())
+	}
+	return elements
+}
+
+func (s IntElements) Copy() Elements {
+	var elements IntElements
+	for _, elem := range s {
+		elements = append(elements, elem.Copy())
+	}
+	return elements
+}
+
+func (s FloatElements) Copy() Elements {
+	var elements FloatElements
+	for _, elem := range s {
+		elements = append(elements, elem.Copy())
+	}
+	return elements
+}
+
+func (s BoolElements) Copy() Elements {
+	var elements BoolElements
+	for _, elem := range s {
+		elements = append(elements, elem.Copy())
+	}
+	return elements
+}
+
 // Constructors
 // ============
 // Strings is a constructor for a String series
@@ -1098,16 +1131,14 @@ func Strings(args ...interface{}) Series {
 			s := v.(Series)
 			switch s.t {
 			case "string":
-				elems := s.Elements.(StringElements)
-				for _, elem := range elems {
-					elements = append(elements, elem.Copy())
-				}
+				elems := s.Elements.Copy().(StringElements)
+				elements = append(elements, elems...)
 			case "int", "float", "bool":
-				elems := s.Elements
+				elems := s.Elements.Copy()
 				strElems := Strings(elems).Elements.(StringElements)
-				for _, elem := range strElems {
-					elements = append(elements, elem.Copy())
-				}
+				elements = append(elements, strElems...)
+			default:
+				panic("Unknown Series type")
 			}
 		default:
 			// This should only happen if v (or its elements in case of a slice)
@@ -1217,16 +1248,14 @@ func Ints(args ...interface{}) Series {
 			s := v.(Series)
 			switch s.t {
 			case "string", "float", "bool":
-				elems := s.Elements
+				elems := s.Elements.Copy()
 				intElems := Ints(elems).Elements.(IntElements)
-				for _, elem := range intElems {
-					elements = append(elements, elem.Copy())
-				}
+				elements = append(elements, intElems...)
 			case "int":
-				elems := s.Elements.(IntElements)
-				for _, elem := range elems {
-					elements = append(elements, elem.Copy())
-				}
+				elems := s.Elements.Copy().(IntElements)
+				elements = append(elements, elems...)
+			default:
+				panic("Unknown Series type")
 			}
 		default:
 			s := reflect.ValueOf(v)
@@ -1334,16 +1363,14 @@ func Floats(args ...interface{}) Series {
 			s := v.(Series)
 			switch s.t {
 			case "string", "int", "bool":
-				elems := s.Elements
+				elems := s.Elements.Copy()
 				floatElems := Floats(elems).Elements.(FloatElements)
-				for _, elem := range floatElems {
-					elements = append(elements, elem.Copy())
-				}
+				elements = append(elements, floatElems...)
 			case "float":
-				elems := s.Elements.(FloatElements)
-				for _, elem := range elems {
-					elements = append(elements, elem.Copy())
-				}
+				elems := s.Elements.Copy().(FloatElements)
+				elements = append(elements, elems...)
+			default:
+				panic("Unknown Series type")
 			}
 		default:
 			s := reflect.ValueOf(v)
@@ -1484,16 +1511,14 @@ func Bools(args ...interface{}) Series {
 			s := v.(Series)
 			switch s.t {
 			case "string", "int", "float":
-				elems := s.Elements
+				elems := s.Elements.Copy()
 				boolElems := Bools(elems).Elements.(BoolElements)
-				for _, elem := range boolElems {
-					elements = append(elements, elem.Copy())
-				}
+				elements = append(elements, boolElems...)
 			case "bool":
-				elems := s.Elements.(BoolElements)
-				for _, elem := range elems {
-					elements = append(elements, elem.Copy())
-				}
+				elems := s.Elements.Copy().(BoolElements)
+				elements = append(elements, elems...)
+			default:
+				panic("Unknown Series type")
 			}
 		default:
 			s := reflect.ValueOf(v)

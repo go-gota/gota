@@ -501,12 +501,82 @@ func TestCopy(t *testing.T) {
 	a := Strings(1, 2, 3, "a", "b", "c")
 	b := a
 	c := Copy(a)
-	fmt.Println(a)
-	fmt.Println(b)
-	fmt.Println(c)
-	fmt.Println(addr(a))
-	fmt.Println(addr(b))
-	fmt.Println(addr(c))
+	if fmt.Sprint(a) != fmt.Sprint(b) ||
+		fmt.Sprint(a) != fmt.Sprint(c) {
+		t.Error(
+			"Different values when copying String elements",
+		)
+	}
+	if !reflect.DeepEqual(addr(a), addr(b)) {
+		t.Error(
+			"Different memory address when assigning String elements",
+		)
+	}
+	if reflect.DeepEqual(addr(a), addr(c)) {
+		t.Error(
+			"Same memory address when copying String elements",
+		)
+	}
+
+	a = Ints(1, 2, 3, "a", "b", "c")
+	b = a
+	c = Copy(a)
+	if fmt.Sprint(a) != fmt.Sprint(b) ||
+		fmt.Sprint(a) != fmt.Sprint(c) {
+		t.Error(
+			"Different values when copying Int elements",
+		)
+	}
+	if !reflect.DeepEqual(addr(a), addr(b)) {
+		t.Error(
+			"Different memory address when assigning Int elements",
+		)
+	}
+	if reflect.DeepEqual(addr(a), addr(c)) {
+		t.Error(
+			"Same memory address when copying Int elements",
+		)
+	}
+
+	a = Floats(1, 2, 3, 0.1, 0.2)
+	b = a
+	c = Copy(a)
+	if fmt.Sprint(a) != fmt.Sprint(b) ||
+		fmt.Sprint(a) != fmt.Sprint(c) {
+		t.Error(
+			"Different values when copying Float elements",
+		)
+	}
+	if !reflect.DeepEqual(addr(a), addr(b)) {
+		t.Error(
+			"Different memory address when assigning Float elements",
+		)
+	}
+	if reflect.DeepEqual(addr(a), addr(c)) {
+		t.Error(
+			"Same memory address when copying Float elements",
+		)
+	}
+
+	a = Bools(true, false, 1, 0)
+	b = a
+	c = Copy(a)
+	if fmt.Sprint(a) != fmt.Sprint(b) ||
+		fmt.Sprint(a) != fmt.Sprint(c) {
+		t.Error(
+			"Different values when copying Bool elements",
+		)
+	}
+	if !reflect.DeepEqual(addr(a), addr(b)) {
+		t.Error(
+			"Different memory address when assigning Bool elements",
+		)
+	}
+	if reflect.DeepEqual(addr(a), addr(c)) {
+		t.Error(
+			"Same memory address when copying Bool elements",
+		)
+	}
 }
 
 //func TestInt_Compare(t *testing.T) {
