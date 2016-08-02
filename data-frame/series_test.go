@@ -279,6 +279,18 @@ func TestStrings(t *testing.T) {
 			received,
 		)
 	}
+	aa = Strings("a", "b", "c", Ints(4, 5, 6), Floats(6, nil, 0.1), Bools(1, 0, 0))
+	expected = "a b c 4 5 6 6 NA 0.1 true false false"
+	received = fmt.Sprint(aa)
+	if received != expected {
+		t.Error(
+			"Series not being propery inserted\n",
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 }
 
 func TestInts(t *testing.T) {
