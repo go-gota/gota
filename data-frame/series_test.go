@@ -497,6 +497,18 @@ func TestBools(t *testing.T) {
 	//}
 }
 
+func TestCopy(t *testing.T) {
+	a := Strings(1, 2, 3, "a", "b", "c")
+	b := a
+	c := Copy(a)
+	fmt.Println(a)
+	fmt.Println(b)
+	fmt.Println(c)
+	fmt.Println(addr(a))
+	fmt.Println(addr(b))
+	fmt.Println(addr(c))
+}
+
 //func TestInt_Compare(t *testing.T) {
 //var tests = []struct {
 //a        Cell

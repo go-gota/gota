@@ -11,9 +11,10 @@ import (
 type Series struct {
 	Name     string   // The name of the series
 	Elements Elements // The values of the elements
-	names    []string // The names of every element. If empty is an unnamed series
+	names    []string // The names of every element. If empty, it is an unnamed series
 	t        string   // The type of the series
 }
+
 type Elements interface {
 	String() string
 }
@@ -90,8 +91,6 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
 	// TODO: What to do in case of NAs?
-	// TODO: Handle logic to convert to series and the logic will only compare
-	// between series?
 	switch s.t {
 	case "string":
 		elements := s.Elements.(StringElements)
@@ -987,6 +986,55 @@ func (b Bool) Bool() *bool {
 	return nil
 }
 
+// All Copy() methods
+// ====================
+func (s String) Copy() String {
+	if s.s == nil {
+		return String{nil}
+	}
+	copy := *s.s
+	return String{&copy}
+}
+
+func (i Int) Copy() Int {
+	if i.i == nil {
+		return Int{nil}
+	}
+	copy := *i.i
+	return Int{&copy}
+}
+
+func (f Float) Copy() Float {
+	if f.f == nil {
+		return Float{nil}
+	}
+	copy := *f.f
+	return Float{&copy}
+}
+
+func (b Bool) Copy() Bool {
+	if b.b == nil {
+		return Bool{nil}
+	}
+	copy := *b.b
+	return Bool{&copy}
+}
+
+func Copy(s Series) Series {
+	var copy Series
+	switch s.t {
+	case "string":
+		copy = Strings(s)
+	case "int":
+		copy = Ints(s)
+	case "float":
+		copy = Floats(s)
+	case "bool":
+		copy = Bools(s)
+	}
+	return copy
+}
+
 // Constructors
 // ============
 // Strings is a constructor for a String series
@@ -1051,11 +1099,15 @@ func Strings(args ...interface{}) Series {
 			switch s.t {
 			case "string":
 				elems := s.Elements.(StringElements)
-				elements = append(elements, elems...)
+				for _, elem := range elems {
+					elements = append(elements, elem.Copy())
+				}
 			case "int", "float", "bool":
 				elems := s.Elements
 				strElems := Strings(elems).Elements.(StringElements)
-				elements = append(elements, strElems...)
+				for _, elem := range strElems {
+					elements = append(elements, elem.Copy())
+				}
 			}
 		default:
 			// This should only happen if v (or its elements in case of a slice)
@@ -1167,10 +1219,14 @@ func Ints(args ...interface{}) Series {
 			case "string", "float", "bool":
 				elems := s.Elements
 				intElems := Ints(elems).Elements.(IntElements)
-				elements = append(elements, intElems...)
+				for _, elem := range intElems {
+					elements = append(elements, elem.Copy())
+				}
 			case "int":
 				elems := s.Elements.(IntElements)
-				elements = append(elements, elems...)
+				for _, elem := range elems {
+					elements = append(elements, elem.Copy())
+				}
 			}
 		default:
 			s := reflect.ValueOf(v)
@@ -1280,10 +1336,14 @@ func Floats(args ...interface{}) Series {
 			case "string", "int", "bool":
 				elems := s.Elements
 				floatElems := Floats(elems).Elements.(FloatElements)
-				elements = append(elements, floatElems...)
+				for _, elem := range floatElems {
+					elements = append(elements, elem.Copy())
+				}
 			case "float":
 				elems := s.Elements.(FloatElements)
-				elements = append(elements, elems...)
+				for _, elem := range elems {
+					elements = append(elements, elem.Copy())
+				}
 			}
 		default:
 			s := reflect.ValueOf(v)
@@ -1425,11 +1485,15 @@ func Bools(args ...interface{}) Series {
 			switch s.t {
 			case "string", "int", "float":
 				elems := s.Elements
-				strElems := Bools(elems).Elements.(BoolElements)
-				elements = append(elements, strElems...)
+				boolElems := Bools(elems).Elements.(BoolElements)
+				for _, elem := range boolElems {
+					elements = append(elements, elem.Copy())
+				}
 			case "bool":
 				elems := s.Elements.(BoolElements)
-				elements = append(elements, elems...)
+				for _, elem := range elems {
+					elements = append(elements, elem.Copy())
+				}
 			}
 		default:
 			s := reflect.ValueOf(v)
@@ -1492,14 +1556,40 @@ func Len(s Series) int {
 	return -1
 }
 
-//// Copy returns a copy of a given Cell
-//func (s String) Copy() Cell {
-//if s.s == nil {
-//return String{nil}
-//}
-//j := *s.s
-//return String{&j}
-//}
+func Type(s Series) string {
+	return s.t
+}
+
+func Names(s Series) []string {
+	return s.names
+}
+
+func addr(s Series) []string {
+	var ret []string
+	switch s.t {
+	case "string":
+		elems := s.Elements.(StringElements)
+		for _, elem := range elems {
+			ret = append(ret, fmt.Sprint(elem.s))
+		}
+	case "int":
+		elems := s.Elements.(IntElements)
+		for _, elem := range elems {
+			ret = append(ret, fmt.Sprint(elem.i))
+		}
+	case "float":
+		elems := s.Elements.(FloatElements)
+		for _, elem := range elems {
+			ret = append(ret, fmt.Sprint(elem.f))
+		}
+	case "bool":
+		elems := s.Elements.(BoolElements)
+		for _, elem := range elems {
+			ret = append(ret, fmt.Sprint(elem.b))
+		}
+	}
+	return ret
+}
 
 //// NA returns the empty element for this type
 //func (s String) NA() Cell {
@@ -1512,97 +1602,6 @@ func Len(s Series) int {
 //return true
 //}
 //return false
-//}
-
-//// Copy returns a copy of a given Cell
-//func (i Int) Copy() Cell {
-//if i.i == nil {
-//return Int{nil}
-//}
-//j := *i.i
-//return Int{&j}
-//}
-
-//// Compare tries to compare a Cell with the current element
-//func (i Int) Compare(cell Cell, op comparator) (*bool, error) {
-//switch op {
-//case eq:
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a == *b
-//return &comp, nil
-//case neq:
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a != *b
-//return &comp, nil
-//case gt:
-//if !i.IsNA() && !cell.IsNA() {
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a > *b
-//return &comp, nil
-//}
-//case lt:
-//if !i.IsNA() && !cell.IsNA() {
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a < *b
-//return &comp, nil
-//}
-//case get:
-//if !i.IsNA() && !cell.IsNA() {
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a >= *b
-//return &comp, nil
-//}
-//case let:
-//if !i.IsNA() && !cell.IsNA() {
-//a, err := i.Int()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Int()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a <= *b
-//return &comp, nil
-//}
-//}
-
-//return nil, errors.New("Invalid comparator operation")
 //}
 
 //// Checksum generates a pseudo-unique 16 byte array
@@ -1625,117 +1624,6 @@ func Len(s Series) int {
 //return false
 //}
 
-//// Copy returns a copy of a given Cell
-//func (f Float) Copy() Cell {
-//if f.f == nil {
-//return Float{nil}
-//}
-//j := *f.f
-//return Float{&j}
-//}
-
-//// Compare tries to compare a Cell with the current element
-//func (f Float) Compare(cell Cell, op comparator) (*bool, error) {
-//switch op {
-//case eq:
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a == *b
-//return &comp, nil
-//case neq:
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a != *b
-//return &comp, nil
-//case gt:
-//if !f.IsNA() && !cell.IsNA() {
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a > *b
-//return &comp, nil
-//}
-//case lt:
-//if !f.IsNA() && !cell.IsNA() {
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a < *b
-//return &comp, nil
-//}
-//case get:
-//if !f.IsNA() && !cell.IsNA() {
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a >= *b
-//return &comp, nil
-//}
-//case let:
-//if !f.IsNA() && !cell.IsNA() {
-//a, err := f.Float()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Float()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a <= *b
-//return &comp, nil
-//}
-//}
-
-//return nil, errors.New("Invalid comparator operation")
-//}
-
-//func (f Float) String() string {
-//return formatCell(f.f)
-//}
-
-//// Bool returns the bool value of Float
-//func (f Float) Bool() (*bool, error) {
-//t := true
-//fa := false
-//if f.f == nil {
-//return nil, errors.New("Can't convert to Bool")
-//}
-//if *f.f == 1.0 {
-//return &t, nil
-//}
-//if *f.f == 0.0 {
-//return &fa, nil
-//}
-//return nil, errors.New("Can't convert to Bool")
-//}
-
 //// Checksum generates a pseudo-unique 16 byte array
 //func (f Float) Checksum() [16]byte {
 //s := f.String()
@@ -1754,53 +1642,6 @@ func Len(s Series) int {
 //return true
 //}
 //return false
-//}
-
-//// Copy returns a copy of a given Cell
-//func (b Bool) Copy() Cell {
-//if b.b == nil {
-//return Bool{nil}
-//}
-//j := *b.b
-//return Bool{&j}
-//}
-
-//// Compare tries to compare a Cell with the current element
-//func (b Bool) Compare(cell Cell, op comparator) (*bool, error) {
-//switch op {
-//case eq:
-//if !b.IsNA() && !cell.IsNA() {
-//a, err := b.Bool()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Bool()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a == *b
-//return &comp, nil
-//}
-//case neq:
-//if !b.IsNA() && !cell.IsNA() {
-//a, err := b.Bool()
-//if err != nil {
-//return nil, err
-//}
-//b, err := cell.Bool()
-//if err != nil {
-//return nil, err
-//}
-//comp := *a != *b
-//return &comp, nil
-//}
-//case gt:
-//case lt:
-//case get:
-//case let:
-//}
-
-//return nil, errors.New("Invalid comparator operation")
 //}
 
 //// Checksum generates a pseudo-unique 16 byte array
