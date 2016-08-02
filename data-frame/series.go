@@ -20,7 +20,8 @@ type Elements interface {
 	Copy() Elements
 }
 
-func (s Series) Index(indexes interface{}) (*Series, error) {
+// TODO: Rename Index to Subset
+func (s Series) Index(indexes interface{}) (Series, error) {
 	switch s.t {
 	case "string":
 		elements := s.Elements.(StringElements)
@@ -28,15 +29,28 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 		case []int:
 			elems := StringElements{}
 			for _, v := range indexes.([]int) {
-				if v >= len(elements) {
-					return nil, errors.New("Index out of range")
+				if v >= len(elements) || v < 0 {
+					return Strings(), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
 			series := Strings(elems)
-			return &series, nil
+			return series, nil
+		case []bool:
+			idx := indexes.([]bool)
+			if len(idx) != Len(s) {
+				return Strings(), errors.New("Dimensions mismatch")
+			}
+			var elems StringElements
+			for k, v := range idx {
+				if v {
+					elems = append(elems, elements[k])
+				}
+			}
+			series := Strings(elems)
+			return series, nil
 		default:
-			return nil, errors.New("Unknown indexing mode")
+			return Strings(), errors.New("Unknown indexing mode")
 		}
 	case "int":
 		elements := s.Elements.(IntElements)
@@ -44,15 +58,28 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 		case []int:
 			elems := IntElements{}
 			for _, v := range indexes.([]int) {
-				if v >= len(elements) {
-					return nil, errors.New("Index out of range")
+				if v >= len(elements) || v < 0 {
+					return Ints(), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
 			series := Ints(elems)
-			return &series, nil
+			return series, nil
+		case []bool:
+			idx := indexes.([]bool)
+			if len(idx) != Len(s) {
+				return Strings(), errors.New("Dimensions mismatch")
+			}
+			var elems IntElements
+			for k, v := range idx {
+				if v {
+					elems = append(elems, elements[k])
+				}
+			}
+			series := Strings(elems)
+			return series, nil
 		default:
-			return nil, errors.New("Unknown indexing mode")
+			return Ints(), errors.New("Unknown indexing mode")
 		}
 	case "float":
 		elements := s.Elements.(FloatElements)
@@ -60,15 +87,28 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 		case []int:
 			elems := FloatElements{}
 			for _, v := range indexes.([]int) {
-				if v >= len(elements) {
-					return nil, errors.New("Index out of range")
+				if v >= len(elements) || v < 0 {
+					return Floats(), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
 			series := Floats(elems)
-			return &series, nil
+			return series, nil
+		case []bool:
+			idx := indexes.([]bool)
+			if len(idx) != Len(s) {
+				return Strings(), errors.New("Dimensions mismatch")
+			}
+			var elems FloatElements
+			for k, v := range idx {
+				if v {
+					elems = append(elems, elements[k])
+				}
+			}
+			series := Strings(elems)
+			return series, nil
 		default:
-			return nil, errors.New("Unknown indexing mode")
+			return Floats(), errors.New("Unknown indexing mode")
 		}
 	case "bool":
 		elements := s.Elements.(BoolElements)
@@ -76,18 +116,31 @@ func (s Series) Index(indexes interface{}) (*Series, error) {
 		case []int:
 			elems := BoolElements{}
 			for _, v := range indexes.([]int) {
-				if v >= len(elements) {
-					return nil, errors.New("Index out of range")
+				if v >= len(elements) || v < 0 {
+					return Bools(), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
 			series := Bools(elems)
-			return &series, nil
+			return series, nil
+		case []bool:
+			idx := indexes.([]bool)
+			if len(idx) != Len(s) {
+				return Strings(), errors.New("Dimensions mismatch")
+			}
+			var elems BoolElements
+			for k, v := range idx {
+				if v {
+					elems = append(elems, elements[k])
+				}
+			}
+			series := Strings(elems)
+			return series, nil
 		default:
-			return nil, errors.New("Unknown indexing mode")
+			return Bools(), errors.New("Unknown indexing mode")
 		}
 	}
-	return nil, errors.New("Unknown Series type")
+	return Strings(), errors.New("Unknown Series type")
 }
 
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
@@ -989,6 +1042,7 @@ func (b Bool) Bool() *bool {
 
 // All Copy() methods
 // ====================
+
 func (s String) Copy() String {
 	if s.s == nil {
 		return String{nil}
@@ -1068,10 +1122,13 @@ func (s BoolElements) Copy() Elements {
 	return elements
 }
 
+// All IsNA() methods
+// ====================
+// TODO: IsNA for a Series will return a boolean Series indicating which of the given elements is NA
+
 // Constructors
 // ============
 // Strings is a constructor for a String series
-// TODO: Change the name of the constructor from Strings() to S()?
 func Strings(args ...interface{}) Series {
 	elements := make(StringElements, 0, len(args))
 	for _, v := range args {
@@ -1558,9 +1615,18 @@ func Bools(args ...interface{}) Series {
 
 // Extra Series functions
 func Str(s Series) string {
-	// TODO: If name print name
 	// TODO: Print summary of the elements. i.e. string[1:20] "a", "b", ...
-	return fmt.Sprint(s)
+	var ret []string
+	// If name exists print name
+	if s.Name != "" {
+		ret = append(ret, "Name: "+s.Name)
+	}
+	ret = append(ret, "Type: "+s.t)
+	ret = append(ret, "Length: "+fmt.Sprint(Len(s)))
+	if Len(s) != 0 {
+		ret = append(ret, "Values: "+fmt.Sprint(s))
+	}
+	return strings.Join(ret, "\n")
 }
 
 func Len(s Series) int {
@@ -1589,7 +1655,7 @@ func Names(s Series) []string {
 	return s.names
 }
 
-func addr(s Series) []string {
+func Addr(s Series) []string {
 	var ret []string
 	switch s.t {
 	case "string":

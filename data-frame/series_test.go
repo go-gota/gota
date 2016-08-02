@@ -179,8 +179,30 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
+	b, _ = a.Index([]bool{true, false, false, false, true})
+	expected = "A D"
+	received = fmt.Sprint(b)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 	b2, _ := a2.Index([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
+	received = fmt.Sprint(b2)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b2, _ = a2.Index([]bool{true, false, false, true, true})
+	expected = "1 NA 5"
 	received = fmt.Sprint(b2)
 	if expected != received {
 		t.Error(
@@ -201,8 +223,30 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
+	b3, _ = a3.Index([]bool{true, false, false, true, true})
+	expected = "1 NA 5"
+	received = fmt.Sprint(b3)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 	b4, _ := a4.Index([]int{2, 3, 4, 4, 4, 1})
 	expected = "true NA true true true false"
+	received = fmt.Sprint(b4)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b4, _ = a4.Index([]bool{true, false, false, true, true})
+	expected = "true NA true"
 	received = fmt.Sprint(b4)
 	if expected != received {
 		t.Error(
@@ -519,12 +563,12 @@ func TestCopy(t *testing.T) {
 			"Different values when copying String elements",
 		)
 	}
-	if !reflect.DeepEqual(addr(a), addr(b)) {
+	if !reflect.DeepEqual(Addr(a), Addr(b)) {
 		t.Error(
 			"Different memory address when assigning String elements",
 		)
 	}
-	if reflect.DeepEqual(addr(a), addr(c)) {
+	if reflect.DeepEqual(Addr(a), Addr(c)) {
 		t.Error(
 			"Same memory address when copying String elements",
 		)
@@ -539,12 +583,12 @@ func TestCopy(t *testing.T) {
 			"Different values when copying Int elements",
 		)
 	}
-	if !reflect.DeepEqual(addr(a), addr(b)) {
+	if !reflect.DeepEqual(Addr(a), Addr(b)) {
 		t.Error(
 			"Different memory address when assigning Int elements",
 		)
 	}
-	if reflect.DeepEqual(addr(a), addr(c)) {
+	if reflect.DeepEqual(Addr(a), Addr(c)) {
 		t.Error(
 			"Same memory address when copying Int elements",
 		)
@@ -559,12 +603,12 @@ func TestCopy(t *testing.T) {
 			"Different values when copying Float elements",
 		)
 	}
-	if !reflect.DeepEqual(addr(a), addr(b)) {
+	if !reflect.DeepEqual(Addr(a), Addr(b)) {
 		t.Error(
 			"Different memory address when assigning Float elements",
 		)
 	}
-	if reflect.DeepEqual(addr(a), addr(c)) {
+	if reflect.DeepEqual(Addr(a), Addr(c)) {
 		t.Error(
 			"Same memory address when copying Float elements",
 		)
@@ -579,12 +623,12 @@ func TestCopy(t *testing.T) {
 			"Different values when copying Bool elements",
 		)
 	}
-	if !reflect.DeepEqual(addr(a), addr(b)) {
+	if !reflect.DeepEqual(Addr(a), Addr(b)) {
 		t.Error(
 			"Different memory address when assigning Bool elements",
 		)
 	}
-	if reflect.DeepEqual(addr(a), addr(c)) {
+	if reflect.DeepEqual(Addr(a), Addr(c)) {
 		t.Error(
 			"Same memory address when copying Bool elements",
 		)
