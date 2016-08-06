@@ -688,7 +688,7 @@ func TestBools(t *testing.T) {
 func TestCopy(t *testing.T) {
 	a := Strings(1, 2, 3, "a", "b", "c")
 	b := a
-	c := Copy(a)
+	c := a.Copy()
 	if fmt.Sprint(a) != fmt.Sprint(b) ||
 		fmt.Sprint(a) != fmt.Sprint(c) {
 		t.Error(
@@ -708,7 +708,7 @@ func TestCopy(t *testing.T) {
 
 	a = Ints(1, 2, 3, "a", "b", "c")
 	b = a
-	c = Copy(a)
+	c = a.Copy()
 	if fmt.Sprint(a) != fmt.Sprint(b) ||
 		fmt.Sprint(a) != fmt.Sprint(c) {
 		t.Error(
@@ -728,7 +728,7 @@ func TestCopy(t *testing.T) {
 
 	a = Floats(1, 2, 3, 0.1, 0.2)
 	b = a
-	c = Copy(a)
+	c = a.Copy()
 	if fmt.Sprint(a) != fmt.Sprint(b) ||
 		fmt.Sprint(a) != fmt.Sprint(c) {
 		t.Error(
@@ -748,7 +748,7 @@ func TestCopy(t *testing.T) {
 
 	a = Bools(true, false, 1, 0)
 	b = a
-	c = Copy(a)
+	c = a.Copy()
 	if fmt.Sprint(a) != fmt.Sprint(b) ||
 		fmt.Sprint(a) != fmt.Sprint(c) {
 		t.Error(

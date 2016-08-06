@@ -1286,7 +1286,7 @@ func (b Bool) Copy() Bool {
 	return Bool{&copy}
 }
 
-func Copy(s Series) Series {
+func (s Series) Copy() Series {
 	var copy Series
 	switch s.t {
 	case "string":
