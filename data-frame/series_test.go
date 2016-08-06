@@ -245,6 +245,39 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
+	b2, _ = a2.Index(Bools([]bool{true, false, false, true, true}))
+	expected = "1 NA 5"
+	received = fmt.Sprint(b2)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b2, _ = a2.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	expected = "3 NA 5 5 5 2"
+	received = fmt.Sprint(b2)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b2, _ = a2.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	expected = "3 NA 5 5 5 2"
+	received = fmt.Sprint(b2)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 	b3, _ := a3.Index([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
@@ -267,6 +300,39 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
+	b3, _ = a3.Index(Bools([]bool{true, false, false, true, true}))
+	expected = "1 NA 5"
+	received = fmt.Sprint(b3)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b3, _ = a3.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	expected = "3 NA 5 5 5 2"
+	received = fmt.Sprint(b3)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b3, _ = a3.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	expected = "3 NA 5 5 5 2"
+	received = fmt.Sprint(b3)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 	b4, _ := a4.Index([]int{2, 3, 4, 4, 4, 1})
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
@@ -280,6 +346,39 @@ func TestSeries_Index(t *testing.T) {
 	}
 	b4, _ = a4.Index([]bool{true, false, false, true, true})
 	expected = "true NA true"
+	received = fmt.Sprint(b4)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b4, _ = a4.Index(Bools([]bool{true, false, false, true, true}))
+	expected = "true NA true"
+	received = fmt.Sprint(b4)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b4, _ = a4.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	expected = "true NA true true true false"
+	received = fmt.Sprint(b4)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b4, _ = a4.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
 		t.Error(
