@@ -190,6 +190,39 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
+	b, _ = a.Index(Bools([]bool{true, false, false, false, true}))
+	expected = "A D"
+	received = fmt.Sprint(b)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b, _ = a.Index(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
+	expected = "C B D D D B"
+	received = fmt.Sprint(b)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+	b, _ = a.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	expected = "C B D D D B"
+	received = fmt.Sprint(b)
+	if expected != received {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
 	b2, _ := a2.Index([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
