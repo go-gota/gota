@@ -20,8 +20,7 @@ type Elements interface {
 	Copy() Elements
 }
 
-// TODO: Rename Index to Subset
-func (s Series) Index(indexes interface{}) (Series, error) {
+func (s Series) Subset(indexes interface{}) (Series, error) {
 	switch s.t {
 	case "string":
 		elements := s.Elements.(StringElements)

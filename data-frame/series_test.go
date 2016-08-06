@@ -168,7 +168,7 @@ func TestSeries_Index(t *testing.T) {
 	a2 := Ints(1, 2, 3, nil, 5)
 	a3 := Floats(1, 2, 3, nil, 5)
 	a4 := Bools(1, 0, 3, nil, 5)
-	b, _ := a.Index([]int{2, 3, 4, 4, 4, 1})
+	b, _ := a.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected := "C B D D D B"
 	received := fmt.Sprint(b)
 	if expected != received {
@@ -179,7 +179,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Index([]bool{true, false, false, false, true})
+	b, _ = a.Subset([]bool{true, false, false, false, true})
 	expected = "A D"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -190,7 +190,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Index(Bools([]bool{true, false, false, false, true}))
+	b, _ = a.Subset(Bools([]bool{true, false, false, false, true}))
 	expected = "A D"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -201,7 +201,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Index(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
+	b, _ = a.Subset(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
 	expected = "C B D D D B"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -212,7 +212,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b, _ = a.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "C B D D D B"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -223,7 +223,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ := a2.Index([]int{2, 3, 4, 4, 4, 1})
+	b2, _ := a2.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -234,7 +234,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Index([]bool{true, false, false, true, true})
+	b2, _ = a2.Subset([]bool{true, false, false, true, true})
 	expected = "1 NA 5"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -245,7 +245,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Index(Bools([]bool{true, false, false, true, true}))
+	b2, _ = a2.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "1 NA 5"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -256,7 +256,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b2, _ = a2.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -267,7 +267,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b2, _ = a2.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -278,7 +278,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ := a3.Index([]int{2, 3, 4, 4, 4, 1})
+	b3, _ := a3.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -289,7 +289,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Index([]bool{true, false, false, true, true})
+	b3, _ = a3.Subset([]bool{true, false, false, true, true})
 	expected = "1 NA 5"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -300,7 +300,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Index(Bools([]bool{true, false, false, true, true}))
+	b3, _ = a3.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "1 NA 5"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -311,7 +311,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b3, _ = a3.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -322,7 +322,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b3, _ = a3.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -333,7 +333,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ := a4.Index([]int{2, 3, 4, 4, 4, 1})
+	b4, _ := a4.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -344,7 +344,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Index([]bool{true, false, false, true, true})
+	b4, _ = a4.Subset([]bool{true, false, false, true, true})
 	expected = "true NA true"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -355,7 +355,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Index(Bools([]bool{true, false, false, true, true}))
+	b4, _ = a4.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "true NA true"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -366,7 +366,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Index(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b4, _ = a4.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -377,7 +377,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Index(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b4, _ = a4.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
