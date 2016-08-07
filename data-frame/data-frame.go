@@ -121,7 +121,49 @@ func (df DataFrame) Copy() DataFrame {
 	return copy
 }
 
-//func (df DataFrame) Filter(params) DataFrame {
+func (df DataFrame) Subset(indexes interface{}) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	switch indexes.(type) {
+	case []int:
+		for _, v := range indexes.([]int) {
+			if v >= df.nrows || v < 0 {
+				return DataFrame{err: errors.New("Index out of range")}
+			}
+		}
+		var columnsSubset []Series
+		for _, column := range df.columns {
+			columnSubset, err := column.Subset(indexes)
+			if err != nil {
+				return DataFrame{err: err}
+			}
+			columnsSubset = append(columnsSubset, columnSubset)
+		}
+		return New(columnsSubset...)
+	case []bool:
+	case Series:
+		idx := indexes.(Series)
+		switch idx.t {
+		case "string":
+		case "bool":
+		case "int":
+		case "float":
+		}
+	default:
+		return DataFrame{err: errors.New("Unknown indexing mode")}
+	}
+	return df.Copy()
+}
+
+//func (df DataFrame) Filter(
+//colname string,
+//comparator string,
+//comparando interface{},
+//) DataFrame {
+//if df.Err() != nil {
+//return df
+//}
 //copy := df.Copy()
 //return copy
 //}

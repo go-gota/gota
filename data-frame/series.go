@@ -28,16 +28,16 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 			elems := StringElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
-					return Strings(), errors.New("Index out of range")
+					return NamedStrings(s.Name), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
-			series := Strings(elems)
+			series := NamedStrings(s.Name, elems)
 			return series, nil
 		case []bool:
 			idx := indexes.([]bool)
 			if len(idx) != Len(s) {
-				return Strings(), errors.New("Dimensions mismatch")
+				return NamedStrings(s.Name), errors.New("Dimensions mismatch")
 			}
 			var elems StringElements
 			for k, v := range idx {
@@ -45,29 +45,29 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 					elems = append(elems, elements[k])
 				}
 			}
-			series := Strings(elems)
+			series := NamedStrings(s.Name, elems)
 			return series, nil
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
 			case "string":
-				return Strings(), errors.New("Wrong Series type for subsetting")
+				return NamedStrings(s.Name), errors.New("Wrong Series type for subsetting")
 			case "bool":
 				if Len(idx) != Len(s) {
-					return Strings(), errors.New("Dimensions mismatch")
+					return NamedStrings(s.Name), errors.New("Dimensions mismatch")
 				}
 				boolElems := idx.Elements.(BoolElements)
 				var elems StringElements
 				for k, v := range boolElems {
 					b := v.Bool()
 					if b == nil {
-						return Strings(), errors.New("Can't subset over NA elements")
+						return NamedStrings(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *b {
 						elems = append(elems, elements[k])
 					}
 				}
-				series := Strings(elems)
+				series := NamedStrings(s.Name, elems)
 				return series, nil
 			case "int":
 				elems := StringElements{}
@@ -75,14 +75,14 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Strings(), errors.New("Can't subset over NA elements")
+						return NamedStrings(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Strings(), errors.New("Index out of range")
+						return NamedStrings(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Strings(elems)
+				series := NamedStrings(s.Name, elems)
 				return series, nil
 			case "float":
 				elems := StringElements{}
@@ -90,18 +90,18 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Strings(), errors.New("Can't subset over NA elements")
+						return NamedStrings(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Strings(), errors.New("Index out of range")
+						return NamedStrings(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Strings(elems)
+				series := NamedStrings(s.Name, elems)
 				return series, nil
 			}
 		default:
-			return Strings(), errors.New("Unknown indexing mode")
+			return NamedStrings(s.Name), errors.New("Unknown indexing mode")
 		}
 	case "int":
 		elements := s.Elements.(IntElements)
@@ -110,16 +110,16 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 			elems := IntElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
-					return Ints(), errors.New("Index out of range")
+					return NamedInts(s.Name), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
-			series := Ints(elems)
+			series := NamedInts(s.Name, elems)
 			return series, nil
 		case []bool:
 			idx := indexes.([]bool)
 			if len(idx) != Len(s) {
-				return Ints(), errors.New("Dimensions mismatch")
+				return NamedInts(s.Name), errors.New("Dimensions mismatch")
 			}
 			var elems IntElements
 			for k, v := range idx {
@@ -127,29 +127,29 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 					elems = append(elems, elements[k])
 				}
 			}
-			series := Ints(elems)
+			series := NamedInts(s.Name, elems)
 			return series, nil
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
 			case "string":
-				return Ints(), errors.New("Wrong Series type for subsetting")
+				return NamedInts(s.Name), errors.New("Wrong Series type for subsetting")
 			case "bool":
 				if Len(idx) != Len(s) {
-					return Ints(), errors.New("Dimensions mismatch")
+					return NamedInts(s.Name), errors.New("Dimensions mismatch")
 				}
 				boolElems := idx.Elements.(BoolElements)
 				var elems IntElements
 				for k, v := range boolElems {
 					b := v.Bool()
 					if b == nil {
-						return Ints(), errors.New("Can't subset over NA elements")
+						return NamedInts(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *b {
 						elems = append(elems, elements[k])
 					}
 				}
-				series := Ints(elems)
+				series := NamedInts(s.Name, elems)
 				return series, nil
 			case "int":
 				elems := IntElements{}
@@ -157,14 +157,14 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Ints(), errors.New("Can't subset over NA elements")
+						return NamedInts(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Ints(), errors.New("Index out of range")
+						return NamedInts(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Ints(elems)
+				series := NamedInts(s.Name, elems)
 				return series, nil
 			case "float":
 				elems := IntElements{}
@@ -172,18 +172,18 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Ints(), errors.New("Can't subset over NA elements")
+						return NamedInts(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Ints(), errors.New("Index out of range")
+						return NamedInts(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Ints(elems)
+				series := NamedInts(s.Name, elems)
 				return series, nil
 			}
 		default:
-			return Ints(), errors.New("Unknown indexing mode")
+			return NamedInts(s.Name), errors.New("Unknown indexing mode")
 		}
 	case "float":
 		elements := s.Elements.(FloatElements)
@@ -192,16 +192,16 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 			elems := FloatElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
-					return Floats(), errors.New("Index out of range")
+					return NamedFloats(s.Name), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
-			series := Floats(elems)
+			series := NamedFloats(s.Name, elems)
 			return series, nil
 		case []bool:
 			idx := indexes.([]bool)
 			if len(idx) != Len(s) {
-				return Floats(), errors.New("Dimensions mismatch")
+				return NamedFloats(s.Name), errors.New("Dimensions mismatch")
 			}
 			var elems FloatElements
 			for k, v := range idx {
@@ -209,29 +209,29 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 					elems = append(elems, elements[k])
 				}
 			}
-			series := Floats(elems)
+			series := NamedFloats(s.Name, elems)
 			return series, nil
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
 			case "string":
-				return Floats(), errors.New("Wrong Series type for subsetting")
+				return NamedFloats(s.Name), errors.New("Wrong Series type for subsetting")
 			case "bool":
 				if Len(idx) != Len(s) {
-					return Floats(), errors.New("Dimensions mismatch")
+					return NamedFloats(s.Name), errors.New("Dimensions mismatch")
 				}
 				boolElems := idx.Elements.(BoolElements)
 				var elems FloatElements
 				for k, v := range boolElems {
 					b := v.Bool()
 					if b == nil {
-						return Floats(), errors.New("Can't subset over NA elements")
+						return NamedFloats(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *b {
 						elems = append(elems, elements[k])
 					}
 				}
-				series := Floats(elems)
+				series := NamedFloats(s.Name, elems)
 				return series, nil
 			case "int":
 				elems := FloatElements{}
@@ -239,14 +239,14 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Floats(), errors.New("Can't subset over NA elements")
+						return NamedFloats(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Floats(), errors.New("Index out of range")
+						return NamedFloats(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Floats(elems)
+				series := NamedFloats(s.Name, elems)
 				return series, nil
 			case "float":
 				elems := FloatElements{}
@@ -254,18 +254,18 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Floats(), errors.New("Can't subset over NA elements")
+						return NamedFloats(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Floats(), errors.New("Index out of range")
+						return NamedFloats(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Floats(elems)
+				series := NamedFloats(s.Name, elems)
 				return series, nil
 			}
 		default:
-			return Floats(), errors.New("Unknown indexing mode")
+			return NamedFloats(s.Name), errors.New("Unknown indexing mode")
 		}
 	case "bool":
 		elements := s.Elements.(BoolElements)
@@ -274,16 +274,16 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 			elems := BoolElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
-					return Bools(), errors.New("Index out of range")
+					return NamedBools(s.Name), errors.New("Index out of range")
 				}
 				elems = append(elems, elements[v])
 			}
-			series := Bools(elems)
+			series := NamedBools(s.Name, elems)
 			return series, nil
 		case []bool:
 			idx := indexes.([]bool)
 			if len(idx) != Len(s) {
-				return Bools(), errors.New("Dimensions mismatch")
+				return NamedBools(s.Name), errors.New("Dimensions mismatch")
 			}
 			var elems BoolElements
 			for k, v := range idx {
@@ -291,29 +291,29 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 					elems = append(elems, elements[k])
 				}
 			}
-			series := Bools(elems)
+			series := NamedBools(s.Name, elems)
 			return series, nil
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
 			case "string":
-				return Bools(), errors.New("Wrong Series type for subsetting")
+				return NamedBools(s.Name), errors.New("Wrong Series type for subsetting")
 			case "bool":
 				if Len(idx) != Len(s) {
-					return Bools(), errors.New("Dimensions mismatch")
+					return NamedBools(s.Name), errors.New("Dimensions mismatch")
 				}
 				boolElems := idx.Elements.(BoolElements)
 				var elems BoolElements
 				for k, v := range boolElems {
 					b := v.Bool()
 					if b == nil {
-						return Bools(), errors.New("Can't subset over NA elements")
+						return NamedBools(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *b {
 						elems = append(elems, elements[k])
 					}
 				}
-				series := Bools(elems)
+				series := NamedBools(s.Name, elems)
 				return series, nil
 			case "int":
 				elems := BoolElements{}
@@ -321,14 +321,14 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Bools(), errors.New("Can't subset over NA elements")
+						return NamedBools(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Bools(), errors.New("Index out of range")
+						return NamedBools(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Bools(elems)
+				series := NamedBools(s.Name, elems)
 				return series, nil
 			case "float":
 				elems := BoolElements{}
@@ -336,21 +336,21 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 				for _, v := range intElems {
 					i := v.Int()
 					if i == nil {
-						return Bools(), errors.New("Can't subset over NA elements")
+						return NamedBools(s.Name), errors.New("Can't subset over NA elements")
 					}
 					if *i >= len(elements) || *i < 0 {
-						return Bools(), errors.New("Index out of range")
+						return NamedBools(s.Name), errors.New("Index out of range")
 					}
 					elems = append(elems, elements[*i])
 				}
-				series := Bools(elems)
+				series := NamedBools(s.Name, elems)
 				return series, nil
 			}
 		default:
-			return Bools(), errors.New("Unknown indexing mode")
+			return NamedBools(s.Name), errors.New("Unknown indexing mode")
 		}
 	}
-	return Strings(), errors.New("Unknown Series type")
+	return NamedStrings(s.Name), errors.New("Unknown Series type")
 }
 
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {

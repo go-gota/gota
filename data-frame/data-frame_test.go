@@ -1,6 +1,7 @@
 package df
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -48,5 +49,14 @@ func TestDataFrame_Copy(t *testing.T) {
 	b := a.Copy()
 	if a.columns[0].Elements.(StringElements)[0] == b.columns[0].Elements.(StringElements)[0] {
 		t.Error("Copy error: The memory address should be different even if the content is the same")
+	}
+}
+
+func TestDataFrame_Subset(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Subset([]int{2, 3})
+	for k := range b.columns {
+		fmt.Println(Str(b.columns[k]))
+		fmt.Println("--------------")
 	}
 }
