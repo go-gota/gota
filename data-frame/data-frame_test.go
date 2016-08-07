@@ -319,3 +319,28 @@ func TestDataFrame_Filter(t *testing.T) {
 		t.Error("Expected Nrow=1, got ", b.Nrow())
 	}
 }
+
+func TestDataFrame_ReadMaps(t *testing.T) {
+	var m []map[string]interface{}
+	one := make(map[string]interface{})
+	one["Age"] = 23
+	one["Name"] = "Alice"
+	one["Credit"] = 12.10
+	two := make(map[string]interface{})
+	two["Age"] = 32
+	two["Name"] = "Bob"
+	two["Credit"] = 15.1
+	three := make(map[string]interface{})
+	three["Age"] = 41
+	three["Name"] = "Daniel"
+	three["Credit"] = 16.2
+	m = []map[string]interface{}{
+		one,
+		two,
+		three,
+	}
+	b := ReadMaps(m)
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+}

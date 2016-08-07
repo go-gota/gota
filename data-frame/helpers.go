@@ -4,6 +4,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 func transposeRecords(x [][]string) [][]string {
@@ -24,15 +25,15 @@ func transposeRecords(x [][]string) [][]string {
 }
 
 func addRightPadding(s string, nchar int) string {
-	if len(s) < nchar {
-		return s + strings.Repeat(" ", nchar-len(s))
+	if utf8.RuneCountInString(s) < nchar {
+		return s + strings.Repeat(" ", nchar-utf8.RuneCountInString(s))
 	}
 	return s
 }
 
 func addLeftPadding(s string, nchar int) string {
-	if len(s) < nchar {
-		return strings.Repeat(" ", nchar-len(s)) + s
+	if utf8.RuneCountInString(s) < nchar {
+		return strings.Repeat(" ", nchar-utf8.RuneCountInString(s)) + s
 	}
 	return s
 }
