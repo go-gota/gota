@@ -3,6 +3,8 @@ package df
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 // DataFrame is the base data structure
@@ -253,113 +255,49 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
-// TODO: Base String() into the [][]string records representation
+// String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
-	// TODO: We should truncate the maximum length of shown columns and scape newline
-	// characters'
-	//addLeftPadding := func(s string, nchar int) string {
-	//if len(s) < nchar {
-	//return strings.Repeat(" ", nchar-len(s)) + s
-	//}
-	//return s
-	//}
-	//addRightPadding := func(s string, nchar int) string {
-	//if len(s) < nchar {
-	//return s + strings.Repeat(" ", nchar-len(s))
-	//}
-	//return s
-	//}
-	//getNumChars := func(s Series) int {
-	//switch s.t {
-	//case "string":
-	//elems := s.Elements.(StringElements)
-	//maxLen := 0
-	//for _, v := range elems {
-	//l := len(v.String())
-	//if l > maxLen {
-	//maxLen = l
-	//}
-	//}
-	//return maxLen
-	//case "int":
-	//elems := s.Elements.(IntElements)
-	//maxLen := 0
-	//for _, v := range elems {
-	//l := len(v.String())
-	//if l > maxLen {
-	//maxLen = l
-	//}
-	//}
-	//return maxLen
-	//case "float":
-	//elems := s.Elements.(FloatElements)
-	//maxLen := 0
-	//for _, v := range elems {
-	//l := len(v.String())
-	//if l > maxLen {
-	//maxLen = l
-	//}
-	//}
-	//return maxLen
-	//case "bool":
-	//elems := s.Elements.(BoolElements)
-	//maxLen := 0
-	//for _, v := range elems {
-	//l := len(v.String())
-	//if l > maxLen {
-	//maxLen = l
-	//}
-	//}
-	//return maxLen
-	//default:
-	//return 0
-	//}
-	//return 0
-	//}
+	addRightPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return s + strings.Repeat(" ", nchar-len(s))
+		}
+		return s
+	}
+	addLeftPadding := func(s string, nchar int) string {
+		if len(s) < nchar {
+			return strings.Repeat(" ", nchar-len(s)) + s
+		}
+		return s
+	}
+	records := df.SaveRecords()
+	// Add the row numbers
+	for i := 0; i < df.nrows+1; i++ {
+		add := ""
+		if i != 0 {
+			add = strconv.Itoa(i) + ":"
+		}
+		records[i] = append([]string{add}, records[i]...)
+	}
 
-	//nRowsPadding := len(fmt.Sprint(df.nrows))
-	////if len(df.colNames) != 0 {
-	//str += addLeftPadding("  ", nRowsPadding+2)
-	//var numChars []int
-	//for k, v := range df.colnames {
-	//nc := getNumChars(df.columns[k])
-	//numChars = append(numChars, nc)
-	//str += addRightPadding(v, nc)
-	//str += "  "
-	//}
-	//str += "\n"
-	//str += "\n"
-	////}
-	//for i := 0; i < df.nrows; i++ {
-	//str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
-	//for k, s := range df.columns {
-	//switch s.t {
-	//case "string":
-	//elems := s.Elements.(StringElements)
-	//elem := elems[i]
-	//str += addRightPadding(elem.String(), numChars[k])
-	//str += "  "
-	//case "int":
-	//elems := s.Elements.(IntElements)
-	//elem := elems[i]
-	//str += addRightPadding(elem.String(), numChars[k])
-	//str += "  "
-	//case "float":
-	//elems := s.Elements.(FloatElements)
-	//elem := elems[i]
-	//str += addRightPadding(elem.String(), numChars[k])
-	//str += "  "
-	//case "bool":
-	//elems := s.Elements.(BoolElements)
-	//elem := elems[i]
-	//str += addRightPadding(elem.String(), numChars[k])
-	//str += "  "
-	//default:
-	//}
-	//}
-	//str += "\n"
-	//}
-
+	// Get the maximum number of characters per column
+	maxChars := make([]int, df.ncols+1)
+	for i := 0; i < df.nrows+1; i++ {
+		for j := 0; j < df.ncols+1; j++ {
+			if len(records[i][j]) > maxChars[j] {
+				maxChars[j] = len(records[i][j])
+			}
+		}
+	}
+	for i := 0; i < df.nrows+1; i++ {
+		// Add right padding to all elements
+		records[i][0] = addLeftPadding(records[i][0], maxChars[0]+1)
+		for j := 1; j < df.ncols+1; j++ {
+			records[i][j] = addRightPadding(records[i][j], maxChars[j])
+		}
+		// Create the final string
+		str += strings.Join(records[i], " ")
+		str += "\n"
+	}
 	return str
 }
 
