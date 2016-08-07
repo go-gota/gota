@@ -207,6 +207,17 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
+func (df DataFrame) CBind(newdf DataFrame) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	if newdf.Err() != nil {
+		return newdf
+	}
+	cols := append(df.columns, newdf.columns...)
+	return New(cols...)
+}
+
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
