@@ -154,3 +154,48 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 		)
 	}
 }
+func TestDataFrame_ReadRecords(t *testing.T) {
+	records := [][]string{
+		[]string{"COL.1", "COL.2", "COL.3"},
+		[]string{"a", "true", "3.1"},
+		[]string{"b", "false", "2"},
+		[]string{"c", "1", "1"},
+	}
+	a := ReadRecords(records)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "int")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "string")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "float")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "bool")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "blaaah")
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadRecords(records, []string{"string", "int"}...)
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadRecords(records, []string{"string", "int", "float"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, []string{"string", "bool", "int"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: Add tests for auto-parsing
+}

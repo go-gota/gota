@@ -257,6 +257,14 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
+	if df.Err() != nil {
+		str = "Empty DataFrame:" + df.Err().Error()
+		return
+	}
+	if df.nrows == 0 {
+		str = "Empty DataFrame..."
+		return
+	}
 	records := df.SaveRecords()
 	// Add the row numbers
 	for i := 0; i < df.nrows+1; i++ {
@@ -303,16 +311,123 @@ func (df DataFrame) SaveRecords() [][]string {
 	return records
 }
 
+func ReadRecords(records [][]string, types ...string) DataFrame {
+	if types != nil && len(types) != 0 {
+		if len(records) == 0 {
+			return DataFrame{
+				err: errors.New("Empty records"),
+			}
+		}
+		colnames := records[0]
+
+		// Empty String only columns
+		if len(records) == 1 {
+			var columns []Series
+			for _, v := range colnames {
+				columns = append(columns, NamedStrings(v, nil))
+				fmt.Println(columns)
+			}
+			return New(columns...)
+		}
+
+		records = transposeRecords(records[1:])
+		if len(types) == 1 {
+			t := types[0]
+			var columns []Series
+			switch t {
+			case "string":
+				for i, colname := range colnames {
+					col := records[i]
+					columns = append(columns, NamedStrings(colname, col))
+				}
+				return New(columns...)
+			case "int":
+				for i, colname := range colnames {
+					col := records[i]
+					columns = append(columns, NamedInts(colname, col))
+				}
+				return New(columns...)
+			case "float":
+				for i, colname := range colnames {
+					col := records[i]
+					columns = append(columns, NamedFloats(colname, col))
+				}
+				return New(columns...)
+			case "bool":
+				for i, colname := range colnames {
+					col := records[i]
+					columns = append(columns, NamedBools(colname, col))
+				}
+				return New(columns...)
+			default:
+				return DataFrame{
+					err: errors.New("Unknown type given"),
+				}
+			}
+		}
+		if len(types) != len(colnames) {
+			return DataFrame{
+				err: errors.New("Records and types array have different dimensions"),
+			}
+		}
+		var columns []Series
+		for i, colname := range colnames {
+			t := types[i]
+			switch t {
+			case "string":
+				col := records[i]
+				columns = append(columns, NamedStrings(colname, col))
+			case "int":
+				col := records[i]
+				columns = append(columns, NamedInts(colname, col))
+			case "float":
+				col := records[i]
+				columns = append(columns, NamedFloats(colname, col))
+			case "bool":
+				col := records[i]
+				columns = append(columns, NamedBools(colname, col))
+			default:
+				return DataFrame{
+					err: errors.New("Unknown type given"),
+				}
+			}
+		}
+		return New(columns...)
+	}
+	if len(records) == 0 {
+		return DataFrame{
+			err: errors.New("Can't parse empty records array"),
+		}
+	}
+
+	colnames := records[0]
+	// Empty String only columns
+	if len(records) == 1 {
+		var columns []Series
+		for _, v := range colnames {
+			columns = append(columns, NamedStrings(v, nil))
+		}
+		return New(columns...)
+	}
+
+	// TODO: Instead of using Strings by default, parse each column to identify the type
+	records = transposeRecords(records[1:])
+	var columns []Series
+	for i, colname := range colnames {
+		col := records[i]
+		columns = append(columns, NamedStrings(colname, col))
+	}
+	return New(columns...)
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: Dim(DataFrame) ([2]int)
 // TODO: Nrows(DataFrame) (int)
 // TODO: Ncols(DataFrame) (int)
-// TODO: ReadRecords([][]string) (DataFrame, err)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
 // TODO: ReadCSV(string) (DataFrame, err)
 // TODO: ReadJSON(string) (DataFrame, err)
-// TODO: ParseRecords([][]string, types) (DataFrame, err)
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
 // TODO: ParseCSV(string, types) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
@@ -326,3 +441,5 @@ func (df DataFrame) SaveRecords() [][]string {
 // TODO: UniqueRows?
 // TODO: UniqueColumns?
 // TODO: Joins: Inner/Outer/Right/Left all.x? all.y?
+// TODO: (df DataFrame) Series(colname string, index interface{}...) (string)
+// TODO: ChangeType(DataFrame, types) (DataFrame, err) // Parse columns again
