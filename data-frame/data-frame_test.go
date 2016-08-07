@@ -10,11 +10,11 @@ func TestDataFrame_New(t *testing.T) {
 	if err == nil {
 		t.Error("Expected error, got success")
 	}
-	a, err := New(Strings("b", "a"), Ints(1, 2), Floats(3.0, 4.0))
+	a, err := New(Strings("b", "a"), NamedInts("Y", 1, 2), Floats(3.0, 4.0))
 	if err != nil {
 		t.Error("Expected success, got error")
 	}
-	expectedNames := []string{"X0", "X1", "X2"}
+	expectedNames := []string{"X0", "Y", "X1"}
 	receivedNames := a.colnames
 	if !reflect.DeepEqual(expectedNames, receivedNames) {
 		t.Error(
