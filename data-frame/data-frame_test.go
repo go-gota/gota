@@ -1,7 +1,6 @@
 package df
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -55,8 +54,24 @@ func TestDataFrame_Copy(t *testing.T) {
 func TestDataFrame_Subset(t *testing.T) {
 	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
 	b := a.Subset([]int{2, 3})
-	for k := range b.columns {
-		fmt.Println(Str(b.columns[k]))
-		fmt.Println("--------------")
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
 	}
+	b = a.Subset([]bool{true, false, false, true})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Ints(1, 2, 3))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Bools(1, 0, 0, 0))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Ints(1, 2, 3)).Subset([]int{0})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
 }

@@ -121,52 +121,21 @@ func (df DataFrame) Copy() DataFrame {
 	return copy
 }
 
+// Subsets the DataFrame based on the Series subsetting rules
 func (df DataFrame) Subset(indexes interface{}) DataFrame {
 	if df.Err() != nil {
 		return df
 	}
-	switch indexes.(type) {
-	case []int:
-		for _, v := range indexes.([]int) {
-			if v >= df.nrows || v < 0 {
-				return DataFrame{err: errors.New("Index out of range")}
-			}
+	var columnsSubset []Series
+	for _, column := range df.columns {
+		columnSubset, err := column.Subset(indexes)
+		if err != nil {
+			return DataFrame{err: err}
 		}
-		var columnsSubset []Series
-		for _, column := range df.columns {
-			columnSubset, err := column.Subset(indexes)
-			if err != nil {
-				return DataFrame{err: err}
-			}
-			columnsSubset = append(columnsSubset, columnSubset)
-		}
-		return New(columnsSubset...)
-	case []bool:
-	case Series:
-		idx := indexes.(Series)
-		switch idx.t {
-		case "string":
-		case "bool":
-		case "int":
-		case "float":
-		}
-	default:
-		return DataFrame{err: errors.New("Unknown indexing mode")}
+		columnsSubset = append(columnsSubset, columnSubset)
 	}
-	return df.Copy()
+	return New(columnsSubset...)
 }
-
-//func (df DataFrame) Filter(
-//colname string,
-//comparator string,
-//comparando interface{},
-//) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//copy := df.Copy()
-//return copy
-//}
 
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
@@ -188,8 +157,8 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 // TODO: SaveJSON(DataFrame) (string) // Bytes?
 // TODO: Rbind(DataFrame, DataFrame) (DataFrame, err)
 // TODO: Cbind(DataFrame, DataFrame) (DataFrame, err)
-// TODO: dplyr-ish: SubsetRows(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
-// TODO: dplyr-ish: SubsetColumns(DataFrame, subset interface) (DataFrame, err) // AKA: Select
+// TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
+// TODO: dplyr-ish: Select(DataFrame, subset interface) (DataFrame, err) // AKA: Select
 // TODO: dplyr-ish: Mutate ?
 // TODO: dplyr-ish: Rename ?
 // TODO: dplyr-ish: Group_By ?
