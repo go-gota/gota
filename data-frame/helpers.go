@@ -1,5 +1,7 @@
 package df
 
+import "strings"
+
 func transposeRecords(x [][]string) [][]string {
 	n := len(x)
 	if n == 0 {
@@ -15,4 +17,18 @@ func transposeRecords(x [][]string) [][]string {
 		y[i] = z
 	}
 	return y
+}
+
+func addRightPadding(s string, nchar int) string {
+	if len(s) < nchar {
+		return s + strings.Repeat(" ", nchar-len(s))
+	}
+	return s
+}
+
+func addLeftPadding(s string, nchar int) string {
+	if len(s) < nchar {
+		return strings.Repeat(" ", nchar-len(s)) + s
+	}
+	return s
 }

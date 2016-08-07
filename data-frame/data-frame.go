@@ -257,18 +257,6 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
-	addRightPadding := func(s string, nchar int) string {
-		if len(s) < nchar {
-			return s + strings.Repeat(" ", nchar-len(s))
-		}
-		return s
-	}
-	addLeftPadding := func(s string, nchar int) string {
-		if len(s) < nchar {
-			return strings.Repeat(" ", nchar-len(s)) + s
-		}
-		return s
-	}
 	records := df.SaveRecords()
 	// Add the row numbers
 	for i := 0; i < df.nrows+1; i++ {
@@ -315,7 +303,6 @@ func (df DataFrame) SaveRecords() [][]string {
 	return records
 }
 
-// TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: Dim(DataFrame) ([2]int)
