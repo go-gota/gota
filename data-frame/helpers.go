@@ -1,6 +1,7 @@
 package df
 
 import (
+	"math"
 	"strconv"
 	"strings"
 )
@@ -69,4 +70,37 @@ func findType(arr []string) string {
 		return "bool"
 	}
 	return "string"
+}
+
+func Range(start, end int) []int {
+	if start > end {
+		start, end = end, start
+	}
+	var arr []int
+	for i := start; i <= end; i++ {
+		arr = append(arr, i)
+	}
+	return arr
+}
+
+func Seq(start, end, step int) []int {
+	if start > end {
+		start, end = end, start
+	}
+	if step == 0 {
+		return []int{}
+	}
+	var arr []int
+	if step < 0 {
+		step = int(math.Abs(float64(step)))
+		for i := end; i >= start; i = i - step {
+			arr = append(arr, i)
+		}
+		return arr
+	} else {
+		for i := start; i <= end; i = i + step {
+			arr = append(arr, i)
+		}
+		return arr
+	}
 }

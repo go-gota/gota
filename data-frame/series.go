@@ -377,6 +377,7 @@ func (s Series) Subset(indexes interface{}) (Series, error) {
 	return NamedStrings(s.Name), errors.New("Unknown Series type")
 }
 
+// TODO: Return a Bools Series instead of []bool?
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
 	// TODO: What to do in case of NAs?
 	switch s.t {

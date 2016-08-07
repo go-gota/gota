@@ -197,5 +197,4 @@ func TestDataFrame_ReadRecords(t *testing.T) {
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	// TODO: Add tests for auto-parsing
 }
