@@ -1,6 +1,9 @@
 package df
 
 import (
+	"bytes"
+	"encoding/csv"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strconv"
@@ -494,6 +497,30 @@ func (df DataFrame) SaveMaps() []map[string]interface{} {
 	return maps
 }
 
+func (df DataFrame) SaveCSV() ([]byte, error) {
+	if df.Err() != nil {
+		return nil, df.Err()
+	}
+	records := df.SaveRecords()
+	b := &bytes.Buffer{}
+	w := csv.NewWriter(b)
+	for _, record := range records {
+		if err := w.Write(record); err != nil {
+			return nil, err
+		}
+	}
+	w.Flush()
+	return b.Bytes(), nil
+}
+
+func (df DataFrame) SaveJSON() ([]byte, error) {
+	if df.Err() != nil {
+		return nil, df.Err()
+	}
+	m := df.SaveMaps()
+	return json.Marshal(m)
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
@@ -502,9 +529,6 @@ func (df DataFrame) SaveMaps() []map[string]interface{} {
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
 // TODO: ParseCSV(string, types) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
-// TODO: SaveMaps(DataFrame) (map[string]interface)
-// TODO: SaveCSV(DataFrame) (string) // Bytes?
-// TODO: SaveJSON(DataFrame) (string) // Bytes?
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
 // TODO: dplyr-ish: Mutate ?
 // TODO: dplyr-ish: Group_By ?
