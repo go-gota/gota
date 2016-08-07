@@ -301,3 +301,21 @@ func TestDataFrame_Mutate(t *testing.T) {
 		t.Error("Expected success, got error")
 	}
 }
+
+func TestDataFrame_Filter(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := a.Filter(
+		F{"Age", "<", 30},
+		F{"Age", ">", 40},
+	).Filter(F{"Names", "==", "Alice"})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	if b.Nrow() != 1 {
+		t.Error("Expected Nrow=1, got ", b.Nrow())
+	}
+}

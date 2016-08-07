@@ -619,13 +619,60 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 	return New(newSeries...)
 }
 
+type F struct {
+	Colname    string
+	Comparator string
+	Comparando interface{}
+}
+
+func (df DataFrame) Filter(filters ...F) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	var compResults [][]bool
+	for _, f := range filters {
+		if exists, idx := strInsideSliceIdx(f.Colname, df.colnames); exists {
+			res, err := df.columns[idx].Compare(f.Comparator, f.Comparando)
+			if err != nil {
+				return DataFrame{
+					err: err,
+				}
+			}
+			compResults = append(compResults, res)
+		} else {
+			return DataFrame{
+				err: errors.New("The given colname doesn't exist"),
+			}
+		}
+	}
+	// Join compResults via "OR"
+	if len(compResults) == 0 {
+		return df.Copy()
+	}
+	res := compResults[0]
+	for i := 1; i < len(compResults); i++ {
+		nextRes := compResults[i]
+		for j := 0; j < len(res); j++ {
+			res[j] = res[j] || nextRes[j]
+		}
+	}
+	return df.Subset(res)
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
-// TODO: ReadJSON(string) (DataFrame, err)
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
+// TODO: ReadJSON(string) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
-// TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
 // TODO: dplyr-ish: Group_By ?
 // TODO: Compare?
 // TODO: UniqueRows?
