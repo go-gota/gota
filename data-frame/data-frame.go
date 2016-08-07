@@ -142,6 +142,7 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 
 // Select the given DataFrame columns
 func (df DataFrame) Select(colnames []string) DataFrame {
+	// TODO: Expand to accept []int, []bool and Series
 	if df.Err() != nil {
 		return df
 	}
@@ -207,6 +208,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
+// TODO: Expand to accept DataFrames, Series, and potentially other objects
 func (df DataFrame) CBind(newdf DataFrame) DataFrame {
 	if df.Err() != nil {
 		return df
@@ -218,6 +220,7 @@ func (df DataFrame) CBind(newdf DataFrame) DataFrame {
 	return New(cols...)
 }
 
+// TODO: Expand to accept DataFrames, Series, and potentially other objects
 func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 	if df.Err() != nil {
 		return df
@@ -250,6 +253,130 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// TODO: Base String() into the [][]string records representation
+func (df DataFrame) String() (str string) {
+	// TODO: We should truncate the maximum length of shown columns and scape newline
+	// characters'
+	//addLeftPadding := func(s string, nchar int) string {
+	//if len(s) < nchar {
+	//return strings.Repeat(" ", nchar-len(s)) + s
+	//}
+	//return s
+	//}
+	//addRightPadding := func(s string, nchar int) string {
+	//if len(s) < nchar {
+	//return s + strings.Repeat(" ", nchar-len(s))
+	//}
+	//return s
+	//}
+	//getNumChars := func(s Series) int {
+	//switch s.t {
+	//case "string":
+	//elems := s.Elements.(StringElements)
+	//maxLen := 0
+	//for _, v := range elems {
+	//l := len(v.String())
+	//if l > maxLen {
+	//maxLen = l
+	//}
+	//}
+	//return maxLen
+	//case "int":
+	//elems := s.Elements.(IntElements)
+	//maxLen := 0
+	//for _, v := range elems {
+	//l := len(v.String())
+	//if l > maxLen {
+	//maxLen = l
+	//}
+	//}
+	//return maxLen
+	//case "float":
+	//elems := s.Elements.(FloatElements)
+	//maxLen := 0
+	//for _, v := range elems {
+	//l := len(v.String())
+	//if l > maxLen {
+	//maxLen = l
+	//}
+	//}
+	//return maxLen
+	//case "bool":
+	//elems := s.Elements.(BoolElements)
+	//maxLen := 0
+	//for _, v := range elems {
+	//l := len(v.String())
+	//if l > maxLen {
+	//maxLen = l
+	//}
+	//}
+	//return maxLen
+	//default:
+	//return 0
+	//}
+	//return 0
+	//}
+
+	//nRowsPadding := len(fmt.Sprint(df.nrows))
+	////if len(df.colNames) != 0 {
+	//str += addLeftPadding("  ", nRowsPadding+2)
+	//var numChars []int
+	//for k, v := range df.colnames {
+	//nc := getNumChars(df.columns[k])
+	//numChars = append(numChars, nc)
+	//str += addRightPadding(v, nc)
+	//str += "  "
+	//}
+	//str += "\n"
+	//str += "\n"
+	////}
+	//for i := 0; i < df.nrows; i++ {
+	//str += addLeftPadding(strconv.Itoa(i)+": ", nRowsPadding+2)
+	//for k, s := range df.columns {
+	//switch s.t {
+	//case "string":
+	//elems := s.Elements.(StringElements)
+	//elem := elems[i]
+	//str += addRightPadding(elem.String(), numChars[k])
+	//str += "  "
+	//case "int":
+	//elems := s.Elements.(IntElements)
+	//elem := elems[i]
+	//str += addRightPadding(elem.String(), numChars[k])
+	//str += "  "
+	//case "float":
+	//elems := s.Elements.(FloatElements)
+	//elem := elems[i]
+	//str += addRightPadding(elem.String(), numChars[k])
+	//str += "  "
+	//case "bool":
+	//elems := s.Elements.(BoolElements)
+	//elem := elems[i]
+	//str += addRightPadding(elem.String(), numChars[k])
+	//str += "  "
+	//default:
+	//}
+	//}
+	//str += "\n"
+	//}
+
+	return str
+}
+
+func (df DataFrame) SaveRecords() [][]string {
+	var records [][]string
+	records = append(records, df.colnames)
+	if df.ncols == 0 || df.nrows == 0 {
+		return records
+	}
+	var tRecords [][]string
+	for _, col := range df.columns {
+		tRecords = append(tRecords, col.Records())
+	}
+	records = append(records, transposeRecords(tRecords)...)
+	return records
+}
+
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
@@ -264,7 +391,6 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
 // TODO: ParseCSV(string, types) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
-// TODO: SaveRecords(DataFrame) ([][]string)
 // TODO: SaveMaps(DataFrame) (map[string]interface)
 // TODO: SaveCSV(DataFrame) (string) // Bytes?
 // TODO: SaveJSON(DataFrame) (string) // Bytes?

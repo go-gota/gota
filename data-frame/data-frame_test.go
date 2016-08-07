@@ -136,3 +136,21 @@ func TestDataFrame_RBind(t *testing.T) {
 	}
 	// TODO: More error checking, this is not exhaustive enough
 }
+
+func TestDataFrame_SaveRecords(t *testing.T) {
+	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
+	expected := [][]string{
+		[]string{"COL.1", "COL.2", "COL.3"},
+		[]string{"a", "1", "3"},
+		[]string{"b", "2", "2"},
+		[]string{"c", "3", "1"},
+	}
+	received := a.SaveRecords()
+	if !reflect.DeepEqual(expected, received) {
+		t.Error(
+			"Error when saving records.\n",
+			"Expected: ", expected, "\n",
+			"Received: ", received,
+		)
+	}
+}

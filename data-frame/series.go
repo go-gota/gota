@@ -19,6 +19,7 @@ type Series struct {
 type Elements interface {
 	String() string
 	Copy() Elements
+	Records() []string
 }
 
 func (s Series) Err() error {
@@ -1066,36 +1067,56 @@ type IntElements []Int
 type FloatElements []Float
 type BoolElements []Bool
 
+// All Records() methods
+// ====================
+
+func (s Series) Records() []string {
+	return s.Elements.Records()
+}
+
+func (s StringElements) Records() []string {
+	arr := []string{}
+	for _, v := range s {
+		arr = append(arr, v.String())
+	}
+	return arr
+}
+func (s IntElements) Records() []string {
+	arr := []string{}
+	for _, v := range s {
+		arr = append(arr, v.String())
+	}
+	return arr
+}
+func (s FloatElements) Records() []string {
+	arr := []string{}
+	for _, v := range s {
+		arr = append(arr, v.String())
+	}
+	return arr
+}
+func (s BoolElements) Records() []string {
+	arr := []string{}
+	for _, v := range s {
+		arr = append(arr, v.String())
+	}
+	return arr
+}
+
 // All String() methods
 // ====================
 
 func (s StringElements) String() string {
-	str := []string{}
-	for _, v := range s {
-		str = append(str, v.String())
-	}
-	return strings.Join(str, " ")
+	return strings.Join(s.Records(), " ")
 }
 func (s IntElements) String() string {
-	str := []string{}
-	for _, v := range s {
-		str = append(str, v.String())
-	}
-	return strings.Join(str, " ")
+	return strings.Join(s.Records(), " ")
 }
 func (s FloatElements) String() string {
-	str := []string{}
-	for _, v := range s {
-		str = append(str, v.String())
-	}
-	return strings.Join(str, " ")
+	return strings.Join(s.Records(), " ")
 }
 func (s BoolElements) String() string {
-	str := []string{}
-	for _, v := range s {
-		str = append(str, v.String())
-	}
-	return strings.Join(str, " ")
+	return strings.Join(s.Records(), " ")
 }
 
 func (s String) String() string {
