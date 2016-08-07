@@ -6,12 +6,12 @@ import (
 )
 
 func TestDataFrame_New(t *testing.T) {
-	_, err := New(Strings("b"), Ints(1, 2))
-	if err == nil {
+	a := New(Strings("b"), Ints(1, 2))
+	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a, err := New(Strings("b", "a"), NamedInts("Y", 1, 2), Floats(3.0, 4.0))
-	if err != nil {
+	a = New(Strings("b", "a"), NamedInts("Y", 1, 2), Floats(3.0, 4.0))
+	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
 	expectedNames := []string{"X0", "Y", "X1"}
@@ -37,8 +37,8 @@ func TestDataFrame_New(t *testing.T) {
 	// TODO: Check that df.colnames == columns.colnames
 	// TODO: Check that the address of the columns are different that of the original series
 	// TODO: Check that dimensions match
-	_, err = New()
-	if err == nil {
+	a = New()
+	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
 }

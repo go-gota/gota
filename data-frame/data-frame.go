@@ -12,12 +12,19 @@ type DataFrame struct {
 	coltypes []string
 	ncols    int
 	nrows    int
+	err      error // TODO: Define custom error data type
+}
+
+func (df DataFrame) Err() error {
+	return df.err
 }
 
 // New is a constructor for DataFrames
-func New(series ...Series) (DataFrame, error) {
+func New(series ...Series) DataFrame {
 	if series == nil || len(series) == 0 {
-		return DataFrame{}, errors.New("No arguments given, returning empty DataFrame")
+		return DataFrame{
+			err: errors.New("No arguments given, returning empty DataFrame"),
+		}
 	}
 	allEqual := true
 	lastLength := 0
@@ -33,7 +40,9 @@ func New(series ...Series) (DataFrame, error) {
 		if k > 0 {
 			allEqual = l == lastLength
 			if !allEqual {
-				return DataFrame{}, errors.New("Series have different dimensions")
+				return DataFrame{
+					err: errors.New("Series have different dimensions"),
+				}
 			}
 		}
 		lastLength = l
@@ -102,8 +111,9 @@ func New(series ...Series) (DataFrame, error) {
 		coltypes: coltypes,
 		ncols:    len(series),
 		nrows:    lastLength,
+		err:      nil,
 	}
-	return df, nil
+	return df
 }
 
 // TODO: (df DataFrame) String() (string)
