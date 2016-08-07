@@ -1,6 +1,9 @@
 package df
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 func transposeRecords(x [][]string) [][]string {
 	n := len(x)
@@ -31,4 +34,39 @@ func addLeftPadding(s string, nchar int) string {
 		return strings.Repeat(" ", nchar-len(s)) + s
 	}
 	return s
+}
+
+func findType(arr []string) string {
+	hasFloats := false
+	hasInts := false
+	hasBools := false
+	hasStrings := false
+	for _, str := range arr {
+		if _, err := strconv.Atoi(str); err == nil {
+			hasInts = true
+			continue
+		}
+		if _, err := strconv.ParseFloat(str, 64); err == nil {
+			hasFloats = true
+			continue
+		}
+		if str == "true" || str == "false" {
+			hasBools = true
+			continue
+		}
+		if str == "" || str == "NA" {
+			continue
+		}
+		hasStrings = true
+	}
+	if hasFloats && !hasBools && !hasStrings {
+		return "float"
+	}
+	if hasInts && !hasFloats && !hasBools && !hasStrings {
+		return "int"
+	}
+	if !hasInts && !hasFloats && hasBools && !hasStrings {
+		return "bool"
+	}
+	return "string"
 }

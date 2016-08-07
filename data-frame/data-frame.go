@@ -373,18 +373,15 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 		var columns []Series
 		for i, colname := range colnames {
 			t := types[i]
+			col := records[i]
 			switch t {
 			case "string":
-				col := records[i]
 				columns = append(columns, NamedStrings(colname, col))
 			case "int":
-				col := records[i]
 				columns = append(columns, NamedInts(colname, col))
 			case "float":
-				col := records[i]
 				columns = append(columns, NamedFloats(colname, col))
 			case "bool":
-				col := records[i]
 				columns = append(columns, NamedBools(colname, col))
 			default:
 				return DataFrame{
@@ -410,12 +407,26 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 		return New(columns...)
 	}
 
-	// TODO: Instead of using Strings by default, parse each column to identify the type
+	// If no type is given, try to auto-identify it
 	records = transposeRecords(records[1:])
 	var columns []Series
 	for i, colname := range colnames {
 		col := records[i]
-		columns = append(columns, NamedStrings(colname, col))
+		t := findType(col)
+		switch t {
+		case "string":
+			columns = append(columns, NamedStrings(colname, col))
+		case "int":
+			columns = append(columns, NamedInts(colname, col))
+		case "float":
+			columns = append(columns, NamedFloats(colname, col))
+		case "bool":
+			columns = append(columns, NamedBools(colname, col))
+		default:
+			return DataFrame{
+				err: errors.New("Unknown type given"),
+			}
+		}
 	}
 	return New(columns...)
 }

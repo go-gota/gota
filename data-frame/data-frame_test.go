@@ -157,9 +157,9 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 func TestDataFrame_ReadRecords(t *testing.T) {
 	records := [][]string{
 		[]string{"COL.1", "COL.2", "COL.3"},
-		[]string{"a", "true", "3.1"},
+		[]string{"a", "true", "3"},
 		[]string{"b", "false", "2"},
-		[]string{"c", "1", "1"},
+		[]string{"1", "", "1.1"},
 	}
 	a := ReadRecords(records)
 	if a.Err() != nil {
