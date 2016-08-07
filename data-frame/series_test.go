@@ -705,7 +705,7 @@ func TestCopy(t *testing.T) {
 			"Same memory address when copying String elements",
 		)
 	}
-	a.Name = "String.Series"
+	a = NamedStrings("Name!", 1, 2, 3, "a", "b", "c")
 	c = a.Copy()
 	if a.Name != c.Name {
 		t.Error(
@@ -732,6 +732,13 @@ func TestCopy(t *testing.T) {
 			"Same memory address when copying Int elements",
 		)
 	}
+	a = NamedInts("Name!", 1, 2, 3, "a", "b", "c")
+	c = a.Copy()
+	if a.Name != c.Name {
+		t.Error(
+			"Series names are different when copying",
+		)
+	}
 
 	a = Floats(1, 2, 3, 0.1, 0.2)
 	b = a
@@ -752,6 +759,13 @@ func TestCopy(t *testing.T) {
 			"Same memory address when copying Float elements",
 		)
 	}
+	a = NamedFloats("Name!", 1, 2, 3, "a", "b", "c")
+	c = a.Copy()
+	if a.Name != c.Name {
+		t.Error(
+			"Series names are different when copying",
+		)
+	}
 
 	a = Bools(true, false, 1, 0)
 	b = a
@@ -770,6 +784,13 @@ func TestCopy(t *testing.T) {
 	if reflect.DeepEqual(Addr(a), Addr(c)) {
 		t.Error(
 			"Same memory address when copying Bool elements",
+		)
+	}
+	a = NamedBools("Name!", true, false, 1, 0)
+	c = a.Copy()
+	if a.Name != c.Name {
+		t.Error(
+			"Series names are different when copying",
 		)
 	}
 }

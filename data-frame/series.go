@@ -1346,6 +1346,35 @@ func (s BoolElements) Copy() Elements {
 
 // Constructors
 // ============
+
+// NamedStrings is a constructor for a named String series
+func NamedStrings(name string, args ...interface{}) Series {
+	s := Strings(args)
+	s.Name = name
+	return s
+}
+
+// NamedInts is a constructor for a named Int series
+func NamedInts(name string, args ...interface{}) Series {
+	s := Ints(args)
+	s.Name = name
+	return s
+}
+
+// NamedFloats is a constructor for a named Float series
+func NamedFloats(name string, args ...interface{}) Series {
+	s := Floats(args)
+	s.Name = name
+	return s
+}
+
+// NamedBools is a constructor for a named Bool series
+func NamedBools(name string, args ...interface{}) Series {
+	s := Bools(args)
+	s.Name = name
+	return s
+}
+
 // Strings is a constructor for a String series
 func Strings(args ...interface{}) Series {
 	elements := make(StringElements, 0, len(args))
