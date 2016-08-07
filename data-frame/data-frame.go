@@ -116,6 +116,16 @@ func New(series ...Series) DataFrame {
 	return df
 }
 
+func (df DataFrame) Copy() DataFrame {
+	copy := New(df.columns...)
+	return copy
+}
+
+//func (df DataFrame) Filter(params) DataFrame {
+//copy := df.Copy()
+//return copy
+//}
+
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
