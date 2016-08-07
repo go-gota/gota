@@ -540,6 +540,7 @@ func (df DataFrame) SaveJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// TODO: Accept also an int with the position of the Series
 func (df DataFrame) Col(colname string) Series {
 	if df.Err() != nil {
 		return Series{err: df.Err()}
@@ -564,6 +565,60 @@ func (df DataFrame) Col(colname string) Series {
 	return ret
 }
 
+func (df DataFrame) Mutate(colname string, series Series) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	if Len(series) != df.nrows {
+		return DataFrame{
+			err: errors.New("Can't set column. Different dimensions"),
+		}
+	}
+	// Check that colname exist on dataframe
+	var newSeries []Series
+	newSeries = append(newSeries, df.columns...)
+	if exists, idx := strInsideSliceIdx(colname, df.colnames); exists {
+		switch series.t {
+		case "string":
+			newSeries[idx] = NamedStrings(colname, series)
+		case "int":
+			newSeries[idx] = NamedInts(colname, series)
+		case "float":
+			newSeries[idx] = NamedFloats(colname, series)
+		case "bool":
+			newSeries[idx] = NamedBools(colname, series)
+		default:
+			return DataFrame{
+				err: errors.New("Unknown Series type"),
+			}
+		}
+	} else {
+		switch series.t {
+		case "string":
+			newSeries = append(newSeries, NamedStrings(colname, series))
+		case "int":
+			newSeries = append(newSeries, NamedInts(colname, series))
+		case "float":
+			newSeries = append(newSeries, NamedFloats(colname, series))
+		case "bool":
+			newSeries = append(newSeries, NamedBools(colname, series))
+		default:
+			return DataFrame{
+				err: errors.New("Unknown Series type"),
+			}
+		}
+	}
+	return New(newSeries...)
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
@@ -571,7 +626,6 @@ func (df DataFrame) Col(colname string) Series {
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
-// TODO: dplyr-ish: Mutate ?
 // TODO: dplyr-ish: Group_By ?
 // TODO: Compare?
 // TODO: UniqueRows?
