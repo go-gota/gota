@@ -137,6 +137,44 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 	return New(columnsSubset...)
 }
 
+// Select the given DataFrame columns
+func (df DataFrame) Select(colnames []string) DataFrame {
+	strInsideSlice := func(i string, s []string) bool {
+		for _, v := range s {
+			if v == i {
+				return true
+			}
+		}
+		return false
+	}
+	var columnsSelected []Series
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	for k, v := range colnames {
+		// Check duplicate colnames
+		if strInsideSlice(v, colnames[k+1:]) {
+			return DataFrame{
+				err: errors.New("Duplicated colnames on Select"),
+			}
+		}
+		// Check that colnames exist on dataframe
+		if exists, idx := strInsideSliceIdx(v, df.colnames); exists {
+			columnsSelected = append(columnsSelected, df.columns[idx])
+		} else {
+			return DataFrame{
+				err: errors.New("The given colname doesn't exist"),
+			}
+		}
+	}
+	return New(columnsSelected...)
+}
+
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
@@ -158,7 +196,6 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 // TODO: Rbind(DataFrame, DataFrame) (DataFrame, err)
 // TODO: Cbind(DataFrame, DataFrame) (DataFrame, err)
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
-// TODO: dplyr-ish: Select(DataFrame, subset interface) (DataFrame, err) // AKA: Select
 // TODO: dplyr-ish: Mutate ?
 // TODO: dplyr-ish: Rename ?
 // TODO: dplyr-ish: Group_By ?

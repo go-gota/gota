@@ -75,3 +75,20 @@ func TestDataFrame_Subset(t *testing.T) {
 	}
 	// TODO: More error checking, this is not exhaustive enough
 }
+
+func TestDataFrame_Select(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Select([]string{"COL.1", "COL.3", "COL.1"})
+	if b.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = a.Select([]string{"COL.3", "COL.1"})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
