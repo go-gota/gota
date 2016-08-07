@@ -17,13 +17,52 @@ type Series struct {
 }
 
 type Elements interface {
-	String() string
 	Copy() Elements
 	Records() []string
 }
 
 func (s Series) Err() error {
 	return s.err
+}
+
+func (s Series) Val(i int) interface{} {
+	if i >= Len(s) {
+		return nil
+	}
+	var ret interface{}
+	switch s.t {
+	case "string":
+		elem := s.Elements.(StringElements)[i]
+		if elem.IsNA() {
+			ret = nil
+		} else {
+			ret = elem.String()
+		}
+	case "int":
+		v := s.Elements.(IntElements)[i].Int()
+		if v != nil {
+			ret = *v
+		} else {
+			ret = nil
+		}
+	case "float":
+		v := s.Elements.(FloatElements)[i].Float()
+		if v != nil {
+			ret = *v
+		} else {
+			ret = nil
+		}
+	case "bool":
+		v := s.Elements.(BoolElements)[i].Bool()
+		if v != nil {
+			ret = *v
+		} else {
+			ret = nil
+		}
+	default:
+		return nil
+	}
+	return ret
 }
 
 func (s Series) Append(newSeries Series) Series {
@@ -1389,6 +1428,38 @@ func (s BoolElements) Copy() Elements {
 // ====================
 // TODO: IsNA for a Series will return a boolean Series indicating which of the given elements is NA
 
+// IsNA returns true if the element is empty and viceversa
+func (s String) IsNA() bool {
+	if s.s == nil {
+		return true
+	}
+	return false
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (i Int) IsNA() bool {
+	if i.i == nil {
+		return true
+	}
+	return false
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (f Float) IsNA() bool {
+	if f.f == nil {
+		return true
+	}
+	return false
+}
+
+// IsNA returns true if the element is empty and viceversa
+func (b Bool) IsNA() bool {
+	if b.b == nil {
+		return true
+	}
+	return false
+}
+
 // Constructors
 // ============
 
@@ -1971,14 +2042,6 @@ func Addr(s Series) []string {
 //return String{nil}
 //}
 
-//// IsNA returns true if the element is empty and viceversa
-//func (s String) IsNA() bool {
-//if s.s == nil {
-//return true
-//}
-//return false
-//}
-
 //// Checksum generates a pseudo-unique 16 byte array
 //func (i Int) Checksum() [16]byte {
 //s := i.String()
@@ -1989,14 +2052,6 @@ func Addr(s Series) []string {
 //// NA returns the empty element for this type
 //func (i Int) NA() Cell {
 //return Int{nil}
-//}
-
-//// IsNA returns true if the element is empty and viceversa
-//func (i Int) IsNA() bool {
-//if i.i == nil {
-//return true
-//}
-//return false
 //}
 
 //// Checksum generates a pseudo-unique 16 byte array
@@ -2011,14 +2066,6 @@ func Addr(s Series) []string {
 //return Float{nil}
 //}
 
-//// IsNA returns true if the element is empty and viceversa
-//func (f Float) IsNA() bool {
-//if f.f == nil {
-//return true
-//}
-//return false
-//}
-
 //// Checksum generates a pseudo-unique 16 byte array
 //func (b Bool) Checksum() [16]byte {
 //bs := []byte(b.String() + "Bool")
@@ -2028,14 +2075,6 @@ func Addr(s Series) []string {
 //// NA returns the empty element for this type
 //func (b Bool) NA() Cell {
 //return Bool{nil}
-//}
-
-//// IsNA returns true if the element is empty and viceversa
-//func (b Bool) IsNA() bool {
-//if b.b == nil {
-//return true
-//}
-//return false
 //}
 
 // Helper interfaces

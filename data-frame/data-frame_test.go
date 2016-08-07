@@ -1,6 +1,7 @@
 package df
 
 import (
+	"encoding/json"
 	"reflect"
 	"testing"
 )
@@ -210,5 +211,14 @@ func TestDataFrame_SetNames(t *testing.T) {
 	err = a.SetNames([]string{"yaaa"})
 	if err == nil {
 		t.Error("Expected error, got success")
+	}
+}
+
+func TestDataFrame_SaveMaps(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	m := a.SaveMaps()
+	_, err := json.Marshal(m)
+	if err != nil {
+		t.Error("Expected success, got error")
 	}
 }

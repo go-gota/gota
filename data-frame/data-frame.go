@@ -478,6 +478,22 @@ func (df DataFrame) Ncol() int {
 	return df.ncols
 }
 
+func (df DataFrame) SaveMaps() []map[string]interface{} {
+	maps := make([]map[string]interface{}, df.nrows)
+	colnames := df.colnames
+	for i := 0; i < df.nrows; i++ {
+		m := make(map[string]interface{})
+		for k, v := range colnames {
+			val := df.columns[i].Val(k)
+			if val != nil {
+				m[v] = val
+			}
+		}
+		maps[i] = m
+	}
+	return maps
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
