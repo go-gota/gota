@@ -117,6 +117,9 @@ func New(series ...Series) DataFrame {
 }
 
 func (df DataFrame) Copy() DataFrame {
+	if df.Err() != nil {
+		return df
+	}
 	copy := New(df.columns...)
 	return copy
 }
@@ -139,6 +142,9 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 
 // Select the given DataFrame columns
 func (df DataFrame) Select(colnames []string) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
 	strInsideSlice := func(i string, s []string) bool {
 		for _, v := range s {
 			if v == i {
@@ -175,6 +181,32 @@ func (df DataFrame) Select(colnames []string) DataFrame {
 	return New(columnsSelected...)
 }
 
+func (df DataFrame) Rename(newname, oldname string) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	// Check that colname exist on dataframe
+	var copy DataFrame
+	if exists, idx := strInsideSliceIdx(oldname, df.colnames); exists {
+		copy = df.Copy()
+		copy.colnames[idx] = newname
+		copy.columns[idx].Name = newname
+	} else {
+		return DataFrame{
+			err: errors.New("The given colname doesn't exist"),
+		}
+	}
+	return copy
+}
+
 // TODO: (df DataFrame) String() (string)
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
@@ -197,7 +229,6 @@ func (df DataFrame) Select(colnames []string) DataFrame {
 // TODO: Cbind(DataFrame, DataFrame) (DataFrame, err)
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
 // TODO: dplyr-ish: Mutate ?
-// TODO: dplyr-ish: Rename ?
 // TODO: dplyr-ish: Group_By ?
 // TODO: Compare?
 // TODO: UniqueRows?

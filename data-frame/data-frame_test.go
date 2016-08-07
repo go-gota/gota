@@ -49,6 +49,7 @@ func TestDataFrame_Copy(t *testing.T) {
 	if a.columns[0].Elements.(StringElements)[0] == b.columns[0].Elements.(StringElements)[0] {
 		t.Error("Copy error: The memory address should be different even if the content is the same")
 	}
+	// TODO: More error checking, this is not exhaustive enough
 }
 
 func TestDataFrame_Subset(t *testing.T) {
@@ -87,6 +88,19 @@ func TestDataFrame_Select(t *testing.T) {
 		t.Error("Expected success, got error")
 	}
 	b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
+
+func TestDataFrame_Rename(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Rename("NewCol!", "YOOOO")
+	if b.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = a.Rename("NewCol!", "COL.2")
 	if b.Err() != nil {
 		t.Error("Expected success, got error")
 	}
