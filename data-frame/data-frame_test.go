@@ -201,6 +201,49 @@ func TestDataFrame_ReadRecords(t *testing.T) {
 	}
 }
 
+func TestDataFrame_ReadCSV(t *testing.T) {
+	csvStr := `"COL.1","COL.2","COL.3"
+"a","true","3"
+"b","false","2"
+"1","","1.1"`
+	a := ReadCSV(csvStr)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, "int")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, "string")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, "float")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, "bool")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, "blaaah")
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadCSV(csvStr, []string{"string", "int"}...)
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadCSV(csvStr, []string{"string", "int", "float"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadCSV(csvStr, []string{"string", "bool", "int"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+}
+
 func TestDataFrame_SetNames(t *testing.T) {
 	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
 	n := []string{"wot", "tho", "tree"}

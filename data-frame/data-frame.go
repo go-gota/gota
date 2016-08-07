@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -314,6 +315,22 @@ func (df DataFrame) SaveRecords() [][]string {
 	return records
 }
 
+func ReadCSV(str string, types ...string) DataFrame {
+	r := csv.NewReader(strings.NewReader(str))
+	var records [][]string
+	for {
+		record, err := r.Read()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return DataFrame{err: err}
+		}
+		records = append(records, record)
+	}
+	return ReadRecords(records, types...)
+}
+
 func ReadRecords(records [][]string, types ...string) DataFrame {
 	if types != nil && len(types) != 0 {
 		if len(records) == 0 {
@@ -524,10 +541,8 @@ func (df DataFrame) SaveJSON() ([]byte, error) {
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
-// TODO: ReadCSV(string) (DataFrame, err)
 // TODO: ReadJSON(string) (DataFrame, err)
 // TODO: ParseMaps(map[string]interface, types) (DataFrame, err)
-// TODO: ParseCSV(string, types) (DataFrame, err)
 // TODO: ParseJSON(string, types) (DataFrame, err)
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
 // TODO: dplyr-ish: Mutate ?
