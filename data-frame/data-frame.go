@@ -439,6 +439,14 @@ func (df DataFrame) Names() []string {
 	return colnames
 }
 
+func (df DataFrame) Types() []string {
+	var coltypes []string
+	for _, v := range df.coltypes {
+		coltypes = append(coltypes, v)
+	}
+	return coltypes
+}
+
 func (df DataFrame) SetNames(colnames []string) error {
 	if df.Err() != nil {
 		return df.Err()
@@ -454,11 +462,24 @@ func (df DataFrame) SetNames(colnames []string) error {
 	return nil
 }
 
+func (df DataFrame) Dim() (dim [2]int) {
+	dim[0] = df.nrows
+	dim[1] = df.ncols
+	return
+}
+
+// NRows is the getter method for the number of rows in a DataFrame
+func (df DataFrame) Nrow() int {
+	return df.nrows
+}
+
+// NCols is the getter method for the number of rows in a DataFrame
+func (df DataFrame) Ncol() int {
+	return df.ncols
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
-// TODO: Dim(DataFrame) ([2]int)
-// TODO: Nrows(DataFrame) (int)
-// TODO: Ncols(DataFrame) (int)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
 // TODO: ReadCSV(string) (DataFrame, err)
 // TODO: ReadJSON(string) (DataFrame, err)
