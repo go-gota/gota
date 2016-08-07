@@ -665,7 +665,6 @@ func ReadJSONString(str string, types ...string) DataFrame {
 	return ReadJSON(r, types...)
 }
 
-// The order of the keys might be different that the types we expect, so we force alphabetical ordering for the map keys
 func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
@@ -697,6 +696,9 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 			fields[k][i] = fmt.Sprint(w)
 		}
 	}
+
+	// The order of the keys might be different that the types we expect, so we force
+	// alphabetical ordering for the map keys.
 	sort.Strings(colnames)
 
 	var columns []Series
@@ -772,7 +774,8 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
-// TODO: dplyr-ish: Group_By ?
+// TODO: dplyr-ish: Arrange?
+// TODO: dplyr-ish: GroupBy?
 // TODO: Compare?
 // TODO: UniqueRows?
 // TODO: UniqueColumns?
