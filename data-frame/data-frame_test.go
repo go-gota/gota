@@ -121,3 +121,18 @@ func TestDataFrame_CBind(t *testing.T) {
 	}
 	// TODO: More error checking, this is not exhaustive enough
 }
+
+func TestDataFrame_RBind(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := New(NamedStrings("COL.1", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c := a.RBind(b)
+	if c.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = New(NamedStrings("COL.1", "d", "a", "d", "e"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c = a.RBind(b).RBind(b)
+	if c.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
