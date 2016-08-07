@@ -431,6 +431,29 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 	return New(columns...)
 }
 
+func (df DataFrame) Names() []string {
+	var colnames []string
+	for _, v := range df.colnames {
+		colnames = append(colnames, v)
+	}
+	return colnames
+}
+
+func (df DataFrame) SetNames(colnames []string) error {
+	if df.Err() != nil {
+		return df.Err()
+	}
+	if len(colnames) != df.ncols {
+		err := errors.New("Couldn't set the column names. Wrong dimensions.")
+		return err
+	}
+	for k, v := range colnames {
+		df.colnames[k] = v
+		df.columns[k].Name = v
+	}
+	return nil
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: Dim(DataFrame) ([2]int)

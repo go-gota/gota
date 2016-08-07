@@ -154,6 +154,7 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 		)
 	}
 }
+
 func TestDataFrame_ReadRecords(t *testing.T) {
 	records := [][]string{
 		[]string{"COL.1", "COL.2", "COL.3"},
@@ -196,5 +197,18 @@ func TestDataFrame_ReadRecords(t *testing.T) {
 	a = ReadRecords(records, []string{"string", "bool", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
+	}
+}
+
+func TestDataFrame_SetNames(t *testing.T) {
+	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
+	n := []string{"wot", "tho", "tree"}
+	err := a.SetNames(n)
+	if err != nil {
+		t.Error("Expected success, got error")
+	}
+	err = a.SetNames([]string{"yaaa"})
+	if err == nil {
+		t.Error("Expected error, got success")
 	}
 }
