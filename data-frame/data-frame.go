@@ -236,21 +236,11 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 	var expandedSeries []Series
 	for k, v := range df.colnames {
 		if exists, idx := strInsideSliceIdx(v, newdf.colnames); exists {
-			var newSeries Series
 			originalSeries := df.columns[k]
 			addedSeries := newdf.columns[idx]
-			// TODO: Refactor into Series.Append method
-			switch originalSeries.t {
-			case "string":
-				newSeries = NamedStrings(originalSeries.Name, originalSeries, addedSeries)
-			case "int":
-				newSeries = NamedInts(originalSeries.Name, originalSeries, addedSeries)
-			case "float":
-				newSeries = NamedFloats(originalSeries.Name, originalSeries, addedSeries)
-			case "bool":
-				newSeries = NamedBools(originalSeries.Name, originalSeries, addedSeries)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
+			newSeries := originalSeries.Append(addedSeries)
+			if err := newSeries.Err(); err != nil {
+				return DataFrame{err: err}
 			}
 			expandedSeries = append(expandedSeries, newSeries)
 		} else {
@@ -278,8 +268,6 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 // TODO: SaveMaps(DataFrame) (map[string]interface)
 // TODO: SaveCSV(DataFrame) (string) // Bytes?
 // TODO: SaveJSON(DataFrame) (string) // Bytes?
-// TODO: Rbind(DataFrame, DataFrame) (DataFrame, err)
-// TODO: Cbind(DataFrame, DataFrame) (DataFrame, err)
 // TODO: dplyr-ish: Filter(DataFrame, subset interface) (DataFrame, err)    // AKA: Filter
 // TODO: dplyr-ish: Mutate ?
 // TODO: dplyr-ish: Group_By ?

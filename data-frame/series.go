@@ -8,15 +8,38 @@ import (
 	"strings"
 )
 
+// TODO: Refactor error returns
 type Series struct {
 	Name     string   // The name of the series
 	Elements Elements // The values of the elements
 	t        string   // The type of the series
+	err      error
 }
 
 type Elements interface {
 	String() string
 	Copy() Elements
+}
+
+func (s Series) Err() error {
+	return s.err
+}
+
+func (s Series) Append(newSeries Series) Series {
+	var joinedSeries Series
+	switch s.t {
+	case "string":
+		joinedSeries = NamedStrings(s.Name, s, newSeries)
+	case "int":
+		joinedSeries = NamedInts(s.Name, s, newSeries)
+	case "float":
+		joinedSeries = NamedFloats(s.Name, s, newSeries)
+	case "bool":
+		joinedSeries = NamedBools(s.Name, s, newSeries)
+	default:
+		return Series{err: errors.New("Unknown Series type")}
+	}
+	return joinedSeries
 }
 
 func (s Series) Subset(indexes interface{}) (Series, error) {
