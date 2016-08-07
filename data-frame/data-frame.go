@@ -1,5 +1,7 @@
 package df
 
+// TODO: Remove append() in favour of manually allocating the slices
+
 import (
 	"bytes"
 	"encoding/csv"
@@ -538,6 +540,30 @@ func (df DataFrame) SaveJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+func (df DataFrame) Col(colname string) Series {
+	if df.Err() != nil {
+		return Series{err: df.Err()}
+	}
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	// Check that colname exist on dataframe
+	var ret Series
+	if exists, idx := strInsideSliceIdx(colname, df.colnames); exists {
+		ret = df.columns[idx].Copy()
+	} else {
+		return Series{
+			err: errors.New("The given colname doesn't exist"),
+		}
+	}
+	return ret
+}
+
 // TODO: (df DataFrame) Str() (string)
 // TODO: (df DataFrame) Summary() (string)
 // TODO: ReadMaps(map[string]interface) (DataFrame, err)
@@ -551,5 +577,4 @@ func (df DataFrame) SaveJSON() ([]byte, error) {
 // TODO: UniqueRows?
 // TODO: UniqueColumns?
 // TODO: Joins: Inner/Outer/Right/Left all.x? all.y?
-// TODO: (df DataFrame) Series(colname string, index interface{}...) (string)
 // TODO: ChangeType(DataFrame, types) (DataFrame, err) // Parse columns again
