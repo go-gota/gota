@@ -11,7 +11,6 @@ import (
 type Series struct {
 	Name     string   // The name of the series
 	Elements Elements // The values of the elements
-	names    []string // The names of every element. If empty, it is an unnamed series
 	t        string   // The type of the series
 }
 
@@ -1291,12 +1290,20 @@ func (s Series) Copy() Series {
 	switch s.t {
 	case "string":
 		copy = Strings(s)
+		n := s.Name
+		copy.Name = n
 	case "int":
 		copy = Ints(s)
+		n := s.Name
+		copy.Name = n
 	case "float":
 		copy = Floats(s)
+		n := s.Name
+		copy.Name = n
 	case "bool":
 		copy = Bools(s)
+		n := s.Name
+		copy.Name = n
 	}
 	return copy
 }
@@ -1441,7 +1448,6 @@ func Strings(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		Elements: elements,
-		names:    []string{},
 		t:        "string",
 	}
 	return ret
@@ -1555,7 +1561,6 @@ func Ints(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		Elements: elements,
-		names:    []string{},
 		t:        "int",
 	}
 	return ret
@@ -1670,7 +1675,6 @@ func Floats(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		Elements: elements,
-		names:    []string{},
 		t:        "float",
 	}
 	return ret
@@ -1818,7 +1822,6 @@ func Bools(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		Elements: elements,
-		names:    []string{},
 		t:        "bool",
 	}
 	return ret
@@ -1860,10 +1863,6 @@ func Len(s Series) int {
 
 func Type(s Series) string {
 	return s.t
-}
-
-func Names(s Series) []string {
-	return s.names
 }
 
 func Addr(s Series) []string {

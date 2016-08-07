@@ -705,6 +705,13 @@ func TestCopy(t *testing.T) {
 			"Same memory address when copying String elements",
 		)
 	}
+	a.Name = "String.Series"
+	c = a.Copy()
+	if a.Name != c.Name {
+		t.Error(
+			"Series names are different when copying",
+		)
+	}
 
 	a = Ints(1, 2, 3, "a", "b", "c")
 	b = a
