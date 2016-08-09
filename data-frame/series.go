@@ -1,5 +1,7 @@
 package df
 
+// TODO: Improve package documentation and include code examples
+
 import (
 	"errors"
 	"fmt"
@@ -2036,46 +2038,6 @@ func Addr(s Series) []string {
 	}
 	return ret
 }
-
-//// NA returns the empty element for this type
-//func (s String) NA() Cell {
-//return String{nil}
-//}
-
-//// Checksum generates a pseudo-unique 16 byte array
-//func (i Int) Checksum() [16]byte {
-//s := i.String()
-//b := []byte(s + "Int")
-//return md5.Sum(b)
-//}
-
-//// NA returns the empty element for this type
-//func (i Int) NA() Cell {
-//return Int{nil}
-//}
-
-//// Checksum generates a pseudo-unique 16 byte array
-//func (f Float) Checksum() [16]byte {
-//s := f.String()
-//b := []byte(s + "Float")
-//return md5.Sum(b)
-//}
-
-//// NA returns the empty element for this type
-//func (f Float) NA() Cell {
-//return Float{nil}
-//}
-
-//// Checksum generates a pseudo-unique 16 byte array
-//func (b Bool) Checksum() [16]byte {
-//bs := []byte(b.String() + "Bool")
-//return md5.Sum(bs)
-//}
-
-//// NA returns the empty element for this type
-//func (b Bool) NA() Cell {
-//return Bool{nil}
-//}
 
 // Helper interfaces
 // =================
