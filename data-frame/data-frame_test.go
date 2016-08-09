@@ -1,406 +1,350 @@
 package df
 
 import (
-	"fmt"
+	"encoding/json"
+	"reflect"
 	"testing"
 )
 
-func TestNew(t *testing.T) {
-	df, err := New(
-		C{"A", Strings("aa", "b")},
-		C{"B", Strings("a", "bbb")},
-	)
-	if err != nil {
-		t.Error("Error when creating DataFrame:", err)
+func TestDataFrame_New(t *testing.T) {
+	a := New(Strings("b"), Ints(1, 2))
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
 	}
-	expected := "   A   B    \n\n0: aa  a    \n1: b   bbb  \n"
-	received := fmt.Sprint(df)
-	if expected != received {
+	a = New(Strings("b", "a"), NamedInts("Y", 1, 2), Floats(3.0, 4.0))
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	expectedNames := []string{"X0", "Y", "X1"}
+	receivedNames := a.colnames
+	if !reflect.DeepEqual(expectedNames, receivedNames) {
 		t.Error(
-			"DataFrame created by New() is not correct",
-			"Expected:\n",
-			expected, "\n",
-			"Received:\n",
-			received,
+			"Expected Names:",
+			expectedNames,
+			"Received Names:",
+			receivedNames,
 		)
 	}
-
-	df, err = New()
-	if err == nil {
-		t.Error("Error when creating DataFrame not being thrown")
+	expectedTypes := []string{"string", "int", "float"}
+	receivedTypes := a.coltypes
+	if !reflect.DeepEqual(expectedTypes, receivedTypes) {
+		t.Error(
+			"Expected Types:",
+			expectedTypes,
+			"Received Types:",
+			receivedTypes,
+		)
 	}
-
-	df, err = New(
-		C{"A", Strings("a", "b")},
-		C{"B", Strings("a", "b", "c")},
-	)
-	if err == nil {
-		t.Error("Error when creating DataFrame not being thrown")
-	}
-
-	df, err = New(
-		C{"A", Strings()},
-		C{"B", Strings("a", "b", "c")},
-	)
-	if err == nil {
-		t.Error("Error when creating DataFrame not being thrown")
+	// TODO: Check that df.colnames == columns.colnames
+	// TODO: Check that the address of the columns are different that of the original series
+	// TODO: Check that dimensions match
+	a = New()
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
 	}
 }
 
-func TestDataFrame_LoadData(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
+func TestDataFrame_Copy(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))
+	b := a.Copy()
+	if a.columns[0].Elements.(StringElements)[0] == b.columns[0].Elements.(StringElements)[0] {
+		t.Error("Copy error: The memory address should be different even if the content is the same")
 	}
-
-	// Test correct data loading
-	df := DataFrame{}
-	df.LoadData(data)
-	expected := "   A  B  C  D  \n\n0: 1  2  3  4  \n1: 5  6  7  8  \n"
-	received := fmt.Sprint(df)
-	if expected != received {
-		t.Error(
-			"DataFrame loaded data incorrectly",
-			"Expected:\n",
-			expected, "\n",
-			"Received:\n",
-			received,
-		)
-	}
-
-	// Test nil data loading
-	err := df.LoadData(nil)
-	if err == nil {
-		t.Error("DataFrame should have failed")
-	}
-
-	// Test empty headers
-	data = [][]string{
-		[]string{"", "", "", ""},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-	}
-	df.LoadData(data)
-	expectedColnames := fmt.Sprint([]string{"V0", "V1", "V2", "V3"})
-	receivedColnames := fmt.Sprint(df.colNames)
-	if expectedColnames != receivedColnames {
-		t.Error(
-			"Colnames not being generated properly",
-			"Expected:\n",
-			expectedColnames, "\n",
-			"Received:\n",
-			receivedColnames,
-		)
-	}
-
-	// Test duplicated headers
-	data = [][]string{
-		[]string{"A", "B", "A", "C"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-	}
-	err = df.LoadData(data)
-	if err == nil {
-		t.Error("Duplicated headers but no error")
-	}
+	// TODO: More error checking, this is not exhaustive enough
 }
 
-func TestDataFrame_LoadAndParse(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
+func TestDataFrame_Subset(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Subset([]int{2, 3})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
 	}
+	b = a.Subset([]bool{true, false, false, true})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Ints(1, 2, 3))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Bools(1, 0, 0, 0))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset(Ints(1, 2, 3)).Subset([]int{0})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
 
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadAndParse(data, T{"A": "int", "C": "int"})
-	if fmt.Sprint(df.colTypes) != "[df.Int df.String df.Int df.String]" {
-		t.Error("Incorrect type parsing" + fmt.Sprint(df.colTypes))
+func TestDataFrame_Select(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Select([]string{"COL.1", "COL.3", "COL.1"}...)
+	if b.Err() == nil {
+		t.Error("Expected error, got success")
 	}
+	b = a.Select([]string{"COL.3", "COL.1"}...)
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"}...)
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
+
+func TestDataFrame_Rename(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := a.Rename("NewCol!", "YOOOO")
+	if b.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = a.Rename("NewCol!", "COL.2")
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
+
+func TestDataFrame_CBind(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := New(NamedStrings("COL.1", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c := a.CBind(b)
+	if c.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = New(NamedStrings("COL.1", "d", "a", "d", "e"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c = a.CBind(b)
+	if c.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
+}
+
+func TestDataFrame_RBind(t *testing.T) {
+	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	b := New(NamedStrings("COL.1", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c := a.RBind(b)
+	if c.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	b = New(NamedStrings("COL.1", "d", "a", "d", "e"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
+	c = a.RBind(b).RBind(b)
+	if c.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	// TODO: More error checking, this is not exhaustive enough
 }
 
 func TestDataFrame_SaveRecords(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
+	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
+	expected := [][]string{
+		[]string{"COL.1", "COL.2", "COL.3"},
+		[]string{"a", "1", "3"},
+		[]string{"b", "2", "2"},
+		[]string{"c", "3", "1"},
 	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-	datab := df.SaveRecords()
-	if fmt.Sprint(data) != fmt.Sprint(datab) {
-		t.Error("Recovered records differ from original")
-	}
-}
-
-func TestDataFrame_SubsetColumns(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	// Subset by column and rearrange the columns by name on the given order
-	_, err := df.SubsetColumns([]string{"A", "B"})
-	if err != nil {
-		t.Error(err)
-	}
-
-	// Subset by column using a range element
-	_, err = df.SubsetColumns(R{0, 3})
-	if err != nil {
-		t.Error(err)
-	}
-
-	// Subset by column using an array of column numbers
-	_, err = df.SubsetColumns([]int{0, 3, 1})
-	if err != nil {
-		t.Error(err)
+	received := a.SaveRecords()
+	if !reflect.DeepEqual(expected, received) {
+		t.Error(
+			"Error when saving records.\n",
+			"Expected: ", expected, "\n",
+			"Received: ", received,
+		)
 	}
 }
 
-func TestDataFrame_SubsetRows(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"9", "10", "11", "12"},
+func TestDataFrame_ReadRecords(t *testing.T) {
+	records := [][]string{
+		[]string{"COL.1", "COL.2", "COL.3"},
+		[]string{"a", "true", "3"},
+		[]string{"b", "false", "2"},
+		[]string{"1", "", "1.1"},
 	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	// Subset by column using a range element
-	_, err := df.SubsetRows(R{1, 2})
-	if err != nil {
-		t.Error(err)
+	a := ReadRecords(records)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-
-	// Subset by column using an array of column numbers
-	_, err = df.SubsetRows([]int{0, 2, 1})
-	if err != nil {
-		t.Error(err)
+	a = ReadRecords(records, "int")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-}
-
-func TestDataFrame_Rbind(t *testing.T) {
-	dataA := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"9", "10", "11", "12"},
+	a = ReadRecords(records, "string")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-	dataB := [][]string{
-		[]string{"B", "A", "D", "C"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"9", "10", "11", "12"},
+	a = ReadRecords(records, "float")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-
-	// Test parsing two columns as integers
-	dfA := DataFrame{}
-	dfA.LoadData(dataA)
-	dfB := DataFrame{}
-	dfB.LoadData(dataB)
-
-	_, err := Rbind(dfA, dfB)
-	if err != nil {
-		t.Error(err)
+	a = ReadRecords(records, "bool")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, "blaaah")
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadRecords(records, []string{"string", "int"}...)
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadRecords(records, []string{"string", "int", "float"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	a = ReadRecords(records, []string{"string", "bool", "int"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
 }
 
-func TestDataFrame_Cbind(t *testing.T) {
-	dataA := [][]string{
-		[]string{"A", "B"},
-		[]string{"1", "2"},
-		[]string{"5", "6"},
-		[]string{"9", "10"},
+func TestDataFrame_ReadCSV(t *testing.T) {
+	// Load the data from a CSV string and try to infer the type of the
+	// columns
+	csvStr := `
+Country,Date,Age,Amount,Id
+"United States",2012-02-01,50,112.1,01234
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,17,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,NA,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United States",2012-02-01,32,321.31,54320
+Spain,2012-02-01,66,555.42,00241
+`
+	a := ReadCSV(csvStr)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-	dataB := [][]string{
-		[]string{"C", "D"},
-		[]string{"3", "4"},
-		[]string{"7", "8"},
-		[]string{"11", "12"},
+	a = ReadCSV(csvStr, "int")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-
-	// Test parsing two columns as integers
-	dfA := DataFrame{}
-	dfA.LoadData(dataA)
-	dfB := DataFrame{}
-	dfB.LoadData(dataB)
-
-	_, err := Cbind(dfA, dfB)
-	if err != nil {
-		t.Error(err)
+	a = ReadCSV(csvStr, "string")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-}
-
-func TestDataFrame_Unique(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"5", "7", "7", "8"},
+	a = ReadCSV(csvStr, "float")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	_, err := df.Unique()
-	if err != nil {
-		t.Error(err)
+	a = ReadCSV(csvStr, "bool")
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
-}
-
-func TestDataFrame_Duplicated(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"5", "7", "7", "8"},
+	a = ReadCSV(csvStr, "blaaah")
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
 	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	_, err := df.Duplicated()
-	if err != nil {
-		t.Error(err)
+	a = ReadCSV(csvStr, []string{"string", "int"}...)
+	if a.Err() == nil {
+		t.Error("Expected error, got success")
+	}
+	a = ReadCSV(csvStr, []string{"string", "int", "float", "float", "int"}...)
+	if a.Err() != nil {
+		t.Error("Expected success, got error")
 	}
 }
 
-func TestDataFrame_RemoveDuplicated(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"5", "7", "7", "8"},
-	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	_, err := df.RemoveDuplicated()
+func TestDataFrame_SetNames(t *testing.T) {
+	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
+	n := []string{"wot", "tho", "tree"}
+	err := a.SetNames(n)
 	if err != nil {
-		t.Error(err)
+		t.Error("Expected success, got error")
 	}
-}
-
-func TestDataFrame_RemoveUnique(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"9", "10", "11", "12"},
-		[]string{"5", "7", "7", "8"},
-	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-
-	_, err := df.RemoveUnique()
-	if err != nil {
-		t.Error(err)
-	}
-}
-
-func TestDataFrame_Join(t *testing.T) {
-	dataa := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"9", "10", "11", "12"},
-	}
-	datab := [][]string{
-		[]string{"A", "C", "F"},
-		[]string{"9", "1", "8"},
-		[]string{"9", "11", "8"},
-		[]string{"1", "3", "2"},
-		[]string{"1", "1", "2"},
-	}
-	dfa := DataFrame{}
-	dfa.LoadData(dataa)
-	dfb := DataFrame{}
-	dfb.LoadData(datab)
-	_, err := InnerJoin(dfa, dfb, "A", "X")
+	err = a.SetNames([]string{"yaaa"})
 	if err == nil {
-		t.Error("Should have failed: Key X not in left or right DataFrame")
-	}
-	_, err = InnerJoin(dfa, dfb, "A")
-	if err != nil {
-		t.Error(err)
-	}
-	_, err = InnerJoin(dfa, dfb, "A", "C")
-	if err != nil {
-		t.Error(err)
-	}
-	_, err = CrossJoin(dfa, dfb)
-	if err != nil {
-		t.Error(err)
-	}
-	_, err = LeftJoin(dfa, dfb, "A", "C")
-	if err != nil {
-		t.Error(err)
-	}
-	_, err = RightJoin(dfa, dfb, "C")
-	if err != nil {
-		t.Error(err)
+		t.Error("Expected error, got success")
 	}
 }
 
-func TestDataFrame_Colnames(t *testing.T) {
-	data := [][]string{
-		[]string{"A", "B", "C", "D"},
-		[]string{"1", "2", "3", "4"},
-		[]string{"5", "6", "7", "8"},
-	}
-
-	// Test parsing two columns as integers
-	df := DataFrame{}
-	df.LoadData(data)
-	if fmt.Sprint(df.Names()) != "[A B C D]" {
-		t.Error("Mismatched colnames")
-	}
-
-	err := df.SetNames([]string{})
-	if err == nil {
-		t.Error("Error didn't fired")
-	}
-	err = df.SetNames([]string{"B", "C", "D", "E"})
+func TestDataFrame_SaveMaps(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	m := a.SaveMaps()
+	_, err := json.Marshal(m)
 	if err != nil {
-		t.Error("Error when setting colnames")
+		t.Error("Expected success, got error")
 	}
+}
 
-	if fmt.Sprint(df.Names()) != "[B C D E]" {
-		t.Error("Setter didn't work properly")
+func TestDataFrame_SaveCSV(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	_, err := a.SaveCSV()
+	if err != nil {
+		t.Error("Expected success, got error")
+	}
+}
+
+func TestDataFrame_SaveJSON(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	_, err := a.SaveJSON()
+	if err != nil {
+		t.Error("Expected success, got error")
+	}
+}
+
+func TestDataFrame_Column(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	b := a.Col("COL.2")
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+}
+
+func TestDataFrame_Mutate(t *testing.T) {
+	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	b := a.Mutate("COL.2", NamedStrings("ColumnChanged!", "x", 1, "z"))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	b = b.Mutate("NewColumn!", Strings("x", 1, "z"))
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+}
+
+func TestDataFrame_Filter(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := a.Filter(
+		F{"Age", "<", 30},
+		F{"Age", ">", 40},
+	).Filter(F{"Names", "==", "Alice"})
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
+	}
+	if b.Nrow() != 1 {
+		t.Error("Expected Nrow=1, got ", b.Nrow())
+	}
+}
+
+func TestDataFrame_ReadMaps(t *testing.T) {
+	m := []map[string]interface{}{
+		map[string]interface{}{
+			"Age":    23,
+			"Name":   "Alice",
+			"Credit": 12.10,
+		},
+		map[string]interface{}{
+			"Age":    32,
+			"Name":   "Bob",
+			"Credit": 15.1,
+		},
+		map[string]interface{}{
+			"Age":    41,
+			"Name":   "Daniel",
+			"Credit": 16.2,
+		},
+	}
+	b := ReadMaps(m)
+	if b.Err() != nil {
+		t.Error("Expected success, got error")
 	}
 }

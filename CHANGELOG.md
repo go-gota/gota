@@ -2,6 +2,25 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.5.0] - 2016-08-09
+### Added
+- Read and write DataFrames from CSV, JSON, []map[string]interface{},
+  [][]string.
+- New constructor for DataFrame accept Series and NamedSeries as
+  arguments.
+- Subset, Select, Rename, Mutate, Filter, RBind and CBind methods
+- Much Better error handling
+
+### Changed
+- Almost complete rewrite of DataFrame code.
+- Now using Series as first class citizens and building blocks for
+  DataFrames.
+
+### Removed
+- Merge/Join functions have been temporarily removed to be adapted to
+  the new architecture.
+- Cell interface for allowing custom types into the system.
+
 ## [0.4.0] - 2016-02-18
 ### Added
 - Getter methods for nrows and ncols.
@@ -86,3 +105,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.2.1]:https://github.com/kniren/gota/compare/v0.2.0...v0.2.1
 [0.3.0]:https://github.com/kniren/gota/compare/v0.2.1...v0.3.0
 [0.4.0]:https://github.com/kniren/gota/compare/v0.3.0...v0.4.0
+[0.5.0]:https://github.com/kniren/gota/compare/v0.4.0...v0.5.0
