@@ -80,15 +80,15 @@ func TestDataFrame_Subset(t *testing.T) {
 
 func TestDataFrame_Select(t *testing.T) {
 	a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
-	b := a.Select([]string{"COL.1", "COL.3", "COL.1"})
+	b := a.Select([]string{"COL.1", "COL.3", "COL.1"}...)
 	if b.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	b = a.Select([]string{"COL.3", "COL.1"})
+	b = a.Select([]string{"COL.3", "COL.1"}...)
 	if b.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"})
+	b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"}...)
 	if b.Err() != nil {
 		t.Error("Expected success, got error")
 	}
@@ -202,10 +202,19 @@ func TestDataFrame_ReadRecords(t *testing.T) {
 }
 
 func TestDataFrame_ReadCSV(t *testing.T) {
-	csvStr := `"COL.1","COL.2","COL.3"
-"a","true","3"
-"b","false","2"
-"1","","1.1"`
+	// Load the data from a CSV string and try to infer the type of the
+	// columns
+	csvStr := `
+Country,Date,Age,Amount,Id
+"United States",2012-02-01,50,112.1,01234
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,17,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,NA,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United States",2012-02-01,32,321.31,54320
+Spain,2012-02-01,66,555.42,00241
+`
 	a := ReadCSV(csvStr)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
@@ -234,11 +243,7 @@ func TestDataFrame_ReadCSV(t *testing.T) {
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(csvStr, []string{"string", "int", "float"}...)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = ReadCSV(csvStr, []string{"string", "bool", "int"}...)
+	a = ReadCSV(csvStr, []string{"string", "int", "float", "float", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
