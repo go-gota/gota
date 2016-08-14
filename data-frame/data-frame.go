@@ -17,12 +17,10 @@ import (
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns  []Series
-	colnames []string
-	coltypes []string
-	ncols    int
-	nrows    int
-	err      error // TODO: Define custom error data type?
+	columns []Series
+	ncols   int
+	nrows   int
+	err     error // TODO: Define custom error data type?
 }
 
 // New is a constructor for DataFrames
@@ -112,12 +110,10 @@ func New(series ...Series) DataFrame {
 
 	// Fill DataFrame base structure
 	df := DataFrame{
-		columns:  columns,
-		colnames: colnames,
-		coltypes: coltypes,
-		ncols:    len(series),
-		nrows:    lastLength,
-		err:      nil,
+		columns: columns,
+		ncols:   len(series),
+		nrows:   lastLength,
+		err:     nil,
 	}
 	return df
 }
@@ -226,7 +222,8 @@ func (df DataFrame) Select(colnames ...string) DataFrame {
 			}
 		}
 		// Check that colnames exist on dataframe
-		if exists, idx := strInsideSliceIdx(v, df.colnames); exists {
+		dfColnames := df.Names()
+		if exists, idx := strInsideSliceIdx(v, dfColnames); exists {
 			columnsSelected = append(columnsSelected, df.columns[idx])
 		} else {
 			return DataFrame{
@@ -251,9 +248,9 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	}
 	// Check that colname exist on dataframe
 	var copy DataFrame
-	if exists, idx := strInsideSliceIdx(oldname, df.colnames); exists {
+	colnames := df.Names()
+	if exists, idx := strInsideSliceIdx(oldname, colnames); exists {
 		copy = df.Copy()
-		copy.colnames[idx] = newname
 		copy.columns[idx].Name = newname
 	} else {
 		return DataFrame{
@@ -292,8 +289,8 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 		return false, -1
 	}
 	var expandedSeries []Series
-	for k, v := range df.colnames {
-		if exists, idx := strInsideSliceIdx(v, newdf.colnames); exists {
+	for k, v := range df.Names() {
+		if exists, idx := strInsideSliceIdx(v, newdf.Names()); exists {
 			originalSeries := df.columns[k]
 			addedSeries := newdf.columns[idx]
 			newSeries := originalSeries.Concat(addedSeries)
@@ -328,7 +325,7 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 	// Check that colname exist on dataframe
 	var newSeries []Series
 	newSeries = append(newSeries, df.columns...)
-	if exists, idx := strInsideSliceIdx(colname, df.colnames); exists {
+	if exists, idx := strInsideSliceIdx(colname, df.Names()); exists {
 		switch series.t {
 		case "string":
 			newSeries[idx] = NamedStrings(colname, series)
@@ -383,7 +380,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	}
 	var compResults [][]bool
 	for _, f := range filters {
-		if exists, idx := strInsideSliceIdx(f.Colname, df.colnames); exists {
+		if exists, idx := strInsideSliceIdx(f.Colname, df.Names()); exists {
 			res, err := df.columns[idx].Compare(f.Comparator, f.Comparando)
 			if err != nil {
 				return DataFrame{
@@ -654,7 +651,7 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 
 func (df DataFrame) SaveMaps() []map[string]interface{} {
 	maps := make([]map[string]interface{}, df.nrows)
-	colnames := df.colnames
+	colnames := df.Names()
 	for i := 0; i < df.nrows; i++ {
 		m := make(map[string]interface{})
 		for k, v := range colnames {
@@ -694,7 +691,7 @@ func (df DataFrame) SaveCSV() ([]byte, error) {
 
 func (df DataFrame) SaveRecords() [][]string {
 	var records [][]string
-	records = append(records, df.colnames)
+	records = append(records, df.Names())
 	if df.ncols == 0 || df.nrows == 0 {
 		return records
 	}
@@ -711,16 +708,16 @@ func (df DataFrame) SaveRecords() [][]string {
 
 func (df DataFrame) Names() []string {
 	var colnames []string
-	for _, v := range df.colnames {
-		colnames = append(colnames, v)
+	for _, v := range df.columns {
+		colnames = append(colnames, v.Name)
 	}
 	return colnames
 }
 
 func (df DataFrame) Types() []string {
 	var coltypes []string
-	for _, v := range df.coltypes {
-		coltypes = append(coltypes, v)
+	for _, v := range df.columns {
+		coltypes = append(coltypes, v.t)
 	}
 	return coltypes
 }
@@ -734,7 +731,6 @@ func (df DataFrame) SetNames(colnames []string) error {
 		return err
 	}
 	for k, v := range colnames {
-		df.colnames[k] = v
 		df.columns[k].Name = v
 	}
 	return nil
@@ -771,7 +767,7 @@ func (df DataFrame) Col(colname string) Series {
 	}
 	// Check that colname exist on dataframe
 	var ret Series
-	if exists, idx := strInsideSliceIdx(colname, df.colnames); exists {
+	if exists, idx := strInsideSliceIdx(colname, df.Names()); exists {
 		ret = df.columns[idx].Copy()
 	} else {
 		return Series{
@@ -807,6 +803,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
+	// TODO: Benchmark if it is worth it to prefilter the data
 	// Pre-Filter A/B
 	prefA := make([]bool, a.nrows, a.nrows)
 	prefB := make([]bool, b.nrows, b.nrows)
@@ -924,7 +921,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 // ColIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.
 func (d DataFrame) ColIndex(s string) int {
-	for k, v := range d.colnames {
+	for k, v := range d.Names() {
 		if v == s {
 			return k
 		}

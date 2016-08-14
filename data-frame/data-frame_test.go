@@ -16,7 +16,7 @@ func TestDataFrame_New(t *testing.T) {
 		t.Error("Expected success, got error")
 	}
 	expectedNames := []string{"X0", "Y", "X1"}
-	receivedNames := a.colnames
+	receivedNames := a.Names()
 	if !reflect.DeepEqual(expectedNames, receivedNames) {
 		t.Error(
 			"Expected Names:",
@@ -26,7 +26,7 @@ func TestDataFrame_New(t *testing.T) {
 		)
 	}
 	expectedTypes := []string{"string", "int", "float"}
-	receivedTypes := a.coltypes
+	receivedTypes := a.Types()
 	if !reflect.DeepEqual(expectedTypes, receivedTypes) {
 		t.Error(
 			"Expected Types:",
@@ -35,7 +35,6 @@ func TestDataFrame_New(t *testing.T) {
 			receivedTypes,
 		)
 	}
-	// TODO: Check that df.colnames == columns.colnames
 	// TODO: Check that the address of the columns are different that of the original series
 	// TODO: Check that dimensions match
 	a = New()
