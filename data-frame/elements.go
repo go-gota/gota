@@ -50,25 +50,25 @@ func (s BoolElements) Records() []string {
 
 // Elem returns the Element at index i
 func (s StringElements) Elem(i int) Element {
-	if i > len(s) || i < 0 {
+	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
 func (s IntElements) Elem(i int) Element {
-	if i > len(s) || i < 0 {
+	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
 func (s FloatElements) Elem(i int) Element {
-	if i > len(s) || i < 0 {
+	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
 func (s BoolElements) Elem(i int) Element {
-	if i > len(s) || i < 0 {
+	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
