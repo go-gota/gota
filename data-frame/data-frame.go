@@ -186,9 +186,9 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 	}
 	var columnsSubset []Series
 	for _, column := range df.columns {
-		columnSubset, err := column.Subset(indexes)
-		if err != nil {
-			return DataFrame{err: err}
+		columnSubset := column.Subset(indexes)
+		if columnSubset.Err() != nil {
+			return DataFrame{err: columnSubset.Err()}
 		}
 		columnsSubset = append(columnsSubset, columnSubset)
 	}
@@ -296,7 +296,7 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 		if exists, idx := strInsideSliceIdx(v, newdf.colnames); exists {
 			originalSeries := df.columns[k]
 			addedSeries := newdf.columns[idx]
-			newSeries := originalSeries.Append(addedSeries)
+			newSeries := originalSeries.Concat(addedSeries)
 			if err := newSeries.Err(); err != nil {
 				return DataFrame{err: err}
 			}
@@ -779,6 +779,156 @@ func (df DataFrame) Col(colname string) Series {
 		}
 	}
 	return ret
+}
+
+// InnerJoin returns a DataFrame containing the inner join of two other DataFrames.
+// This operation matches all rows that appear on both dataframes.
+//func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
+//if len(keys) == 0 {
+//return DataFrame{err: errors.New("Unspecified Join keys")}
+//}
+//// Check that we have all given keys in both DataFrames
+//errorArr := []string{}
+//var ia []int
+//var ib []int
+//for _, key := range keys {
+//i := a.ColIndex(key)
+//if i < 0 {
+//errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+//}
+//ia = append(ia, i)
+//j := b.ColIndex(key)
+//if j < 0 {
+//errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+//}
+//ib = append(ib, j)
+//}
+//if len(errorArr) != 0 {
+//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+//}
+
+//// Pre-Filter A/B
+//prefA := make([]bool, a.nrows, a.nrows)
+//prefB := make([]bool, b.nrows, b.nrows)
+//for i := 0; i < len(keys); i++ {
+//cola := a.columns[ia[i]]
+//colb := b.columns[ib[i]]
+//compa, err := cola.Compare("in", colb)
+//if err != nil {
+//return DataFrame{err: err}
+//}
+//prefA, _ = orBool(prefA, compa)
+//compb, err := colb.Compare("in", cola)
+//if err != nil {
+//return DataFrame{err: err}
+//}
+//prefB, _ = orBool(prefB, compb)
+//}
+//a = a.Subset(prefA)
+//b = b.Subset(prefB)
+
+//aCols := a.columns
+//bCols := b.columns
+//fmt.Println(aCols[0].Elem(0).Eq(bCols[0].Elem(0)))
+////var dfs []DataFrame
+//var newCols []Series
+//// Initialize newCols
+//for _, i := range ia {
+//var empty Series
+//switch aCols[i].t {
+//case "string":
+//empty = Strings()
+//case "int":
+//empty = Ints()
+//case "float":
+//empty = Floats()
+//case "bool":
+//empty = Bools()
+//default:
+//return DataFrame{err: errors.New("Unknown Series type")}
+//}
+//newCols = append(newCols, empty)
+//}
+//for i := 0; i < a.ncols; i++ {
+//if !inIntSlice(i, ia) {
+//var empty Series
+//switch aCols[i].t {
+//case "string":
+//empty = Strings()
+//case "int":
+//empty = Ints()
+//case "float":
+//empty = Floats()
+//case "bool":
+//empty = Bools()
+//default:
+//return DataFrame{err: errors.New("Unknown Series type")}
+//}
+//newCols = append(newCols, empty)
+//}
+//}
+//for i := 0; i < b.ncols; i++ {
+//if !inIntSlice(i, ib) {
+//var empty Series
+//switch bCols[i].t {
+//case "string":
+//empty = Strings()
+//case "int":
+//empty = Ints()
+//case "float":
+//empty = Floats()
+//case "bool":
+//empty = Bools()
+//default:
+//return DataFrame{err: errors.New("Unknown Series type")}
+//}
+//newCols = append(newCols, empty)
+//}
+//}
+//for i := 0; i < a.nrows; i++ {
+//for j := 0; j < b.nrows; j++ {
+//match := true
+//for k := range keys {
+//aElem := aCols[ia[k]].Elem(i)
+//bElem := bCols[ib[k]].Elem(j)
+//match = match && aElem.Eq(bElem)
+//}
+//if match {
+//for n, k := range ia {
+//elem := aCols[k].Elem(k)
+//var s Series
+//switch aCols[k].t {
+//case "string":
+//s = Strings(elem)
+//case "int":
+//s = Ints(elem)
+//case "float":
+//s = Floats(elem)
+//case "bool":
+//s = Bools(elem)
+//default:
+//return DataFrame{err: errors.New("Unknown Series type")}
+//}
+//newCols[n] = newCols[n].Concat(s)
+//fmt.Println(elem)
+//}
+//}
+//}
+//}
+//fmt.Println(newCols)
+
+//return DataFrame{err: errors.New("oops!")}
+//}
+
+// ColIndex returns the index of the column with name `s`. If it fails to find the
+// column it returns -1 instead.
+func (d DataFrame) ColIndex(s string) int {
+	for k, v := range d.colnames {
+		if v == s {
+			return k
+		}
+	}
+	return -1
 }
 
 // TODO: (df DataFrame) Str() (string)

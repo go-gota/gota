@@ -168,7 +168,7 @@ func TestSeries_Index(t *testing.T) {
 	a2 := Ints(1, 2, 3, nil, 5)
 	a3 := Floats(1, 2, 3, nil, 5)
 	a4 := Bools(1, 0, 3, nil, 5)
-	b, _ := a.Subset([]int{2, 3, 4, 4, 4, 1})
+	b := a.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected := "C B D D D B"
 	received := fmt.Sprint(b)
 	if expected != received {
@@ -179,7 +179,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Subset([]bool{true, false, false, false, true})
+	b = a.Subset([]bool{true, false, false, false, true})
 	expected = "A D"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -190,7 +190,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Subset(Bools([]bool{true, false, false, false, true}))
+	b = a.Subset(Bools([]bool{true, false, false, false, true}))
 	expected = "A D"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -201,7 +201,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Subset(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
+	b = a.Subset(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
 	expected = "C B D D D B"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -212,7 +212,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b, _ = a.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b = a.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "C B D D D B"
 	received = fmt.Sprint(b)
 	if expected != received {
@@ -223,7 +223,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ := a2.Subset([]int{2, 3, 4, 4, 4, 1})
+	b2 := a2.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -234,7 +234,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Subset([]bool{true, false, false, true, true})
+	b2 = a2.Subset([]bool{true, false, false, true, true})
 	expected = "1 NA 5"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -245,7 +245,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Subset(Bools([]bool{true, false, false, true, true}))
+	b2 = a2.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "1 NA 5"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -256,7 +256,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b2 = a2.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -267,7 +267,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b2, _ = a2.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b2 = a2.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b2)
 	if expected != received {
@@ -278,7 +278,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ := a3.Subset([]int{2, 3, 4, 4, 4, 1})
+	b3 := a3.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -289,7 +289,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Subset([]bool{true, false, false, true, true})
+	b3 = a3.Subset([]bool{true, false, false, true, true})
 	expected = "1 NA 5"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -300,7 +300,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Subset(Bools([]bool{true, false, false, true, true}))
+	b3 = a3.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "1 NA 5"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -311,7 +311,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b3 = a3.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -322,7 +322,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b3, _ = a3.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b3 = a3.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "3 NA 5 5 5 2"
 	received = fmt.Sprint(b3)
 	if expected != received {
@@ -333,7 +333,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ := a4.Subset([]int{2, 3, 4, 4, 4, 1})
+	b4 := a4.Subset([]int{2, 3, 4, 4, 4, 1})
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -344,7 +344,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Subset([]bool{true, false, false, true, true})
+	b4 = a4.Subset([]bool{true, false, false, true, true})
 	expected = "true NA true"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -355,7 +355,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Subset(Bools([]bool{true, false, false, true, true}))
+	b4 = a4.Subset(Bools([]bool{true, false, false, true, true}))
 	expected = "true NA true"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -366,7 +366,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
+	b4 = a4.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -377,7 +377,7 @@ func TestSeries_Index(t *testing.T) {
 			received,
 		)
 	}
-	b4, _ = a4.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
+	b4 = a4.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
 	expected = "true NA true true true false"
 	received = fmt.Sprint(b4)
 	if expected != received {
@@ -392,7 +392,8 @@ func TestSeries_Index(t *testing.T) {
 
 func TestStrings(t *testing.T) {
 	a := []string{"C", "D"}
-	aa := Strings("A", "B", a)
+	x := "A"
+	aa := Strings(String{&x}, "B", a)
 	expected := "A B C D"
 	received := fmt.Sprint(aa)
 	if expected != received {
@@ -795,335 +796,35 @@ func TestCopy(t *testing.T) {
 	}
 }
 
-//func TestInt_Compare(t *testing.T) {
-//var tests = []struct {
-//a        Cell
-//b        Cell
-//op       comparator
-//expected bool
-//}{
-//{Ints(1)[0], Ints(1)[0], eq, true},
-//{Ints(1)[0], Ints(1)[0], neq, false},
-//{Ints(1)[0], Ints(1)[0], gt, false},
-//{Ints(1)[0], Ints(1)[0], lt, false},
-//{Ints(1)[0], Ints(1)[0], get, true},
-//{Ints(1)[0], Ints(1)[0], let, true},
-
-//{Ints(1)[0], Ints(2)[0], eq, false},
-//{Ints(1)[0], Ints(2)[0], neq, true},
-//{Ints(1)[0], Ints(2)[0], gt, false},
-//{Ints(1)[0], Ints(2)[0], lt, true},
-//{Ints(1)[0], Ints(2)[0], get, false},
-//{Ints(1)[0], Ints(2)[0], let, true},
-
-//{Ints(2)[0], Ints(1)[0], eq, false},
-//{Ints(2)[0], Ints(1)[0], neq, true},
-//{Ints(2)[0], Ints(1)[0], gt, true},
-//{Ints(2)[0], Ints(1)[0], lt, false},
-//{Ints(2)[0], Ints(1)[0], get, true},
-//{Ints(2)[0], Ints(1)[0], let, false},
-
-//{Ints(1)[0], Strings("1")[0], eq, true},
-//{Ints(1)[0], Strings("1")[0], neq, false},
-//{Ints(1)[0], Strings("1")[0], gt, false},
-//{Ints(1)[0], Strings("1")[0], lt, false},
-//{Ints(1)[0], Strings("1")[0], get, true},
-//{Ints(1)[0], Strings("1")[0], let, true},
-
-//{Ints(1)[0], Strings("2")[0], eq, false},
-//{Ints(1)[0], Strings("2")[0], neq, true},
-//{Ints(1)[0], Strings("2")[0], gt, false},
-//{Ints(1)[0], Strings("2")[0], lt, true},
-//{Ints(1)[0], Strings("2")[0], get, false},
-//{Ints(1)[0], Strings("2")[0], let, true},
-
-//{Ints(1)[0], Floats(1)[0], eq, true},
-//{Ints(1)[0], Floats(1)[0], neq, false},
-//{Ints(1)[0], Floats(1)[0], gt, false},
-//{Ints(1)[0], Floats(1)[0], lt, false},
-//{Ints(1)[0], Floats(1)[0], get, true},
-//{Ints(1)[0], Floats(1)[0], let, true},
-
-//{Ints(1)[0], Floats(2)[0], eq, false},
-//{Ints(1)[0], Floats(2)[0], neq, true},
-//{Ints(1)[0], Floats(2)[0], gt, false},
-//{Ints(1)[0], Floats(2)[0], lt, true},
-//{Ints(1)[0], Floats(2)[0], get, false},
-//{Ints(1)[0], Floats(2)[0], let, true},
-
-//{Ints(1)[0], Bools(1)[0], eq, true},
-//{Ints(1)[0], Bools(1)[0], neq, false},
-//{Ints(1)[0], Bools(1)[0], gt, false},
-//{Ints(1)[0], Bools(1)[0], lt, false},
-//{Ints(1)[0], Bools(1)[0], get, true},
-//{Ints(1)[0], Bools(1)[0], let, true},
-
-//{Ints(-1)[0], Bools(0)[0], eq, false},
-//{Ints(-1)[0], Bools(0)[0], neq, true},
-//{Ints(-1)[0], Bools(0)[0], gt, false},
-//{Ints(-1)[0], Bools(0)[0], lt, true},
-//{Ints(-1)[0], Bools(0)[0], get, false},
-//{Ints(-1)[0], Bools(0)[0], let, true},
-//}
-//for k, v := range tests {
-//res, err := v.a.Compare(v.b, v.op)
-//if err != nil {
-//t.Error("Error on test", k, ":", err)
-//} else {
-//if *res != v.expected {
-//t.Error("Error on test", k,
-//"\nExpected:", v.expected,
-//"\nReceived:", *res,
-//)
-//}
-//}
-//}
-//}
-
-//func TestFloat_Compare(t *testing.T) {
-//var tests = []struct {
-//a        Cell
-//b        Cell
-//op       comparator
-//expected bool
-//}{
-//{Floats(1)[0], Ints(1)[0], eq, true},
-//{Floats(1)[0], Ints(1)[0], neq, false},
-//{Floats(1)[0], Ints(1)[0], gt, false},
-//{Floats(1)[0], Ints(1)[0], lt, false},
-//{Floats(1)[0], Ints(1)[0], get, true},
-//{Floats(1)[0], Ints(1)[0], let, true},
-
-//{Floats(1)[0], Ints(2)[0], eq, false},
-//{Floats(1)[0], Ints(2)[0], neq, true},
-//{Floats(1)[0], Ints(2)[0], gt, false},
-//{Floats(1)[0], Ints(2)[0], lt, true},
-//{Floats(1)[0], Ints(2)[0], get, false},
-//{Floats(1)[0], Ints(2)[0], let, true},
-
-//{Floats(2)[0], Ints(1)[0], eq, false},
-//{Floats(2)[0], Ints(1)[0], neq, true},
-//{Floats(2)[0], Ints(1)[0], gt, true},
-//{Floats(2)[0], Ints(1)[0], lt, false},
-//{Floats(2)[0], Ints(1)[0], get, true},
-//{Floats(2)[0], Ints(1)[0], let, false},
-
-//{Floats(1)[0], Strings("1")[0], eq, true},
-//{Floats(1)[0], Strings("1")[0], neq, false},
-//{Floats(1)[0], Strings("1")[0], gt, false},
-//{Floats(1)[0], Strings("1")[0], lt, false},
-//{Floats(1)[0], Strings("1")[0], get, true},
-//{Floats(1)[0], Strings("1")[0], let, true},
-
-//{Floats(1)[0], Strings("2")[0], eq, false},
-//{Floats(1)[0], Strings("2")[0], neq, true},
-//{Floats(1)[0], Strings("2")[0], gt, false},
-//{Floats(1)[0], Strings("2")[0], lt, true},
-//{Floats(1)[0], Strings("2")[0], get, false},
-//{Floats(1)[0], Strings("2")[0], let, true},
-
-//{Floats(1)[0], Floats(1)[0], eq, true},
-//{Floats(1)[0], Floats(1)[0], neq, false},
-//{Floats(1)[0], Floats(1)[0], gt, false},
-//{Floats(1)[0], Floats(1)[0], lt, false},
-//{Floats(1)[0], Floats(1)[0], get, true},
-//{Floats(1)[0], Floats(1)[0], let, true},
-
-//{Floats(1)[0], Floats(2)[0], eq, false},
-//{Floats(1)[0], Floats(2)[0], neq, true},
-//{Floats(1)[0], Floats(2)[0], gt, false},
-//{Floats(1)[0], Floats(2)[0], lt, true},
-//{Floats(1)[0], Floats(2)[0], get, false},
-//{Floats(1)[0], Floats(2)[0], let, true},
-
-//{Floats(1)[0], Bools(1)[0], eq, true},
-//{Floats(1)[0], Bools(1)[0], neq, false},
-//{Floats(1)[0], Bools(1)[0], gt, false},
-//{Floats(1)[0], Bools(1)[0], lt, false},
-//{Floats(1)[0], Bools(1)[0], get, true},
-//{Floats(1)[0], Bools(1)[0], let, true},
-
-//{Floats(-1)[0], Bools(0)[0], eq, false},
-//{Floats(-1)[0], Bools(0)[0], neq, true},
-//{Floats(-1)[0], Bools(0)[0], gt, false},
-//{Floats(-1)[0], Bools(0)[0], lt, true},
-//{Floats(-1)[0], Bools(0)[0], get, false},
-//{Floats(-1)[0], Bools(0)[0], let, true},
-//}
-//for k, v := range tests {
-//res, err := v.a.Compare(v.b, v.op)
-//if err != nil {
-//t.Error("Error on test", k, ":", err)
-//} else {
-//if *res != v.expected {
-//t.Error("Error on test", k,
-//"\nExpected:", v.expected,
-//"\nReceived:", *res,
-//)
-//}
-//}
-//}
-//}
-
-//func TestString_Compare(t *testing.T) {
-//var tests = []struct {
-//a        Cell
-//b        Cell
-//op       comparator
-//expected bool
-//}{
-//{Strings(1)[0], Ints(1)[0], eq, true},
-//{Strings(1)[0], Ints(1)[0], neq, false},
-//{Strings(1)[0], Ints(1)[0], gt, false},
-//{Strings(1)[0], Ints(1)[0], lt, false},
-//{Strings(1)[0], Ints(1)[0], get, true},
-//{Strings(1)[0], Ints(1)[0], let, true},
-
-//{Strings(1)[0], Ints(2)[0], eq, false},
-//{Strings(1)[0], Ints(2)[0], neq, true},
-//{Strings(1)[0], Ints(2)[0], gt, false},
-//{Strings(1)[0], Ints(2)[0], lt, true},
-//{Strings(1)[0], Ints(2)[0], get, false},
-//{Strings(1)[0], Ints(2)[0], let, true},
-
-//{Strings(2)[0], Ints(1)[0], eq, false},
-//{Strings(2)[0], Ints(1)[0], neq, true},
-//{Strings(2)[0], Ints(1)[0], gt, true},
-//{Strings(2)[0], Ints(1)[0], lt, false},
-//{Strings(2)[0], Ints(1)[0], get, true},
-//{Strings(2)[0], Ints(1)[0], let, false},
-
-//{Strings(1)[0], Strings("1")[0], eq, true},
-//{Strings(1)[0], Strings("1")[0], neq, false},
-//{Strings(1)[0], Strings("1")[0], gt, false},
-//{Strings(1)[0], Strings("1")[0], lt, false},
-//{Strings(1)[0], Strings("1")[0], get, true},
-//{Strings(1)[0], Strings("1")[0], let, true},
-
-//{Strings(1)[0], Strings("2")[0], eq, false},
-//{Strings(1)[0], Strings("2")[0], neq, true},
-//{Strings(1)[0], Strings("2")[0], gt, false},
-//{Strings(1)[0], Strings("2")[0], lt, true},
-//{Strings(1)[0], Strings("2")[0], get, false},
-//{Strings(1)[0], Strings("2")[0], let, true},
-
-//{Strings(1)[0], Floats(1)[0], eq, true},
-//{Strings(1)[0], Floats(1)[0], neq, false},
-//{Strings(1)[0], Floats(1)[0], gt, false},
-//{Strings(1)[0], Floats(1)[0], lt, false},
-//{Strings(1)[0], Floats(1)[0], get, true},
-//{Strings(1)[0], Floats(1)[0], let, true},
-
-//{Strings(1)[0], Floats(2)[0], eq, false},
-//{Strings(1)[0], Floats(2)[0], neq, true},
-//{Strings(1)[0], Floats(2)[0], gt, false},
-//{Strings(1)[0], Floats(2)[0], lt, true},
-//{Strings(1)[0], Floats(2)[0], get, false},
-//{Strings(1)[0], Floats(2)[0], let, true},
-
-//{Strings("true")[0], Bools(1)[0], eq, true},
-//{Strings("true")[0], Bools(1)[0], neq, false},
-//{Strings("true")[0], Bools(1)[0], gt, false},
-//{Strings("true")[0], Bools(1)[0], lt, false},
-//{Strings("true")[0], Bools(1)[0], get, true},
-//{Strings("true")[0], Bools(1)[0], let, true},
-
-//{Strings("true")[0], Bools(0)[0], eq, false},
-//{Strings("true")[0], Bools(0)[0], neq, true},
-//{Strings("true")[0], Bools(0)[0], gt, true},
-//{Strings("true")[0], Bools(0)[0], lt, false},
-//{Strings("true")[0], Bools(0)[0], get, true},
-//{Strings("true")[0], Bools(0)[0], let, false},
-
-//{Strings("abc")[0], Strings("def")[0], eq, false},
-//{Strings("abc")[0], Strings("def")[0], neq, true},
-//{Strings("abc")[0], Strings("def")[0], gt, false},
-//{Strings("abc")[0], Strings("def")[0], lt, true},
-//{Strings("abc")[0], Strings("def")[0], get, false},
-//{Strings("abc")[0], Strings("def")[0], let, true},
-
-//{Strings("abc")[0], Strings("ab")[0], eq, false},
-//{Strings("abc")[0], Strings("ab")[0], neq, true},
-//{Strings("abc")[0], Strings("ab")[0], gt, true},
-//{Strings("abc")[0], Strings("ab")[0], lt, false},
-//{Strings("abc")[0], Strings("ab")[0], get, true},
-//{Strings("abc")[0], Strings("ab")[0], let, false},
-//}
-//for k, v := range tests {
-//res, err := v.a.Compare(v.b, v.op)
-//if err != nil {
-//t.Error("Error on test", k, ":", err)
-//} else {
-//if *res != v.expected {
-//t.Error("Error on test", k,
-//"\nExpected:", v.expected,
-//"\nReceived:", *res,
-//)
-//}
-//}
-//}
-//}
-
-//func TestBool_Compare(t *testing.T) {
-//var tests = []struct {
-//a        Cell
-//b        Cell
-//op       comparator
-//expected bool
-//}{
-//{Bools(1)[0], Ints(1)[0], eq, true},
-//{Bools(1)[0], Ints(1)[0], neq, false},
-
-//{Bools(1)[0], Ints(0)[0], eq, false},
-//{Bools(1)[0], Ints(0)[0], neq, true},
-
-//{Bools(1)[0], Strings("true")[0], eq, true},
-//{Bools(1)[0], Strings("true")[0], neq, false},
-
-//{Bools(1)[0], Strings("false")[0], eq, false},
-//{Bools(1)[0], Strings("false")[0], neq, true},
-
-//{Bools(1)[0], Floats(1)[0], eq, true},
-//{Bools(1)[0], Floats(1)[0], neq, false},
-
-//{Bools(1)[0], Floats(0)[0], eq, false},
-//{Bools(1)[0], Floats(0)[0], neq, true},
-
-//{Bools(1)[0], Bools(1)[0], eq, true},
-//{Bools(1)[0], Bools(1)[0], neq, false},
-
-//{Bools(0)[0], Ints(0)[0], eq, true},
-//{Bools(0)[0], Ints(0)[0], neq, false},
-
-//{Bools(0)[0], Ints(1)[0], eq, false},
-//{Bools(0)[0], Ints(1)[0], neq, true},
-
-//{Bools(0)[0], Strings("false")[0], eq, true},
-//{Bools(0)[0], Strings("false")[0], neq, false},
-
-//{Bools(0)[0], Strings("true")[0], eq, false},
-//{Bools(0)[0], Strings("true")[0], neq, true},
-
-//{Bools(0)[0], Floats(0)[0], eq, true},
-//{Bools(0)[0], Floats(0)[0], neq, false},
-
-//{Bools(0)[0], Floats(1)[0], eq, false},
-//{Bools(0)[0], Floats(1)[0], neq, true},
-
-//{Bools(0)[0], Bools(0)[0], eq, true},
-//{Bools(0)[0], Bools(0)[0], neq, false},
-//}
-//for k, v := range tests {
-//res, err := v.a.Compare(v.b, v.op)
-//if err != nil {
-//t.Error("Error on test", k, ":", err)
-//} else {
-//if *res != v.expected {
-//t.Error("Error on test", k,
-//"\nExpected:", v.expected,
-//"\nReceived:", *res,
-//)
-//}
-//}
-//}
-//}
+func TestEq(t *testing.T) {
+	s1 := "123"
+	s2 := "Hello"
+	a := String{&s1}
+	b := String{&s2}
+	if !a.Eq(a) || a.Eq(b) {
+		t.Error("String Eq() not working properly")
+	}
+	i1 := 123
+	i2 := 234
+	c := Int{&i1}
+	d := Int{&i2}
+	if !c.Eq(c) || d.Eq(c) {
+		t.Error("Int Eq() not working properly")
+	}
+	if !c.Eq(a) || c.Eq(b) || c.Eq(String{nil}) {
+		t.Error("Int Eq() not working properly")
+	}
+	if !a.Eq(c) || a.Eq(d) || a.Eq(String{nil}) {
+		t.Error("String Eq() not working properly")
+	}
+	fval1 := 123.0
+	fval2 := 321.456
+	f1 := Float{&fval1}
+	f2 := Float{&fval2}
+	if !f1.Eq(f1) || f1.Eq(f2) {
+		t.Error("Float Eq() not working properly")
+	}
+	if !f1.Eq(c) || f1.Eq(d) || f1.Eq(String{nil}) {
+		t.Error("Float Eq() not working properly")
+	}
+}

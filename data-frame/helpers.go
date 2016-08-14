@@ -1,6 +1,7 @@
 package df
 
 import (
+	"errors"
 	"math"
 	"strconv"
 	"strings"
@@ -104,4 +105,24 @@ func Seq(start, end, step int) []int {
 		}
 		return arr
 	}
+}
+
+func orBool(a []bool, b []bool) ([]bool, error) {
+	if len(a) != len(b) {
+		return nil, errors.New("Different lengths")
+	}
+	ret := make([]bool, len(a), len(a))
+	for i := 0; i < len(a); i++ {
+		ret[i] = a[i] || b[i]
+	}
+	return ret, nil
+}
+
+func inIntSlice(i int, is []int) bool {
+	for _, v := range is {
+		if v == i {
+			return true
+		}
+	}
+	return false
 }

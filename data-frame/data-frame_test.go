@@ -47,7 +47,7 @@ func TestDataFrame_New(t *testing.T) {
 func TestDataFrame_Copy(t *testing.T) {
 	a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))
 	b := a.Copy()
-	if a.columns[0].Elements.(StringElements)[0] == b.columns[0].Elements.(StringElements)[0] {
+	if a.columns[0].elements.(StringElements)[0] == b.columns[0].elements.(StringElements)[0] {
 		t.Error("Copy error: The memory address should be different even if the content is the same")
 	}
 	// TODO: More error checking, this is not exhaustive enough
@@ -348,3 +348,18 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 		t.Error("Expected success, got error")
 	}
 }
+
+//func TestInnerJoin(t *testing.T) {
+//a := New(
+//NamedInts("Age", 23, 32, 41),
+//NamedStrings("Names", "Alice", "Bob", "Daniel"),
+//NamedFloats("Credit", 12.10, 15.1, 16.2),
+//)
+//b := New(
+//NamedInts("Age", 23, 32, 23),
+//NamedStrings("Names", "Alice", "Bob", "Daniel"),
+//NamedFloats("Credit", 12.10, 15.1, 16.2),
+//)
+//c := a.InnerJoin(b, "Age", "Names")
+//fmt.Println(c)
+//}
