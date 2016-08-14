@@ -376,626 +376,123 @@ func (s Series) Subset(indexes interface{}) Series {
 
 // TODO: Return a Bools Series instead of []bool?
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
-	// TODO: What to do in case of NAs?
+	var comp Series
 	switch s.t {
 	case "string":
-		elements := s.elements.(StringElements)
-		ret := []bool{}
-		comparando := Strings(comparando)
-		compElements := comparando.elements.(StringElements)
-		switch comparator {
-		case "==":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case "!=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, !v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, !elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case ">":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.String() > compElements[0].String())
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].String() > compElements[i].String())
-			}
-			return ret, nil
-		case ">=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.String() >= compElements[0].String())
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].String() >= compElements[i].String())
-			}
-			return ret, nil
-		case "<":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.String() < compElements[0].String())
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].String() < compElements[i].String())
-			}
-			return ret, nil
-		case "<=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.String() <= compElements[0].String())
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].String() <= compElements[i].String())
-			}
-			return ret, nil
-		case "in":
-			for _, v := range elements {
-				found := false
-				for _, w := range compElements {
-					if v.String() == w.String() {
-						found = true
-						break
-					}
-				}
-				ret = append(ret, found)
-			}
-			return ret, nil
-		default:
-			return nil, errors.New("Unknown comparator")
-		}
-
+		comp = Strings(comparando)
 	case "int":
-		elements := s.elements.(IntElements)
-		ret := []bool{}
-		comparando := Ints(comparando)
-		compElements := comparando.elements.(IntElements)
-		switch comparator {
-		case "==":
-			if Len(comparando) == 1 {
-				compInt := compElements[0]
-				for _, v := range elements {
-					ret = append(ret, v.Eq(compInt))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case "!=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, !v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, !elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case ">":
-			if Len(comparando) == 1 {
-				compInt := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sInt := v.ToInt().Val()
-					if sInt == nil || compInt == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sInt.(int) > compInt.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sInt := elements[i].ToInt().Val()
-				compInt := compElements[i].ToInt().Val()
-				if sInt == nil || compInt == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sInt.(int) > compInt.(int))
-			}
-			return ret, nil
-		case ">=":
-			if Len(comparando) == 1 {
-				compInt := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sInt := v.ToInt().Val()
-					if sInt == nil || compInt == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sInt.(int) >= compInt.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sInt := elements[i].ToInt().Val()
-				compInt := compElements[i].ToInt().Val()
-				if sInt == nil || compInt == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sInt.(int) >= compInt.(int))
-			}
-			return ret, nil
-		case "<":
-			if Len(comparando) == 1 {
-				compInt := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sInt := v.ToInt().Val()
-					if sInt == nil || compInt == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sInt.(int) < compInt.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sInt := elements[i].ToInt().Val()
-				compInt := compElements[i].ToInt().Val()
-				if sInt == nil || compInt == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sInt.(int) < compInt.(int))
-			}
-			return ret, nil
-		case "<=":
-			if Len(comparando) == 1 {
-				compInt := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sInt := v.ToInt().Val()
-					if sInt == nil || compInt == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sInt.(int) <= compInt.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sInt := elements[i].ToInt().Val()
-				compInt := compElements[i].ToInt().Val()
-				if sInt == nil || compInt == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sInt.(int) <= compInt.(int))
-			}
-			return ret, nil
-		case "in":
-			for _, v := range elements {
-				sInt := v.ToInt().Val()
-				found := false
-				for _, w := range compElements {
-					compInt := w.ToInt().Val()
-					if sInt == nil || compInt == nil {
-						continue
-					}
-					if sInt.(int) == compInt {
-						found = true
-						break
-					}
-				}
-				ret = append(ret, found)
-			}
-			return ret, nil
-		default:
-			return nil, errors.New("Unknown comparator")
-		}
-
+		comp = Ints(comparando)
 	case "float":
-		elements := s.elements.(FloatElements)
-		ret := []bool{}
-		comparando := Floats(comparando)
-		compElements := comparando.elements.(FloatElements)
-		switch comparator {
-		case "==":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case "!=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, !v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, !elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case ">":
-			if Len(comparando) == 1 {
-				compFloat := compElements[0].ToFloat().Val()
-				for _, v := range elements {
-					sFloat := v.ToFloat().Val()
-					if sFloat == nil || compFloat == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sFloat.(float64) > compFloat.(float64))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sFloat := elements[i].ToFloat().Val()
-				compFloat := compElements[i].ToFloat().Val()
-				if sFloat == nil || compFloat == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sFloat.(float64) > compFloat.(float64))
-			}
-			return ret, nil
-		case ">=":
-			if Len(comparando) == 1 {
-				compFloat := compElements[0].ToFloat().Val()
-				for _, v := range elements {
-					sFloat := v.ToFloat().Val()
-					if sFloat == nil || compFloat == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sFloat.(float64) >= compFloat.(float64))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sFloat := elements[i].ToFloat().Val()
-				compFloat := compElements[i].ToFloat().Val()
-				if sFloat == nil || compFloat == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sFloat.(float64) >= compFloat.(float64))
-			}
-			return ret, nil
-		case "<":
-			if Len(comparando) == 1 {
-				compFloat := compElements[0].ToFloat().Val()
-				for _, v := range elements {
-					sFloat := v.ToFloat().Val()
-					if sFloat == nil || compFloat == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sFloat.(float64) < compFloat.(float64))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sFloat := elements[i].ToFloat().Val()
-				compFloat := compElements[i].ToFloat().Val()
-				if sFloat == nil || compFloat == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sFloat.(float64) < compFloat.(float64))
-			}
-			return ret, nil
-		case "<=":
-			if Len(comparando) == 1 {
-				compFloat := compElements[0].ToFloat().Val()
-				for _, v := range elements {
-					sFloat := v.ToFloat().Val()
-					if sFloat == nil || compFloat == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sFloat.(float64) <= compFloat.(float64))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sFloat := elements[i].ToFloat().Val()
-				compFloat := compElements[i].ToFloat().Val()
-				if sFloat == nil || compFloat == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sFloat.(float64) <= compFloat.(float64))
-			}
-			return ret, nil
-		case "in":
-			for _, v := range elements {
-				sFloat := v.ToFloat().Val()
-				found := false
-				for _, w := range compElements {
-					compFloat := w.ToFloat().Val()
-					if sFloat == nil || compFloat == nil {
-						continue
-					}
-					if sFloat.(float64) == compFloat.(float64) {
-						found = true
-						break
-					}
-				}
-				ret = append(ret, found)
-			}
-			return ret, nil
-		default:
-			return nil, errors.New("Unknown comparator")
-		}
-
+		comp = Floats(comparando)
 	case "bool":
-		elements := s.elements.(BoolElements)
-		ret := []bool{}
-		comparando := Bools(comparando)
-		compElements := comparando.elements.(BoolElements)
-		switch comparator {
-		case "==":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case "!=":
-			if Len(comparando) == 1 {
-				for _, v := range elements {
-					ret = append(ret, !v.Eq(compElements[0]))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				ret = append(ret, !elements[i].Eq(compElements[i]))
-			}
-			return ret, nil
-		case ">":
-			if Len(comparando) == 1 {
-				compBool := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sBool := v.ToInt().Val()
-					if sBool == nil || compBool == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sBool.(int) > compBool.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sBool := elements[i].ToInt().Val()
-				compBool := compElements[i].ToInt().Val()
-				if sBool == nil || compBool == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sBool.(int) > compBool.(int))
-			}
-			return ret, nil
-		case ">=":
-			if Len(comparando) == 1 {
-				compBool := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sBool := v.ToInt().Val()
-					if sBool == nil || compBool == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sBool.(int) >= compBool.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sBool := elements[i].ToInt().Val()
-				compBool := compElements[i].ToInt().Val()
-				if sBool == nil || compBool == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sBool.(int) >= compBool.(int))
-			}
-			return ret, nil
-		case "<":
-			if Len(comparando) == 1 {
-				compBool := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sBool := v.ToInt().Val()
-					if sBool == nil || compBool == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sBool.(int) < compBool.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sBool := elements[i].ToInt().Val()
-				compBool := compElements[i].ToInt().Val()
-				if sBool == nil || compBool == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sBool.(int) < compBool.(int))
-			}
-			return ret, nil
-		case "<=":
-			if Len(comparando) == 1 {
-				compBool := compElements[0].ToInt().Val()
-				for _, v := range elements {
-					sBool := v.ToInt().Val()
-					if sBool == nil || compBool == nil {
-						ret = append(ret, false)
-						continue
-					}
-					ret = append(ret, sBool.(int) <= compBool.(int))
-				}
-				return ret, nil
-			}
-			if Len(s) != Len(comparando) {
-				return nil, errors.New("Can't compare Series: Different dimensions")
-			}
-			for i := 0; i < Len(s); i++ {
-				sBool := elements[i].ToInt().Val()
-				compBool := compElements[i].ToInt().Val()
-				if sBool == nil || compBool == nil {
-					ret = append(ret, false)
-					continue
-				}
-				ret = append(ret, sBool.(int) <= compBool.(int))
-			}
-			return ret, nil
-		case "in":
-			for _, v := range elements {
-				sBool := v.ToBool().Val()
-				found := false
-				for _, w := range compElements {
-					compBool := w.ToBool().Val()
-					if sBool == nil || compBool == nil {
-						continue
-					}
-					if sBool.(bool) == compBool.(bool) {
-						found = true
-						break
-					}
-				}
-				ret = append(ret, found)
-			}
-			return ret, nil
-		default:
-			return nil, errors.New("Unknown comparator")
-		}
-
+		comp = Bools(comparando)
+	default:
+		return nil, errors.New("Unknown Series type")
 	}
-	return nil, nil
+	ret := []bool{}
+	switch comparator {
+	case "==":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(i)))
+		}
+	case "!=":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(i)))
+		}
+	case ">":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(i)))
+		}
+	case ">=":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(i)))
+		}
+	case "<":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(i)))
+		}
+	case "<=":
+		if Len(comp) == 1 {
+			for i := 0; i < Len(s); i++ {
+				ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(0)))
+			}
+			return ret, nil
+		}
+		if Len(s) != Len(comp) {
+			return nil, errors.New("Can't compare Series: Different dimensions")
+		}
+		for i := 0; i < Len(s); i++ {
+			ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(i)))
+		}
+	case "in":
+		for i := 0; i < Len(s); i++ {
+			found := false
+			for j := 0; j < Len(comp); j++ {
+				if s.elements.Elem(i).Eq(comp.elements.Elem(j)) {
+					found = true
+					break
+				}
+			}
+			ret = append(ret, found)
+		}
+	default:
+		return nil, errors.New("Unknown comparator")
+	}
+	return ret, nil
 }
-
-// All custom type definitions:
-// ============================
-
-// All Eq() methods
-// ====================
-
-// All Records() methods
-// ====================
 
 func (s Series) Records() []string {
 	return s.elements.Records()
 }
 
-// All String() methods
-// ====================
-
 func (s Series) String() string {
 	return fmt.Sprint(s.elements)
 }
-
-// All Int() methods
-// ====================
-
-// All Float() methods
-// ====================
-
-// All Bool() methods
-// ====================
-// All Copy() methods
-// ====================
 
 func (s Series) Copy() Series {
 	var copy Series
@@ -1019,13 +516,6 @@ func (s Series) Copy() Series {
 	}
 	return copy
 }
-
-// All IsNA() methods
-// ====================
-// TODO: IsNA for a Series will return a boolean Series indicating which of the given elements is NA
-
-// Constructors
-// ============
 
 // NamedStrings is a constructor for a named String series
 func NamedStrings(name string, args ...interface{}) Series {
@@ -1103,7 +593,6 @@ func Bools(args ...interface{}) Series {
 	return ret
 }
 
-// Extra Series functions
 func Str(s Series) string {
 	var ret []string
 	// If name exists print name

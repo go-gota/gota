@@ -27,6 +27,10 @@ type Bool struct {
 
 type Element interface {
 	Eq(Element) bool
+	Less(Element) bool
+	LessEq(Element) bool
+	Greater(Element) bool
+	GreaterEq(Element) bool
 	ToString() String
 	ToInt() Int
 	ToFloat() Float
@@ -198,6 +202,188 @@ func (f Float) ToBool() Bool {
 }
 func (i Bool) ToBool() Bool {
 	return i.Copy()
+}
+
+func (s String) LessEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToString()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.s <= *e.s
+}
+func (s Int) LessEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToInt()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.i <= *e.i
+}
+func (s Float) LessEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToFloat()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.f <= *e.f
+}
+func (s Bool) LessEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToBool()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	if *s.b && !*e.b {
+		return false
+	}
+	return true
+}
+
+func (s String) Less(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToString()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.s < *e.s
+}
+func (s Int) Less(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToInt()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.i < *e.i
+}
+func (s Float) Less(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToFloat()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.f < *e.f
+}
+func (s Bool) Less(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToBool()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	if *s.b {
+		return false
+	}
+	if *e.b {
+		return true
+	}
+	return false
+}
+
+func (s String) GreaterEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToString()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.s >= *e.s
+}
+func (s Int) GreaterEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToInt()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.i >= *e.i
+}
+func (s Float) GreaterEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToFloat()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.f >= *e.f
+}
+func (s Bool) GreaterEq(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToBool()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	if *s.b {
+		return true
+	}
+	if *e.b {
+		return false
+	}
+	return true
+}
+
+func (s String) Greater(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToString()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.s > *e.s
+}
+func (s Int) Greater(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToInt()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.i > *e.i
+}
+func (s Float) Greater(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToFloat()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.f > *e.f
+}
+func (s Bool) Greater(elem Element) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToBool()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	if *s.b && !*e.b {
+		return true
+	}
+	return false
 }
 
 func (s String) Eq(elem Element) bool {
