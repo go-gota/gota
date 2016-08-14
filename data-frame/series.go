@@ -24,7 +24,7 @@ func (s Series) Elem(i int) Element {
 	if i >= Len(s) || i < 0 {
 		return nil
 	}
-	return s.Elem(i)
+	return s.elements.Elem(i)
 }
 
 func (s Series) Val(i int) interface{} {
@@ -38,7 +38,7 @@ func (s Series) Val(i int) interface{} {
 	return elem.Val()
 }
 
-func (s Series) Append(x interface{}) {
+func (s *Series) Append(x interface{}) {
 	s.elements = s.elements.Append(x)
 }
 

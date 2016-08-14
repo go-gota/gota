@@ -345,21 +345,23 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 	}
 	b := ReadMaps(m)
 	if b.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: ", b.Err())
 	}
 }
 
-//func TestInnerJoin(t *testing.T) {
-//a := New(
-//NamedInts("Age", 23, 32, 41),
-//NamedStrings("Names", "Alice", "Bob", "Daniel"),
-//NamedFloats("Credit", 12.10, 15.1, 16.2),
-//)
-//b := New(
-//NamedInts("Age", 23, 32, 23),
-//NamedStrings("Names", "Alice", "Bob", "Daniel"),
-//NamedFloats("Credit", 12.10, 15.1, 16.2),
-//)
-//c := a.InnerJoin(b, "Age", "Names")
-//fmt.Println(c)
-//}
+func TestInnerJoin(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := New(
+		NamedInts("Age", 23, 32, 23),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 1.10, 0.1, 16.2),
+	)
+	c := a.InnerJoin(b, "Age", "Names")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+}
