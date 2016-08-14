@@ -20,6 +20,21 @@ func (s Series) Err() error {
 	return s.err
 }
 
+func (s Series) Set(i int, val ElementValue) Series {
+	if s.Err() != nil {
+		return s
+	}
+	if i >= Len(s) || i < 0 {
+		return Series{err: errors.New("Couldn't set element. Index out of bounds")}
+	}
+	elems, err := s.elements.Set(i, val)
+	if err != nil {
+		return Series{err: errors.New("Couldn't set element: " + err.Error())}
+	}
+	s.elements = elems
+	return s
+}
+
 func (s Series) Elem(i int) Element {
 	if i >= Len(s) || i < 0 {
 		return nil
