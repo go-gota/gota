@@ -359,8 +359,58 @@ func TestInnerJoin(t *testing.T) {
 		NamedStrings("Names", "Alice", "Bob", "Daniel"),
 		NamedFloats("Credit", 1.10, 0.1, 16.2),
 	)
-	c := a.InnerJoin(b, "Age", "Names")
+	c := a.InnerJoin(b, "Names")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = a.InnerJoin(b, "Credit")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = a.InnerJoin(b, "Age")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = a.InnerJoin(b, "Names", "Age")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = a.InnerJoin(b, "Names", "Credit")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = a.InnerJoin(b, "Age", "Names")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	c = b.Rename("Credit.B", "Credit").InnerJoin(a, "Age", "Names")
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
 }
+
+//func TestExample(t *testing.T) {
+//var a, b DataFrame
+//r, err := http.Get("https://jsonplaceholder.typicode.com/albums")
+//if err != nil {
+//log.Fatal(err)
+//} else {
+//defer r.Body.Close()
+//var target []map[string]interface{}
+//json.NewDecoder(r.Body).Decode(&target)
+//a = ReadMaps(target)
+//}
+//r, err = http.Get("https://jsonplaceholder.typicode.com/photos")
+//if err != nil {
+//log.Fatal(err)
+//} else {
+//defer r.Body.Close()
+//var target []map[string]interface{}
+//json.NewDecoder(r.Body).Decode(&target)
+//b = ReadMaps(target)
+//}
+//c := a.InnerJoin(b, "id")
+//fmt.Println(a.Names())
+//fmt.Println(b.Names())
+//fmt.Println(c)
+//}

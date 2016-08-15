@@ -80,7 +80,6 @@ func (s StringElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-
 func (s IntElements) Set(i int, val ElementValue) (Elements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
@@ -145,7 +144,6 @@ func (s IntElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-
 func (s FloatElements) Set(i int, val ElementValue) (Elements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
@@ -209,7 +207,6 @@ func (s FloatElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-
 func (s BoolElements) Set(i int, val ElementValue) (Elements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
