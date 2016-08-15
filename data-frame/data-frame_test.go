@@ -353,10 +353,12 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 }
 
 func TestDataFrame_InnerJoin(t *testing.T) {
+	// TODO: Design table tests that compare that elements, types, and values are
+	// what we expect
 	a := New(
 		NamedInts("Age", 23, 32, 41),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
 		NamedFloats("Credit", 12.10, 15.1, 16.2),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
 	)
 	b := New(
 		NamedInts("Age", 23, 32, 23),
