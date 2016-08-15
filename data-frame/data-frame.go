@@ -32,11 +32,9 @@ func New(series ...Series) DataFrame {
 	lastLength := 0
 	colnames := make([]string, len(series))
 	var columns []Series
-	var coltypes []string
 	for k, v := range series {
 		columns = append(columns, v.Copy())
 		colnames[k] = v.Name
-		coltypes = append(coltypes, v.t)
 		l := Len(v)
 		// Check that all given Series have the same length
 		if k > 0 {
@@ -321,38 +319,12 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 		}
 	}
 	// Check that colname exist on dataframe
-	var newSeries []Series
-	newSeries = append(newSeries, df.columns...)
+	newSeries := df.columns
 	if exists, idx := strInsideSliceIdx(colname, df.Names()); exists {
-		switch series.t {
-		case "string":
-			newSeries[idx] = NamedStrings(colname, series)
-		case "int":
-			newSeries[idx] = NamedInts(colname, series)
-		case "float":
-			newSeries[idx] = NamedFloats(colname, series)
-		case "bool":
-			newSeries[idx] = NamedBools(colname, series)
-		default:
-			return DataFrame{
-				err: errors.New("Unknown Series type"),
-			}
-		}
+		newSeries[idx] = series
 	} else {
-		switch series.t {
-		case "string":
-			newSeries = append(newSeries, NamedStrings(colname, series))
-		case "int":
-			newSeries = append(newSeries, NamedInts(colname, series))
-		case "float":
-			newSeries = append(newSeries, NamedFloats(colname, series))
-		case "bool":
-			newSeries = append(newSeries, NamedBools(colname, series))
-		default:
-			return DataFrame{
-				err: errors.New("Unknown Series type"),
-			}
-		}
+		series.Name = colname
+		newSeries = append(newSeries, series)
 	}
 	return New(newSeries...)
 }
@@ -806,61 +778,19 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	// Initialize newCols
 	var newCols []Series
 	for _, i := range ia {
-		name := aCols[i].Name
-		var empty Series
-		switch aCols[i].t {
-		case "string":
-			empty = NamedStrings(name)
-		case "int":
-			empty = NamedInts(name)
-		case "float":
-			empty = NamedFloats(name)
-		case "bool":
-			empty = NamedBools(name)
-		default:
-			return DataFrame{err: errors.New("Unknown Series type")}
-		}
-		newCols = append(newCols, empty)
+		newCols = append(newCols, aCols[i].Empty())
 	}
 	for i := 0; i < a.ncols; i++ {
 		if !inIntSlice(i, ia) {
 			ia = append(ia, i)
-			name := aCols[i].Name
-			var empty Series
-			switch aCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, aCols[i].Empty())
 		}
 	}
 	var bIdx []int
 	for i := 0; i < b.ncols; i++ {
 		if !inIntSlice(i, ib) {
 			bIdx = append(bIdx, i)
-			name := bCols[i].Name
-			var empty Series
-			switch bCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, bCols[i].Empty())
 		}
 	}
 
@@ -924,61 +854,19 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	// Initialize newCols
 	var newCols []Series
 	for _, i := range ia {
-		name := aCols[i].Name
-		var empty Series
-		switch aCols[i].t {
-		case "string":
-			empty = NamedStrings(name)
-		case "int":
-			empty = NamedInts(name)
-		case "float":
-			empty = NamedFloats(name)
-		case "bool":
-			empty = NamedBools(name)
-		default:
-			return DataFrame{err: errors.New("Unknown Series type")}
-		}
-		newCols = append(newCols, empty)
+		newCols = append(newCols, aCols[i].Empty())
 	}
 	for i := 0; i < a.ncols; i++ {
 		if !inIntSlice(i, ia) {
 			ia = append(ia, i)
-			name := aCols[i].Name
-			var empty Series
-			switch aCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, aCols[i].Empty())
 		}
 	}
 	var bIdx []int
 	for i := 0; i < b.ncols; i++ {
 		if !inIntSlice(i, ib) {
 			bIdx = append(bIdx, i)
-			name := bCols[i].Name
-			var empty Series
-			switch bCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, bCols[i].Empty())
 		}
 	}
 
@@ -1058,61 +946,19 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	var aIdx []int
 	for _, i := range ia {
 		aIdx = append(aIdx, i)
-		name := aCols[i].Name
-		var empty Series
-		switch aCols[i].t {
-		case "string":
-			empty = NamedStrings(name)
-		case "int":
-			empty = NamedInts(name)
-		case "float":
-			empty = NamedFloats(name)
-		case "bool":
-			empty = NamedBools(name)
-		default:
-			return DataFrame{err: errors.New("Unknown Series type")}
-		}
-		newCols = append(newCols, empty)
+		newCols = append(newCols, aCols[i].Empty())
 	}
 	for i := 0; i < a.ncols; i++ {
 		if !inIntSlice(i, ia) {
 			aIdx = append(aIdx, i)
-			name := aCols[i].Name
-			var empty Series
-			switch aCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, aCols[i].Empty())
 		}
 	}
 	var bIdx []int
 	for i := 0; i < b.ncols; i++ {
 		if !inIntSlice(i, ib) {
 			bIdx = append(bIdx, i)
-			name := bCols[i].Name
-			var empty Series
-			switch bCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
+			newCols = append(newCols, bCols[i].Empty())
 		}
 	}
 
@@ -1182,7 +1028,7 @@ func (d DataFrame) ColIndex(s string) int {
 // TODO: Compare?
 // TODO: UniqueRows?
 // TODO: UniqueColumns?
-// TODO: Joins: Inner/Outer/Right/Left all.x? all.y?
+// TODO: Joins: OuterJoin, CrossJoin
 // TODO: ChangeType(DataFrame, types) (DataFrame, err) // Parse columns again
 // TODO: Improve error handling by using errors.Wrap and errors.Unwrap
 // TODO: Improve DataFrame.String() by limiting the column lengtht to x characters and perhaps the line length as well

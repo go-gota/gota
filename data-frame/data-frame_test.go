@@ -295,7 +295,11 @@ func TestDataFrame_Column(t *testing.T) {
 }
 
 func TestDataFrame_Mutate(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1),
+	)
 	b := a.Mutate("COL.2", NamedStrings("ColumnChanged!", "x", 1, "z"))
 	if b.Err() != nil {
 		t.Error("Expected success, got error")

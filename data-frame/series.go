@@ -16,6 +16,21 @@ type Series struct {
 	err      error
 }
 
+func (s Series) Empty() Series {
+	ret := Series{Name: s.Name, t: s.t}
+	switch ret.t {
+	case "string":
+		ret.elements = StringElements{}
+	case "int":
+		ret.elements = IntElements{}
+	case "float":
+		ret.elements = FloatElements{}
+	case "bool":
+		ret.elements = BoolElements{}
+	}
+	return ret
+}
+
 func (s Series) Err() error {
 	return s.err
 }
