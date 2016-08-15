@@ -2,7 +2,6 @@ package df
 
 import (
 	"encoding/json"
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -422,7 +421,6 @@ func TestDataFrame_RightJoin(t *testing.T) {
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
-	fmt.Println(c)
 }
 
 //func TestExample(t *testing.T) {
@@ -445,8 +443,12 @@ func TestDataFrame_RightJoin(t *testing.T) {
 //json.NewDecoder(r.Body).Decode(&target)
 //b = ReadMaps(target)
 //}
-//c := a.InnerJoin(b, "id")
-//fmt.Println(a.Names())
-//fmt.Println(b.Names())
-//fmt.Println(c)
+//c := a.LeftJoin(b, "id")
+//c = a.InnerJoin(b, "id")
+//c = a.RightJoin(b, "id")
+////fmt.Println(c)
+////fmt.Println(a.Names())
+////fmt.Println(b.Names())
+////fmt.Println(c.Names())
+//fmt.Println(c.Dim())
 //}
