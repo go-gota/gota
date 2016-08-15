@@ -1010,6 +1010,132 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	return New(newCols...)
 }
 
+// OuterJoin returns a DataFrame containing the outer join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
+	if len(keys) == 0 {
+		return DataFrame{err: errors.New("Unspecified Join keys")}
+	}
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	var ia []int
+	var ib []int
+	for _, key := range keys {
+		i := a.ColIndex(key)
+		if i < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		ia = append(ia, i)
+		j := b.ColIndex(key)
+		if j < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+		}
+		ib = append(ib, j)
+	}
+	if len(errorArr) != 0 {
+		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+	}
+
+	aCols := a.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols []Series
+	var aIdx []int
+	for _, i := range ia {
+		aIdx = append(aIdx, i)
+		newCols = append(newCols, aCols[i].Empty())
+	}
+	for i := 0; i < a.ncols; i++ {
+		if !inIntSlice(i, ia) {
+			aIdx = append(aIdx, i)
+			ia = append(ia, i)
+			newCols = append(newCols, aCols[i].Empty())
+		}
+	}
+	var bIdx []int
+	for i := 0; i < b.ncols; i++ {
+		if !inIntSlice(i, ib) {
+			bIdx = append(bIdx, i)
+			newCols = append(newCols, bCols[i].Empty())
+		}
+	}
+
+	// Fill newCols
+	for i := 0; i < a.nrows; i++ {
+		matched := false
+		for j := 0; j < b.nrows; j++ {
+			match := true
+			for k := range keys {
+				aElem := aCols[ia[k]].Elem(i)
+				bElem := bCols[ib[k]].Elem(j)
+				match = match && aElem.Eq(bElem)
+			}
+			if match {
+				matched = true
+				ii := 0
+				for n, k := range ia {
+					elem := aCols[k].Elem(i)
+					newCols[n].Append(elem)
+					ii = n
+				}
+				ii++
+				for _, k := range bIdx {
+					elem := bCols[k].Elem(i)
+					newCols[ii].Append(elem)
+					ii++
+				}
+			}
+		}
+		if !matched {
+			ii := 0
+			for n, k := range ia {
+				elem := aCols[k].Elem(i)
+				newCols[n].Append(elem)
+				ii = n
+			}
+			ii++
+			for _, _ = range bIdx {
+				newCols[ii].Append(nil)
+				ii++
+			}
+		}
+	}
+	for j := 0; j < b.nrows; j++ {
+		matched := false
+		for i := 0; i < a.nrows; i++ {
+			match := true
+			for k := range keys {
+				aElem := aCols[ia[k]].Elem(i)
+				bElem := bCols[ib[k]].Elem(j)
+				match = match && aElem.Eq(bElem)
+			}
+			if match {
+				matched = true
+			}
+		}
+		if !matched {
+			ii := 0
+			for _, k := range ib {
+				elem := bCols[k].Elem(j)
+				newCols[ii].Append(elem)
+				ii++
+			}
+			for n := range aIdx {
+				if n >= ii {
+					newCols[n].Append(nil)
+					ii++
+				}
+			}
+			for _, k := range bIdx {
+				elem := bCols[k].Elem(j)
+				newCols[ii].Append(elem)
+				ii++
+			}
+		}
+	}
+	return New(newCols...)
+}
+
 // ColIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.
 func (d DataFrame) ColIndex(s string) int {
@@ -1028,7 +1154,7 @@ func (d DataFrame) ColIndex(s string) int {
 // TODO: Compare?
 // TODO: UniqueRows?
 // TODO: UniqueColumns?
-// TODO: Joins: OuterJoin, CrossJoin
+// TODO: Joins: CrossJoin
 // TODO: ChangeType(DataFrame, types) (DataFrame, err) // Parse columns again
 // TODO: Improve error handling by using errors.Wrap and errors.Unwrap
 // TODO: Improve DataFrame.String() by limiting the column lengtht to x characters and perhaps the line length as well

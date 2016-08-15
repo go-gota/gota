@@ -427,6 +427,23 @@ func TestDataFrame_RightJoin(t *testing.T) {
 	}
 }
 
+func TestDataFrame_OuterJoin(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := New(
+		NamedInts("Age", 23, 32, 31),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 1.10, 0.1, 16.2),
+	)
+	c := a.OuterJoin(b, "Age")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+}
+
 //func TestExample(t *testing.T) {
 //var a, b DataFrame
 //r, err := http.Get("https://jsonplaceholder.typicode.com/albums")
