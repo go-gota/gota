@@ -801,26 +801,123 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
-	// TODO: Benchmark if it is worth it to prefilter the data
-	// Pre-Filter A/B
-	prefA := make([]bool, a.nrows, a.nrows)
-	prefB := make([]bool, b.nrows, b.nrows)
-	for i := 0; i < len(keys); i++ {
-		cola := a.columns[ia[i]]
-		colb := b.columns[ib[i]]
-		compa, err := cola.Compare("in", colb)
-		if err != nil {
-			return DataFrame{err: err}
+	aCols := a.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols []Series
+	for _, i := range ia {
+		name := aCols[i].Name
+		var empty Series
+		switch aCols[i].t {
+		case "string":
+			empty = NamedStrings(name)
+		case "int":
+			empty = NamedInts(name)
+		case "float":
+			empty = NamedFloats(name)
+		case "bool":
+			empty = NamedBools(name)
+		default:
+			return DataFrame{err: errors.New("Unknown Series type")}
 		}
-		prefA, _ = orBool(prefA, compa)
-		compb, err := colb.Compare("in", cola)
-		if err != nil {
-			return DataFrame{err: err}
-		}
-		prefB, _ = orBool(prefB, compb)
+		newCols = append(newCols, empty)
 	}
-	a = a.Subset(prefA)
-	b = b.Subset(prefB)
+	for i := 0; i < a.ncols; i++ {
+		if !inIntSlice(i, ia) {
+			ia = append(ia, i)
+			name := aCols[i].Name
+			var empty Series
+			switch aCols[i].t {
+			case "string":
+				empty = NamedStrings(name)
+			case "int":
+				empty = NamedInts(name)
+			case "float":
+				empty = NamedFloats(name)
+			case "bool":
+				empty = NamedBools(name)
+			default:
+				return DataFrame{err: errors.New("Unknown Series type")}
+			}
+			newCols = append(newCols, empty)
+		}
+	}
+	var bIdx []int
+	for i := 0; i < b.ncols; i++ {
+		if !inIntSlice(i, ib) {
+			bIdx = append(bIdx, i)
+			name := bCols[i].Name
+			var empty Series
+			switch bCols[i].t {
+			case "string":
+				empty = NamedStrings(name)
+			case "int":
+				empty = NamedInts(name)
+			case "float":
+				empty = NamedFloats(name)
+			case "bool":
+				empty = NamedBools(name)
+			default:
+				return DataFrame{err: errors.New("Unknown Series type")}
+			}
+			newCols = append(newCols, empty)
+		}
+	}
+
+	// Fill mewCols
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < b.nrows; j++ {
+			match := true
+			for k := range keys {
+				aElem := aCols[ia[k]].Elem(i)
+				bElem := bCols[ib[k]].Elem(j)
+				match = match && aElem.Eq(bElem)
+			}
+			if match {
+				ii := 0
+				for n, k := range ia {
+					elem := aCols[k].Elem(i)
+					newCols[n].Append(elem)
+					ii = n
+				}
+				ii++
+				for _, k := range bIdx {
+					elem := bCols[k].Elem(i)
+					newCols[ii].Append(elem)
+					ii++
+				}
+			}
+		}
+	}
+	return New(newCols...)
+
+}
+
+// LeftJoin returns a DataFrame containing the left join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
+	if len(keys) == 0 {
+		return DataFrame{err: errors.New("Unspecified Join keys")}
+	}
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	var ia []int
+	var ib []int
+	for _, key := range keys {
+		i := a.ColIndex(key)
+		if i < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		ia = append(ia, i)
+		j := b.ColIndex(key)
+		if j < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+		}
+		ib = append(ib, j)
+	}
+	if len(errorArr) != 0 {
+		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+	}
 
 	aCols := a.columns
 	bCols := b.columns
@@ -885,7 +982,9 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		}
 	}
 
+	// Fill mewCols
 	for i := 0; i < a.nrows; i++ {
+		matched := false
 		for j := 0; j < b.nrows; j++ {
 			match := true
 			for k := range keys {
@@ -894,6 +993,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
+				matched = true
 				ii := 0
 				for n, k := range ia {
 					elem := aCols[k].Elem(i)
@@ -908,164 +1008,17 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 				}
 			}
 		}
-	}
-	return New(newCols...)
-}
-
-// LeftJoin returns a DataFrame containing the left join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
-func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
-	if len(keys) == 0 {
-		return DataFrame{err: errors.New("Unspecified Join keys")}
-	}
-	// Check that we have all given keys in both DataFrames
-	errorArr := []string{}
-	var ia []int
-	var ib []int
-	for _, key := range keys {
-		i := a.ColIndex(key)
-		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
-		}
-		ia = append(ia, i)
-		j := b.ColIndex(key)
-		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
-		}
-		ib = append(ib, j)
-	}
-	if len(errorArr) != 0 {
-		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
-	}
-
-	// TODO: Benchmark if it is worth it to prefilter the data
-	// Pre-Filter A/B
-	prefA := make([]bool, a.nrows, a.nrows)
-	prefB := make([]bool, b.nrows, b.nrows)
-	for i := 0; i < len(keys); i++ {
-		cola := a.columns[ia[i]]
-		colb := b.columns[ib[i]]
-		compa, err := cola.Compare("in", colb)
-		if err != nil {
-			return DataFrame{err: err}
-		}
-		prefA, _ = orBool(prefA, compa)
-		compb, err := colb.Compare("in", cola)
-		if err != nil {
-			return DataFrame{err: err}
-		}
-		prefB, _ = orBool(prefB, compb)
-	}
-	a = a.Subset(prefA)
-	b = b.Subset(prefB)
-
-	aCols := a.columns
-	bCols := b.columns
-	// Initialize newCols
-	var newCols []Series
-	for _, i := range ia {
-		name := aCols[i].Name
-		var empty Series
-		switch aCols[i].t {
-		case "string":
-			empty = NamedStrings(name)
-		case "int":
-			empty = NamedInts(name)
-		case "float":
-			empty = NamedFloats(name)
-		case "bool":
-			empty = NamedBools(name)
-		default:
-			return DataFrame{err: errors.New("Unknown Series type")}
-		}
-		newCols = append(newCols, empty)
-	}
-	for i := 0; i < a.ncols; i++ {
-		if !inIntSlice(i, ia) {
-			name := aCols[i].Name
-			var empty Series
-			switch aCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
-		}
-	}
-	for i := 0; i < b.ncols; i++ {
-		if !inIntSlice(i, ib) {
-			name := aCols[i].Name
-			var empty Series
-			switch bCols[i].t {
-			case "string":
-				empty = NamedStrings(name)
-			case "int":
-				empty = NamedInts(name)
-			case "float":
-				empty = NamedFloats(name)
-			case "bool":
-				empty = NamedBools(name)
-			default:
-				return DataFrame{err: errors.New("Unknown Series type")}
-			}
-			newCols = append(newCols, empty)
-		}
-	}
-
-	for i := 0; i < a.nrows; i++ {
-		hasMatched := false
-		for j := 0; j < b.nrows; j++ {
-			match := true
-			for k := range keys {
-				aElem := aCols[ia[k]].Elem(i)
-				bElem := bCols[ib[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
-			}
-			if match {
-				hasMatched = true
-				for n, k := range ia {
-					elem := aCols[k].Elem(k)
-					newCols[n].Append(elem)
-				}
-				ii := a.ncols - len(ia) + 1
-				for jj := 0; jj < a.ncols; jj++ {
-					if !inIntSlice(jj, ia) {
-						elem := aCols[jj].Elem(i)
-						newCols[ii].Append(elem)
-						ii++
-					}
-				}
-				for jj := 0; jj < b.ncols; jj++ {
-					if !inIntSlice(jj, ib) {
-						elem := bCols[jj].Elem(j)
-						newCols[ii].Append(elem)
-						ii++
-					}
-				}
-			}
-		}
-		if !hasMatched {
+		if !matched {
+			ii := 0
 			for n, k := range ia {
-				elem := aCols[k].Elem(k)
+				elem := aCols[k].Elem(i)
 				newCols[n].Append(elem)
+				ii = n
 			}
-			ii := a.ncols - len(ia) + 1
-			for jj := 0; jj < a.ncols; jj++ {
-				if !inIntSlice(jj, ia) {
-					elem := aCols[jj].Elem(i)
-					newCols[ii].Append(elem)
-					ii++
-				}
-			}
-			for jj := 0; jj < b.ncols; jj++ {
-				newCols[jj].Append(nil)
+			ii++
+			for _, _ = range bIdx {
+				newCols[ii].Append(nil)
+				ii++
 			}
 		}
 	}
@@ -1074,166 +1027,9 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-//func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
-//if len(keys) == 0 {
-//return DataFrame{err: errors.New("Unspecified Join keys")}
-//}
-//// Check that we have all given keys in both DataFrames
-//errorArr := []string{}
-//var ia []int
-//var ib []int
-//for _, key := range keys {
-//i := a.ColIndex(key)
-//if i < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
-//}
-//ia = append(ia, i)
-//j := b.ColIndex(key)
-//if j < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
-//}
-//ib = append(ib, j)
-//}
-//if len(errorArr) != 0 {
-//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
-//}
-
-//// TODO: Benchmark if it is worth it to prefilter the data
-//// Pre-Filter A/B
-//prefA := make([]bool, a.nrows, a.nrows)
-//prefB := make([]bool, b.nrows, b.nrows)
-//for i := 0; i < len(keys); i++ {
-//cola := a.columns[ia[i]]
-//colb := b.columns[ib[i]]
-//compa, err := cola.Compare("in", colb)
-//if err != nil {
-//return DataFrame{err: err}
-//}
-//prefA, _ = orBool(prefA, compa)
-//compb, err := colb.Compare("in", cola)
-//if err != nil {
-//return DataFrame{err: err}
-//}
-//prefB, _ = orBool(prefB, compb)
-//}
-//a = a.Subset(prefA)
-//b = b.Subset(prefB)
-
-//aCols := a.columns
-//bCols := b.columns
-//// Initialize newCols
-//var newCols []Series
-//for _, i := range ia {
-//name := aCols[i].Name
-//var empty Series
-//switch aCols[i].t {
-//case "string":
-//empty = NamedStrings(name)
-//case "int":
-//empty = NamedInts(name)
-//case "float":
-//empty = NamedFloats(name)
-//case "bool":
-//empty = NamedBools(name)
-//default:
-//return DataFrame{err: errors.New("Unknown Series type")}
-//}
-//newCols = append(newCols, empty)
-//}
-//for i := 0; i < a.ncols; i++ {
-//if !inIntSlice(i, ia) {
-//name := aCols[i].Name
-//var empty Series
-//switch aCols[i].t {
-//case "string":
-//empty = NamedStrings(name)
-//case "int":
-//empty = NamedInts(name)
-//case "float":
-//empty = NamedFloats(name)
-//case "bool":
-//empty = NamedBools(name)
-//default:
-//return DataFrame{err: errors.New("Unknown Series type")}
-//}
-//newCols = append(newCols, empty)
-//}
-//}
-//for i := 0; i < b.ncols; i++ {
-//if !inIntSlice(i, ib) {
-//name := aCols[i].Name
-//var empty Series
-//switch bCols[i].t {
-//case "string":
-//empty = NamedStrings(name)
-//case "int":
-//empty = NamedInts(name)
-//case "float":
-//empty = NamedFloats(name)
-//case "bool":
-//empty = NamedBools(name)
-//default:
-//return DataFrame{err: errors.New("Unknown Series type")}
-//}
-//newCols = append(newCols, empty)
-//}
-//}
-
-//for j := 0; j < b.nrows; j++ {
-//hasMatched := false
-//for i := 0; i < a.nrows; i++ {
-//match := true
-//for k := range keys {
-//aElem := aCols[ia[k]].Elem(i)
-//bElem := bCols[ib[k]].Elem(j)
-//match = match && aElem.Eq(bElem)
-//}
-//if match {
-//hasMatched = true
-//for n, k := range ia {
-//elem := aCols[k].Elem(k)
-//newCols[n].Append(elem)
-//}
-//ii := a.ncols - len(ia) + 1
-//for jj := 0; jj < a.ncols; jj++ {
-//if !inIntSlice(jj, ia) {
-//elem := aCols[jj].Elem(i)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//for jj := 0; jj < b.ncols; jj++ {
-//if !inIntSlice(jj, ib) {
-//elem := bCols[jj].Elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//}
-//}
-//if !hasMatched {
-//for n, k := range ia {
-//elem := aCols[k].Elem(k)
-//newCols[n].Append(elem)
-//}
-//ii := a.ncols - len(ia) + 1
-//for jj := 0; jj < a.ncols; jj++ {
-//newCols[jj].Append(nil)
-//}
-//for jj := 0; jj < b.ncols; jj++ {
-//if !inIntSlice(jj, ia) {
-//elem := aCols[jj].Elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//for jj := 0; jj < a.ncols; jj++ {
-//newCols[jj].Append(nil)
-//}
-//}
-//}
-//return New(newCols...)
-//}
+func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
+	return DataFrame{}
+}
 
 // ColIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.

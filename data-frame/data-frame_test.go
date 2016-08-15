@@ -2,6 +2,7 @@ package df
 
 import (
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -348,7 +349,7 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 	}
 }
 
-func TestInnerJoin(t *testing.T) {
+func TestDataFrame_InnerJoin(t *testing.T) {
 	a := New(
 		NamedInts("Age", 23, 32, 41),
 		NamedStrings("Names", "Alice", "Bob", "Daniel"),
@@ -387,6 +388,41 @@ func TestInnerJoin(t *testing.T) {
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
+}
+
+func TestDataFrame_LeftJoin(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := New(
+		NamedInts("Age", 23, 32, 23),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 1.10, 0.1, 16.2),
+	)
+	c := a.LeftJoin(b, "Age")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+}
+
+func TestDataFrame_RightJoin(t *testing.T) {
+	a := New(
+		NamedInts("Age", 23, 32, 41),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 12.10, 15.1, 16.2),
+	)
+	b := New(
+		NamedInts("Age", 23, 32, 23),
+		NamedStrings("Names", "Alice", "Bob", "Daniel"),
+		NamedFloats("Credit", 1.10, 0.1, 16.2),
+	)
+	c := b.RightJoin(a, "Age")
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	fmt.Println(c)
 }
 
 //func TestExample(t *testing.T) {
