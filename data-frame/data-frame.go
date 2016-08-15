@@ -820,7 +820,6 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		}
 	}
 	return New(newCols...)
-
 }
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
@@ -1133,6 +1132,37 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 			}
 		}
 	}
+	return New(newCols...)
+}
+
+// CrossJoin returns a DataFrame containing the cross join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
+	aCols := a.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols []Series
+	for i := 0; i < a.ncols; i++ {
+		newCols = append(newCols, aCols[i].Empty())
+	}
+	for i := 0; i < b.ncols; i++ {
+		newCols = append(newCols, bCols[i].Empty())
+	}
+
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < b.nrows; j++ {
+			for ii := 0; ii < a.ncols; ii++ {
+				elem := aCols[ii].Elem(i)
+				newCols[ii].Append(elem)
+			}
+			for ii := 0; ii < b.ncols; ii++ {
+				jj := ii + a.ncols
+				elem := bCols[ii].Elem(j)
+				newCols[jj].Append(elem)
+			}
+		}
+	}
+	// Fill newCols
 	return New(newCols...)
 }
 
