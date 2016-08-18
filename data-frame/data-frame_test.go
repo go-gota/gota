@@ -413,7 +413,7 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 	}
 	for k, v := range testTable {
 		c := a.InnerJoin(b, v.keys...)
-		if !c.eq(v.expected) {
+		if !eq(c, v.expected) {
 			t.Errorf(
 				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
 				k, v.expected, c)
@@ -423,18 +423,70 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 
 func TestDataFrame_LeftJoin(t *testing.T) {
 	a := New(
-		NamedInts("Age", 23, 32, 41),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 12.10, 15.1, 16.2),
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
 	)
 	b := New(
-		NamedInts("Age", 23, 32, 23),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 1.10, 0.1, 16.2),
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
 	)
-	c := a.LeftJoin(b, "Age")
-	if c.Err() != nil {
-		t.Error("Expected success, got error: ", c.Err())
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedBools("D.0", true, true, false, false),
+				NamedInts("F", 1, 8, nil, 1),
+				NamedBools("D.1", true, false, nil, true),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 3, 3, 1, 1, 1),
+				NamedStrings("B", "a", "b", "c", "c", "c", "d", "d", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 6.0, 6.0, 7.1, 7.1, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "2", "5", "4", "2", "5"),
+				NamedInts("F", 1, 1, 2, 8, 9, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedBools("D", true, true, false, false),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, true, false, false),
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.LeftJoin(b, v.keys...)
+		if !eq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
 	}
 }
 
@@ -518,3 +570,28 @@ func TestDataFrame_CrossJoin(t *testing.T) {
 ////fmt.Println(c.Names())
 //fmt.Println(c.Dim())
 //}
+
+// Helper function to compare DataFrames even if the value to compare is NA
+func eq(a, b DataFrame) bool {
+	if a.nrows != b.nrows || a.ncols != b.ncols {
+		return false
+	}
+	if !reflect.DeepEqual(a.Names(), b.Names()) {
+		return false
+	}
+	if !reflect.DeepEqual(a.Types(), b.Types()) {
+		return false
+	}
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < a.ncols; j++ {
+			aElem := a.columns[j].Elem(i)
+			bElem := b.columns[j].Elem(i)
+
+			if !(aElem.IsNA() && bElem.IsNA()) &&
+				!aElem.Eq(bElem) {
+				return false
+			}
+		}
+	}
+	return true
+}
