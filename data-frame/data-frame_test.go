@@ -492,18 +492,70 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 
 func TestDataFrame_RightJoin(t *testing.T) {
 	a := New(
-		NamedInts("Age", 23, 32, 41),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 12.10, 15.1, 16.2),
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
 	)
 	b := New(
-		NamedInts("Age", 23, 32, 23),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 1.10, 0.1, 16.2),
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
 	)
-	c := b.RightJoin(a, "Age")
-	if c.Err() != nil {
-		t.Error("Expected success, got error: ", c.Err())
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 1, 2, 4, 5),
+				NamedStrings("B", "a", "d", "b", nil, nil),
+				NamedFloats("C", 5.1, 7.1, 6.0, nil, nil),
+				NamedBools("D.0", true, false, true, nil, nil),
+				NamedInts("F", 1, 1, 8, 2, 9),
+				NamedBools("D.1", true, true, false, false, false),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 1, 3, 1, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d", "c", "d", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1, 6.0, 7.1, 6.0, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "4", "2", "2", "5", "5"),
+				NamedInts("F", 1, 1, 2, 2, 8, 8, 9, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 4, 2, 5),
+				NamedBools("D", true, false, false, false),
+				NamedStrings("B", "a", nil, nil, nil),
+				NamedFloats("C", 5.1, nil, nil, nil),
+				NamedInts("F", 1, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, false, false, false),
+				NamedInts("A", 1, 4, 2, 5),
+				NamedStrings("B", "a", nil, nil, nil),
+				NamedFloats("C", 5.1, nil, nil, nil),
+				NamedInts("F", 1, 2, 8, 9),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.RightJoin(b, v.keys...)
+		if !eq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
 	}
 }
 

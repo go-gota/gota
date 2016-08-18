@@ -934,19 +934,19 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	}
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
-	var ia []int
-	var ib []int
+	var iKeysA []int
+	var iKeysB []int
 	for _, key := range keys {
 		i := a.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
-		ia = append(ia, i)
+		iKeysA = append(iKeysA, i)
 		j := b.ColIndex(key)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
 		}
-		ib = append(ib, j)
+		iKeysB = append(iKeysB, j)
 	}
 	if len(errorArr) != 0 {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
@@ -956,68 +956,80 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
-	var aIdx []int
-	for _, i := range ia {
-		aIdx = append(aIdx, i)
+	for _, i := range iKeysA {
 		newCols = append(newCols, aCols[i].Empty())
 	}
+	var iNotKeysA []int
 	for i := 0; i < a.ncols; i++ {
-		if !inIntSlice(i, ia) {
-			aIdx = append(aIdx, i)
+		if !inIntSlice(i, iKeysA) {
+			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
 		}
 	}
-	var bIdx []int
+	var iNotKeysB []int
 	for i := 0; i < b.ncols; i++ {
-		if !inIntSlice(i, ib) {
-			bIdx = append(bIdx, i)
+		if !inIntSlice(i, iKeysB) {
+			iNotKeysB = append(iNotKeysB, i)
 			newCols = append(newCols, bCols[i].Empty())
 		}
 	}
 
 	// Fill newCols
+	var yesmatched []struct{ i, j int }
+	var nonmatched []int
 	for j := 0; j < b.nrows; j++ {
 		matched := false
 		for i := 0; i < a.nrows; i++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[ia[k]].Elem(i)
-				bElem := bCols[ib[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].Elem(i)
+				bElem := bCols[iKeysB[k]].Elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
 				matched = true
-				ii := 0
-				for n, k := range aIdx {
-					elem := aCols[k].Elem(i)
-					newCols[n].Append(elem)
-					ii = n
-				}
-				ii++
-				for _, k := range bIdx {
-					elem := bCols[k].Elem(i)
-					newCols[ii].Append(elem)
-					ii++
-				}
+				yesmatched = append(yesmatched, struct{ i, j int }{i, j})
 			}
 		}
 		if !matched {
-			ii := 0
-			for n, k := range aIdx {
-				if inIntSlice(k, ia) {
-					elem := aCols[k].Elem(j)
-					newCols[n].Append(elem)
-				} else {
-					newCols[n].Append(nil)
-				}
-				ii = n
-			}
+			nonmatched = append(nonmatched, j)
+		}
+	}
+	for _, v := range yesmatched {
+		i := v.i
+		j := v.j
+		ii := 0
+		for _, k := range iKeysA {
+			elem := aCols[k].Elem(i)
+			newCols[ii].Append(elem)
 			ii++
-			for _, k := range bIdx {
-				elem := bCols[k].Elem(j)
-				newCols[ii].Append(elem)
-				ii++
-			}
+		}
+		for _, k := range iNotKeysA {
+			elem := aCols[k].Elem(i)
+			newCols[ii].Append(elem)
+			ii++
+		}
+		for _, k := range iNotKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
+		}
+	}
+	for _, j := range nonmatched {
+		ii := 0
+		for _, k := range iKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
+		}
+		for _, _ = range iNotKeysA {
+			newCols[ii].Append(nil)
+			ii++
+		}
+		for _, k := range iNotKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
 		}
 	}
 	return New(newCols...)
