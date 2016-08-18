@@ -561,18 +561,95 @@ func TestDataFrame_RightJoin(t *testing.T) {
 
 func TestDataFrame_OuterJoin(t *testing.T) {
 	a := New(
-		NamedInts("Age", 23, 32, 41),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 12.10, 15.1, 16.2),
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
 	)
 	b := New(
-		NamedInts("Age", 23, 32, 31),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 1.10, 0.1, 16.2),
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
 	)
-	c := a.OuterJoin(b, "Age")
-	if c.Err() != nil {
-		t.Error("Expected success, got error: ", c.Err())
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedBools("D.0", true, true, false, false),
+				NamedInts("F", 1, 8, nil, 1),
+				NamedBools("D.1", true, false, nil, true),
+			).RBind(
+				New(
+					NamedInts("A", 4, 5),
+					NamedStrings("B", nil, nil),
+					NamedFloats("C", nil, nil),
+					NamedBools("D.0", nil, nil),
+					NamedInts("F", 2, 9),
+					NamedBools("D.1", false, false),
+				),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 3, 3, 1, 1, 1),
+				NamedStrings("B", "a", "b", "c", "c", "c", "d", "d", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 6.0, 6.0, 7.1, 7.1, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "2", "5", "4", "2", "5"),
+				NamedInts("F", 1, 1, 2, 8, 9, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedBools("D", true, true, false, false),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			).RBind(
+				New(
+					NamedInts("A", 4, 2, 5),
+					NamedBools("D", false, false, false),
+					NamedStrings("B", nil, nil, nil),
+					NamedFloats("C", nil, nil, nil),
+					NamedInts("F", 2, 8, 9),
+				),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, true, false, false),
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			).RBind(
+				New(
+					NamedBools("D", false, false, false),
+					NamedInts("A", 4, 2, 5),
+					NamedStrings("B", nil, nil, nil),
+					NamedFloats("C", nil, nil, nil),
+					NamedInts("F", 2, 8, 9),
+				),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.OuterJoin(b, v.keys...)
+		if !eq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
 	}
 }
 
