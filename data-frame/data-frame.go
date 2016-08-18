@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -817,7 +818,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 					ii++
 				}
 				for _, k := range iNotKeysB {
-					elem := bCols[k].Elem(i)
+					elem := bCols[k].Elem(j)
 					newCols[ii].Append(elem)
 					ii++
 				}
@@ -1180,6 +1181,28 @@ func (d DataFrame) ColIndex(s string) int {
 		}
 	}
 	return -1
+}
+
+func (a DataFrame) eq(b DataFrame) bool {
+	if a.nrows != b.nrows || a.ncols != b.ncols {
+		return false
+	}
+	if !reflect.DeepEqual(a.Names(), b.Names()) {
+		return false
+	}
+	if !reflect.DeepEqual(a.Types(), b.Types()) {
+		return false
+	}
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < a.ncols; j++ {
+			aElem := a.columns[j].Elem(i)
+			bElem := b.columns[j].Elem(i)
+			if !aElem.Eq(bElem) {
+				return false
+			}
+		}
+	}
+	return true
 }
 
 // TODO: (df DataFrame) Str() (string)
