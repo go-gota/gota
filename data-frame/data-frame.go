@@ -1178,7 +1178,7 @@ func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
 	for i := 0; i < b.ncols; i++ {
 		newCols = append(newCols, bCols[i].Empty())
 	}
-
+	// Fill newCols
 	for i := 0; i < a.nrows; i++ {
 		for j := 0; j < b.nrows; j++ {
 			for ii := 0; ii < a.ncols; ii++ {
@@ -1192,7 +1192,6 @@ func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
 			}
 		}
 	}
-	// Fill newCols
 	return New(newCols...)
 }
 

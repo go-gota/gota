@@ -413,7 +413,7 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 	}
 	for k, v := range testTable {
 		c := a.InnerJoin(b, v.keys...)
-		if !eq(c, v.expected) {
+		if !joinTestEq(c, v.expected) {
 			t.Errorf(
 				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
 				k, v.expected, c)
@@ -482,7 +482,7 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 	}
 	for k, v := range testTable {
 		c := a.LeftJoin(b, v.keys...)
-		if !eq(c, v.expected) {
+		if !joinTestEq(c, v.expected) {
 			t.Errorf(
 				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
 				k, v.expected, c)
@@ -551,7 +551,7 @@ func TestDataFrame_RightJoin(t *testing.T) {
 	}
 	for k, v := range testTable {
 		c := a.RightJoin(b, v.keys...)
-		if !eq(c, v.expected) {
+		if !joinTestEq(c, v.expected) {
 			t.Errorf(
 				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
 				k, v.expected, c)
@@ -645,7 +645,7 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 	}
 	for k, v := range testTable {
 		c := a.OuterJoin(b, v.keys...)
-		if !eq(c, v.expected) {
+		if !joinTestEq(c, v.expected) {
 			t.Errorf(
 				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
 				k, v.expected, c)
@@ -655,53 +655,50 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 
 func TestDataFrame_CrossJoin(t *testing.T) {
 	a := New(
-		NamedInts("Age", 23, 32, 41),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 12.10, 15.1, 16.2),
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
 	)
 	b := New(
-		NamedInts("Age", 23, 32, 31),
-		NamedStrings("Names", "Alice", "Bob", "Daniel"),
-		NamedFloats("Credit", 1.10, 0.1, 16.2),
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
 	)
 	c := a.CrossJoin(b)
+	expectedCSV := `
+A.0,B,C,D.0,A.1,F,D.1
+1,a,5.1,true,1,1,true
+1,a,5.1,true,4,2,false
+1,a,5.1,true,2,8,false
+1,a,5.1,true,5,9,false
+2,b,6.0,true,1,1,true
+2,b,6.0,true,4,2,false
+2,b,6.0,true,2,8,false
+2,b,6.0,true,5,9,false
+3,c,6.0,false,1,1,true
+3,c,6.0,false,4,2,false
+3,c,6.0,false,2,8,false
+3,c,6.0,false,5,9,false
+1,d,7.1,false,1,1,true
+1,d,7.1,false,4,2,false
+1,d,7.1,false,2,8,false
+1,d,7.1,false,5,9,false
+`
+	expected := ReadCSV(expectedCSV,
+		[]string{"int", "string", "float", "bool", "string", "int", "bool"}...)
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
+	if !joinTestEq(c, expected) {
+		t.Errorf(
+			"Error:\nExpected:\n%v\nReceived:\n%v",
+			expected, c)
+	}
 }
 
-//func TestExample(t *testing.T) {
-//var a, b DataFrame
-//r, err := http.Get("https://jsonplaceholder.typicode.com/albums")
-//if err != nil {
-//log.Fatal(err)
-//} else {
-//defer r.Body.Close()
-//var target []map[string]interface{}
-//json.NewDecoder(r.Body).Decode(&target)
-//a = ReadMaps(target)
-//}
-//r, err = http.Get("https://jsonplaceholder.typicode.com/photos")
-//if err != nil {
-//log.Fatal(err)
-//} else {
-//defer r.Body.Close()
-//var target []map[string]interface{}
-//json.NewDecoder(r.Body).Decode(&target)
-//b = ReadMaps(target)
-//}
-//c := a.LeftJoin(b, "id")
-//c = a.InnerJoin(b, "id")
-//c = a.RightJoin(b, "id")
-////fmt.Println(c)
-////fmt.Println(a.Names())
-////fmt.Println(b.Names())
-////fmt.Println(c.Names())
-//fmt.Println(c.Dim())
-//}
-
 // Helper function to compare DataFrames even if the value to compare is NA
-func eq(a, b DataFrame) bool {
+func joinTestEq(a, b DataFrame) bool {
 	if a.nrows != b.nrows || a.ncols != b.ncols {
 		return false
 	}
