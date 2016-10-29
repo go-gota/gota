@@ -6,22 +6,22 @@ import (
 )
 
 // String is an alias for string to be able to implement custom methods
-type String struct {
+type stringElement struct {
 	s *string
 }
 
 // Int is an alias for int to be able to implement custom methods
-type Int struct {
+type intElement struct {
 	i *int
 }
 
 // Float is an alias for float64 to be able to implement custom methods
-type Float struct {
+type floatElement struct {
 	f *float64
 }
 
 // Bool is an alias for string to be able to implement custom methods
-type Bool struct {
+type boolElement struct {
 	b *bool
 }
 
@@ -31,92 +31,92 @@ type elementInterface interface {
 	LessEq(elementInterface) bool
 	Greater(elementInterface) bool
 	GreaterEq(elementInterface) bool
-	ToString() String
-	ToInt() Int
-	ToFloat() Float
-	ToBool() Bool
+	ToString() stringElement
+	ToInt() intElement
+	ToFloat() floatElement
+	ToBool() boolElement
 	IsNA() bool
 	Val() elementValue
 }
 
 type elementValue interface{}
 
-func (e String) Val() elementValue {
+func (e stringElement) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.s
 }
-func (e Int) Val() elementValue {
+func (e intElement) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.i
 }
-func (e Float) Val() elementValue {
+func (e floatElement) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.f
 }
-func (e Bool) Val() elementValue {
+func (e boolElement) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.b
 }
 
-func (s String) ToString() String {
+func (s stringElement) ToString() stringElement {
 	return s.Copy()
 }
-func (i Int) ToString() String {
+func (i intElement) ToString() stringElement {
 	if i.IsNA() {
-		return String{nil}
+		return stringElement{nil}
 	}
 	s := i.String()
-	return String{&s}
+	return stringElement{&s}
 }
-func (f Float) ToString() String {
+func (f floatElement) ToString() stringElement {
 	if f.IsNA() {
-		return String{nil}
+		return stringElement{nil}
 	}
 	s := f.String()
-	return String{&s}
+	return stringElement{&s}
 }
-func (b Bool) ToString() String {
+func (b boolElement) ToString() stringElement {
 	if b.IsNA() {
-		return String{nil}
+		return stringElement{nil}
 	}
 	s := b.String()
-	return String{&s}
+	return stringElement{&s}
 }
 
-func (s String) ToInt() Int {
+func (s stringElement) ToInt() intElement {
 	if s.s == nil {
-		return Int{nil}
+		return intElement{nil}
 	}
 	i, err := strconv.Atoi(*s.s)
 	if err != nil {
-		return Int{nil}
+		return intElement{nil}
 	}
 	if s.IsNA() {
-		return Int{nil}
+		return intElement{nil}
 	}
-	return Int{&i}
+	return intElement{&i}
 }
-func (i Int) ToInt() Int {
+func (i intElement) ToInt() intElement {
 	return i.Copy()
 }
-func (f Float) ToInt() Int {
+func (f floatElement) ToInt() intElement {
 	if f.f != nil {
 		i := int(*f.f)
-		return Int{&i}
+		return intElement{&i}
 	}
-	return Int{nil}
+	return intElement{nil}
 }
-func (b Bool) ToInt() Int {
+func (b boolElement) ToInt() intElement {
 	if b.b == nil {
-		return Int{nil}
+		return intElement{nil}
 	}
 	var i int
 	if *b.b {
@@ -124,32 +124,32 @@ func (b Bool) ToInt() Int {
 	} else {
 		i = 0
 	}
-	return Int{&i}
+	return intElement{&i}
 }
 
-func (s String) ToFloat() Float {
+func (s stringElement) ToFloat() floatElement {
 	if s.s == nil {
-		return Float{nil}
+		return floatElement{nil}
 	}
 	f, err := strconv.ParseFloat(*s.s, 64)
 	if err != nil {
-		return Float{nil}
+		return floatElement{nil}
 	}
-	return Float{&f}
+	return floatElement{&f}
 }
-func (i Float) ToFloat() Float {
+func (i floatElement) ToFloat() floatElement {
 	return i.Copy()
 }
-func (i Int) ToFloat() Float {
+func (i intElement) ToFloat() floatElement {
 	if i.i != nil {
 		f := float64(*i.i)
-		return Float{&f}
+		return floatElement{&f}
 	}
-	return Float{nil}
+	return floatElement{nil}
 }
-func (b Bool) ToFloat() Float {
+func (b boolElement) ToFloat() floatElement {
 	if b.b == nil {
-		return Float{nil}
+		return floatElement{nil}
 	}
 	var f float64
 	if *b.b {
@@ -157,12 +157,12 @@ func (b Bool) ToFloat() Float {
 	} else {
 		f = 0.0
 	}
-	return Float{&f}
+	return floatElement{&f}
 }
 
-func (s String) ToBool() Bool {
+func (s stringElement) ToBool() boolElement {
 	if s.s == nil {
-		return Bool{nil}
+		return boolElement{nil}
 	}
 	var b bool
 	if *s.s == "false" {
@@ -171,11 +171,11 @@ func (s String) ToBool() Bool {
 	if *s.s == "true" {
 		b = true
 	}
-	return Bool{&b}
+	return boolElement{&b}
 }
-func (i Int) ToBool() Bool {
+func (i intElement) ToBool() boolElement {
 	if i.i == nil {
-		return Bool{nil}
+		return boolElement{nil}
 	}
 	var b bool
 	if *i.i == 1 {
@@ -184,11 +184,11 @@ func (i Int) ToBool() Bool {
 	if *i.i == 0 {
 		b = false
 	}
-	return Bool{&b}
+	return boolElement{&b}
 }
-func (f Float) ToBool() Bool {
+func (f floatElement) ToBool() boolElement {
 	if f.f == nil {
-		return Bool{nil}
+		return boolElement{nil}
 	}
 	var b bool
 	if *f.f == 1.0 {
@@ -196,15 +196,15 @@ func (f Float) ToBool() Bool {
 	} else if *f.f == 0.0 {
 		b = false
 	} else {
-		return Bool{nil}
+		return boolElement{nil}
 	}
-	return Bool{&b}
+	return boolElement{&b}
 }
-func (i Bool) ToBool() Bool {
+func (i boolElement) ToBool() boolElement {
 	return i.Copy()
 }
 
-func (s String) LessEq(elem elementInterface) bool {
+func (s stringElement) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -214,7 +214,7 @@ func (s String) LessEq(elem elementInterface) bool {
 	}
 	return *s.s <= *e.s
 }
-func (s Int) LessEq(elem elementInterface) bool {
+func (s intElement) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -224,7 +224,7 @@ func (s Int) LessEq(elem elementInterface) bool {
 	}
 	return *s.i <= *e.i
 }
-func (s Float) LessEq(elem elementInterface) bool {
+func (s floatElement) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -234,7 +234,7 @@ func (s Float) LessEq(elem elementInterface) bool {
 	}
 	return *s.f <= *e.f
 }
-func (s Bool) LessEq(elem elementInterface) bool {
+func (s boolElement) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -248,7 +248,7 @@ func (s Bool) LessEq(elem elementInterface) bool {
 	return true
 }
 
-func (s String) Less(elem elementInterface) bool {
+func (s stringElement) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -258,7 +258,7 @@ func (s String) Less(elem elementInterface) bool {
 	}
 	return *s.s < *e.s
 }
-func (s Int) Less(elem elementInterface) bool {
+func (s intElement) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -268,7 +268,7 @@ func (s Int) Less(elem elementInterface) bool {
 	}
 	return *s.i < *e.i
 }
-func (s Float) Less(elem elementInterface) bool {
+func (s floatElement) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -278,7 +278,7 @@ func (s Float) Less(elem elementInterface) bool {
 	}
 	return *s.f < *e.f
 }
-func (s Bool) Less(elem elementInterface) bool {
+func (s boolElement) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -295,7 +295,7 @@ func (s Bool) Less(elem elementInterface) bool {
 	return false
 }
 
-func (s String) GreaterEq(elem elementInterface) bool {
+func (s stringElement) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -305,7 +305,7 @@ func (s String) GreaterEq(elem elementInterface) bool {
 	}
 	return *s.s >= *e.s
 }
-func (s Int) GreaterEq(elem elementInterface) bool {
+func (s intElement) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -315,7 +315,7 @@ func (s Int) GreaterEq(elem elementInterface) bool {
 	}
 	return *s.i >= *e.i
 }
-func (s Float) GreaterEq(elem elementInterface) bool {
+func (s floatElement) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -325,7 +325,7 @@ func (s Float) GreaterEq(elem elementInterface) bool {
 	}
 	return *s.f >= *e.f
 }
-func (s Bool) GreaterEq(elem elementInterface) bool {
+func (s boolElement) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -342,7 +342,7 @@ func (s Bool) GreaterEq(elem elementInterface) bool {
 	return true
 }
 
-func (s String) Greater(elem elementInterface) bool {
+func (s stringElement) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -352,7 +352,7 @@ func (s String) Greater(elem elementInterface) bool {
 	}
 	return *s.s > *e.s
 }
-func (s Int) Greater(elem elementInterface) bool {
+func (s intElement) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -362,7 +362,7 @@ func (s Int) Greater(elem elementInterface) bool {
 	}
 	return *s.i > *e.i
 }
-func (s Float) Greater(elem elementInterface) bool {
+func (s floatElement) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -372,7 +372,7 @@ func (s Float) Greater(elem elementInterface) bool {
 	}
 	return *s.f > *e.f
 }
-func (s Bool) Greater(elem elementInterface) bool {
+func (s boolElement) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -386,7 +386,7 @@ func (s Bool) Greater(elem elementInterface) bool {
 	return false
 }
 
-func (s String) Eq(elem elementInterface) bool {
+func (s stringElement) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -397,7 +397,7 @@ func (s String) Eq(elem elementInterface) bool {
 	return *s.s == *e.s
 }
 
-func (s Int) Eq(elem elementInterface) bool {
+func (s intElement) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -408,7 +408,7 @@ func (s Int) Eq(elem elementInterface) bool {
 	return *s.i == *e.i
 }
 
-func (s Float) Eq(elem elementInterface) bool {
+func (s floatElement) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -419,7 +419,7 @@ func (s Float) Eq(elem elementInterface) bool {
 	return *s.f == *e.f
 }
 
-func (s Bool) Eq(elem elementInterface) bool {
+func (s boolElement) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -430,25 +430,25 @@ func (s Bool) Eq(elem elementInterface) bool {
 	return *s.b == *e.b
 }
 
-func (s String) String() string {
+func (s stringElement) String() string {
 	if s.s == nil {
 		return "NA"
 	}
 	return *s.s
 }
-func (i Int) String() string {
+func (i intElement) String() string {
 	if i.i == nil {
 		return "NA"
 	}
 	return fmt.Sprint(*i.i)
 }
-func (f Float) String() string {
+func (f floatElement) String() string {
 	if f.f == nil {
 		return "NA"
 	}
 	return fmt.Sprint(*f.f)
 }
-func (b Bool) String() string {
+func (b boolElement) String() string {
 	if b.b == nil {
 		return "NA"
 	}
@@ -458,40 +458,40 @@ func (b Bool) String() string {
 	return "false"
 }
 
-func (s String) Copy() String {
+func (s stringElement) Copy() stringElement {
 	if s.s == nil {
-		return String{nil}
+		return stringElement{nil}
 	}
 	copy := *s.s
-	return String{&copy}
+	return stringElement{&copy}
 }
 
-func (i Int) Copy() Int {
+func (i intElement) Copy() intElement {
 	if i.i == nil {
-		return Int{nil}
+		return intElement{nil}
 	}
 	copy := *i.i
-	return Int{&copy}
+	return intElement{&copy}
 }
 
-func (f Float) Copy() Float {
+func (f floatElement) Copy() floatElement {
 	if f.f == nil {
-		return Float{nil}
+		return floatElement{nil}
 	}
 	copy := *f.f
-	return Float{&copy}
+	return floatElement{&copy}
 }
 
-func (b Bool) Copy() Bool {
+func (b boolElement) Copy() boolElement {
 	if b.b == nil {
-		return Bool{nil}
+		return boolElement{nil}
 	}
 	copy := *b.b
-	return Bool{&copy}
+	return boolElement{&copy}
 }
 
 // IsNA returns true if the element is empty and viceversa
-func (s String) IsNA() bool {
+func (s stringElement) IsNA() bool {
 	if s.s == nil {
 		return true
 	}
@@ -499,7 +499,7 @@ func (s String) IsNA() bool {
 }
 
 // IsNA returns true if the element is empty and viceversa
-func (i Int) IsNA() bool {
+func (i intElement) IsNA() bool {
 	if i.i == nil {
 		return true
 	}
@@ -507,7 +507,7 @@ func (i Int) IsNA() bool {
 }
 
 // IsNA returns true if the element is empty and viceversa
-func (f Float) IsNA() bool {
+func (f floatElement) IsNA() bool {
 	if f.f == nil {
 		return true
 	}
@@ -515,7 +515,7 @@ func (f Float) IsNA() bool {
 }
 
 // IsNA returns true if the element is empty and viceversa
-func (b Bool) IsNA() bool {
+func (b boolElement) IsNA() bool {
 	if b.b == nil {
 		return true
 	}

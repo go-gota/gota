@@ -393,7 +393,7 @@ func TestSeries_Index(t *testing.T) {
 func TestStrings(t *testing.T) {
 	a := []string{"C", "D"}
 	x := "A"
-	aa := Strings(String{&x}, "B", a)
+	aa := Strings(stringElement{&x}, "B", a)
 	expected := "A B C D"
 	received := fmt.Sprint(aa)
 	if expected != received {
@@ -444,7 +444,7 @@ func TestStrings(t *testing.T) {
 	}
 	dd := []T{d, d}
 	s := "B"
-	aa = Strings(dd, aa, d, String{&s}, nil)
+	aa = Strings(dd, aa, d, stringElement{&s}, nil)
 	expected = "NA NA 1.000000 2.000000 3.000000 4.000000 NA B NA"
 	received = fmt.Sprint(aa)
 	if received != expected {
@@ -799,32 +799,32 @@ func TestCopy(t *testing.T) {
 func TestEq(t *testing.T) {
 	s1 := "123"
 	s2 := "Hello"
-	a := String{&s1}
-	b := String{&s2}
+	a := stringElement{&s1}
+	b := stringElement{&s2}
 	if !a.Eq(a) || a.Eq(b) {
 		t.Error("String Eq() not working properly")
 	}
 	i1 := 123
 	i2 := 234
-	c := Int{&i1}
-	d := Int{&i2}
+	c := intElement{&i1}
+	d := intElement{&i2}
 	if !c.Eq(c) || d.Eq(c) {
 		t.Error("Int Eq() not working properly")
 	}
-	if !c.Eq(a) || c.Eq(b) || c.Eq(String{nil}) {
+	if !c.Eq(a) || c.Eq(b) || c.Eq(stringElement{nil}) {
 		t.Error("Int Eq() not working properly")
 	}
-	if !a.Eq(c) || a.Eq(d) || a.Eq(String{nil}) {
+	if !a.Eq(c) || a.Eq(d) || a.Eq(stringElement{nil}) {
 		t.Error("String Eq() not working properly")
 	}
 	fval1 := 123.0
 	fval2 := 321.456
-	f1 := Float{&fval1}
-	f2 := Float{&fval2}
+	f1 := floatElement{&fval1}
+	f2 := floatElement{&fval2}
 	if !f1.Eq(f1) || f1.Eq(f2) {
 		t.Error("Float Eq() not working properly")
 	}
-	if !f1.Eq(c) || f1.Eq(d) || f1.Eq(String{nil}) {
+	if !f1.Eq(c) || f1.Eq(d) || f1.Eq(stringElement{nil}) {
 		t.Error("Float Eq() not working properly")
 	}
 }

@@ -15,10 +15,10 @@ type seriesElements interface {
 	Set(int, elementValue) (seriesElements, error)
 }
 
-type stringElements []String
-type intElements []Int
-type floatElements []Float
-type boolElements []Bool
+type stringElements []stringElement
+type intElements []intElement
+type floatElements []floatElement
+type boolElements []boolElement
 
 func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {
@@ -27,24 +27,24 @@ func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 	switch val.(type) {
 	case int:
 		v := strconv.Itoa(val.(int))
-		s[i] = String{&v}
+		s[i] = stringElement{&v}
 	case float64:
 		v := strconv.FormatFloat(val.(float64), 'f', 6, 64)
-		s[i] = String{&v}
+		s[i] = stringElement{&v}
 	case string:
 		v := val.(string)
-		s[i] = String{&v}
+		s[i] = stringElement{&v}
 	case bool:
 		b := val.(bool)
 		if b {
 			v := "true"
-			s[i] = String{&v}
+			s[i] = stringElement{&v}
 		} else {
 			v := "false"
-			s[i] = String{&v}
+			s[i] = stringElement{&v}
 		}
 	case nil:
-		s[i] = String{nil}
+		s[i] = stringElement{nil}
 	case Series:
 		series := val.(Series)
 		if Len(series) != 1 {
@@ -63,18 +63,18 @@ func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 			if rv.Index(0).Type().Implements(ifElem) {
 				m := rv.Index(0).MethodByName("ToString").
 					Call([]reflect.Value{})
-				j := m[0].Interface().(String)
+				j := m[0].Interface().(stringElement)
 				s[i] = j
 			} else {
-				s[i] = String{nil}
+				s[i] = stringElement{nil}
 			}
 		default:
 			if rv.Type().Implements(ifElem) {
 				m := rv.MethodByName("ToString").Call([]reflect.Value{})
-				j := m[0].Interface().(String)
+				j := m[0].Interface().(stringElement)
 				s[i] = j
 			} else {
-				s[i] = String{nil}
+				s[i] = stringElement{nil}
 			}
 		}
 	}
@@ -87,16 +87,16 @@ func (s intElements) Set(i int, val elementValue) (seriesElements, error) {
 	switch val.(type) {
 	case int:
 		v := val.(int)
-		s[i] = Int{&v}
+		s[i] = intElement{&v}
 	case float64:
 		v := int(val.(float64))
-		s[i] = Int{&v}
+		s[i] = intElement{&v}
 	case string:
 		v, err := strconv.Atoi(val.(string))
 		if err != nil {
 			return nil, err
 		} else {
-			s[i] = Int{&v}
+			s[i] = intElement{&v}
 		}
 	case bool:
 		b := val.(bool)
@@ -106,9 +106,9 @@ func (s intElements) Set(i int, val elementValue) (seriesElements, error) {
 		} else {
 			v = 0
 		}
-		s[i] = Int{&v}
+		s[i] = intElement{&v}
 	case nil:
-		s[i] = Int{nil}
+		s[i] = intElement{nil}
 	case Series:
 		series := val.(Series)
 		if Len(series) != 1 {
@@ -127,18 +127,18 @@ func (s intElements) Set(i int, val elementValue) (seriesElements, error) {
 			if rv.Index(0).Type().Implements(ifElem) {
 				m := rv.Index(0).MethodByName("ToInt").
 					Call([]reflect.Value{})
-				j := m[0].Interface().(Int)
+				j := m[0].Interface().(intElement)
 				s[i] = j
 			} else {
-				s[i] = Int{nil}
+				s[i] = intElement{nil}
 			}
 		default:
 			if rv.Type().Implements(ifElem) {
 				m := rv.MethodByName("ToInt").Call([]reflect.Value{})
-				j := m[0].Interface().(Int)
+				j := m[0].Interface().(intElement)
 				s[i] = j
 			} else {
-				s[i] = Int{nil}
+				s[i] = intElement{nil}
 			}
 		}
 	}
@@ -151,16 +151,16 @@ func (s floatElements) Set(i int, val elementValue) (seriesElements, error) {
 	switch val.(type) {
 	case int:
 		v := float64(val.(int))
-		s[i] = Float{&v}
+		s[i] = floatElement{&v}
 	case float64:
 		v := val.(float64)
-		s[i] = Float{&v}
+		s[i] = floatElement{&v}
 	case string:
 		v, err := strconv.ParseFloat(val.(string), 64)
 		if err != nil {
 			return nil, errors.New(err.Error())
 		}
-		s[i] = Float{&v}
+		s[i] = floatElement{&v}
 	case bool:
 		b := val.(bool)
 		var v float64
@@ -169,9 +169,9 @@ func (s floatElements) Set(i int, val elementValue) (seriesElements, error) {
 		} else {
 			v = 0.0
 		}
-		s[i] = Float{&v}
+		s[i] = floatElement{&v}
 	case nil:
-		s[i] = Float{nil}
+		s[i] = floatElement{nil}
 	case Series:
 		series := val.(Series)
 		if Len(series) != 1 {
@@ -190,18 +190,18 @@ func (s floatElements) Set(i int, val elementValue) (seriesElements, error) {
 			if rv.Index(0).Type().Implements(ifElem) {
 				m := rv.Index(0).MethodByName("ToFloat").
 					Call([]reflect.Value{})
-				j := m[0].Interface().(Float)
+				j := m[0].Interface().(floatElement)
 				s[i] = j
 			} else {
-				s[i] = Float{nil}
+				s[i] = floatElement{nil}
 			}
 		default:
 			if rv.Type().Implements(ifElem) {
 				m := rv.MethodByName("ToFloat").Call([]reflect.Value{})
-				j := m[0].Interface().(Float)
+				j := m[0].Interface().(floatElement)
 				s[i] = j
 			} else {
-				s[i] = Float{nil}
+				s[i] = floatElement{nil}
 			}
 		}
 	}
@@ -218,14 +218,14 @@ func (s boolElements) Set(i int, val elementValue) (seriesElements, error) {
 		if v > 0 {
 			b = true
 		}
-		s[i] = Bool{&b}
+		s[i] = boolElement{&b}
 	case float64:
 		v := val.(float64)
 		var b bool
 		if v > 0 {
 			b = true
 		}
-		s[i] = Bool{&b}
+		s[i] = boolElement{&b}
 	case string:
 		v := val.(string)
 		var b bool
@@ -236,15 +236,15 @@ func (s boolElements) Set(i int, val elementValue) (seriesElements, error) {
 			strings.ToLower(v) == "f" {
 			b = false
 		} else {
-			s[i] = Bool{nil}
+			s[i] = boolElement{nil}
 			return s, nil
 		}
-		s[i] = Bool{&b}
+		s[i] = boolElement{&b}
 	case bool:
 		v := val.(bool)
-		s[i] = Bool{&v}
+		s[i] = boolElement{&v}
 	case nil:
-		s[i] = Bool{nil}
+		s[i] = boolElement{nil}
 	case Series:
 		series := val.(Series)
 		if Len(series) != 1 {
@@ -263,18 +263,18 @@ func (s boolElements) Set(i int, val elementValue) (seriesElements, error) {
 			if rv.Index(0).Type().Implements(ifElem) {
 				m := rv.Index(0).MethodByName("ToBool").
 					Call([]reflect.Value{})
-				j := m[0].Interface().(Bool)
+				j := m[0].Interface().(boolElement)
 				s[i] = j
 			} else {
-				s[i] = Bool{nil}
+				s[i] = boolElement{nil}
 			}
 		default:
 			if rv.Type().Implements(ifElem) {
 				m := rv.MethodByName("ToBool").Call([]reflect.Value{})
-				j := m[0].Interface().(Bool)
+				j := m[0].Interface().(boolElement)
 				s[i] = j
 			} else {
-				s[i] = Bool{nil}
+				s[i] = boolElement{nil}
 			}
 		}
 	}
@@ -344,52 +344,52 @@ func (elements stringElements) Append(args ...interface{}) seriesElements {
 			varr := v.([]int)
 			for k := range varr {
 				s := strconv.Itoa(varr[k])
-				elements = append(elements, String{&s})
+				elements = append(elements, stringElement{&s})
 			}
 		case int:
 			s := strconv.Itoa(v.(int))
-			elements = append(elements, String{&s})
+			elements = append(elements, stringElement{&s})
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
 				s := strconv.FormatFloat(varr[k], 'f', 6, 64)
-				elements = append(elements, String{&s})
+				elements = append(elements, stringElement{&s})
 			}
 		case float64:
 			s := strconv.FormatFloat(v.(float64), 'f', 6, 64)
-			elements = append(elements, String{&s})
+			elements = append(elements, stringElement{&s})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
 				s := varr[k]
-				elements = append(elements, String{&s})
+				elements = append(elements, stringElement{&s})
 			}
 		case string:
 			s := v.(string)
-			elements = append(elements, String{&s})
+			elements = append(elements, stringElement{&s})
 		case []bool:
 			varr := v.([]bool)
 			for k := range varr {
 				b := varr[k]
 				if b {
 					s := "true"
-					elements = append(elements, String{&s})
+					elements = append(elements, stringElement{&s})
 				} else {
 					s := "false"
-					elements = append(elements, String{&s})
+					elements = append(elements, stringElement{&s})
 				}
 			}
 		case bool:
 			b := v.(bool)
 			if b {
 				s := "true"
-				elements = append(elements, String{&s})
+				elements = append(elements, stringElement{&s})
 			} else {
 				s := "false"
-				elements = append(elements, String{&s})
+				elements = append(elements, stringElement{&s})
 			}
 		case nil:
-			elements = append(elements, String{nil})
+			elements = append(elements, stringElement{nil})
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
@@ -406,20 +406,20 @@ func (elements stringElements) Append(args ...interface{}) seriesElements {
 						if s.Index(i).Type().Implements(ifElem) {
 							m := s.Index(i).MethodByName("ToString").
 								Call([]reflect.Value{})
-							j := m[0].Interface().(String)
+							j := m[0].Interface().(stringElement)
 							elements = append(elements, j)
 						} else {
-							elements = append(elements, String{nil})
+							elements = append(elements, stringElement{nil})
 						}
 					}
 				}
 			default:
 				if s.Type().Implements(ifElem) {
 					m := s.MethodByName("ToString").Call([]reflect.Value{})
-					j := m[0].Interface().(String)
+					j := m[0].Interface().(stringElement)
 					elements = append(elements, j)
 				} else {
-					elements = append(elements, String{nil})
+					elements = append(elements, stringElement{nil})
 				}
 			}
 		}
@@ -432,39 +432,39 @@ func (elements intElements) Append(args ...interface{}) seriesElements {
 		case []int:
 			varr := v.([]int)
 			for k := range varr {
-				elements = append(elements, Int{&varr[k]})
+				elements = append(elements, intElement{&varr[k]})
 			}
 		case int:
 			i := v.(int)
-			elements = append(elements, Int{&i})
+			elements = append(elements, intElement{&i})
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
 				f := varr[k]
 				i := int(f)
-				elements = append(elements, Int{&i})
+				elements = append(elements, intElement{&i})
 			}
 		case float64:
 			f := v.(float64)
 			i := int(f)
-			elements = append(elements, Int{&i})
+			elements = append(elements, intElement{&i})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
 				s := varr[k]
 				i, err := strconv.Atoi(s)
 				if err != nil {
-					elements = append(elements, Int{nil})
+					elements = append(elements, intElement{nil})
 				} else {
-					elements = append(elements, Int{&i})
+					elements = append(elements, intElement{&i})
 				}
 			}
 		case string:
 			i, err := strconv.Atoi(v.(string))
 			if err != nil {
-				elements = append(elements, Int{nil})
+				elements = append(elements, intElement{nil})
 			} else {
-				elements = append(elements, Int{&i})
+				elements = append(elements, intElement{&i})
 			}
 		case []bool:
 			varr := v.([]bool)
@@ -472,23 +472,23 @@ func (elements intElements) Append(args ...interface{}) seriesElements {
 				b := varr[k]
 				if b {
 					i := 1
-					elements = append(elements, Int{&i})
+					elements = append(elements, intElement{&i})
 				} else {
 					i := 0
-					elements = append(elements, Int{&i})
+					elements = append(elements, intElement{&i})
 				}
 			}
 		case bool:
 			b := v.(bool)
 			if b {
 				i := 1
-				elements = append(elements, Int{&i})
+				elements = append(elements, intElement{&i})
 			} else {
 				i := 0
-				elements = append(elements, Int{&i})
+				elements = append(elements, intElement{&i})
 			}
 		case nil:
-			elements = append(elements, Int{nil})
+			elements = append(elements, intElement{nil})
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
@@ -503,20 +503,20 @@ func (elements intElements) Append(args ...interface{}) seriesElements {
 						if s.Index(i).Type().Implements(ifElem) {
 							m := s.Index(i).MethodByName("ToInt").
 								Call([]reflect.Value{})
-							j := m[0].Interface().(Int)
+							j := m[0].Interface().(intElement)
 							elements = append(elements, j)
 						} else {
-							elements = append(elements, Int{nil})
+							elements = append(elements, intElement{nil})
 						}
 					}
 				}
 			default:
 				if s.Type().Implements(ifElem) {
 					m := s.MethodByName("ToInt").Call([]reflect.Value{})
-					j := m[0].Interface().(Int)
+					j := m[0].Interface().(intElement)
 					elements = append(elements, j)
 				} else {
-					elements = append(elements, Int{nil})
+					elements = append(elements, intElement{nil})
 				}
 			}
 		}
@@ -531,38 +531,38 @@ func (elements floatElements) Append(args ...interface{}) seriesElements {
 			for k := range varr {
 				i := varr[k]
 				f := float64(i)
-				elements = append(elements, Float{&f})
+				elements = append(elements, floatElement{&f})
 			}
 		case int:
 			i := v.(int)
 			f := float64(i)
-			elements = append(elements, Float{&f})
+			elements = append(elements, floatElement{&f})
 		case []float64:
 			varr := v.([]float64)
 			for k := range varr {
 				f := varr[k]
-				elements = append(elements, Float{&f})
+				elements = append(elements, floatElement{&f})
 			}
 		case float64:
 			f := v.(float64)
-			elements = append(elements, Float{&f})
+			elements = append(elements, floatElement{&f})
 		case []string:
 			varr := v.([]string)
 			for k := range varr {
 				s := varr[k]
 				f, err := strconv.ParseFloat(s, 64)
 				if err != nil {
-					elements = append(elements, Float{nil})
+					elements = append(elements, floatElement{nil})
 				} else {
-					elements = append(elements, Float{&f})
+					elements = append(elements, floatElement{&f})
 				}
 			}
 		case string:
 			f, err := strconv.ParseFloat(v.(string), 64)
 			if err != nil {
-				elements = append(elements, Float{nil})
+				elements = append(elements, floatElement{nil})
 			} else {
-				elements = append(elements, Float{&f})
+				elements = append(elements, floatElement{&f})
 			}
 		case []bool:
 			varr := v.([]bool)
@@ -570,23 +570,23 @@ func (elements floatElements) Append(args ...interface{}) seriesElements {
 				b := varr[k]
 				if b {
 					i := 1.0
-					elements = append(elements, Float{&i})
+					elements = append(elements, floatElement{&i})
 				} else {
 					i := 0.0
-					elements = append(elements, Float{&i})
+					elements = append(elements, floatElement{&i})
 				}
 			}
 		case bool:
 			b := v.(bool)
 			if b {
 				i := 1.0
-				elements = append(elements, Float{&i})
+				elements = append(elements, floatElement{&i})
 			} else {
 				i := 0.0
-				elements = append(elements, Float{&i})
+				elements = append(elements, floatElement{&i})
 			}
 		case nil:
-			elements = append(elements, Float{nil})
+			elements = append(elements, floatElement{nil})
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
@@ -601,20 +601,20 @@ func (elements floatElements) Append(args ...interface{}) seriesElements {
 						if s.Index(i).Type().Implements(ifElem) {
 							m := s.Index(i).MethodByName("ToFloat").
 								Call([]reflect.Value{})
-							j := m[0].Interface().(Float)
+							j := m[0].Interface().(floatElement)
 							elements = append(elements, j)
 						} else {
-							elements = append(elements, Float{nil})
+							elements = append(elements, floatElement{nil})
 						}
 					}
 				}
 			default:
 				if s.Type().Implements(ifElem) {
 					m := s.MethodByName("ToFloat").Call([]reflect.Value{})
-					j := m[0].Interface().(Float)
+					j := m[0].Interface().(floatElement)
 					elements = append(elements, j)
 				} else {
-					elements = append(elements, Float{nil})
+					elements = append(elements, floatElement{nil})
 				}
 			}
 		}
@@ -631,9 +631,9 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 				t := true
 				f := false
 				if i > 0 {
-					elements = append(elements, Bool{&t})
+					elements = append(elements, boolElement{&t})
 				} else {
-					elements = append(elements, Bool{&f})
+					elements = append(elements, boolElement{&f})
 				}
 			}
 		case int:
@@ -641,9 +641,9 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 			t := true
 			f := false
 			if i > 0 {
-				elements = append(elements, Bool{&t})
+				elements = append(elements, boolElement{&t})
 			} else {
-				elements = append(elements, Bool{&f})
+				elements = append(elements, boolElement{&f})
 			}
 		case []float64:
 			varr := v.([]float64)
@@ -652,9 +652,9 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 				t := true
 				f := false
 				if i > 0 {
-					elements = append(elements, Bool{&t})
+					elements = append(elements, boolElement{&t})
 				} else {
-					elements = append(elements, Bool{&f})
+					elements = append(elements, boolElement{&f})
 				}
 			}
 		case float64:
@@ -662,9 +662,9 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 			t := true
 			f := false
 			if i > 0 {
-				elements = append(elements, Bool{&t})
+				elements = append(elements, boolElement{&t})
 			} else {
-				elements = append(elements, Bool{&f})
+				elements = append(elements, boolElement{&f})
 			}
 		case []string:
 			varr := v.([]string)
@@ -674,12 +674,12 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 				f := false
 				if strings.ToLower(i) == "true" ||
 					strings.ToLower(i) == "t" {
-					elements = append(elements, Bool{&t})
+					elements = append(elements, boolElement{&t})
 				} else if strings.ToLower(i) == "false" ||
 					strings.ToLower(i) == "f" {
-					elements = append(elements, Bool{&f})
+					elements = append(elements, boolElement{&f})
 				} else {
-					elements = append(elements, Bool{nil})
+					elements = append(elements, boolElement{nil})
 				}
 			}
 		case string:
@@ -688,12 +688,12 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 			f := false
 			if strings.ToLower(i) == "true" ||
 				strings.ToLower(i) == "t" {
-				elements = append(elements, Bool{&t})
+				elements = append(elements, boolElement{&t})
 			} else if strings.ToLower(i) == "false" ||
 				strings.ToLower(i) == "f" {
-				elements = append(elements, Bool{&f})
+				elements = append(elements, boolElement{&f})
 			} else {
-				elements = append(elements, Bool{nil})
+				elements = append(elements, boolElement{nil})
 			}
 		case []bool:
 			varr := v.([]bool)
@@ -702,9 +702,9 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 				t := true
 				f := false
 				if i {
-					elements = append(elements, Bool{&t})
+					elements = append(elements, boolElement{&t})
 				} else {
-					elements = append(elements, Bool{&f})
+					elements = append(elements, boolElement{&f})
 				}
 			}
 		case bool:
@@ -712,12 +712,12 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 			t := true
 			f := false
 			if i {
-				elements = append(elements, Bool{&t})
+				elements = append(elements, boolElement{&t})
 			} else {
-				elements = append(elements, Bool{&f})
+				elements = append(elements, boolElement{&f})
 			}
 		case nil:
-			elements = append(elements, Bool{nil})
+			elements = append(elements, boolElement{nil})
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
@@ -732,20 +732,20 @@ func (elements boolElements) Append(args ...interface{}) seriesElements {
 						if s.Index(i).Type().Implements(ifElem) {
 							m := s.Index(i).MethodByName("ToBool").
 								Call([]reflect.Value{})
-							j := m[0].Interface().(Bool)
+							j := m[0].Interface().(boolElement)
 							elements = append(elements, j)
 						} else {
-							elements = append(elements, Bool{nil})
+							elements = append(elements, boolElement{nil})
 						}
 					}
 				}
 			default:
 				if s.Type().Implements(ifElem) {
 					m := s.MethodByName("ToBool").Call([]reflect.Value{})
-					j := m[0].Interface().(Bool)
+					j := m[0].Interface().(boolElement)
 					elements = append(elements, j)
 				} else {
-					elements = append(elements, Bool{nil})
+					elements = append(elements, boolElement{nil})
 				}
 			}
 		}
