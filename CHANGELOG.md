@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - More code refactoring for easier maintenance and management
 - Add more documentation to the exported functions
+- Remove unnecessary methods and structures from the exported API
 
 ### Removed
 - colnames and coltypes from the DataFrame structure
