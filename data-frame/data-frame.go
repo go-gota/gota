@@ -114,6 +114,7 @@ func New(series ...Series) DataFrame {
 	return df
 }
 
+// Copy wil copy the values of a given DataFrame
 func (df DataFrame) Copy() DataFrame {
 	if df.Err() != nil {
 		return df
@@ -256,8 +257,9 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
-// TODO: Expand to accept DataFrames, Series, and potentially other objects
+// CBind combines the columns of two DataFrames
 func (df DataFrame) CBind(newdf DataFrame) DataFrame {
+	// TODO: Expand to accept DataFrames, Series, and potentially other objects
 	if df.Err() != nil {
 		return df
 	}
@@ -268,8 +270,9 @@ func (df DataFrame) CBind(newdf DataFrame) DataFrame {
 	return New(cols...)
 }
 
-// TODO: Expand to accept DataFrames, Series, and potentially other objects
+// RBind combines the rows of two DataFrames
 func (df DataFrame) RBind(newdf DataFrame) DataFrame {
+	// TODO: Expand to accept DataFrames, Series, and potentially other objects
 	if df.Err() != nil {
 		return df
 	}
@@ -301,6 +304,7 @@ func (df DataFrame) RBind(newdf DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// Mutate changes a column of the DataFrame with the given Series
 func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 	if df.Err() != nil {
 		return df
@@ -329,14 +333,16 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 	return New(newSeries...)
 }
 
+// F is the filtering structure
 type F struct {
 	Colname    string
 	Comparator string
 	Comparando interface{}
 }
 
-// TODO: Implement a better interface for filtering
+// Filter will filter the rows of a DataFrame
 func (df DataFrame) Filter(filters ...F) DataFrame {
+	// TODO: Implement a better interface for filtering
 	if df.Err() != nil {
 		return df
 	}
@@ -706,6 +712,7 @@ func (df DataFrame) SetNames(colnames []string) error {
 	return nil
 }
 
+// Dim retrieves the dimensiosn of a DataFrame
 func (df DataFrame) Dim() (dim [2]int) {
 	dim[0] = df.nrows
 	dim[1] = df.ncols
@@ -722,8 +729,9 @@ func (df DataFrame) Ncol() int {
 	return df.ncols
 }
 
-// TODO: Accept also an int with the position of the Series
+// Col returns the Series with the given column name contained in the DataFrame
 func (df DataFrame) Col(colname string) Series {
+	// TODO: Accept also an int with the position of the Series
 	if df.Err() != nil {
 		return Series{err: df.Err()}
 	}
@@ -800,24 +808,24 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		for j := 0; j < b.nrows; j++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[iKeysA[k]].Elem(i)
-				bElem := bCols[iKeysB[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].elem(i)
+				bElem := bCols[iKeysB[k]].elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
 				ii := 0
 				for _, k := range iKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysB {
-					elem := bCols[k].Elem(j)
+					elem := bCols[k].elem(j)
 					newCols[ii].Append(elem)
 					ii++
 				}
@@ -881,25 +889,25 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 		for j := 0; j < b.nrows; j++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[iKeysA[k]].Elem(i)
-				bElem := bCols[iKeysB[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].elem(i)
+				bElem := bCols[iKeysB[k]].elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
 				matched = true
 				ii := 0
 				for _, k := range iKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysB {
-					elem := bCols[k].Elem(j)
+					elem := bCols[k].elem(j)
 					newCols[ii].Append(elem)
 					ii++
 				}
@@ -908,12 +916,12 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 		if !matched {
 			ii := 0
 			for _, k := range iKeysA {
-				elem := aCols[k].Elem(i)
+				elem := aCols[k].elem(i)
 				newCols[ii].Append(elem)
 				ii++
 			}
 			for _, k := range iNotKeysA {
-				elem := aCols[k].Elem(i)
+				elem := aCols[k].elem(i)
 				newCols[ii].Append(elem)
 				ii++
 			}
@@ -982,8 +990,8 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 		for i := 0; i < a.nrows; i++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[iKeysA[k]].Elem(i)
-				bElem := bCols[iKeysB[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].elem(i)
+				bElem := bCols[iKeysB[k]].elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
@@ -1000,17 +1008,17 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 		j := v.j
 		ii := 0
 		for _, k := range iKeysA {
-			elem := aCols[k].Elem(i)
+			elem := aCols[k].elem(i)
 			newCols[ii].Append(elem)
 			ii++
 		}
 		for _, k := range iNotKeysA {
-			elem := aCols[k].Elem(i)
+			elem := aCols[k].elem(i)
 			newCols[ii].Append(elem)
 			ii++
 		}
 		for _, k := range iNotKeysB {
-			elem := bCols[k].Elem(j)
+			elem := bCols[k].elem(j)
 			newCols[ii].Append(elem)
 			ii++
 		}
@@ -1018,7 +1026,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	for _, j := range nonmatched {
 		ii := 0
 		for _, k := range iKeysB {
-			elem := bCols[k].Elem(j)
+			elem := bCols[k].elem(j)
 			newCols[ii].Append(elem)
 			ii++
 		}
@@ -1027,7 +1035,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 			ii++
 		}
 		for _, k := range iNotKeysB {
-			elem := bCols[k].Elem(j)
+			elem := bCols[k].elem(j)
 			newCols[ii].Append(elem)
 			ii++
 		}
@@ -1089,25 +1097,25 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		for j := 0; j < b.nrows; j++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[iKeysA[k]].Elem(i)
-				bElem := bCols[iKeysB[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].elem(i)
+				bElem := bCols[iKeysB[k]].elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
 				matched = true
 				ii := 0
 				for _, k := range iKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysA {
-					elem := aCols[k].Elem(i)
+					elem := aCols[k].elem(i)
 					newCols[ii].Append(elem)
 					ii++
 				}
 				for _, k := range iNotKeysB {
-					elem := bCols[k].Elem(j)
+					elem := bCols[k].elem(j)
 					newCols[ii].Append(elem)
 					ii++
 				}
@@ -1116,12 +1124,12 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		if !matched {
 			ii := 0
 			for _, k := range iKeysA {
-				elem := aCols[k].Elem(i)
+				elem := aCols[k].elem(i)
 				newCols[ii].Append(elem)
 				ii++
 			}
 			for _, k := range iNotKeysA {
-				elem := aCols[k].Elem(i)
+				elem := aCols[k].elem(i)
 				newCols[ii].Append(elem)
 				ii++
 			}
@@ -1136,8 +1144,8 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		for i := 0; i < a.nrows; i++ {
 			match := true
 			for k := range keys {
-				aElem := aCols[iKeysA[k]].Elem(i)
-				bElem := bCols[iKeysB[k]].Elem(j)
+				aElem := aCols[iKeysA[k]].elem(i)
+				bElem := bCols[iKeysB[k]].elem(j)
 				match = match && aElem.Eq(bElem)
 			}
 			if match {
@@ -1147,7 +1155,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		if !matched {
 			ii := 0
 			for _, k := range iKeysB {
-				elem := bCols[k].Elem(j)
+				elem := bCols[k].elem(j)
 				newCols[ii].Append(elem)
 				ii++
 			}
@@ -1156,7 +1164,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				ii++
 			}
 			for _, k := range iNotKeysB {
-				elem := bCols[k].Elem(j)
+				elem := bCols[k].elem(j)
 				newCols[ii].Append(elem)
 				ii++
 			}
@@ -1182,12 +1190,12 @@ func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
 	for i := 0; i < a.nrows; i++ {
 		for j := 0; j < b.nrows; j++ {
 			for ii := 0; ii < a.ncols; ii++ {
-				elem := aCols[ii].Elem(i)
+				elem := aCols[ii].elem(i)
 				newCols[ii].Append(elem)
 			}
 			for ii := 0; ii < b.ncols; ii++ {
 				jj := ii + a.ncols
-				elem := bCols[ii].Elem(j)
+				elem := bCols[ii].elem(j)
 				newCols[jj].Append(elem)
 			}
 		}

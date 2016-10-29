@@ -46,7 +46,7 @@ func TestDataFrame_New(t *testing.T) {
 func TestDataFrame_Copy(t *testing.T) {
 	a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))
 	b := a.Copy()
-	if a.columns[0].elements.(StringElements)[0] == b.columns[0].elements.(StringElements)[0] {
+	if a.columns[0].elements.(stringElements)[0] == b.columns[0].elements.(stringElements)[0] {
 		t.Error("Copy error: The memory address should be different even if the content is the same")
 	}
 	// TODO: More error checking, this is not exhaustive enough
@@ -710,8 +710,8 @@ func joinTestEq(a, b DataFrame) bool {
 	}
 	for i := 0; i < a.nrows; i++ {
 		for j := 0; j < a.ncols; j++ {
-			aElem := a.columns[j].Elem(i)
-			bElem := b.columns[j].Elem(i)
+			aElem := a.columns[j].elem(i)
+			bElem := b.columns[j].elem(i)
 
 			if !(aElem.IsNA() && bElem.IsNA()) &&
 				!aElem.Eq(bElem) {

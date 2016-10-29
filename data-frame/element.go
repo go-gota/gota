@@ -25,41 +25,41 @@ type Bool struct {
 	b *bool
 }
 
-type Element interface {
-	Eq(Element) bool
-	Less(Element) bool
-	LessEq(Element) bool
-	Greater(Element) bool
-	GreaterEq(Element) bool
+type elementInterface interface {
+	Eq(elementInterface) bool
+	Less(elementInterface) bool
+	LessEq(elementInterface) bool
+	Greater(elementInterface) bool
+	GreaterEq(elementInterface) bool
 	ToString() String
 	ToInt() Int
 	ToFloat() Float
 	ToBool() Bool
 	IsNA() bool
-	Val() ElementValue
+	Val() elementValue
 }
 
-type ElementValue interface{}
+type elementValue interface{}
 
-func (e String) Val() ElementValue {
+func (e String) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.s
 }
-func (e Int) Val() ElementValue {
+func (e Int) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.i
 }
-func (e Float) Val() ElementValue {
+func (e Float) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
 	return *e.f
 }
-func (e Bool) Val() ElementValue {
+func (e Bool) Val() elementValue {
 	if e.IsNA() {
 		return nil
 	}
@@ -204,7 +204,7 @@ func (i Bool) ToBool() Bool {
 	return i.Copy()
 }
 
-func (s String) LessEq(elem Element) bool {
+func (s String) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -214,7 +214,7 @@ func (s String) LessEq(elem Element) bool {
 	}
 	return *s.s <= *e.s
 }
-func (s Int) LessEq(elem Element) bool {
+func (s Int) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -224,7 +224,7 @@ func (s Int) LessEq(elem Element) bool {
 	}
 	return *s.i <= *e.i
 }
-func (s Float) LessEq(elem Element) bool {
+func (s Float) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -234,7 +234,7 @@ func (s Float) LessEq(elem Element) bool {
 	}
 	return *s.f <= *e.f
 }
-func (s Bool) LessEq(elem Element) bool {
+func (s Bool) LessEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -248,7 +248,7 @@ func (s Bool) LessEq(elem Element) bool {
 	return true
 }
 
-func (s String) Less(elem Element) bool {
+func (s String) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -258,7 +258,7 @@ func (s String) Less(elem Element) bool {
 	}
 	return *s.s < *e.s
 }
-func (s Int) Less(elem Element) bool {
+func (s Int) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -268,7 +268,7 @@ func (s Int) Less(elem Element) bool {
 	}
 	return *s.i < *e.i
 }
-func (s Float) Less(elem Element) bool {
+func (s Float) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -278,7 +278,7 @@ func (s Float) Less(elem Element) bool {
 	}
 	return *s.f < *e.f
 }
-func (s Bool) Less(elem Element) bool {
+func (s Bool) Less(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -295,7 +295,7 @@ func (s Bool) Less(elem Element) bool {
 	return false
 }
 
-func (s String) GreaterEq(elem Element) bool {
+func (s String) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -305,7 +305,7 @@ func (s String) GreaterEq(elem Element) bool {
 	}
 	return *s.s >= *e.s
 }
-func (s Int) GreaterEq(elem Element) bool {
+func (s Int) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -315,7 +315,7 @@ func (s Int) GreaterEq(elem Element) bool {
 	}
 	return *s.i >= *e.i
 }
-func (s Float) GreaterEq(elem Element) bool {
+func (s Float) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -325,7 +325,7 @@ func (s Float) GreaterEq(elem Element) bool {
 	}
 	return *s.f >= *e.f
 }
-func (s Bool) GreaterEq(elem Element) bool {
+func (s Bool) GreaterEq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -342,7 +342,7 @@ func (s Bool) GreaterEq(elem Element) bool {
 	return true
 }
 
-func (s String) Greater(elem Element) bool {
+func (s String) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -352,7 +352,7 @@ func (s String) Greater(elem Element) bool {
 	}
 	return *s.s > *e.s
 }
-func (s Int) Greater(elem Element) bool {
+func (s Int) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -362,7 +362,7 @@ func (s Int) Greater(elem Element) bool {
 	}
 	return *s.i > *e.i
 }
-func (s Float) Greater(elem Element) bool {
+func (s Float) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -372,7 +372,7 @@ func (s Float) Greater(elem Element) bool {
 	}
 	return *s.f > *e.f
 }
-func (s Bool) Greater(elem Element) bool {
+func (s Bool) Greater(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -386,7 +386,7 @@ func (s Bool) Greater(elem Element) bool {
 	return false
 }
 
-func (s String) Eq(elem Element) bool {
+func (s String) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -397,7 +397,7 @@ func (s String) Eq(elem Element) bool {
 	return *s.s == *e.s
 }
 
-func (s Int) Eq(elem Element) bool {
+func (s Int) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -408,7 +408,7 @@ func (s Int) Eq(elem Element) bool {
 	return *s.i == *e.i
 }
 
-func (s Float) Eq(elem Element) bool {
+func (s Float) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}
@@ -419,7 +419,7 @@ func (s Float) Eq(elem Element) bool {
 	return *s.f == *e.f
 }
 
-func (s Bool) Eq(elem Element) bool {
+func (s Bool) Eq(elem elementInterface) bool {
 	if elem == nil {
 		return false
 	}

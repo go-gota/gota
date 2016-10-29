@@ -7,20 +7,20 @@ import (
 	"strings"
 )
 
-type Elements interface {
-	Copy() Elements
+type seriesElements interface {
+	Copy() seriesElements
 	Records() []string
-	Elem(int) Element
-	Append(...interface{}) Elements
-	Set(int, ElementValue) (Elements, error)
+	Elem(int) elementInterface
+	Append(...interface{}) seriesElements
+	Set(int, elementValue) (seriesElements, error)
 }
 
-type StringElements []String
-type IntElements []Int
-type FloatElements []Float
-type BoolElements []Bool
+type stringElements []String
+type intElements []Int
+type floatElements []Float
+type boolElements []Bool
 
-func (s StringElements) Set(i int, val ElementValue) (Elements, error) {
+func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
 	}
@@ -50,10 +50,10 @@ func (s StringElements) Set(i int, val ElementValue) (Elements, error) {
 		if Len(series) != 1 {
 			return nil, errors.New("Non unit Series")
 		}
-		v := series.Elem(0).ToString()
+		v := series.elem(0).ToString()
 		s[i] = v
 	default:
-		ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+		ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 		rv := reflect.ValueOf(val)
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Slice:
@@ -80,7 +80,7 @@ func (s StringElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-func (s IntElements) Set(i int, val ElementValue) (Elements, error) {
+func (s intElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
 	}
@@ -114,11 +114,11 @@ func (s IntElements) Set(i int, val ElementValue) (Elements, error) {
 		if Len(series) != 1 {
 			return nil, errors.New("Non unit Series")
 		}
-		v := series.Elem(0).ToInt()
+		v := series.elem(0).ToInt()
 		s[i] = v
 	default:
 		rv := reflect.ValueOf(val)
-		ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+		ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Slice:
 			if rv.Len() != 1 {
@@ -144,7 +144,7 @@ func (s IntElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-func (s FloatElements) Set(i int, val ElementValue) (Elements, error) {
+func (s floatElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
 	}
@@ -177,11 +177,11 @@ func (s FloatElements) Set(i int, val ElementValue) (Elements, error) {
 		if Len(series) != 1 {
 			return nil, errors.New("Non unit Series")
 		}
-		v := series.Elem(0).ToFloat()
+		v := series.elem(0).ToFloat()
 		s[i] = v
 	default:
 		rv := reflect.ValueOf(val)
-		ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+		ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Slice:
 			if rv.Len() != 1 {
@@ -207,7 +207,7 @@ func (s FloatElements) Set(i int, val ElementValue) (Elements, error) {
 	}
 	return s, nil
 }
-func (s BoolElements) Set(i int, val ElementValue) (Elements, error) {
+func (s boolElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {
 		return nil, errors.New("Index out of bounds")
 	}
@@ -250,11 +250,11 @@ func (s BoolElements) Set(i int, val ElementValue) (Elements, error) {
 		if Len(series) != 1 {
 			return nil, errors.New("Non unit Series")
 		}
-		v := series.Elem(0).ToBool()
+		v := series.elem(0).ToBool()
 		s[i] = v
 	default:
 		rv := reflect.ValueOf(val)
-		ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+		ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 		switch reflect.TypeOf(val).Kind() {
 		case reflect.Slice:
 			if rv.Len() != 1 {
@@ -282,28 +282,28 @@ func (s BoolElements) Set(i int, val ElementValue) (Elements, error) {
 }
 
 // Records return the elements as a slice of strings
-func (s StringElements) Records() []string {
+func (s stringElements) Records() []string {
 	arr := []string{}
 	for _, v := range s {
 		arr = append(arr, v.String())
 	}
 	return arr
 }
-func (s IntElements) Records() []string {
+func (s intElements) Records() []string {
 	arr := []string{}
 	for _, v := range s {
 		arr = append(arr, v.String())
 	}
 	return arr
 }
-func (s FloatElements) Records() []string {
+func (s floatElements) Records() []string {
 	arr := []string{}
 	for _, v := range s {
 		arr = append(arr, v.String())
 	}
 	return arr
 }
-func (s BoolElements) Records() []string {
+func (s boolElements) Records() []string {
 	arr := []string{}
 	for _, v := range s {
 		arr = append(arr, v.String())
@@ -312,32 +312,32 @@ func (s BoolElements) Records() []string {
 }
 
 // Elem returns the Element at index i
-func (s StringElements) Elem(i int) Element {
+func (s stringElements) Elem(i int) elementInterface {
 	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
-func (s IntElements) Elem(i int) Element {
+func (s intElements) Elem(i int) elementInterface {
 	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
-func (s FloatElements) Elem(i int) Element {
+func (s floatElements) Elem(i int) elementInterface {
 	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
-func (s BoolElements) Elem(i int) Element {
+func (s boolElements) Elem(i int) elementInterface {
 	if i >= len(s) || i < 0 {
 		return nil
 	}
 	return s[i]
 }
 
-func (elements StringElements) Append(args ...interface{}) Elements {
+func (elements stringElements) Append(args ...interface{}) seriesElements {
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -393,11 +393,11 @@ func (elements StringElements) Append(args ...interface{}) Elements {
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
-			elements = elements.Append(elems).(StringElements)
+			elements = elements.Append(elems).(stringElements)
 		default:
 			// This should only happen if v (or its elements in case of a slice)
 			// implements Stringer.
-			ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+			ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 			s := reflect.ValueOf(v)
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice:
@@ -426,7 +426,7 @@ func (elements StringElements) Append(args ...interface{}) Elements {
 	}
 	return elements
 }
-func (elements IntElements) Append(args ...interface{}) Elements {
+func (elements intElements) Append(args ...interface{}) seriesElements {
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -492,10 +492,10 @@ func (elements IntElements) Append(args ...interface{}) Elements {
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
-			elements = elements.Append(elems).(IntElements)
+			elements = elements.Append(elems).(intElements)
 		default:
 			s := reflect.ValueOf(v)
-			ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+			ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice:
 				if s.Len() > 0 {
@@ -523,7 +523,7 @@ func (elements IntElements) Append(args ...interface{}) Elements {
 	}
 	return elements
 }
-func (elements FloatElements) Append(args ...interface{}) Elements {
+func (elements floatElements) Append(args ...interface{}) seriesElements {
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -590,10 +590,10 @@ func (elements FloatElements) Append(args ...interface{}) Elements {
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
-			elements = elements.Append(elems).(FloatElements)
+			elements = elements.Append(elems).(floatElements)
 		default:
 			s := reflect.ValueOf(v)
-			ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+			ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice:
 				if s.Len() > 0 {
@@ -621,7 +621,7 @@ func (elements FloatElements) Append(args ...interface{}) Elements {
 	}
 	return elements
 }
-func (elements BoolElements) Append(args ...interface{}) Elements {
+func (elements boolElements) Append(args ...interface{}) seriesElements {
 	for _, v := range args {
 		switch v.(type) {
 		case []int:
@@ -721,10 +721,10 @@ func (elements BoolElements) Append(args ...interface{}) Elements {
 		case Series:
 			s := v.(Series)
 			elems := s.elements.Copy()
-			elements = elements.Append(elems).(BoolElements)
+			elements = elements.Append(elems).(boolElements)
 		default:
 			s := reflect.ValueOf(v)
-			ifElem := reflect.TypeOf((*Element)(nil)).Elem()
+			ifElem := reflect.TypeOf((*elementInterface)(nil)).Elem()
 			switch reflect.TypeOf(v).Kind() {
 			case reflect.Slice:
 				if s.Len() > 0 {
@@ -754,44 +754,44 @@ func (elements BoolElements) Append(args ...interface{}) Elements {
 }
 
 // Copy the elements of Elements
-func (s StringElements) Copy() Elements {
-	var elements StringElements
+func (s stringElements) Copy() seriesElements {
+	var elements stringElements
 	for _, elem := range s {
 		elements = append(elements, elem.Copy())
 	}
 	return elements
 }
-func (s IntElements) Copy() Elements {
-	var elements IntElements
+func (s intElements) Copy() seriesElements {
+	var elements intElements
 	for _, elem := range s {
 		elements = append(elements, elem.Copy())
 	}
 	return elements
 }
-func (s FloatElements) Copy() Elements {
-	var elements FloatElements
+func (s floatElements) Copy() seriesElements {
+	var elements floatElements
 	for _, elem := range s {
 		elements = append(elements, elem.Copy())
 	}
 	return elements
 }
-func (s BoolElements) Copy() Elements {
-	var elements BoolElements
+func (s boolElements) Copy() seriesElements {
+	var elements boolElements
 	for _, elem := range s {
 		elements = append(elements, elem.Copy())
 	}
 	return elements
 }
 
-func (s StringElements) String() string {
+func (s stringElements) String() string {
 	return strings.Join(s.Records(), " ")
 }
-func (s IntElements) String() string {
+func (s intElements) String() string {
 	return strings.Join(s.Records(), " ")
 }
-func (s FloatElements) String() string {
+func (s floatElements) String() string {
 	return strings.Join(s.Records(), " ")
 }
-func (s BoolElements) String() string {
+func (s boolElements) String() string {
 	return strings.Join(s.Records(), " ")
 }

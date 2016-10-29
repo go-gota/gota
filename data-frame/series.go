@@ -1,6 +1,7 @@
 package df
 
 // TODO: Improve package documentation and include code examples
+// TODO: Refactor error returns
 
 import (
 	"errors"
@@ -8,34 +9,38 @@ import (
 	"strings"
 )
 
-// TODO: Refactor error returns
+// Series is the main structure for a series of elements of the same type. It is
+// the primary building block of a DataFrame.
 type Series struct {
-	Name     string   // The name of the series
-	elements Elements // The values of the elements
-	t        string   // The type of the series
+	Name     string         // The name of the series
+	elements seriesElements // The values of the elements
+	t        string         // The type of the series
 	err      error
 }
 
+// Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	ret := Series{Name: s.Name, t: s.t}
 	switch ret.t {
 	case "string":
-		ret.elements = StringElements{}
+		ret.elements = stringElements{}
 	case "int":
-		ret.elements = IntElements{}
+		ret.elements = intElements{}
 	case "float":
-		ret.elements = FloatElements{}
+		ret.elements = floatElements{}
 	case "bool":
-		ret.elements = BoolElements{}
+		ret.elements = boolElements{}
 	}
 	return ret
 }
 
+// Err returns the error contained in the series
 func (s Series) Err() error {
 	return s.err
 }
 
-func (s Series) Set(i int, val ElementValue) Series {
+func (s Series) set(i int, val elementValue) Series {
+	// TODO: This needs to be reimplemented with better exported access
 	if s.Err() != nil {
 		return s
 	}
@@ -50,14 +55,16 @@ func (s Series) Set(i int, val ElementValue) Series {
 	return s
 }
 
-func (s Series) Elem(i int) Element {
+func (s Series) elem(i int) elementInterface {
 	if i >= Len(s) || i < 0 {
 		return nil
 	}
 	return s.elements.Elem(i)
 }
 
+// Val returns the value of a series for the given index or nil if NA or out of bounds
 func (s Series) Val(i int) interface{} {
+	// TODO: This is probably not the right way to handle out of bounds/NA errors...
 	if i >= Len(s) || i < 0 {
 		return nil
 	}
@@ -68,10 +75,12 @@ func (s Series) Val(i int) interface{} {
 	return elem.Val()
 }
 
+// Append adds elements to the end of the Series
 func (s *Series) Append(x interface{}) {
 	s.elements = s.elements.Append(x)
 }
 
+// Concat concatenates two series together
 func (s Series) Concat(x Series) Series {
 	var y Series
 	switch s.t {
@@ -89,14 +98,16 @@ func (s Series) Concat(x Series) Series {
 	return y
 }
 
+// Subset returns a subset of the series based on the given indexes
 func (s Series) Subset(indexes interface{}) Series {
+	// TODO: Improve documentation of this function, including examples and use cases
 	var series Series
 	switch s.t {
 	case "string":
-		elements := s.elements.(StringElements)
+		elements := s.elements.(stringElements)
 		switch indexes.(type) {
 		case []int:
-			elems := StringElements{}
+			elems := stringElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
 					return Series{err: errors.New("Index out of range")}
@@ -109,7 +120,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			if len(idx) != Len(s) {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
-			var elems StringElements
+			var elems stringElements
 			for k, v := range idx {
 				if v {
 					elems = append(elems, elements[k])
@@ -125,8 +136,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				if Len(idx) != Len(s) {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
-				boolElems := idx.elements.(BoolElements)
-				var elems StringElements
+				boolElems := idx.elements.(boolElements)
+				var elems stringElements
 				for k, v := range boolElems {
 					b := v.ToBool().Val()
 					if b == nil {
@@ -138,8 +149,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedStrings(s.Name, elems)
 			case "int":
-				elems := StringElements{}
-				intElems := idx.elements.(IntElements)
+				elems := stringElements{}
+				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -152,8 +163,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedStrings(s.Name, elems)
 			case "float":
-				elems := StringElements{}
-				intElems := Ints(idx).elements.(IntElements)
+				elems := stringElements{}
+				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -170,10 +181,10 @@ func (s Series) Subset(indexes interface{}) Series {
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
 	case "int":
-		elements := s.elements.(IntElements)
+		elements := s.elements.(intElements)
 		switch indexes.(type) {
 		case []int:
-			elems := IntElements{}
+			elems := intElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
 					return Series{err: errors.New("Index out of range")}
@@ -186,7 +197,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			if len(idx) != Len(s) {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
-			var elems IntElements
+			var elems intElements
 			for k, v := range idx {
 				if v {
 					elems = append(elems, elements[k])
@@ -202,8 +213,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				if Len(idx) != Len(s) {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
-				boolElems := idx.elements.(BoolElements)
-				var elems IntElements
+				boolElems := idx.elements.(boolElements)
+				var elems intElements
 				for k, v := range boolElems {
 					b := v.ToBool().Val()
 					if b == nil {
@@ -215,8 +226,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedInts(s.Name, elems)
 			case "int":
-				elems := IntElements{}
-				intElems := idx.elements.(IntElements)
+				elems := intElements{}
+				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -229,8 +240,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedInts(s.Name, elems)
 			case "float":
-				elems := IntElements{}
-				intElems := Ints(idx).elements.(IntElements)
+				elems := intElements{}
+				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -247,10 +258,10 @@ func (s Series) Subset(indexes interface{}) Series {
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
 	case "float":
-		elements := s.elements.(FloatElements)
+		elements := s.elements.(floatElements)
 		switch indexes.(type) {
 		case []int:
-			elems := FloatElements{}
+			elems := floatElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
 					return Series{err: errors.New("Index out of range")}
@@ -263,7 +274,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			if len(idx) != Len(s) {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
-			var elems FloatElements
+			var elems floatElements
 			for k, v := range idx {
 				if v {
 					elems = append(elems, elements[k])
@@ -279,8 +290,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				if Len(idx) != Len(s) {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
-				boolElems := idx.elements.(BoolElements)
-				var elems FloatElements
+				boolElems := idx.elements.(boolElements)
+				var elems floatElements
 				for k, v := range boolElems {
 					b := v.ToBool().Val()
 					if b == nil {
@@ -292,8 +303,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedFloats(s.Name, elems)
 			case "int":
-				elems := FloatElements{}
-				intElems := idx.elements.(IntElements)
+				elems := floatElements{}
+				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -306,8 +317,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedFloats(s.Name, elems)
 			case "float":
-				elems := FloatElements{}
-				intElems := Ints(idx).elements.(IntElements)
+				elems := floatElements{}
+				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -324,10 +335,10 @@ func (s Series) Subset(indexes interface{}) Series {
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
 	case "bool":
-		elements := s.elements.(BoolElements)
+		elements := s.elements.(boolElements)
 		switch indexes.(type) {
 		case []int:
-			elems := BoolElements{}
+			elems := boolElements{}
 			for _, v := range indexes.([]int) {
 				if v >= len(elements) || v < 0 {
 					return Series{err: errors.New("Index out of range")}
@@ -340,7 +351,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			if len(idx) != Len(s) {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
-			var elems BoolElements
+			var elems boolElements
 			for k, v := range idx {
 				if v {
 					elems = append(elems, elements[k])
@@ -356,8 +367,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				if Len(idx) != Len(s) {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
-				boolElems := idx.elements.(BoolElements)
-				var elems BoolElements
+				boolElems := idx.elements.(boolElements)
+				var elems boolElements
 				for k, v := range boolElems {
 					b := v.ToBool().Val()
 					if b == nil {
@@ -369,8 +380,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedBools(s.Name, elems)
 			case "int":
-				elems := BoolElements{}
-				intElems := idx.elements.(IntElements)
+				elems := boolElements{}
+				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -383,8 +394,8 @@ func (s Series) Subset(indexes interface{}) Series {
 				}
 				series = NamedBools(s.Name, elems)
 			case "float":
-				elems := BoolElements{}
-				intElems := Ints(idx).elements.(IntElements)
+				elems := boolElements{}
+				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
 					i := v.ToInt().Val()
 					if i == nil {
@@ -404,8 +415,10 @@ func (s Series) Subset(indexes interface{}) Series {
 	return series
 }
 
-// TODO: Return a Bools Series instead of []bool?
+// Compare compares the values of a Series with other series, scalars, text, etc
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
+	// TODO: Improve documentation of this function, including examples and use cases
+	// TODO: Return a Bools Series instead of []bool?
 	var comp Series
 	switch s.t {
 	case "string":
@@ -516,14 +529,17 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 	return ret, nil
 }
 
+// Records returns the elements of a Series in a []string
 func (s Series) Records() []string {
 	return s.elements.Records()
 }
 
+// String implements the Stringer interface for Series
 func (s Series) String() string {
 	return fmt.Sprint(s.elements)
 }
 
+// Copy wil copy the values of a given Series
 func (s Series) Copy() Series {
 	var copy Series
 	switch s.t {
@@ -577,7 +593,7 @@ func NamedBools(name string, args ...interface{}) Series {
 
 // Strings is a constructor for a String series
 func Strings(args ...interface{}) Series {
-	var elements Elements = make(StringElements, 0)
+	var elements seriesElements = make(stringElements, 0)
 	elements = elements.Append(args...)
 	ret := Series{
 		Name:     "",
@@ -589,7 +605,7 @@ func Strings(args ...interface{}) Series {
 
 // Ints is a constructor for an Int series
 func Ints(args ...interface{}) Series {
-	var elements Elements = make(IntElements, 0)
+	var elements seriesElements = make(intElements, 0)
 	elements = elements.Append(args...)
 	ret := Series{
 		Name:     "",
@@ -601,7 +617,7 @@ func Ints(args ...interface{}) Series {
 
 // Floats is a constructor for a Float series
 func Floats(args ...interface{}) Series {
-	var elements Elements = make(FloatElements, 0)
+	var elements seriesElements = make(floatElements, 0)
 	elements = elements.Append(args...)
 	ret := Series{
 		Name:     "",
@@ -613,7 +629,7 @@ func Floats(args ...interface{}) Series {
 
 // Bools is a constructor for a bools series
 func Bools(args ...interface{}) Series {
-	var elements Elements = make(BoolElements, 0)
+	var elements seriesElements = make(boolElements, 0)
 	elements = elements.Append(args...)
 	ret := Series{
 		Name:     "",
@@ -623,6 +639,7 @@ func Bools(args ...interface{}) Series {
 	return ret
 }
 
+// Str prints some extra information about a given series
 func Str(s Series) string {
 	var ret []string
 	// If name exists print name
@@ -637,48 +654,50 @@ func Str(s Series) string {
 	return strings.Join(ret, "\n")
 }
 
+// Len returns the length of a given Series
 func Len(s Series) int {
 	switch s.t {
 	case "string":
-		elems := s.elements.(StringElements)
+		elems := s.elements.(stringElements)
 		return (len(elems))
 	case "int":
-		elems := s.elements.(IntElements)
+		elems := s.elements.(intElements)
 		return (len(elems))
 	case "float":
-		elems := s.elements.(FloatElements)
+		elems := s.elements.(floatElements)
 		return (len(elems))
 	case "bool":
-		elems := s.elements.(BoolElements)
+		elems := s.elements.(boolElements)
 		return (len(elems))
 	}
 	return -1
 }
 
-func Type(s Series) string {
+// Type returns the type of a given series
+func (s Series) Type() string {
 	return s.t
 }
 
-func Addr(s Series) []string {
+func addr(s Series) []string {
 	var ret []string
 	switch s.t {
 	case "string":
-		elems := s.elements.(StringElements)
+		elems := s.elements.(stringElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.s))
 		}
 	case "int":
-		elems := s.elements.(IntElements)
+		elems := s.elements.(intElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.i))
 		}
 	case "float":
-		elems := s.elements.(FloatElements)
+		elems := s.elements.(floatElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.f))
 		}
 	case "bool":
-		elems := s.elements.(BoolElements)
+		elems := s.elements.(boolElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.b))
 		}
