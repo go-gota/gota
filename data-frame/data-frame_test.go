@@ -16,7 +16,7 @@ func TestDataFrame_New(t *testing.T) {
 		t.Error("Expected success, got error")
 	}
 	expectedNames := []string{"X0", "Y", "X1"}
-	receivedNames := a.colnames
+	receivedNames := a.Names()
 	if !reflect.DeepEqual(expectedNames, receivedNames) {
 		t.Error(
 			"Expected Names:",
@@ -26,7 +26,7 @@ func TestDataFrame_New(t *testing.T) {
 		)
 	}
 	expectedTypes := []string{"string", "int", "float"}
-	receivedTypes := a.coltypes
+	receivedTypes := a.Types()
 	if !reflect.DeepEqual(expectedTypes, receivedTypes) {
 		t.Error(
 			"Expected Types:",
@@ -35,7 +35,6 @@ func TestDataFrame_New(t *testing.T) {
 			receivedTypes,
 		)
 	}
-	// TODO: Check that df.colnames == columns.colnames
 	// TODO: Check that the address of the columns are different that of the original series
 	// TODO: Check that dimensions match
 	a = New()
@@ -47,7 +46,7 @@ func TestDataFrame_New(t *testing.T) {
 func TestDataFrame_Copy(t *testing.T) {
 	a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))
 	b := a.Copy()
-	if a.columns[0].Elements.(StringElements)[0] == b.columns[0].Elements.(StringElements)[0] {
+	if a.columns[0].elements.(stringElements)[0] == b.columns[0].elements.(stringElements)[0] {
 		t.Error("Copy error: The memory address should be different even if the content is the same")
 	}
 	// TODO: More error checking, this is not exhaustive enough
@@ -296,7 +295,11 @@ func TestDataFrame_Column(t *testing.T) {
 }
 
 func TestDataFrame_Mutate(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1),
+	)
 	b := a.Mutate("COL.2", NamedStrings("ColumnChanged!", "x", 1, "z"))
 	if b.Err() != nil {
 		t.Error("Expected success, got error")
@@ -345,6 +348,376 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 	}
 	b := ReadMaps(m)
 	if b.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: ", b.Err())
 	}
+}
+
+func TestDataFrame_InnerJoin(t *testing.T) {
+	a := New(
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
+	)
+	b := New(
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
+	)
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 2, 1),
+				NamedStrings("B", "a", "b", "d"),
+				NamedFloats("C", 5.1, 6.0, 7.1),
+				NamedBools("D.0", true, true, false),
+				NamedInts("F", 1, 8, 1),
+				NamedBools("D.1", true, false, true),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 3, 3, 1, 1, 1),
+				NamedStrings("B", "a", "b", "c", "c", "c", "d", "d", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 6.0, 6.0, 7.1, 7.1, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "2", "5", "4", "2", "5"),
+				NamedInts("F", 1, 1, 2, 8, 9, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1),
+				NamedBools("D", true),
+				NamedStrings("B", "a"),
+				NamedFloats("C", 5.1),
+				NamedInts("F", 1),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true),
+				NamedInts("A", 1),
+				NamedStrings("B", "a"),
+				NamedFloats("C", 5.1),
+				NamedInts("F", 1),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.InnerJoin(b, v.keys...)
+		if !joinTestEq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
+	}
+}
+
+func TestDataFrame_LeftJoin(t *testing.T) {
+	a := New(
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
+	)
+	b := New(
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
+	)
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedBools("D.0", true, true, false, false),
+				NamedInts("F", 1, 8, nil, 1),
+				NamedBools("D.1", true, false, nil, true),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 3, 3, 1, 1, 1),
+				NamedStrings("B", "a", "b", "c", "c", "c", "d", "d", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 6.0, 6.0, 7.1, 7.1, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "2", "5", "4", "2", "5"),
+				NamedInts("F", 1, 1, 2, 8, 9, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedBools("D", true, true, false, false),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, true, false, false),
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.LeftJoin(b, v.keys...)
+		if !joinTestEq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
+	}
+}
+
+func TestDataFrame_RightJoin(t *testing.T) {
+	a := New(
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
+	)
+	b := New(
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
+	)
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 1, 2, 4, 5),
+				NamedStrings("B", "a", "d", "b", nil, nil),
+				NamedFloats("C", 5.1, 7.1, 6.0, nil, nil),
+				NamedBools("D.0", true, false, true, nil, nil),
+				NamedInts("F", 1, 1, 8, 2, 9),
+				NamedBools("D.1", true, true, false, false, false),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 1, 3, 1, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d", "c", "d", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1, 6.0, 7.1, 6.0, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "4", "2", "2", "5", "5"),
+				NamedInts("F", 1, 1, 2, 2, 8, 8, 9, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 4, 2, 5),
+				NamedBools("D", true, false, false, false),
+				NamedStrings("B", "a", nil, nil, nil),
+				NamedFloats("C", 5.1, nil, nil, nil),
+				NamedInts("F", 1, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, false, false, false),
+				NamedInts("A", 1, 4, 2, 5),
+				NamedStrings("B", "a", nil, nil, nil),
+				NamedFloats("C", 5.1, nil, nil, nil),
+				NamedInts("F", 1, 2, 8, 9),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.RightJoin(b, v.keys...)
+		if !joinTestEq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
+	}
+}
+
+func TestDataFrame_OuterJoin(t *testing.T) {
+	a := New(
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
+	)
+	b := New(
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
+	)
+	testTable := []struct {
+		keys     []string
+		expected DataFrame
+	}{
+		{
+			[]string{"A"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedBools("D.0", true, true, false, false),
+				NamedInts("F", 1, 8, nil, 1),
+				NamedBools("D.1", true, false, nil, true),
+			).RBind(
+				New(
+					NamedInts("A", 4, 5),
+					NamedStrings("B", nil, nil),
+					NamedFloats("C", nil, nil),
+					NamedBools("D.0", nil, nil),
+					NamedInts("F", 2, 9),
+					NamedBools("D.1", false, false),
+				),
+			),
+		},
+		{
+			[]string{"D"},
+			New(
+				NamedBools("D", true, true, false, false, false, false, false, false),
+				NamedInts("A.0", 1, 2, 3, 3, 3, 1, 1, 1),
+				NamedStrings("B", "a", "b", "c", "c", "c", "d", "d", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 6.0, 6.0, 7.1, 7.1, 7.1),
+				NamedStrings("A.1", "1", "1", "4", "2", "5", "4", "2", "5"),
+				NamedInts("F", 1, 1, 2, 8, 9, 2, 8, 9),
+			),
+		},
+		{
+			[]string{"A", "D"},
+			New(
+				NamedInts("A", 1, 2, 3, 1),
+				NamedBools("D", true, true, false, false),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			).RBind(
+				New(
+					NamedInts("A", 4, 2, 5),
+					NamedBools("D", false, false, false),
+					NamedStrings("B", nil, nil, nil),
+					NamedFloats("C", nil, nil, nil),
+					NamedInts("F", 2, 8, 9),
+				),
+			),
+		},
+		{
+			[]string{"D", "A"},
+			New(
+				NamedBools("D", true, true, false, false),
+				NamedInts("A", 1, 2, 3, 1),
+				NamedStrings("B", "a", "b", "c", "d"),
+				NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+				NamedInts("F", 1, nil, nil, nil),
+			).RBind(
+				New(
+					NamedBools("D", false, false, false),
+					NamedInts("A", 4, 2, 5),
+					NamedStrings("B", nil, nil, nil),
+					NamedFloats("C", nil, nil, nil),
+					NamedInts("F", 2, 8, 9),
+				),
+			),
+		},
+	}
+	for k, v := range testTable {
+		c := a.OuterJoin(b, v.keys...)
+		if !joinTestEq(c, v.expected) {
+			t.Errorf(
+				"Error on test %v:\nExpected:\n%v\nReceived:\n%v",
+				k, v.expected, c)
+		}
+	}
+}
+
+func TestDataFrame_CrossJoin(t *testing.T) {
+	a := New(
+		NamedInts("A", 1, 2, 3, 1),
+		NamedStrings("B", "a", "b", "c", "d"),
+		NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
+		NamedBools("D", true, true, false, false),
+	)
+	b := New(
+		NamedStrings("A", "1", "4", "2", "5"),
+		NamedInts("F", 1, 2, 8, 9),
+		NamedBools("D", true, false, false, false),
+	)
+	c := a.CrossJoin(b)
+	expectedCSV := `
+A.0,B,C,D.0,A.1,F,D.1
+1,a,5.1,true,1,1,true
+1,a,5.1,true,4,2,false
+1,a,5.1,true,2,8,false
+1,a,5.1,true,5,9,false
+2,b,6.0,true,1,1,true
+2,b,6.0,true,4,2,false
+2,b,6.0,true,2,8,false
+2,b,6.0,true,5,9,false
+3,c,6.0,false,1,1,true
+3,c,6.0,false,4,2,false
+3,c,6.0,false,2,8,false
+3,c,6.0,false,5,9,false
+1,d,7.1,false,1,1,true
+1,d,7.1,false,4,2,false
+1,d,7.1,false,2,8,false
+1,d,7.1,false,5,9,false
+`
+	expected := ReadCSV(expectedCSV,
+		[]string{"int", "string", "float", "bool", "string", "int", "bool"}...)
+	if c.Err() != nil {
+		t.Error("Expected success, got error: ", c.Err())
+	}
+	if !joinTestEq(c, expected) {
+		t.Errorf(
+			"Error:\nExpected:\n%v\nReceived:\n%v",
+			expected, c)
+	}
+}
+
+// Helper function to compare DataFrames even if the value to compare is NA
+func joinTestEq(a, b DataFrame) bool {
+	if a.nrows != b.nrows || a.ncols != b.ncols {
+		return false
+	}
+	if !reflect.DeepEqual(a.Names(), b.Names()) {
+		return false
+	}
+	if !reflect.DeepEqual(a.Types(), b.Types()) {
+		return false
+	}
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < a.ncols; j++ {
+			aElem := a.columns[j].elem(i)
+			bElem := b.columns[j].elem(i)
+
+			if !(aElem.IsNA() && bElem.IsNA()) &&
+				!aElem.Eq(bElem) {
+				return false
+			}
+		}
+	}
+	return true
 }

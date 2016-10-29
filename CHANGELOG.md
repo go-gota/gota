@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.6.0] - 2016-10-29
+### Added
+- InnerJoin, CrossJoin, RightJoin, LeftJoin, OuterJoin functions
+
+### Changed
+- More code refactoring for easier maintenance and management
+- Add more documentation to the exported functions
+- Remove unnecessary methods and structures from the exported API
+
+### Removed
+- colnames and coltypes from the DataFrame structure
+
 ## [0.5.0] - 2016-08-09
 ### Added
 - Read and write DataFrames from CSV, JSON, []map[string]interface{},
@@ -106,3 +118,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.3.0]:https://github.com/kniren/gota/compare/v0.2.1...v0.3.0
 [0.4.0]:https://github.com/kniren/gota/compare/v0.3.0...v0.4.0
 [0.5.0]:https://github.com/kniren/gota/compare/v0.4.0...v0.5.0
+[0.6.0]:https://github.com/kniren/gota/compare/v0.5.0...v0.6.0
