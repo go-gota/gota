@@ -13,6 +13,7 @@ type seriesElements interface {
 	Elem(int) elementInterface
 	Append(...interface{}) seriesElements
 	Set(int, elementValue) (seriesElements, error)
+	// FIXME: Len() int
 }
 
 type stringElements []stringElement

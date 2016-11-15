@@ -18,7 +18,7 @@ type DataFrame struct {
 	columns []Series
 	ncols   int
 	nrows   int
-	err     error // TODO: Define custom error data type?
+	err     error
 }
 
 // New is a constructor for DataFrames
@@ -190,7 +190,6 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 
 // Select the given DataFrame columns
 func (df DataFrame) Select(colnames ...string) DataFrame {
-	// TODO: Expand to accept []int, []bool and Series
 	if df.Err() != nil {
 		return df
 	}
@@ -342,7 +341,6 @@ type F struct {
 
 // Filter will filter the rows of a DataFrame
 func (df DataFrame) Filter(filters ...F) DataFrame {
-	// TODO: Implement a better interface for filtering
 	if df.Err() != nil {
 		return df
 	}
@@ -445,6 +443,7 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 			for _, colname := range colnames {
 				col := fields[colname]
 				switch t {
+				// FIXME: Use SeriesType instead
 				case "string":
 					columns = append(columns, NamedStrings(colname, col))
 				case "int":
@@ -470,6 +469,7 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 			col := fields[colname]
 			t := types[k]
 			switch t {
+			// FIXME: Use SeriesType instead
 			case "string":
 				columns = append(columns, NamedStrings(colname, col))
 			case "int":
@@ -491,6 +491,7 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 		col := fields[colname]
 		t := findType(col)
 		switch t {
+		// FIXME: Use SeriesType instead
 		case "string":
 			columns = append(columns, NamedStrings(colname, col))
 		case "int":
@@ -550,6 +551,7 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 			for i, colname := range colnames {
 				col := records[i]
 				switch t {
+				// FIXME: Use SeriesType instead
 				case "string":
 					columns = append(columns, NamedStrings(colname, col))
 				case "int":
@@ -575,6 +577,7 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 			t := types[i]
 			col := records[i]
 			switch t {
+			// FIXME: Use SeriesType instead
 			case "string":
 				columns = append(columns, NamedStrings(colname, col))
 			case "int":
@@ -608,6 +611,7 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 		col := records[i]
 		t := findType(col)
 		switch t {
+		// FIXME: Use SeriesType instead
 		case "string":
 			columns = append(columns, NamedStrings(colname, col))
 		case "int":
@@ -1213,14 +1217,3 @@ func (d DataFrame) ColIndex(s string) int {
 	}
 	return -1
 }
-
-// TODO: (df DataFrame) Str() (string)
-// TODO: (df DataFrame) Summary() (string)
-// TODO: dplyr-ish: Arrange?
-// TODO: dplyr-ish: GroupBy?
-// TODO: Compare?
-// TODO: UniqueRows?
-// TODO: UniqueColumns?
-// TODO: ChangeType(DataFrame, types) (DataFrame, err) // Parse columns again
-// TODO: Improve error handling by using errors.Wrap and errors.Unwrap
-// TODO: Improve DataFrame.String() by limiting the column lengtht to x characters and perhaps the line length as well

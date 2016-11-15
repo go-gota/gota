@@ -1,8 +1,5 @@
 package df
 
-// TODO: Improve package documentation and include code examples
-// TODO: Refactor error returns
-
 import (
 	"errors"
 	"fmt"
@@ -22,6 +19,7 @@ type Series struct {
 func (s Series) Empty() Series {
 	ret := Series{Name: s.Name, t: s.t}
 	switch ret.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		ret.elements = stringElements{}
 	case "int":
@@ -40,7 +38,6 @@ func (s Series) Err() error {
 }
 
 func (s Series) set(i int, val elementValue) Series {
-	// TODO: This needs to be reimplemented with better exported access
 	if s.Err() != nil {
 		return s
 	}
@@ -64,7 +61,7 @@ func (s Series) elem(i int) elementInterface {
 
 // Val returns the value of a series for the given index or nil if NA or out of bounds
 func (s Series) Val(i int) interface{} {
-	// TODO: This is probably not the right way to handle out of bounds/NA errors...
+	// FIXME: This is probably not the right way to handle out of bounds/NA errors...
 	if i >= Len(s) || i < 0 {
 		return nil
 	}
@@ -84,6 +81,7 @@ func (s *Series) Append(x interface{}) {
 func (s Series) Concat(x Series) Series {
 	var y Series
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		y = NamedStrings(s.Name, s, x)
 	case "int":
@@ -100,9 +98,9 @@ func (s Series) Concat(x Series) Series {
 
 // Subset returns a subset of the series based on the given indexes
 func (s Series) Subset(indexes interface{}) Series {
-	// TODO: Improve documentation of this function, including examples and use cases
 	var series Series
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		elements := s.elements.(stringElements)
 		switch indexes.(type) {
@@ -417,10 +415,9 @@ func (s Series) Subset(indexes interface{}) Series {
 
 // Compare compares the values of a Series with other series, scalars, text, etc
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
-	// TODO: Improve documentation of this function, including examples and use cases
-	// TODO: Return a Bools Series instead of []bool?
 	var comp Series
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		comp = Strings(comparando)
 	case "int":
@@ -434,6 +431,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 	}
 	ret := []bool{}
 	switch comparator {
+	// FIXME: Use ComparatorType instead
 	case "==":
 		if Len(comp) == 1 {
 			for i := 0; i < Len(s); i++ {
@@ -543,6 +541,7 @@ func (s Series) String() string {
 func (s Series) Copy() Series {
 	var copy Series
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		copy = Strings(s)
 		n := s.Name
@@ -657,6 +656,7 @@ func Str(s Series) string {
 // Len returns the length of a given Series
 func Len(s Series) int {
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		elems := s.elements.(stringElements)
 		return (len(elems))
@@ -681,6 +681,7 @@ func (s Series) Type() string {
 func addr(s Series) []string {
 	var ret []string
 	switch s.t {
+	// FIXME: Use SeriesType instead
 	case "string":
 		elems := s.elements.(stringElements)
 		for _, elem := range elems {
