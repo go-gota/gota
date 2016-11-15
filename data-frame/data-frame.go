@@ -35,7 +35,7 @@ func New(series ...Series) DataFrame {
 	for k, v := range series {
 		columns = append(columns, v.Copy())
 		colnames[k] = v.Name
-		l := Len(v)
+		l := v.Len()
 		// Check that all given Series have the same length
 		if k > 0 {
 			allEqual = l == lastLength
@@ -316,7 +316,7 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 		}
 		return false, -1
 	}
-	if Len(series) != df.nrows {
+	if series.Len() != df.nrows {
 		return DataFrame{
 			err: errors.New("Can't set column. Different dimensions"),
 		}

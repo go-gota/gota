@@ -48,7 +48,7 @@ func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 		s[i] = stringElement{nil}
 	case Series:
 		series := val.(Series)
-		if Len(series) != 1 {
+		if series.Len() != 1 {
 			return nil, errors.New("Non unit Series")
 		}
 		v := series.elem(0).ToString()
@@ -112,7 +112,7 @@ func (s intElements) Set(i int, val elementValue) (seriesElements, error) {
 		s[i] = intElement{nil}
 	case Series:
 		series := val.(Series)
-		if Len(series) != 1 {
+		if series.Len() != 1 {
 			return nil, errors.New("Non unit Series")
 		}
 		v := series.elem(0).ToInt()
@@ -175,7 +175,7 @@ func (s floatElements) Set(i int, val elementValue) (seriesElements, error) {
 		s[i] = floatElement{nil}
 	case Series:
 		series := val.(Series)
-		if Len(series) != 1 {
+		if series.Len() != 1 {
 			return nil, errors.New("Non unit Series")
 		}
 		v := series.elem(0).ToFloat()
@@ -248,7 +248,7 @@ func (s boolElements) Set(i int, val elementValue) (seriesElements, error) {
 		s[i] = boolElement{nil}
 	case Series:
 		series := val.(Series)
-		if Len(series) != 1 {
+		if series.Len() != 1 {
 			return nil, errors.New("Non unit Series")
 		}
 		v := series.elem(0).ToBool()

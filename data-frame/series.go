@@ -41,7 +41,7 @@ func (s Series) set(i int, val elementValue) Series {
 	if s.Err() != nil {
 		return s
 	}
-	if i >= Len(s) || i < 0 {
+	if i >= s.Len() || i < 0 {
 		return Series{err: errors.New("Couldn't set element. Index out of bounds")}
 	}
 	elems, err := s.elements.Set(i, val)
@@ -53,7 +53,7 @@ func (s Series) set(i int, val elementValue) Series {
 }
 
 func (s Series) elem(i int) elementInterface {
-	if i >= Len(s) || i < 0 {
+	if i >= s.Len() || i < 0 {
 		return nil
 	}
 	return s.elements.Elem(i)
@@ -62,7 +62,7 @@ func (s Series) elem(i int) elementInterface {
 // Val returns the value of a series for the given index or nil if NA or out of bounds
 func (s Series) Val(i int) interface{} {
 	// FIXME: This is probably not the right way to handle out of bounds/NA errors...
-	if i >= Len(s) || i < 0 {
+	if i >= s.Len() || i < 0 {
 		return nil
 	}
 	elem := s.elements.Elem(i)
@@ -115,7 +115,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			series = NamedStrings(s.Name, elems)
 		case []bool:
 			idx := indexes.([]bool)
-			if len(idx) != Len(s) {
+			if len(idx) != s.Len() {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
 			var elems stringElements
@@ -131,7 +131,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			case "string":
 				return Series{err: errors.New("Wrong Series type for subsetting")}
 			case "bool":
-				if Len(idx) != Len(s) {
+				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
 				boolElems := idx.elements.(boolElements)
@@ -192,7 +192,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			series = NamedInts(s.Name, elems)
 		case []bool:
 			idx := indexes.([]bool)
-			if len(idx) != Len(s) {
+			if len(idx) != s.Len() {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
 			var elems intElements
@@ -208,7 +208,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			case "string":
 				return Series{err: errors.New("Wrong Series type for subsetting")}
 			case "bool":
-				if Len(idx) != Len(s) {
+				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
 				boolElems := idx.elements.(boolElements)
@@ -269,7 +269,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			series = NamedFloats(s.Name, elems)
 		case []bool:
 			idx := indexes.([]bool)
-			if len(idx) != Len(s) {
+			if len(idx) != s.Len() {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
 			var elems floatElements
@@ -285,7 +285,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			case "string":
 				return Series{err: errors.New("Wrong Series type for subsetting")}
 			case "bool":
-				if Len(idx) != Len(s) {
+				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
 				boolElems := idx.elements.(boolElements)
@@ -346,7 +346,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			series = NamedBools(s.Name, elems)
 		case []bool:
 			idx := indexes.([]bool)
-			if len(idx) != Len(s) {
+			if len(idx) != s.Len() {
 				return Series{err: errors.New("Dimensions mismatch")}
 			}
 			var elems boolElements
@@ -362,7 +362,7 @@ func (s Series) Subset(indexes interface{}) Series {
 			case "string":
 				return Series{err: errors.New("Wrong Series type for subsetting")}
 			case "bool":
-				if Len(idx) != Len(s) {
+				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
 				boolElems := idx.elements.(boolElements)
@@ -433,87 +433,87 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 	switch comparator {
 	// FIXME: Use ComparatorType instead
 	case "==":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(i)))
 		}
 	case "!=":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(i)))
 		}
 	case ">":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(i)))
 		}
 	case ">=":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(i)))
 		}
 	case "<":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(i)))
 		}
 	case "<=":
-		if Len(comp) == 1 {
-			for i := 0; i < Len(s); i++ {
+		if comp.Len() == 1 {
+			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(0)))
 			}
 			return ret, nil
 		}
-		if Len(s) != Len(comp) {
+		if s.Len() != comp.Len() {
 			return nil, errors.New("Can't compare Series: Different dimensions")
 		}
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(i)))
 		}
 	case "in":
-		for i := 0; i < Len(s); i++ {
+		for i := 0; i < s.Len(); i++ {
 			found := false
-			for j := 0; j < Len(comp); j++ {
+			for j := 0; j < comp.Len(); j++ {
 				if s.elements.Elem(i).Eq(comp.elements.Elem(j)) {
 					found = true
 					break
@@ -646,15 +646,15 @@ func Str(s Series) string {
 		ret = append(ret, "Name: "+s.Name)
 	}
 	ret = append(ret, "Type: "+s.t)
-	ret = append(ret, "Length: "+fmt.Sprint(Len(s)))
-	if Len(s) != 0 {
+	ret = append(ret, "Length: "+fmt.Sprint(s.Len()))
+	if s.Len() != 0 {
 		ret = append(ret, "Values: "+fmt.Sprint(s))
 	}
 	return strings.Join(ret, "\n")
 }
 
 // Len returns the length of a given Series
-func Len(s Series) int {
+func (s Series) Len() int {
 	switch s.t {
 	// FIXME: Use SeriesType instead
 	case "string":
