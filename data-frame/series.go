@@ -3,6 +3,7 @@ package df
 import (
 	"errors"
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -671,6 +672,58 @@ func (s Series) Len() int {
 		return (len(elems))
 	}
 	return -1
+}
+
+func (s Series) Float() ([]float64, error) {
+	var ret []float64
+	switch s.t {
+	// FIXME: Use SeriesType instead
+	case "string":
+		elems := s.elements.(stringElements)
+		for _, elem := range elems {
+			val := elem.ToFloat().Val()
+			if val == nil {
+				ret = append(ret, math.NaN())
+			} else {
+				ret = append(ret, val.(float64))
+			}
+		}
+		return ret, nil
+	case "int":
+		elems := s.elements.(intElements)
+		for _, elem := range elems {
+			val := elem.ToFloat().Val()
+			if val == nil {
+				ret = append(ret, math.NaN())
+			} else {
+				ret = append(ret, val.(float64))
+			}
+		}
+		return ret, nil
+	case "float":
+		elems := s.elements.(floatElements)
+		for _, elem := range elems {
+			val := elem.ToFloat().Val()
+			if val == nil {
+				ret = append(ret, math.NaN())
+			} else {
+				ret = append(ret, val.(float64))
+			}
+		}
+		return ret, nil
+	case "bool":
+		elems := s.elements.(boolElements)
+		for _, elem := range elems {
+			val := elem.ToFloat().Val()
+			if val == nil {
+				ret = append(ret, math.NaN())
+			} else {
+				ret = append(ret, val.(float64))
+			}
+		}
+		return ret, nil
+	}
+	return nil, errors.New("Couldn't convert to []float64")
 }
 
 // Type returns the type of a given series

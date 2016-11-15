@@ -828,3 +828,77 @@ func TestEq(t *testing.T) {
 		t.Error("Float Eq() not working properly")
 	}
 }
+
+func TestSeries_Float(t *testing.T) {
+	a := Floats(1, 2, 3, 4, nil, 6, 7, 8)
+	b := Ints(1, 2, 3, 4, nil, 6, 7, 8)
+	c := Strings(1, 2, 3, 4, nil, 6, 7, 8)
+	d := Bools(1, 2, 3, 4, nil, 6, 7, 8)
+	received, err := a.Float()
+	if err != nil {
+		t.Errorf(
+			"Some error happen when converting to float from Float Series: %v",
+			err,
+		)
+	}
+	expected := "[1 2 3 4 NaN 6 7 8]"
+	if fmt.Sprint(received) != expected {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	received, err = b.Float()
+	if err != nil {
+		t.Errorf(
+			"Some error happen when converting to float from Int Series: %v",
+			err,
+		)
+	}
+	expected = "[1 2 3 4 NaN 6 7 8]"
+	if fmt.Sprint(received) != expected {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	received, err = c.Float()
+	if err != nil {
+		t.Errorf(
+			"Some error happen when converting to float from String Series: %v",
+			err,
+		)
+	}
+	expected = "[1 2 3 4 NaN 6 7 8]"
+	if fmt.Sprint(received) != expected {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+
+	received, err = d.Float()
+	if err != nil {
+		t.Errorf(
+			"Some error happen when converting to float from Bool Series: %v",
+			err,
+		)
+	}
+	expected = "[1 1 1 1 NaN 1 1 1]"
+	if fmt.Sprint(received) != expected {
+		t.Error(
+			"Expected:\n",
+			expected, "\n",
+			"Received:\n",
+			received,
+		)
+	}
+}
