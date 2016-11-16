@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/gonum/matrix/mat64"
 )
 
 // DataFrame is the base data structure
@@ -1216,4 +1218,20 @@ func (d DataFrame) ColIndex(s string) int {
 		}
 	}
 	return -1
+}
+
+func (d DataFrame) Dense() (*mat64.Dense, error) {
+	if d.Err() != nil {
+		return nil, d.Err()
+	}
+	var floats []float64
+	for _, col := range d.columns {
+		f, err := col.Float()
+		if err != nil {
+			return nil, err
+		}
+		floats = append(floats, f...)
+	}
+	dense := mat64.NewDense(d.nrows, d.ncols, floats)
+	return dense, nil
 }
