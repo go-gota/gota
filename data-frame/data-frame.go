@@ -1,7 +1,6 @@
 package df
 
 import (
-	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -139,7 +138,7 @@ func (df DataFrame) String() (str string) {
 		str = "Empty DataFrame..."
 		return
 	}
-	records := df.SaveRecords()
+	records := df.Records()
 	// Add the row numbers
 	for i := 0; i < df.nrows+1; i++ {
 		add := ""
@@ -393,15 +392,19 @@ func ReadJSON(r io.Reader, types ...string) DataFrame {
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return ReadMaps(m, types...)
+	return LoadMaps(m, types...)
 }
 
-func ReadJSONString(str string, types ...string) DataFrame {
-	r := strings.NewReader(str)
-	return ReadJSON(r, types...)
+func ReadCSV(r io.Reader, types ...string) DataFrame {
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return DataFrame{err: err}
+	}
+	return LoadRecords(records, types...)
 }
 
-func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
+func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
@@ -511,23 +514,7 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	return New(columns...)
 }
 
-func ReadCSV(str string, types ...string) DataFrame {
-	r := csv.NewReader(strings.NewReader(str))
-	var records [][]string
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return DataFrame{err: err}
-		}
-		records = append(records, record)
-	}
-	return ReadRecords(records, types...)
-}
-
-func ReadRecords(records [][]string, types ...string) DataFrame {
+func LoadRecords(records [][]string, types ...string) DataFrame {
 	if len(records) == 0 {
 		return DataFrame{
 			err: errors.New("Empty records"),
@@ -631,58 +618,20 @@ func ReadRecords(records [][]string, types ...string) DataFrame {
 	return New(columns...)
 }
 
-func (df DataFrame) SaveMaps() []map[string]interface{} {
-	maps := make([]map[string]interface{}, df.nrows)
-	colnames := df.Names()
-	for i := 0; i < df.nrows; i++ {
-		m := make(map[string]interface{})
-		for k, v := range colnames {
-			val := df.columns[i].Val(k)
-			if val != nil {
-				m[v] = val
-			}
-		}
-		maps[i] = m
-	}
-	return maps
-}
-
-func (df DataFrame) SaveJSON() ([]byte, error) {
+func (df DataFrame) SaveJSON(w io.Writer) error {
 	if df.Err() != nil {
-		return nil, df.Err()
+		return df.Err()
 	}
-	m := df.SaveMaps()
-	return json.Marshal(m)
+	m := df.Maps()
+	return json.NewEncoder(w).Encode(m)
 }
 
-func (df DataFrame) SaveCSV() ([]byte, error) {
+func (df DataFrame) SaveCSV(w io.Writer) error {
 	if df.Err() != nil {
-		return nil, df.Err()
+		return df.Err()
 	}
-	records := df.SaveRecords()
-	b := &bytes.Buffer{}
-	w := csv.NewWriter(b)
-	for _, record := range records {
-		if err := w.Write(record); err != nil {
-			return nil, err
-		}
-	}
-	w.Flush()
-	return b.Bytes(), nil
-}
-
-func (df DataFrame) SaveRecords() [][]string {
-	var records [][]string
-	records = append(records, df.Names())
-	if df.ncols == 0 || df.nrows == 0 {
-		return records
-	}
-	var tRecords [][]string
-	for _, col := range df.columns {
-		tRecords = append(tRecords, col.Records())
-	}
-	records = append(records, transposeRecords(tRecords)...)
-	return records
+	records := df.Records()
+	return csv.NewWriter(w).WriteAll(records)
 }
 
 // Getters/Setters for DataFrame fields
@@ -1218,6 +1167,34 @@ func (d DataFrame) ColIndex(s string) int {
 		}
 	}
 	return -1
+}
+
+func (df DataFrame) Records() [][]string {
+	var records [][]string
+	records = append(records, df.Names())
+	if df.ncols == 0 || df.nrows == 0 {
+		return records
+	}
+	var tRecords [][]string
+	for _, col := range df.columns {
+		tRecords = append(tRecords, col.Records())
+	}
+	records = append(records, transposeRecords(tRecords)...)
+	return records
+}
+
+func (df DataFrame) Maps() []map[string]interface{} {
+	maps := make([]map[string]interface{}, df.nrows)
+	colnames := df.Names()
+	for i := 0; i < df.nrows; i++ {
+		m := make(map[string]interface{})
+		for k, v := range colnames {
+			val := df.columns[k].Val(i)
+			m[v] = val
+		}
+		maps[i] = m
+	}
+	return maps
 }
 
 func (d DataFrame) Dense() (*mat64.Dense, error) {

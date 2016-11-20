@@ -1,8 +1,10 @@
 package df
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -137,7 +139,7 @@ func TestDataFrame_RBind(t *testing.T) {
 	// TODO: More error checking, this is not exhaustive enough
 }
 
-func TestDataFrame_SaveRecords(t *testing.T) {
+func TestDataFrame_Records(t *testing.T) {
 	a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
 	expected := [][]string{
 		[]string{"COL.1", "COL.2", "COL.3"},
@@ -145,7 +147,7 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 		[]string{"b", "2", "2"},
 		[]string{"c", "3", "1"},
 	}
-	received := a.SaveRecords()
+	received := a.Records()
 	if !reflect.DeepEqual(expected, received) {
 		t.Error(
 			"Error when saving records.\n",
@@ -155,46 +157,46 @@ func TestDataFrame_SaveRecords(t *testing.T) {
 	}
 }
 
-func TestDataFrame_ReadRecords(t *testing.T) {
+func TestDataFrame_LoadRecords(t *testing.T) {
 	records := [][]string{
 		[]string{"COL.1", "COL.2", "COL.3"},
 		[]string{"a", "true", "3"},
 		[]string{"b", "false", "2"},
 		[]string{"1", "", "1.1"},
 	}
-	a := ReadRecords(records)
+	a := LoadRecords(records)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "int")
+	a = LoadRecords(records, "int")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "string")
+	a = LoadRecords(records, "string")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "float")
+	a = LoadRecords(records, "float")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "bool")
+	a = LoadRecords(records, "bool")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "blaaah")
+	a = LoadRecords(records, "blaaah")
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadRecords(records, []string{"string", "int"}...)
+	a = LoadRecords(records, []string{"string", "int"}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadRecords(records, []string{"string", "int", "float"}...)
+	a = LoadRecords(records, []string{"string", "int", "float"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, []string{"string", "bool", "int"}...)
+	a = LoadRecords(records, []string{"string", "bool", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
@@ -214,37 +216,38 @@ Country,Date,Age,Amount,Id
 "United States",2012-02-01,32,321.31,54320
 Spain,2012-02-01,66,555.42,00241
 `
-	a := ReadCSV(csvStr)
+	a := ReadCSV(strings.NewReader(csvStr))
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "int")
+	a = ReadCSV(strings.NewReader(csvStr), "int")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "string")
+	a = ReadCSV(strings.NewReader(csvStr), "string")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "float")
+	a = ReadCSV(strings.NewReader(csvStr), "float")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "bool")
+	a = ReadCSV(strings.NewReader(csvStr), "bool")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "blaaah")
+	a = ReadCSV(strings.NewReader(csvStr), "blaaah")
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(csvStr, []string{"string", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int"}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(csvStr, []string{"string", "int", "float", "float", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int", "float", "float", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
 }
 
@@ -261,28 +264,52 @@ func TestDataFrame_SetNames(t *testing.T) {
 	}
 }
 
-func TestDataFrame_SaveMaps(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-	m := a.SaveMaps()
+func TestDataFrame_Maps(t *testing.T) {
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
+	m := a.Maps()
 	_, err := json.Marshal(m)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
 	}
 }
 
 func TestDataFrame_SaveCSV(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-	_, err := a.SaveCSV()
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
+	buf := new(bytes.Buffer)
+	err := a.SaveCSV(buf)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
+	}
+	expected := `COL.1,COL.2,COL.3
+NA,1,3
+b,2,NA
+c,3,1
+`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
 	}
 }
 
 func TestDataFrame_SaveJSON(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-	_, err := a.SaveJSON()
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
+	buf := new(bytes.Buffer)
+	err := a.SaveJSON(buf)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
+	}
+	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
+`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
 	}
 }
 
@@ -328,7 +355,7 @@ func TestDataFrame_Filter(t *testing.T) {
 	}
 }
 
-func TestDataFrame_ReadMaps(t *testing.T) {
+func TestDataFrame_LoadMaps(t *testing.T) {
 	m := []map[string]interface{}{
 		map[string]interface{}{
 			"Age":    23,
@@ -346,7 +373,7 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 			"Credit": 16.2,
 		},
 	}
-	b := ReadMaps(m)
+	b := LoadMaps(m)
 	if b.Err() != nil {
 		t.Error("Expected success, got error: ", b.Err())
 	}
@@ -685,7 +712,7 @@ A.0,B,C,D.0,A.1,F,D.1
 1,d,7.1,false,2,8,false
 1,d,7.1,false,5,9,false
 `
-	expected := ReadCSV(expectedCSV,
+	expected := ReadCSV(strings.NewReader(expectedCSV),
 		[]string{"int", "string", "float", "bool", "string", "int", "bool"}...)
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
