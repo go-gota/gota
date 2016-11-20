@@ -386,24 +386,6 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 // Read/Write Methods
 // =================
 
-func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
-	var m []map[string]interface{}
-	err := json.NewDecoder(r).Decode(&m)
-	if err != nil {
-		return DataFrame{err: err}
-	}
-	return LoadMaps(m, options...)
-}
-
-func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
-	csvReader := csv.NewReader(r)
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		return DataFrame{err: err}
-	}
-	return LoadRecords(records, options...)
-}
-
 // LoadOptions is the configuration that will be used for the loading operations
 type LoadOptions struct {
 	detectTypes bool
@@ -507,9 +489,7 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	return New(columns...)
 }
 
-func LoadMaps(
-	maps []map[string]interface{},
-	options ...func(*LoadOptions)) DataFrame {
+func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
@@ -548,6 +528,24 @@ func LoadMaps(
 		records = append(records, row)
 	}
 
+	return LoadRecords(records, options...)
+}
+
+func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+	var m []map[string]interface{}
+	err := json.NewDecoder(r).Decode(&m)
+	if err != nil {
+		return DataFrame{err: err}
+	}
+	return LoadMaps(m, options...)
+}
+
+func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return DataFrame{err: err}
+	}
 	return LoadRecords(records, options...)
 }
 
