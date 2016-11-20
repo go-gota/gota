@@ -406,15 +406,21 @@ func ReadCSV(r io.Reader, options ...func(*LoadConfig)) DataFrame {
 
 // LoadConfig is the configuration that will be used for the loading operations
 type LoadConfig struct {
-	types       map[string]Type
 	detectTypes bool
-	defaultType Type
 	hasHeader   bool
+	types       map[string]Type
+	defaultType Type
 }
 
 func CfgDetectTypes(b bool) func(*LoadConfig) {
 	return func(c *LoadConfig) {
 		c.detectTypes = b
+	}
+}
+
+func CfgHasHeader(b bool) func(*LoadConfig) {
+	return func(c *LoadConfig) {
+		c.hasHeader = b
 	}
 }
 

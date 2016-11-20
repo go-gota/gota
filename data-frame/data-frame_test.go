@@ -685,6 +685,7 @@ func TestLoadRecords(t *testing.T) {
 			{"a", "1", "true", "0"},
 			{"b", "2", "true", "0.5"},
 		},
+		CfgHasHeader(true),
 		CfgDetectTypes(true),
 		CfgColumnTypes(map[string]Type{
 			"A": String,
