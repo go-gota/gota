@@ -624,10 +624,8 @@ func (df DataFrame) SaveMaps() []map[string]interface{} {
 	for i := 0; i < df.nrows; i++ {
 		m := make(map[string]interface{})
 		for k, v := range colnames {
-			val := df.columns[i].Val(k)
-			if val != nil {
-				m[v] = val
-			}
+			val := df.columns[k].Val(i)
+			m[v] = val
 		}
 		maps[i] = m
 	}

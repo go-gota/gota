@@ -306,7 +306,8 @@ func TestDataFrame_SaveJSON(t *testing.T) {
 	if err != nil {
 		t.Error("Expected success, got error: %v", err)
 	}
-	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":b,"COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]`
+	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
+`
 	if expected != buf.String() {
 		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
 	}
