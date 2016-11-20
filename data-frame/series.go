@@ -39,6 +39,24 @@ const (
 	Bool        = "bool"
 )
 
+// NewSeries is the generic Series constructor
+func NewSeries(elements interface{}, t Type) Series {
+	ret := Series{}
+	switch t {
+	case String:
+		ret = Strings(elements)
+	case Int:
+		ret = Ints(elements)
+	case Float:
+		ret = Floats(elements)
+	case Bool:
+		ret = Bools(elements)
+	default:
+		return Series{err: errors.New("unknown type")}
+	}
+	return ret
+}
+
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	ret := Series{Name: s.Name, t: s.t}

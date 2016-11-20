@@ -468,23 +468,14 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 
 	var columns []Series
 	for i, colname := range headers {
-		// FIXME: This should be moved to Series, we should be able to abstract
-		// the type from the DataFrame and do the parsing within a Series
-		// constructor
-		switch types[i] {
-		case String:
-			columns = append(columns, NamedStrings(colname, rawcols[i]))
-		case Int:
-			columns = append(columns, NamedInts(colname, rawcols[i]))
-		case Float:
-			columns = append(columns, NamedFloats(colname, rawcols[i]))
-		case Bool:
-			columns = append(columns, NamedBools(colname, rawcols[i]))
-		default:
+		col := NewSeries(rawcols[i], types[i])
+		if col.Err() != nil {
 			return DataFrame{
-				err: errors.New("Unknown type given"),
+				err: col.Err(),
 			}
 		}
+		col.Name = colname
+		columns = append(columns, col)
 	}
 	return New(columns...)
 }
