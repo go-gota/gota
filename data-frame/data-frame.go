@@ -1,7 +1,6 @@
 package df
 
 import (
-	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"errors"
@@ -643,20 +642,12 @@ func (df DataFrame) SaveJSON(w io.Writer) error {
 	return json.NewEncoder(w).Encode(m)
 }
 
-func (df DataFrame) SaveCSV() ([]byte, error) {
+func (df DataFrame) SaveCSV(w io.Writer) error {
 	if df.Err() != nil {
-		return nil, df.Err()
+		return df.Err()
 	}
 	records := df.SaveRecords()
-	b := &bytes.Buffer{}
-	w := csv.NewWriter(b)
-	for _, record := range records {
-		if err := w.Write(record); err != nil {
-			return nil, err
-		}
-	}
-	w.Flush()
-	return b.Bytes(), nil
+	return csv.NewWriter(w).WriteAll(records)
 }
 
 func (df DataFrame) SaveRecords() [][]string {

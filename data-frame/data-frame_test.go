@@ -272,7 +272,7 @@ func TestDataFrame_SaveMaps(t *testing.T) {
 	m := a.SaveMaps()
 	_, err := json.Marshal(m)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
 	}
 }
 
@@ -281,9 +281,18 @@ func TestDataFrame_SaveCSV(t *testing.T) {
 		NamedStrings("COL.1", nil, "b", "c"),
 		NamedInts("COL.2", 1, 2, 3),
 		NamedFloats("COL.3", 3, nil, 1))
-	_, err := a.SaveCSV()
+	buf := new(bytes.Buffer)
+	err := a.SaveCSV(buf)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
+	}
+	expected := `COL.1,COL.2,COL.3
+NA,1,3
+b,2,NA
+c,3,1
+`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
 	}
 }
 
@@ -295,7 +304,7 @@ func TestDataFrame_SaveJSON(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err := a.SaveJSON(buf)
 	if err != nil {
-		t.Error("Expected success, got error")
+		t.Error("Expected success, got error: %v", err)
 	}
 	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":b,"COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]`
 	if expected != buf.String() {
