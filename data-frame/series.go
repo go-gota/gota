@@ -16,6 +16,19 @@ type Series struct {
 	err      error
 }
 
+// Comparator is a comparator that can be used for filtering Series and DataFrames
+type Comparator string
+
+const (
+	Eq        Comparator = "=="
+	Neq                  = "!="
+	Greater              = ">"
+	GreaterEq            = ">="
+	Less                 = "<"
+	LessEq               = "<="
+	In                   = "in"
+)
+
 // Type represents the type of the elements that can be stored on Series
 type Type string
 
@@ -422,7 +435,7 @@ func (s Series) Subset(indexes interface{}) Series {
 }
 
 // Compare compares the values of a Series with other series, scalars, text, etc
-func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
+func (s Series) Compare(comparator Comparator, comparando interface{}) ([]bool, error) {
 	var comp Series
 	switch s.t {
 	case String:
@@ -438,8 +451,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 	}
 	ret := []bool{}
 	switch comparator {
-	// FIXME: Use ComparatorType instead
-	case "==":
+	case Eq:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(0)))
@@ -452,7 +464,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(i)))
 		}
-	case "!=":
+	case Neq:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(0)))
@@ -465,7 +477,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(i)))
 		}
-	case ">":
+	case Greater:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(0)))
@@ -478,7 +490,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(i)))
 		}
-	case ">=":
+	case GreaterEq:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(0)))
@@ -491,7 +503,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(i)))
 		}
-	case "<":
+	case Less:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(0)))
@@ -504,7 +516,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(i)))
 		}
-	case "<=":
+	case LessEq:
 		if comp.Len() == 1 {
 			for i := 0; i < s.Len(); i++ {
 				ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(0)))
@@ -517,7 +529,7 @@ func (s Series) Compare(comparator string, comparando interface{}) ([]bool, erro
 		for i := 0; i < s.Len(); i++ {
 			ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(i)))
 		}
-	case "in":
+	case In:
 		for i := 0; i < s.Len(); i++ {
 			found := false
 			for j := 0; j < comp.Len(); j++ {

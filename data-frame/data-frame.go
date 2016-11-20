@@ -336,7 +336,7 @@ func (df DataFrame) Mutate(colname string, series Series) DataFrame {
 // F is the filtering structure
 type F struct {
 	Colname    string
-	Comparator string
+	Comparator Comparator
 	Comparando interface{}
 }
 
@@ -448,7 +448,6 @@ func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
 			for _, colname := range colnames {
 				col := fields[colname]
 				switch t {
-				// FIXME: Use SeriesType instead
 				case String:
 					columns = append(columns, NamedStrings(colname, col))
 				case Int:
@@ -474,7 +473,6 @@ func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
 			col := fields[colname]
 			t := types[k]
 			switch t {
-			// FIXME: Use SeriesType instead
 			case String:
 				columns = append(columns, NamedStrings(colname, col))
 			case Int:
@@ -496,7 +494,6 @@ func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
 		col := fields[colname]
 		t := findType(col)
 		switch t {
-		// FIXME: Use SeriesType instead
 		case String:
 			columns = append(columns, NamedStrings(colname, col))
 		case Int:
@@ -540,7 +537,6 @@ func LoadRecords(records [][]string, types ...Type) DataFrame {
 			for i, colname := range colnames {
 				col := records[i]
 				switch t {
-				// FIXME: Use SeriesType instead
 				case String:
 					columns = append(columns, NamedStrings(colname, col))
 				case Int:
@@ -566,7 +562,6 @@ func LoadRecords(records [][]string, types ...Type) DataFrame {
 			t := types[i]
 			col := records[i]
 			switch t {
-			// FIXME: Use SeriesType instead
 			case String:
 				columns = append(columns, NamedStrings(colname, col))
 			case Int:
@@ -600,7 +595,6 @@ func LoadRecords(records [][]string, types ...Type) DataFrame {
 		col := records[i]
 		t := findType(col)
 		switch t {
-		// FIXME: Use SeriesType instead
 		case String:
 			columns = append(columns, NamedStrings(colname, col))
 		case Int:

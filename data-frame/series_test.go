@@ -9,17 +9,17 @@ import (
 func TestSeries_Compare(t *testing.T) {
 	a := Strings("A", "B", "C", "B", "D", "BADA")
 	testData := []struct {
-		comparator string
+		comparator Comparator
 		comparando string
 		expected   []bool
 	}{
-		{"==", "B", []bool{false, true, false, true, false, false}},
-		{"in", "BADA", []bool{false, false, false, false, false, true}},
-		{"!=", "C", []bool{true, true, false, true, true, true}},
-		{"<", "B", []bool{true, false, false, false, false, false}},
-		{"<=", "B", []bool{true, true, false, true, false, false}},
-		{">", "C", []bool{false, false, false, false, true, false}},
-		{">=", "C", []bool{false, false, true, false, true, false}},
+		{Eq, "B", []bool{false, true, false, true, false, false}},
+		{In, "BADA", []bool{false, false, false, false, false, true}},
+		{Neq, "C", []bool{true, true, false, true, true, true}},
+		{Less, "B", []bool{true, false, false, false, false, false}},
+		{LessEq, "B", []bool{true, true, false, true, false, false}},
+		{Greater, "C", []bool{false, false, false, false, true, false}},
+		{GreaterEq, "C", []bool{false, false, true, false, true, false}},
 	}
 	for k, v := range testData {
 		received, _ := a.Compare(v.comparator, v.comparando)
@@ -35,19 +35,19 @@ func TestSeries_Compare(t *testing.T) {
 	}
 	b := Strings("A", "B", "A")
 	testData2 := []struct {
-		comparator string
+		comparator Comparator
 		comparando []string
 		expected   []bool
 	}{
-		{"==", []string{"B", "A", "A"}, []bool{false, false, true}},
-		{"!=", []string{"B", "B", "A"}, []bool{true, false, false}},
-		{"in", []string{"C", "A"}, []bool{true, false, true}},
-		{"in", []string{"B"}, []bool{false, true, false}},
-		{"in", []string{"A", "B"}, []bool{true, true, true}},
-		{"<", []string{"B", "B", "A"}, []bool{true, false, false}},
-		{"<=", []string{"B", "B", "A"}, []bool{true, true, true}},
-		{">", []string{"B", "B", "A"}, []bool{false, false, false}},
-		{">=", []string{"B", "B", "A"}, []bool{false, true, true}},
+		{Eq, []string{"B", "A", "A"}, []bool{false, false, true}},
+		{Neq, []string{"B", "B", "A"}, []bool{true, false, false}},
+		{In, []string{"C", "A"}, []bool{true, false, true}},
+		{In, []string{"B"}, []bool{false, true, false}},
+		{In, []string{"A", "B"}, []bool{true, true, true}},
+		{Less, []string{"B", "B", "A"}, []bool{true, false, false}},
+		{LessEq, []string{"B", "B", "A"}, []bool{true, true, true}},
+		{Greater, []string{"B", "B", "A"}, []bool{false, false, false}},
+		{GreaterEq, []string{"B", "B", "A"}, []bool{false, true, true}},
 	}
 	for k, v := range testData2 {
 		received, _ := b.Compare(v.comparator, v.comparando)
@@ -64,25 +64,25 @@ func TestSeries_Compare(t *testing.T) {
 
 	c := Ints(1, 2, 3, 2, 1)
 	testData3 := []struct {
-		comparator string
+		comparator Comparator
 		comparando []int
 		expected   []bool
 	}{
-		{"==", []int{1}, []bool{true, false, false, false, true}},
-		{"==", []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
-		{"!=", []int{3}, []bool{true, true, false, true, true}},
-		{"!=", []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
-		{"in", []int{5, 6, 7}, []bool{false, false, false, false, false}},
-		{"in", []int{2, 3}, []bool{false, true, true, true, false}},
-		{"<", []int{2}, []bool{true, false, false, false, true}},
-		{"<", []int{3}, []bool{true, true, false, true, true}},
-		{"<", []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
-		{"<=", []int{2}, []bool{true, true, false, true, true}},
-		{"<=", []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
-		{">", []int{2}, []bool{false, false, true, false, false}},
-		{">", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
-		{">=", []int{2}, []bool{false, true, true, true, false}},
-		{">=", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
+		{Eq, []int{1}, []bool{true, false, false, false, true}},
+		{Eq, []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
+		{Neq, []int{3}, []bool{true, true, false, true, true}},
+		{Neq, []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
+		{In, []int{5, 6, 7}, []bool{false, false, false, false, false}},
+		{In, []int{2, 3}, []bool{false, true, true, true, false}},
+		{Less, []int{2}, []bool{true, false, false, false, true}},
+		{Less, []int{3}, []bool{true, true, false, true, true}},
+		{Less, []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
+		{LessEq, []int{2}, []bool{true, true, false, true, true}},
+		{LessEq, []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
+		{Greater, []int{2}, []bool{false, false, true, false, false}},
+		{Greater, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
+		{GreaterEq, []int{2}, []bool{false, true, true, true, false}},
+		{GreaterEq, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
 	}
 	for k, v := range testData3 {
 		received, _ := c.Compare(v.comparator, v.comparando)
@@ -99,25 +99,25 @@ func TestSeries_Compare(t *testing.T) {
 
 	d := Floats(1, 2, 3, 2, 1)
 	testData4 := []struct {
-		comparator string
+		comparator Comparator
 		comparando []int
 		expected   []bool
 	}{
-		{"==", []int{1}, []bool{true, false, false, false, true}},
-		{"==", []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
-		{"!=", []int{3}, []bool{true, true, false, true, true}},
-		{"!=", []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
-		{"in", []int{5, 6, 7}, []bool{false, false, false, false, false}},
-		{"in", []int{2, 3}, []bool{false, true, true, true, false}},
-		{"<", []int{2}, []bool{true, false, false, false, true}},
-		{"<", []int{3}, []bool{true, true, false, true, true}},
-		{"<", []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
-		{"<=", []int{2}, []bool{true, true, false, true, true}},
-		{"<=", []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
-		{">", []int{2}, []bool{false, false, true, false, false}},
-		{">", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
-		{">=", []int{2}, []bool{false, true, true, true, false}},
-		{">=", []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
+		{Eq, []int{1}, []bool{true, false, false, false, true}},
+		{Eq, []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
+		{Neq, []int{3}, []bool{true, true, false, true, true}},
+		{Neq, []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
+		{In, []int{5, 6, 7}, []bool{false, false, false, false, false}},
+		{In, []int{2, 3}, []bool{false, true, true, true, false}},
+		{Less, []int{2}, []bool{true, false, false, false, true}},
+		{Less, []int{3}, []bool{true, true, false, true, true}},
+		{Less, []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
+		{LessEq, []int{2}, []bool{true, true, false, true, true}},
+		{LessEq, []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
+		{Greater, []int{2}, []bool{false, false, true, false, false}},
+		{Greater, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
+		{GreaterEq, []int{2}, []bool{false, true, true, true, false}},
+		{GreaterEq, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
 	}
 	for k, v := range testData4 {
 		received, _ := d.Compare(v.comparator, v.comparando)
@@ -134,20 +134,20 @@ func TestSeries_Compare(t *testing.T) {
 
 	e := Bools(1, 1, 0, 0)
 	testData5 := []struct {
-		comparator string
+		comparator Comparator
 		comparando []bool
 		expected   []bool
 	}{
-		{"==", []bool{true}, []bool{true, true, false, false}},
-		{"==", []bool{true, false, false, true}, []bool{true, false, true, false}},
-		{"!=", []bool{false}, []bool{true, true, false, false}},
-		{"!=", []bool{false, true, true, false}, []bool{true, false, true, false}},
-		{"in", []bool{false}, []bool{false, false, true, true}},
-		{"in", []bool{false, true}, []bool{true, true, true, true}},
-		{"<", []bool{true}, []bool{false, false, true, true}},
-		{"<=", []bool{true}, []bool{true, true, true, true}},
-		{">", []bool{false}, []bool{true, true, false, false}},
-		{">=", []bool{false}, []bool{true, true, true, true}},
+		{Eq, []bool{true}, []bool{true, true, false, false}},
+		{Eq, []bool{true, false, false, true}, []bool{true, false, true, false}},
+		{Neq, []bool{false}, []bool{true, true, false, false}},
+		{Neq, []bool{false, true, true, false}, []bool{true, false, true, false}},
+		{In, []bool{false}, []bool{false, false, true, true}},
+		{In, []bool{false, true}, []bool{true, true, true, true}},
+		{Less, []bool{true}, []bool{false, false, true, true}},
+		{LessEq, []bool{true}, []bool{true, true, true, true}},
+		{Greater, []bool{false}, []bool{true, true, false, false}},
+		{GreaterEq, []bool{false}, []bool{true, true, true, true}},
 	}
 	for k, v := range testData5 {
 		received, _ := e.Compare(v.comparator, v.comparando)
