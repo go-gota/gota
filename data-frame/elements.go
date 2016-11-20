@@ -13,13 +13,29 @@ type seriesElements interface {
 	Elem(int) elementInterface
 	Append(...interface{}) seriesElements
 	Set(int, elementValue) (seriesElements, error)
-	// FIXME: Len() int
+	Len() int
 }
 
 type stringElements []stringElement
 type intElements []intElement
 type floatElements []floatElement
 type boolElements []boolElement
+
+func (s stringElements) Len() int {
+	return len(s)
+}
+
+func (s intElements) Len() int {
+	return len(s)
+}
+
+func (s floatElements) Len() int {
+	return len(s)
+}
+
+func (s boolElements) Len() int {
+	return len(s)
+}
 
 func (s stringElements) Set(i int, val elementValue) (seriesElements, error) {
 	if i >= len(s) || i < 0 {

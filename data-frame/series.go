@@ -691,21 +691,7 @@ func (s Series) Str() string {
 
 // Len returns the length of a given Series
 func (s Series) Len() int {
-	switch s.t {
-	case String:
-		elems := s.elements.(stringElements)
-		return (len(elems))
-	case Int:
-		elems := s.elements.(intElements)
-		return (len(elems))
-	case Float:
-		elems := s.elements.(floatElements)
-		return (len(elems))
-	case Bool:
-		elems := s.elements.(boolElements)
-		return (len(elems))
-	}
-	return -1
+	return s.elements.Len()
 }
 
 func (s Series) Float() ([]float64, error) {
