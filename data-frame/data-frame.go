@@ -386,230 +386,169 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 // Read/Write Methods
 // =================
 
-func ReadJSON(r io.Reader, types ...Type) DataFrame {
+func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return LoadMaps(m, types...)
+	return LoadMaps(m, options...)
 }
 
-func ReadCSV(r io.Reader, types ...Type) DataFrame {
+func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return LoadRecords(records, types...)
+	return LoadRecords(records, options...)
 }
 
-func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
+// LoadOptions is the configuration that will be used for the loading operations
+type LoadOptions struct {
+	detectTypes bool
+	hasHeader   bool
+	types       map[string]Type
+	defaultType Type
+}
+
+func CfgDetectTypes(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.detectTypes = b
+	}
+}
+
+func CfgHasHeader(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.hasHeader = b
+	}
+}
+
+func CfgColumnTypes(coltypes map[string]Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.types = coltypes
+	}
+}
+
+func CfgDefaultType(t Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.defaultType = t
+	}
+}
+
+func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
+	// Load the options
+	cfg := LoadOptions{
+		types:       make(map[string]Type),
+		detectTypes: true,
+		defaultType: String,
+		hasHeader:   true,
+	}
+	for _, option := range options {
+		option(&cfg)
+	}
+
+	if len(records) == 0 {
+		return DataFrame{err: errors.New("Empty DataFrame")}
+	}
+	if cfg.hasHeader && len(records) <= 1 {
+		return DataFrame{err: errors.New("Empty DataFrame")}
+	}
+
+	// Extract headers
+	var headers []string
+	if cfg.hasHeader {
+		headers = records[0]
+		records = records[1:]
+	} else {
+		for i := 0; i < len(records[0]); i++ {
+			headers = append(headers, fmt.Sprint(i))
+		}
+	}
+	types := make([]Type, len(headers))
+	var rawcols [][]string
+	for i, colname := range headers {
+		var rawcol []string
+		for j := 0; j < len(records); j++ {
+			rawcol = append(rawcol, records[j][i])
+		}
+		rawcols = append(rawcols, rawcol)
+
+		t, ok := cfg.types[colname]
+		if !ok {
+			t = cfg.defaultType
+			if cfg.detectTypes {
+				t = findType(rawcol)
+			}
+		}
+		types[i] = t
+	}
+
+	var columns []Series
+	for i, colname := range headers {
+		// FIXME: This should be moved to Series, we should be able to abstract
+		// the type from the DataFrame and do the parsing within a Series
+		// constructor
+		switch types[i] {
+		case String:
+			columns = append(columns, NamedStrings(colname, rawcols[i]))
+		case Int:
+			columns = append(columns, NamedInts(colname, rawcols[i]))
+		case Float:
+			columns = append(columns, NamedFloats(colname, rawcols[i]))
+		case Bool:
+			columns = append(columns, NamedBools(colname, rawcols[i]))
+		default:
+			return DataFrame{
+				err: errors.New("Unknown type given"),
+			}
+		}
+	}
+	return New(columns...)
+}
+
+func LoadMaps(
+	maps []map[string]interface{},
+	options ...func(*LoadOptions)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
 		}
 	}
-	strInsideSliceIdx := func(i string, s []string) (bool, int) {
-		for k, v := range s {
+	inStrSlice := func(i string, s []string) bool {
+		for _, v := range s {
 			if v == i {
-				return true, k
+				return true
 			}
 		}
-		return false, -1
+		return false
 	}
-	fields := make(map[string][]string)
+
+	// Detect all colnames
 	var colnames []string
-	// Initialize data structures
 	for _, v := range maps {
 		for k, _ := range v {
-			if exists, _ := strInsideSliceIdx(k, colnames); !exists {
+			if exists := inStrSlice(k, colnames); !exists {
 				colnames = append(colnames, k)
 			}
-			fields[k] = make([]string, len(maps))
 		}
 	}
-	// Copy the values for all given elements
-	for i, v := range maps {
-		for k, w := range v {
-			fields[k][i] = fmt.Sprint(w)
-		}
-	}
-
-	// The order of the keys might be different that the types we expect, so we force
-	// alphabetical ordering for the map keys.
 	sort.Strings(colnames)
-
-	var columns []Series
-	if types != nil && len(types) != 0 {
-		// Empty String only columns
-		if len(types) == 1 {
-			t := types[0]
-			for _, colname := range colnames {
-				col := fields[colname]
-				switch t {
-				case String:
-					columns = append(columns, NamedStrings(colname, col))
-				case Int:
-					columns = append(columns, NamedInts(colname, col))
-				case Float:
-					columns = append(columns, NamedFloats(colname, col))
-				case Bool:
-					columns = append(columns, NamedBools(colname, col))
-				default:
-					return DataFrame{
-						err: errors.New("Unknown type given"),
-					}
-				}
+	records := [][]string{colnames}
+	for _, m := range maps {
+		var row []string
+		for _, colname := range colnames {
+			element := ""
+			val, ok := m[colname]
+			if ok {
+				element = fmt.Sprint(val)
 			}
-			return New(columns...)
+			row = append(row, element)
 		}
-		if len(types) != len(colnames) {
-			return DataFrame{
-				err: errors.New("Fields and types array have different dimensions"),
-			}
-		}
-		for k, colname := range colnames {
-			col := fields[colname]
-			t := types[k]
-			switch t {
-			case String:
-				columns = append(columns, NamedStrings(colname, col))
-			case Int:
-				columns = append(columns, NamedInts(colname, col))
-			case Float:
-				columns = append(columns, NamedFloats(colname, col))
-			case Bool:
-				columns = append(columns, NamedBools(colname, col))
-			default:
-				return DataFrame{
-					err: errors.New("Unknown type given"),
-				}
-			}
-		}
-		return New(columns...)
+		records = append(records, row)
 	}
 
-	for _, colname := range colnames {
-		col := fields[colname]
-		t := findType(col)
-		switch t {
-		case String:
-			columns = append(columns, NamedStrings(colname, col))
-		case Int:
-			columns = append(columns, NamedInts(colname, col))
-		case Float:
-			columns = append(columns, NamedFloats(colname, col))
-		case Bool:
-			columns = append(columns, NamedBools(colname, col))
-		default:
-			return DataFrame{
-				err: errors.New("Unknown type given"),
-			}
-		}
-	}
-	return New(columns...)
-}
-
-func LoadRecords(records [][]string, types ...Type) DataFrame {
-	if len(records) == 0 {
-		return DataFrame{
-			err: errors.New("Empty records"),
-		}
-	}
-	var columns []Series
-	if types != nil && len(types) != 0 {
-		colnames := records[0]
-
-		// Empty String only columns
-		if len(records) == 1 {
-			var columns []Series
-			for _, v := range colnames {
-				columns = append(columns, NamedStrings(v, nil))
-				fmt.Println(columns)
-			}
-			return New(columns...)
-		}
-
-		records = transposeRecords(records[1:])
-		if len(types) == 1 {
-			t := types[0]
-			for i, colname := range colnames {
-				col := records[i]
-				switch t {
-				case String:
-					columns = append(columns, NamedStrings(colname, col))
-				case Int:
-					columns = append(columns, NamedInts(colname, col))
-				case Float:
-					columns = append(columns, NamedFloats(colname, col))
-				case Bool:
-					columns = append(columns, NamedBools(colname, col))
-				default:
-					return DataFrame{
-						err: errors.New("Unknown type given"),
-					}
-				}
-			}
-			return New(columns...)
-		}
-		if len(types) != len(colnames) {
-			return DataFrame{
-				err: errors.New("Records and types array have different dimensions"),
-			}
-		}
-		for i, colname := range colnames {
-			t := types[i]
-			col := records[i]
-			switch t {
-			case String:
-				columns = append(columns, NamedStrings(colname, col))
-			case Int:
-				columns = append(columns, NamedInts(colname, col))
-			case Float:
-				columns = append(columns, NamedFloats(colname, col))
-			case Bool:
-				columns = append(columns, NamedBools(colname, col))
-			default:
-				return DataFrame{
-					err: errors.New("Unknown type given"),
-				}
-			}
-		}
-		return New(columns...)
-	}
-
-	colnames := records[0]
-	// Empty String only columns
-	if len(records) == 1 {
-		var columns []Series
-		for _, v := range colnames {
-			columns = append(columns, NamedStrings(v, nil))
-		}
-		return New(columns...)
-	}
-
-	// If no type is given, try to auto-identify it
-	records = transposeRecords(records[1:])
-	for i, colname := range colnames {
-		col := records[i]
-		t := findType(col)
-		switch t {
-		case String:
-			columns = append(columns, NamedStrings(colname, col))
-		case Int:
-			columns = append(columns, NamedInts(colname, col))
-		case Float:
-			columns = append(columns, NamedFloats(colname, col))
-		case Bool:
-			columns = append(columns, NamedBools(colname, col))
-		default:
-			return DataFrame{
-				err: errors.New("Unknown type given"),
-			}
-		}
-	}
-	return New(columns...)
+	return LoadRecords(records, options...)
 }
 
 func (df DataFrame) WriteJSON(w io.Writer) error {
