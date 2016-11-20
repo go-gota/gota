@@ -3,6 +3,7 @@ package df
 import (
 	"encoding/json"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -214,37 +215,38 @@ Country,Date,Age,Amount,Id
 "United States",2012-02-01,32,321.31,54320
 Spain,2012-02-01,66,555.42,00241
 `
-	a := ReadCSV(csvStr)
+	a := ReadCSV(strings.NewReader(csvStr))
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "int")
+	a = ReadCSV(strings.NewReader(csvStr), "int")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "string")
+	a = ReadCSV(strings.NewReader(csvStr), "string")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "float")
+	a = ReadCSV(strings.NewReader(csvStr), "float")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "bool")
+	a = ReadCSV(strings.NewReader(csvStr), "bool")
 	if a.Err() != nil {
-		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(csvStr, "blaaah")
+	a = ReadCSV(strings.NewReader(csvStr), "blaaah")
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(csvStr, []string{"string", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int"}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(csvStr, []string{"string", "int", "float", "float", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int", "float", "float", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
+		t.Errorf("Expected success, got error: %v", a.Err())
 	}
 }
 
@@ -685,7 +687,7 @@ A.0,B,C,D.0,A.1,F,D.1
 1,d,7.1,false,2,8,false
 1,d,7.1,false,5,9,false
 `
-	expected := ReadCSV(expectedCSV,
+	expected := ReadCSV(strings.NewReader(expectedCSV),
 		[]string{"int", "string", "float", "bool", "string", "int", "bool"}...)
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())

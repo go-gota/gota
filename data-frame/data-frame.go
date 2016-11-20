@@ -396,9 +396,13 @@ func ReadJSON(r io.Reader, types ...string) DataFrame {
 	return ReadMaps(m, types...)
 }
 
-func ReadJSONString(str string, types ...string) DataFrame {
-	r := strings.NewReader(str)
-	return ReadJSON(r, types...)
+func ReadCSV(r io.Reader, types ...string) DataFrame {
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return DataFrame{err: err}
+	}
+	return ReadRecords(records, types...)
 }
 
 func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
@@ -509,22 +513,6 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 		}
 	}
 	return New(columns...)
-}
-
-func ReadCSV(str string, types ...string) DataFrame {
-	r := csv.NewReader(strings.NewReader(str))
-	var records [][]string
-	for {
-		record, err := r.Read()
-		if err == io.EOF {
-			break
-		}
-		if err != nil {
-			return DataFrame{err: err}
-		}
-		records = append(records, record)
-	}
-	return ReadRecords(records, types...)
 }
 
 func ReadRecords(records [][]string, types ...string) DataFrame {
