@@ -38,7 +38,7 @@ func addLeftPadding(s string, nchar int) string {
 	return s
 }
 
-func findType(arr []string) string {
+func findType(arr []string) Type {
 	hasFloats := false
 	hasInts := false
 	hasBools := false
@@ -62,15 +62,15 @@ func findType(arr []string) string {
 		hasStrings = true
 	}
 	if hasFloats && !hasBools && !hasStrings {
-		return "float"
+		return Float
 	}
 	if hasInts && !hasFloats && !hasBools && !hasStrings {
-		return "int"
+		return Int
 	}
 	if !hasInts && !hasFloats && hasBools && !hasStrings {
-		return "bool"
+		return Bool
 	}
-	return "string"
+	return String
 }
 
 func orBool(a []bool, b []bool) ([]bool, error) {

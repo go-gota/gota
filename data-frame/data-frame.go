@@ -386,7 +386,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 // Read/Write Methods
 // =================
 
-func ReadJSON(r io.Reader, types ...string) DataFrame {
+func ReadJSON(r io.Reader, types ...Type) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
 	if err != nil {
@@ -395,7 +395,7 @@ func ReadJSON(r io.Reader, types ...string) DataFrame {
 	return LoadMaps(m, types...)
 }
 
-func ReadCSV(r io.Reader, types ...string) DataFrame {
+func ReadCSV(r io.Reader, types ...Type) DataFrame {
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
@@ -404,7 +404,7 @@ func ReadCSV(r io.Reader, types ...string) DataFrame {
 	return LoadRecords(records, types...)
 }
 
-func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
+func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
@@ -449,13 +449,13 @@ func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 				col := fields[colname]
 				switch t {
 				// FIXME: Use SeriesType instead
-				case "string":
+				case String:
 					columns = append(columns, NamedStrings(colname, col))
-				case "int":
+				case Int:
 					columns = append(columns, NamedInts(colname, col))
-				case "float":
+				case Float:
 					columns = append(columns, NamedFloats(colname, col))
-				case "bool":
+				case Bool:
 					columns = append(columns, NamedBools(colname, col))
 				default:
 					return DataFrame{
@@ -475,13 +475,13 @@ func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 			t := types[k]
 			switch t {
 			// FIXME: Use SeriesType instead
-			case "string":
+			case String:
 				columns = append(columns, NamedStrings(colname, col))
-			case "int":
+			case Int:
 				columns = append(columns, NamedInts(colname, col))
-			case "float":
+			case Float:
 				columns = append(columns, NamedFloats(colname, col))
-			case "bool":
+			case Bool:
 				columns = append(columns, NamedBools(colname, col))
 			default:
 				return DataFrame{
@@ -497,13 +497,13 @@ func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 		t := findType(col)
 		switch t {
 		// FIXME: Use SeriesType instead
-		case "string":
+		case String:
 			columns = append(columns, NamedStrings(colname, col))
-		case "int":
+		case Int:
 			columns = append(columns, NamedInts(colname, col))
-		case "float":
+		case Float:
 			columns = append(columns, NamedFloats(colname, col))
-		case "bool":
+		case Bool:
 			columns = append(columns, NamedBools(colname, col))
 		default:
 			return DataFrame{
@@ -514,7 +514,7 @@ func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	return New(columns...)
 }
 
-func LoadRecords(records [][]string, types ...string) DataFrame {
+func LoadRecords(records [][]string, types ...Type) DataFrame {
 	if len(records) == 0 {
 		return DataFrame{
 			err: errors.New("Empty records"),
@@ -541,13 +541,13 @@ func LoadRecords(records [][]string, types ...string) DataFrame {
 				col := records[i]
 				switch t {
 				// FIXME: Use SeriesType instead
-				case "string":
+				case String:
 					columns = append(columns, NamedStrings(colname, col))
-				case "int":
+				case Int:
 					columns = append(columns, NamedInts(colname, col))
-				case "float":
+				case Float:
 					columns = append(columns, NamedFloats(colname, col))
-				case "bool":
+				case Bool:
 					columns = append(columns, NamedBools(colname, col))
 				default:
 					return DataFrame{
@@ -567,13 +567,13 @@ func LoadRecords(records [][]string, types ...string) DataFrame {
 			col := records[i]
 			switch t {
 			// FIXME: Use SeriesType instead
-			case "string":
+			case String:
 				columns = append(columns, NamedStrings(colname, col))
-			case "int":
+			case Int:
 				columns = append(columns, NamedInts(colname, col))
-			case "float":
+			case Float:
 				columns = append(columns, NamedFloats(colname, col))
-			case "bool":
+			case Bool:
 				columns = append(columns, NamedBools(colname, col))
 			default:
 				return DataFrame{
@@ -601,13 +601,13 @@ func LoadRecords(records [][]string, types ...string) DataFrame {
 		t := findType(col)
 		switch t {
 		// FIXME: Use SeriesType instead
-		case "string":
+		case String:
 			columns = append(columns, NamedStrings(colname, col))
-		case "int":
+		case Int:
 			columns = append(columns, NamedInts(colname, col))
-		case "float":
+		case Float:
 			columns = append(columns, NamedFloats(colname, col))
-		case "bool":
+		case Bool:
 			columns = append(columns, NamedBools(colname, col))
 		default:
 			return DataFrame{
@@ -645,8 +645,8 @@ func (df DataFrame) Names() []string {
 	return colnames
 }
 
-func (df DataFrame) Types() []string {
-	var coltypes []string
+func (df DataFrame) Types() []Type {
+	var coltypes []Type
 	for _, v := range df.columns {
 		coltypes = append(coltypes, v.t)
 	}

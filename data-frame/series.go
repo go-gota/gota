@@ -12,22 +12,31 @@ import (
 type Series struct {
 	Name     string         // The name of the series
 	elements seriesElements // The values of the elements
-	t        string         // The type of the series
+	t        Type           // The type of the series
 	err      error
 }
+
+// Type represents the type of the elements that can be stored on Series
+type Type string
+
+const (
+	String Type = "string"
+	Int         = "int"
+	Float       = "float"
+	Bool        = "bool"
+)
 
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	ret := Series{Name: s.Name, t: s.t}
 	switch ret.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		ret.elements = stringElements{}
-	case "int":
+	case Int:
 		ret.elements = intElements{}
-	case "float":
+	case Float:
 		ret.elements = floatElements{}
-	case "bool":
+	case Bool:
 		ret.elements = boolElements{}
 	}
 	return ret
@@ -82,14 +91,13 @@ func (s *Series) Append(x interface{}) {
 func (s Series) Concat(x Series) Series {
 	var y Series
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		y = NamedStrings(s.Name, s, x)
-	case "int":
+	case Int:
 		y = NamedInts(s.Name, s, x)
-	case "float":
+	case Float:
 		y = NamedFloats(s.Name, s, x)
-	case "bool":
+	case Bool:
 		y = NamedBools(s.Name, s, x)
 	default:
 		return Series{err: errors.New("Unknown Series type")}
@@ -101,8 +109,7 @@ func (s Series) Concat(x Series) Series {
 func (s Series) Subset(indexes interface{}) Series {
 	var series Series
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		elements := s.elements.(stringElements)
 		switch indexes.(type) {
 		case []int:
@@ -129,9 +136,9 @@ func (s Series) Subset(indexes interface{}) Series {
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
-			case "string":
+			case String:
 				return Series{err: errors.New("Wrong Series type for subsetting")}
-			case "bool":
+			case Bool:
 				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
@@ -147,7 +154,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					}
 				}
 				series = NamedStrings(s.Name, elems)
-			case "int":
+			case Int:
 				elems := stringElements{}
 				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
@@ -161,7 +168,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					elems = append(elems, elements[i.(int)])
 				}
 				series = NamedStrings(s.Name, elems)
-			case "float":
+			case Float:
 				elems := stringElements{}
 				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
@@ -179,7 +186,7 @@ func (s Series) Subset(indexes interface{}) Series {
 		default:
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
-	case "int":
+	case Int:
 		elements := s.elements.(intElements)
 		switch indexes.(type) {
 		case []int:
@@ -206,9 +213,9 @@ func (s Series) Subset(indexes interface{}) Series {
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
-			case "string":
+			case String:
 				return Series{err: errors.New("Wrong Series type for subsetting")}
-			case "bool":
+			case Bool:
 				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
@@ -224,7 +231,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					}
 				}
 				series = NamedInts(s.Name, elems)
-			case "int":
+			case Int:
 				elems := intElements{}
 				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
@@ -238,7 +245,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					elems = append(elems, elements[i.(int)])
 				}
 				series = NamedInts(s.Name, elems)
-			case "float":
+			case Float:
 				elems := intElements{}
 				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
@@ -256,7 +263,7 @@ func (s Series) Subset(indexes interface{}) Series {
 		default:
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
-	case "float":
+	case Float:
 		elements := s.elements.(floatElements)
 		switch indexes.(type) {
 		case []int:
@@ -283,9 +290,9 @@ func (s Series) Subset(indexes interface{}) Series {
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
-			case "string":
+			case String:
 				return Series{err: errors.New("Wrong Series type for subsetting")}
-			case "bool":
+			case Bool:
 				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
@@ -301,7 +308,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					}
 				}
 				series = NamedFloats(s.Name, elems)
-			case "int":
+			case Int:
 				elems := floatElements{}
 				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
@@ -315,7 +322,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					elems = append(elems, elements[i.(int)])
 				}
 				series = NamedFloats(s.Name, elems)
-			case "float":
+			case Float:
 				elems := floatElements{}
 				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
@@ -333,7 +340,7 @@ func (s Series) Subset(indexes interface{}) Series {
 		default:
 			return Series{err: errors.New("Unknown indexing mode")}
 		}
-	case "bool":
+	case Bool:
 		elements := s.elements.(boolElements)
 		switch indexes.(type) {
 		case []int:
@@ -360,9 +367,9 @@ func (s Series) Subset(indexes interface{}) Series {
 		case Series:
 			idx := indexes.(Series)
 			switch idx.t {
-			case "string":
+			case String:
 				return Series{err: errors.New("Wrong Series type for subsetting")}
-			case "bool":
+			case Bool:
 				if idx.Len() != s.Len() {
 					return Series{err: errors.New("Dimensions mismatch")}
 				}
@@ -378,7 +385,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					}
 				}
 				series = NamedBools(s.Name, elems)
-			case "int":
+			case Int:
 				elems := boolElements{}
 				intElems := idx.elements.(intElements)
 				for _, v := range intElems {
@@ -392,7 +399,7 @@ func (s Series) Subset(indexes interface{}) Series {
 					elems = append(elems, elements[i.(int)])
 				}
 				series = NamedBools(s.Name, elems)
-			case "float":
+			case Float:
 				elems := boolElements{}
 				intElems := Ints(idx).elements.(intElements)
 				for _, v := range intElems {
@@ -418,14 +425,13 @@ func (s Series) Subset(indexes interface{}) Series {
 func (s Series) Compare(comparator string, comparando interface{}) ([]bool, error) {
 	var comp Series
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		comp = Strings(comparando)
-	case "int":
+	case Int:
 		comp = Ints(comparando)
-	case "float":
+	case Float:
 		comp = Floats(comparando)
-	case "bool":
+	case Bool:
 		comp = Bools(comparando)
 	default:
 		return nil, errors.New("Unknown Series type")
@@ -542,20 +548,19 @@ func (s Series) String() string {
 func (s Series) Copy() Series {
 	var copy Series
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		copy = Strings(s)
 		n := s.Name
 		copy.Name = n
-	case "int":
+	case Int:
 		copy = Ints(s)
 		n := s.Name
 		copy.Name = n
-	case "float":
+	case Float:
 		copy = Floats(s)
 		n := s.Name
 		copy.Name = n
-	case "bool":
+	case Bool:
 		copy = Bools(s)
 		n := s.Name
 		copy.Name = n
@@ -598,7 +603,7 @@ func Strings(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		elements: elements,
-		t:        "string",
+		t:        String,
 	}
 	return ret
 }
@@ -610,7 +615,7 @@ func Ints(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		elements: elements,
-		t:        "int",
+		t:        Int,
 	}
 	return ret
 }
@@ -622,7 +627,7 @@ func Floats(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		elements: elements,
-		t:        "float",
+		t:        Float,
 	}
 	return ret
 }
@@ -634,7 +639,7 @@ func Bools(args ...interface{}) Series {
 	ret := Series{
 		Name:     "",
 		elements: elements,
-		t:        "bool",
+		t:        Bool,
 	}
 	return ret
 }
@@ -646,7 +651,7 @@ func (s Series) Str() string {
 	if s.Name != "" {
 		ret = append(ret, "Name: "+s.Name)
 	}
-	ret = append(ret, "Type: "+s.t)
+	ret = append(ret, "Type: "+fmt.Sprint(s.t))
 	ret = append(ret, "Length: "+fmt.Sprint(s.Len()))
 	if s.Len() != 0 {
 		ret = append(ret, "Values: "+fmt.Sprint(s))
@@ -657,17 +662,16 @@ func (s Series) Str() string {
 // Len returns the length of a given Series
 func (s Series) Len() int {
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		elems := s.elements.(stringElements)
 		return (len(elems))
-	case "int":
+	case Int:
 		elems := s.elements.(intElements)
 		return (len(elems))
-	case "float":
+	case Float:
 		elems := s.elements.(floatElements)
 		return (len(elems))
-	case "bool":
+	case Bool:
 		elems := s.elements.(boolElements)
 		return (len(elems))
 	}
@@ -677,8 +681,7 @@ func (s Series) Len() int {
 func (s Series) Float() ([]float64, error) {
 	var ret []float64
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		elems := s.elements.(stringElements)
 		for _, elem := range elems {
 			val := elem.ToFloat().Val()
@@ -689,7 +692,7 @@ func (s Series) Float() ([]float64, error) {
 			}
 		}
 		return ret, nil
-	case "int":
+	case Int:
 		elems := s.elements.(intElements)
 		for _, elem := range elems {
 			val := elem.ToFloat().Val()
@@ -700,7 +703,7 @@ func (s Series) Float() ([]float64, error) {
 			}
 		}
 		return ret, nil
-	case "float":
+	case Float:
 		elems := s.elements.(floatElements)
 		for _, elem := range elems {
 			val := elem.ToFloat().Val()
@@ -711,7 +714,7 @@ func (s Series) Float() ([]float64, error) {
 			}
 		}
 		return ret, nil
-	case "bool":
+	case Bool:
 		elems := s.elements.(boolElements)
 		for _, elem := range elems {
 			val := elem.ToFloat().Val()
@@ -728,29 +731,28 @@ func (s Series) Float() ([]float64, error) {
 
 // Type returns the type of a given series
 func (s Series) Type() string {
-	return s.t
+	return fmt.Sprint(s.t)
 }
 
 func addr(s Series) []string {
 	var ret []string
 	switch s.t {
-	// FIXME: Use SeriesType instead
-	case "string":
+	case String:
 		elems := s.elements.(stringElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.s))
 		}
-	case "int":
+	case Int:
 		elems := s.elements.(intElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.i))
 		}
-	case "float":
+	case Float:
 		elems := s.elements.(floatElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.f))
 		}
-	case "bool":
+	case Bool:
 		elems := s.elements.(boolElements)
 		for _, elem := range elems {
 			ret = append(ret, fmt.Sprint(elem.b))

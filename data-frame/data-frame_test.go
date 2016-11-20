@@ -27,7 +27,7 @@ func TestDataFrame_New(t *testing.T) {
 			receivedNames,
 		)
 	}
-	expectedTypes := []string{"string", "int", "float"}
+	expectedTypes := []Type{String, Int, Float}
 	receivedTypes := a.Types()
 	if !reflect.DeepEqual(expectedTypes, receivedTypes) {
 		t.Error(
@@ -168,19 +168,19 @@ func TestDataFrame_LoadRecords(t *testing.T) {
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = LoadRecords(records, "int")
+	a = LoadRecords(records, Int)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = LoadRecords(records, "string")
+	a = LoadRecords(records, String)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = LoadRecords(records, "float")
+	a = LoadRecords(records, Float)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = LoadRecords(records, "bool")
+	a = LoadRecords(records, Bool)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
@@ -188,15 +188,15 @@ func TestDataFrame_LoadRecords(t *testing.T) {
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = LoadRecords(records, []string{"string", "int"}...)
+	a = LoadRecords(records, []Type{String, Int}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = LoadRecords(records, []string{"string", "int", "float"}...)
+	a = LoadRecords(records, []Type{String, Int, Float}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = LoadRecords(records, []string{"string", "bool", "int"}...)
+	a = LoadRecords(records, []Type{String, Bool, Int}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
@@ -220,19 +220,19 @@ Spain,2012-02-01,66,555.42,00241
 	if a.Err() != nil {
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(strings.NewReader(csvStr), "int")
+	a = ReadCSV(strings.NewReader(csvStr), Int)
 	if a.Err() != nil {
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(strings.NewReader(csvStr), "string")
+	a = ReadCSV(strings.NewReader(csvStr), String)
 	if a.Err() != nil {
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(strings.NewReader(csvStr), "float")
+	a = ReadCSV(strings.NewReader(csvStr), Float)
 	if a.Err() != nil {
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
-	a = ReadCSV(strings.NewReader(csvStr), "bool")
+	a = ReadCSV(strings.NewReader(csvStr), Bool)
 	if a.Err() != nil {
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
@@ -240,11 +240,11 @@ Spain,2012-02-01,66,555.42,00241
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []Type{String, Int}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadCSV(strings.NewReader(csvStr), []string{"string", "int", "float", "float", "int"}...)
+	a = ReadCSV(strings.NewReader(csvStr), []Type{String, Int, Float, Float, Int}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 		t.Errorf("Expected success, got error: %v", a.Err())
@@ -713,7 +713,7 @@ A.0,B,C,D.0,A.1,F,D.1
 1,d,7.1,false,5,9,false
 `
 	expected := ReadCSV(strings.NewReader(expectedCSV),
-		[]string{"int", "string", "float", "bool", "string", "int", "bool"}...)
+		[]Type{Int, String, Float, Bool, String, Int, Bool}...)
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
