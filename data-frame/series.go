@@ -760,8 +760,8 @@ func (s Series) Float() ([]float64, error) {
 }
 
 // Type returns the type of a given series
-func (s Series) Type() string {
-	return fmt.Sprint(s.t)
+func (s Series) Type() Type {
+	return s.t
 }
 
 func addr(s Series) []string {
