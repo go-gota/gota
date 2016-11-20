@@ -640,7 +640,7 @@ func Bools(args ...interface{}) Series {
 }
 
 // Str prints some extra information about a given series
-func Str(s Series) string {
+func (s Series) Str() string {
 	var ret []string
 	// If name exists print name
 	if s.Name != "" {
