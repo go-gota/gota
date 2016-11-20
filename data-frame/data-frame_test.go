@@ -157,46 +157,46 @@ func TestDataFrame_Records(t *testing.T) {
 	}
 }
 
-func TestDataFrame_ReadRecords(t *testing.T) {
+func TestDataFrame_LoadRecords(t *testing.T) {
 	records := [][]string{
 		[]string{"COL.1", "COL.2", "COL.3"},
 		[]string{"a", "true", "3"},
 		[]string{"b", "false", "2"},
 		[]string{"1", "", "1.1"},
 	}
-	a := ReadRecords(records)
+	a := LoadRecords(records)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "int")
+	a = LoadRecords(records, "int")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "string")
+	a = LoadRecords(records, "string")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "float")
+	a = LoadRecords(records, "float")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "bool")
+	a = LoadRecords(records, "bool")
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, "blaaah")
+	a = LoadRecords(records, "blaaah")
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadRecords(records, []string{"string", "int"}...)
+	a = LoadRecords(records, []string{"string", "int"}...)
 	if a.Err() == nil {
 		t.Error("Expected error, got success")
 	}
-	a = ReadRecords(records, []string{"string", "int", "float"}...)
+	a = LoadRecords(records, []string{"string", "int", "float"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
-	a = ReadRecords(records, []string{"string", "bool", "int"}...)
+	a = LoadRecords(records, []string{"string", "bool", "int"}...)
 	if a.Err() != nil {
 		t.Error("Expected success, got error")
 	}
@@ -355,7 +355,7 @@ func TestDataFrame_Filter(t *testing.T) {
 	}
 }
 
-func TestDataFrame_ReadMaps(t *testing.T) {
+func TestDataFrame_LoadMaps(t *testing.T) {
 	m := []map[string]interface{}{
 		map[string]interface{}{
 			"Age":    23,
@@ -373,7 +373,7 @@ func TestDataFrame_ReadMaps(t *testing.T) {
 			"Credit": 16.2,
 		},
 	}
-	b := ReadMaps(m)
+	b := LoadMaps(m)
 	if b.Err() != nil {
 		t.Error("Expected success, got error: ", b.Err())
 	}

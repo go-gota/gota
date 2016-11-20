@@ -392,7 +392,7 @@ func ReadJSON(r io.Reader, types ...string) DataFrame {
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return ReadMaps(m, types...)
+	return LoadMaps(m, types...)
 }
 
 func ReadCSV(r io.Reader, types ...string) DataFrame {
@@ -401,10 +401,10 @@ func ReadCSV(r io.Reader, types ...string) DataFrame {
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return ReadRecords(records, types...)
+	return LoadRecords(records, types...)
 }
 
-func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
+func LoadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
@@ -514,7 +514,7 @@ func ReadMaps(maps []map[string]interface{}, types ...string) DataFrame {
 	return New(columns...)
 }
 
-func ReadRecords(records [][]string, types ...string) DataFrame {
+func LoadRecords(records [][]string, types ...string) DataFrame {
 	if len(records) == 0 {
 		return DataFrame{
 			err: errors.New("Empty records"),
