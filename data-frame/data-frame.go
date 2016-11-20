@@ -635,12 +635,12 @@ func (df DataFrame) SaveMaps() []map[string]interface{} {
 	return maps
 }
 
-func (df DataFrame) SaveJSON() ([]byte, error) {
+func (df DataFrame) SaveJSON(w io.Writer) error {
 	if df.Err() != nil {
-		return nil, df.Err()
+		return df.Err()
 	}
 	m := df.SaveMaps()
-	return json.Marshal(m)
+	return json.NewEncoder(w).Encode(m)
 }
 
 func (df DataFrame) SaveCSV() ([]byte, error) {

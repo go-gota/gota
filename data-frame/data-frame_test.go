@@ -1,6 +1,7 @@
 package df
 
 import (
+	"bytes"
 	"encoding/json"
 	"reflect"
 	"strings"
@@ -264,7 +265,10 @@ func TestDataFrame_SetNames(t *testing.T) {
 }
 
 func TestDataFrame_SaveMaps(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
 	m := a.SaveMaps()
 	_, err := json.Marshal(m)
 	if err != nil {
@@ -273,7 +277,10 @@ func TestDataFrame_SaveMaps(t *testing.T) {
 }
 
 func TestDataFrame_SaveCSV(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
 	_, err := a.SaveCSV()
 	if err != nil {
 		t.Error("Expected success, got error")
@@ -281,10 +288,18 @@ func TestDataFrame_SaveCSV(t *testing.T) {
 }
 
 func TestDataFrame_SaveJSON(t *testing.T) {
-	a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-	_, err := a.SaveJSON()
+	a := New(
+		NamedStrings("COL.1", nil, "b", "c"),
+		NamedInts("COL.2", 1, 2, 3),
+		NamedFloats("COL.3", 3, nil, 1))
+	buf := new(bytes.Buffer)
+	err := a.SaveJSON(buf)
 	if err != nil {
 		t.Error("Expected success, got error")
+	}
+	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":b,"COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
 	}
 }
 
