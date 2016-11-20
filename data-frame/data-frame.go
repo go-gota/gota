@@ -383,7 +383,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	return df.Subset(res)
 }
 
-// Read/Save Methods
+// Read/Write Methods
 // =================
 
 func ReadJSON(r io.Reader, types ...string) DataFrame {
@@ -618,7 +618,7 @@ func LoadRecords(records [][]string, types ...string) DataFrame {
 	return New(columns...)
 }
 
-func (df DataFrame) SaveJSON(w io.Writer) error {
+func (df DataFrame) WriteJSON(w io.Writer) error {
 	if df.Err() != nil {
 		return df.Err()
 	}
@@ -626,7 +626,7 @@ func (df DataFrame) SaveJSON(w io.Writer) error {
 	return json.NewEncoder(w).Encode(m)
 }
 
-func (df DataFrame) SaveCSV(w io.Writer) error {
+func (df DataFrame) WriteCSV(w io.Writer) error {
 	if df.Err() != nil {
 		return df.Err()
 	}

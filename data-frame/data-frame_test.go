@@ -276,13 +276,13 @@ func TestDataFrame_Maps(t *testing.T) {
 	}
 }
 
-func TestDataFrame_SaveCSV(t *testing.T) {
+func TestDataFrame_WriteCSV(t *testing.T) {
 	a := New(
 		NamedStrings("COL.1", nil, "b", "c"),
 		NamedInts("COL.2", 1, 2, 3),
 		NamedFloats("COL.3", 3, nil, 1))
 	buf := new(bytes.Buffer)
-	err := a.SaveCSV(buf)
+	err := a.WriteCSV(buf)
 	if err != nil {
 		t.Error("Expected success, got error: %v", err)
 	}
@@ -296,13 +296,13 @@ c,3,1
 	}
 }
 
-func TestDataFrame_SaveJSON(t *testing.T) {
+func TestDataFrame_WriteJSON(t *testing.T) {
 	a := New(
 		NamedStrings("COL.1", nil, "b", "c"),
 		NamedInts("COL.2", 1, 2, 3),
 		NamedFloats("COL.3", 3, nil, 1))
 	buf := new(bytes.Buffer)
-	err := a.SaveJSON(buf)
+	err := a.WriteJSON(buf)
 	if err != nil {
 		t.Error("Expected success, got error: %v", err)
 	}
