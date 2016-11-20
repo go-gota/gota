@@ -157,51 +157,6 @@ func TestDataFrame_Records(t *testing.T) {
 	}
 }
 
-func TestDataFrame_LoadRecords(t *testing.T) {
-	records := [][]string{
-		[]string{"COL.1", "COL.2", "COL.3"},
-		[]string{"a", "true", "3"},
-		[]string{"b", "false", "2"},
-		[]string{"1", "", "1.1"},
-	}
-	a := LoadRecords(records)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, Int)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, String)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, Float)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, Bool)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, "blaaah")
-	if a.Err() == nil {
-		t.Error("Expected error, got success")
-	}
-	a = LoadRecords(records, []Type{String, Int}...)
-	if a.Err() == nil {
-		t.Error("Expected error, got success")
-	}
-	a = LoadRecords(records, []Type{String, Int, Float}...)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-	a = LoadRecords(records, []Type{String, Bool, Int}...)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
-	}
-}
-
 func TestDataFrame_ReadCSV(t *testing.T) {
 	// Load the data from a CSV string and try to infer the type of the
 	// columns
@@ -218,35 +173,6 @@ Spain,2012-02-01,66,555.42,00241
 `
 	a := ReadCSV(strings.NewReader(csvStr))
 	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
-	}
-	a = ReadCSV(strings.NewReader(csvStr), Int)
-	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
-	}
-	a = ReadCSV(strings.NewReader(csvStr), String)
-	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
-	}
-	a = ReadCSV(strings.NewReader(csvStr), Float)
-	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
-	}
-	a = ReadCSV(strings.NewReader(csvStr), Bool)
-	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
-	}
-	a = ReadCSV(strings.NewReader(csvStr), "blaaah")
-	if a.Err() == nil {
-		t.Error("Expected error, got success")
-	}
-	a = ReadCSV(strings.NewReader(csvStr), []Type{String, Int}...)
-	if a.Err() == nil {
-		t.Error("Expected error, got success")
-	}
-	a = ReadCSV(strings.NewReader(csvStr), []Type{String, Int, Float, Float, Int}...)
-	if a.Err() != nil {
-		t.Error("Expected success, got error")
 		t.Errorf("Expected success, got error: %v", a.Err())
 	}
 }
@@ -712,8 +638,11 @@ A.0,B,C,D.0,A.1,F,D.1
 1,d,7.1,false,2,8,false
 1,d,7.1,false,5,9,false
 `
-	expected := ReadCSV(strings.NewReader(expectedCSV),
-		[]Type{Int, String, Float, Bool, String, Int, Bool}...)
+	expected := ReadCSV(
+		strings.NewReader(expectedCSV),
+		CfgColumnTypes(map[string]Type{
+			"A.1": String,
+		}))
 	if c.Err() != nil {
 		t.Error("Expected success, got error: ", c.Err())
 	}
@@ -747,4 +676,20 @@ func joinTestEq(a, b DataFrame) bool {
 		}
 	}
 	return true
+}
+
+func TestLoadRecords(t *testing.T) {
+	_ = LoadRecords(
+		[][]string{
+			{"A", "B", "C", "D"},
+			{"a", "1", "true", "0"},
+			{"b", "2", "true", "0.5"},
+		},
+		CfgDetectTypes(true),
+		CfgColumnTypes(map[string]Type{
+			"A": String,
+			"B": Int,
+		}),
+		CfgDefaultType(String),
+	)
 }
