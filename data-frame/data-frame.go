@@ -386,7 +386,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 // Read/Write Methods
 // =================
 
-func ReadJSON(r io.Reader, options ...func(*LoadConfig)) DataFrame {
+func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
 	if err != nil {
@@ -395,7 +395,7 @@ func ReadJSON(r io.Reader, options ...func(*LoadConfig)) DataFrame {
 	return LoadMaps(m, options...)
 }
 
-func ReadCSV(r io.Reader, options ...func(*LoadConfig)) DataFrame {
+func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
@@ -404,41 +404,41 @@ func ReadCSV(r io.Reader, options ...func(*LoadConfig)) DataFrame {
 	return LoadRecords(records, options...)
 }
 
-// LoadConfig is the configuration that will be used for the loading operations
-type LoadConfig struct {
+// LoadOptions is the configuration that will be used for the loading operations
+type LoadOptions struct {
 	detectTypes bool
 	hasHeader   bool
 	types       map[string]Type
 	defaultType Type
 }
 
-func CfgDetectTypes(b bool) func(*LoadConfig) {
-	return func(c *LoadConfig) {
+func CfgDetectTypes(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
 		c.detectTypes = b
 	}
 }
 
-func CfgHasHeader(b bool) func(*LoadConfig) {
-	return func(c *LoadConfig) {
+func CfgHasHeader(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
 		c.hasHeader = b
 	}
 }
 
-func CfgColumnTypes(coltypes map[string]Type) func(*LoadConfig) {
-	return func(c *LoadConfig) {
+func CfgColumnTypes(coltypes map[string]Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
 		c.types = coltypes
 	}
 }
 
-func CfgDefaultType(t Type) func(*LoadConfig) {
-	return func(c *LoadConfig) {
+func CfgDefaultType(t Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
 		c.defaultType = t
 	}
 }
 
-func LoadRecords(records [][]string, options ...func(*LoadConfig)) DataFrame {
+func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	// Load the options
-	cfg := LoadConfig{
+	cfg := LoadOptions{
 		types:       make(map[string]Type),
 		detectTypes: true,
 		defaultType: String,
@@ -509,7 +509,7 @@ func LoadRecords(records [][]string, options ...func(*LoadConfig)) DataFrame {
 
 func LoadMaps(
 	maps []map[string]interface{},
-	options ...func(*LoadConfig)) DataFrame {
+	options ...func(*LoadOptions)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
