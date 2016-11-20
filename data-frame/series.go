@@ -134,6 +134,7 @@ func (s Series) Concat(x Series) Series {
 
 // Subset returns a subset of the series based on the given indexes
 func (s Series) Subset(indexes interface{}) Series {
+	// TODO: This could use some work
 	var series Series
 	switch s.t {
 	case String:
@@ -572,25 +573,10 @@ func (s Series) String() string {
 
 // Copy wil copy the values of a given Series
 func (s Series) Copy() Series {
-	var copy Series
-	switch s.t {
-	case String:
-		copy = Strings(s)
-		n := s.Name
-		copy.Name = n
-	case Int:
-		copy = Ints(s)
-		n := s.Name
-		copy.Name = n
-	case Float:
-		copy = Floats(s)
-		n := s.Name
-		copy.Name = n
-	case Bool:
-		copy = Bools(s)
-		n := s.Name
-		copy.Name = n
-	}
+	copy := Series{}
+	copy.Name = s.Name
+	copy.t = s.t
+	copy.elements = s.elements.Copy()
 	return copy
 }
 
