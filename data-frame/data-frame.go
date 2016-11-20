@@ -386,13 +386,13 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 // Read/Write Methods
 // =================
 
-func ReadJSON(r io.Reader, types ...Type) DataFrame {
+func ReadJSON(r io.Reader, options ...func(*LoadConfig)) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
 	if err != nil {
 		return DataFrame{err: err}
 	}
-	return LoadMaps(m, types...)
+	return LoadMaps(m, options...)
 }
 
 func ReadCSV(r io.Reader, options ...func(*LoadConfig)) DataFrame {
@@ -501,111 +501,48 @@ func LoadRecords(records [][]string, options ...func(*LoadConfig)) DataFrame {
 	return New(columns...)
 }
 
-func LoadMaps(maps []map[string]interface{}, types ...Type) DataFrame {
+func LoadMaps(
+	maps []map[string]interface{},
+	options ...func(*LoadConfig)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			err: errors.New("Can't parse empty map array"),
 		}
 	}
-	strInsideSliceIdx := func(i string, s []string) (bool, int) {
-		for k, v := range s {
+	inStrSlice := func(i string, s []string) bool {
+		for _, v := range s {
 			if v == i {
-				return true, k
+				return true
 			}
 		}
-		return false, -1
+		return false
 	}
-	fields := make(map[string][]string)
+
+	// Detect all colnames
 	var colnames []string
-	// Initialize data structures
 	for _, v := range maps {
 		for k, _ := range v {
-			if exists, _ := strInsideSliceIdx(k, colnames); !exists {
+			if exists := inStrSlice(k, colnames); !exists {
 				colnames = append(colnames, k)
 			}
-			fields[k] = make([]string, len(maps))
 		}
 	}
-	// Copy the values for all given elements
-	for i, v := range maps {
-		for k, w := range v {
-			fields[k][i] = fmt.Sprint(w)
-		}
-	}
-
-	// The order of the keys might be different that the types we expect, so we force
-	// alphabetical ordering for the map keys.
 	sort.Strings(colnames)
-
-	var columns []Series
-	if types != nil && len(types) != 0 {
-		// Empty String only columns
-		if len(types) == 1 {
-			t := types[0]
-			for _, colname := range colnames {
-				col := fields[colname]
-				switch t {
-				case String:
-					columns = append(columns, NamedStrings(colname, col))
-				case Int:
-					columns = append(columns, NamedInts(colname, col))
-				case Float:
-					columns = append(columns, NamedFloats(colname, col))
-				case Bool:
-					columns = append(columns, NamedBools(colname, col))
-				default:
-					return DataFrame{
-						err: errors.New("Unknown type given"),
-					}
-				}
+	records := [][]string{colnames}
+	for _, m := range maps {
+		var row []string
+		for _, colname := range colnames {
+			element := ""
+			val, ok := m[colname]
+			if ok {
+				element = fmt.Sprint(val)
 			}
-			return New(columns...)
+			row = append(row, element)
 		}
-		if len(types) != len(colnames) {
-			return DataFrame{
-				err: errors.New("Fields and types array have different dimensions"),
-			}
-		}
-		for k, colname := range colnames {
-			col := fields[colname]
-			t := types[k]
-			switch t {
-			case String:
-				columns = append(columns, NamedStrings(colname, col))
-			case Int:
-				columns = append(columns, NamedInts(colname, col))
-			case Float:
-				columns = append(columns, NamedFloats(colname, col))
-			case Bool:
-				columns = append(columns, NamedBools(colname, col))
-			default:
-				return DataFrame{
-					err: errors.New("Unknown type given"),
-				}
-			}
-		}
-		return New(columns...)
+		records = append(records, row)
 	}
 
-	for _, colname := range colnames {
-		col := fields[colname]
-		t := findType(col)
-		switch t {
-		case String:
-			columns = append(columns, NamedStrings(colname, col))
-		case Int:
-			columns = append(columns, NamedInts(colname, col))
-		case Float:
-			columns = append(columns, NamedFloats(colname, col))
-		case Bool:
-			columns = append(columns, NamedBools(colname, col))
-		default:
-			return DataFrame{
-				err: errors.New("Unknown type given"),
-			}
-		}
-	}
-	return New(columns...)
+	return LoadRecords(records, options...)
 }
 
 func (df DataFrame) WriteJSON(w io.Writer) error {
