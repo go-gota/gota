@@ -76,13 +76,13 @@ func New(series ...Series) DataFrame {
 			// Make sure that we don't have duplicate column names when autofilling
 			inside, _ := strInsideSliceIdx(proposedName, colnames, k)
 			for inside {
-				i += 1
+				i++
 				proposedName = "X" + fmt.Sprint(i)
 				inside, _ = strInsideSliceIdx(proposedName, colnames, k)
 			}
 			colnames[k] = proposedName
 			columns[k].Name = proposedName
-			i += 1
+			i++
 		}
 	}
 
@@ -95,12 +95,12 @@ func New(series ...Series) DataFrame {
 			for _, j := range idx {
 				proposedName := v + "." + fmt.Sprint(i)
 				for strInsideSlice(proposedName, colnames) {
-					i += 1
+					i++
 					proposedName = v + "." + fmt.Sprint(i)
 				}
 				colnames[j] = proposedName
 				columns[j].Name = proposedName
-				i += 1
+				i++
 			}
 		}
 	}
@@ -712,7 +712,7 @@ func (df DataFrame) Col(colname string) Series {
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{err: errors.New("Unspecified Join keys")}
 	}
@@ -721,7 +721,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := a.ColIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -736,7 +736,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
-	aCols := a.columns
+	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
@@ -744,7 +744,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		newCols = append(newCols, aCols[i].Empty())
 	}
 	var iNotKeysA []int
-	for i := 0; i < a.ncols; i++ {
+	for i := 0; i < df.ncols; i++ {
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
@@ -759,7 +759,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	}
 
 	// Fill newCols
-	for i := 0; i < a.nrows; i++ {
+	for i := 0; i < df.nrows; i++ {
 		for j := 0; j < b.nrows; j++ {
 			match := true
 			for k := range keys {
@@ -792,7 +792,7 @@ func (a DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{err: errors.New("Unspecified Join keys")}
 	}
@@ -801,7 +801,7 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := a.ColIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -816,7 +816,7 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
-	aCols := a.columns
+	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
@@ -824,7 +824,7 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 		newCols = append(newCols, aCols[i].Empty())
 	}
 	var iNotKeysA []int
-	for i := 0; i < a.ncols; i++ {
+	for i := 0; i < df.ncols; i++ {
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
@@ -839,7 +839,7 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	}
 
 	// Fill newCols
-	for i := 0; i < a.nrows; i++ {
+	for i := 0; i < df.nrows; i++ {
 		matched := false
 		for j := 0; j < b.nrows; j++ {
 			match := true
@@ -891,7 +891,7 @@ func (a DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{err: errors.New("Unspecified Join keys")}
 	}
@@ -900,7 +900,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := a.ColIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -915,7 +915,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
-	aCols := a.columns
+	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
@@ -923,7 +923,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 		newCols = append(newCols, aCols[i].Empty())
 	}
 	var iNotKeysA []int
-	for i := 0; i < a.ncols; i++ {
+	for i := 0; i < df.ncols; i++ {
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
@@ -942,7 +942,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	var nonmatched []int
 	for j := 0; j < b.nrows; j++ {
 		matched := false
-		for i := 0; i < a.nrows; i++ {
+		for i := 0; i < df.nrows; i++ {
 			match := true
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].elem(i)
@@ -1000,7 +1000,7 @@ func (a DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{err: errors.New("Unspecified Join keys")}
 	}
@@ -1009,7 +1009,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := a.ColIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 		}
@@ -1024,7 +1024,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
 	}
 
-	aCols := a.columns
+	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
@@ -1032,7 +1032,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		newCols = append(newCols, aCols[i].Empty())
 	}
 	var iNotKeysA []int
-	for i := 0; i < a.ncols; i++ {
+	for i := 0; i < df.ncols; i++ {
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
@@ -1047,7 +1047,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	}
 
 	// Fill newCols
-	for i := 0; i < a.nrows; i++ {
+	for i := 0; i < df.nrows; i++ {
 		matched := false
 		for j := 0; j < b.nrows; j++ {
 			match := true
@@ -1096,7 +1096,7 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	}
 	for j := 0; j < b.nrows; j++ {
 		matched := false
-		for i := 0; i < a.nrows; i++ {
+		for i := 0; i < df.nrows; i++ {
 			match := true
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].elem(i)
@@ -1130,26 +1130,26 @@ func (a DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 
 // CrossJoin returns a DataFrame containing the cross join of two DataFrames.
 // This operation matches all rows that appear on both dataframes.
-func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
-	aCols := a.columns
+func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
+	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
 	var newCols []Series
-	for i := 0; i < a.ncols; i++ {
+	for i := 0; i < df.ncols; i++ {
 		newCols = append(newCols, aCols[i].Empty())
 	}
 	for i := 0; i < b.ncols; i++ {
 		newCols = append(newCols, bCols[i].Empty())
 	}
 	// Fill newCols
-	for i := 0; i < a.nrows; i++ {
+	for i := 0; i < df.nrows; i++ {
 		for j := 0; j < b.nrows; j++ {
-			for ii := 0; ii < a.ncols; ii++ {
+			for ii := 0; ii < df.ncols; ii++ {
 				elem := aCols[ii].elem(i)
 				newCols[ii].Append(elem)
 			}
 			for ii := 0; ii < b.ncols; ii++ {
-				jj := ii + a.ncols
+				jj := ii + df.ncols
 				elem := bCols[ii].elem(j)
 				newCols[jj].Append(elem)
 			}
@@ -1160,8 +1160,8 @@ func (a DataFrame) CrossJoin(b DataFrame) DataFrame {
 
 // ColIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.
-func (d DataFrame) ColIndex(s string) int {
-	for k, v := range d.Names() {
+func (df DataFrame) ColIndex(s string) int {
+	for k, v := range df.Names() {
 		if v == s {
 			return k
 		}
@@ -1197,18 +1197,18 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	return maps
 }
 
-func (d DataFrame) Dense() (*mat64.Dense, error) {
-	if d.Err() != nil {
-		return nil, d.Err()
+func (df DataFrame) Dense() (*mat64.Dense, error) {
+	if df.Err() != nil {
+		return nil, df.Err()
 	}
 	var floats []float64
-	for _, col := range d.columns {
+	for _, col := range df.columns {
 		f, err := col.Float()
 		if err != nil {
 			return nil, err
 		}
 		floats = append(floats, f...)
 	}
-	dense := mat64.NewDense(d.nrows, d.ncols, floats)
+	dense := mat64.NewDense(df.nrows, df.ncols, floats)
 	return dense, nil
 }
