@@ -1111,7 +1111,7 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	for i := 0; i < df.nrows; i++ {
 		m := make(map[string]interface{})
 		for k, v := range colnames {
-			val := df.columns[k].Val(i)
+			val, _ := df.columns[k].Val(i) // Ignoring the error as the index should not be out of bounds
 			m[v] = val
 		}
 		maps[i] = m

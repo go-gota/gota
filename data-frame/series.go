@@ -100,17 +100,13 @@ func (s Series) elem(i int) elementInterface {
 	return s.elements.Elem(i)
 }
 
-// Val returns the value of a series for the given index or nil if NA or out of bounds
-func (s Series) Val(i int) interface{} {
-	// FIXME: This is probably not the right way to handle out of bounds/NA errors...
+// Val returns the value of a series for the given index
+func (s Series) Val(i int) (interface{}, error) {
 	if i >= s.Len() || i < 0 {
-		return nil
+		return nil, errors.New("index out of bounds")
 	}
-	elem := s.elements.Elem(i)
-	if elem.IsNA() {
-		return nil
-	}
-	return elem.Val()
+	elem := s.elements.Elem(i).Val()
+	return elem, nil
 }
 
 // Append adds elements to the end of the Series
