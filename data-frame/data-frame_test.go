@@ -272,7 +272,7 @@ func TestDataFrame_Maps(t *testing.T) {
 	m := a.Maps()
 	_, err := json.Marshal(m)
 	if err != nil {
-		t.Error("Expected success, got error: %v", err)
+		t.Errorf("Expected success, got error: %v", err)
 	}
 }
 
@@ -284,7 +284,7 @@ func TestDataFrame_WriteCSV(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err := a.WriteCSV(buf)
 	if err != nil {
-		t.Error("Expected success, got error: %v", err)
+		t.Errorf("Expected success, got error: %v", err)
 	}
 	expected := `COL.1,COL.2,COL.3
 NA,1,3
@@ -304,7 +304,7 @@ func TestDataFrame_WriteJSON(t *testing.T) {
 	buf := new(bytes.Buffer)
 	err := a.WriteJSON(buf)
 	if err != nil {
-		t.Error("Expected success, got error: %v", err)
+		t.Errorf("Expected success, got error: %v", err)
 	}
 	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
 `
