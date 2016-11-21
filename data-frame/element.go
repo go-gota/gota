@@ -2,7 +2,9 @@ package df
 
 import (
 	"fmt"
+	"math"
 	"strconv"
+	"strings"
 )
 
 // String is an alias for string to be able to implement custom methods
@@ -37,9 +39,152 @@ type elementInterface interface {
 	ToBool() boolElement
 	IsNA() bool
 	Val() elementValue
+	Set(interface{}) elementInterface
 }
 
 type elementValue interface{}
+
+func (e stringElement) Set(value interface{}) elementInterface {
+	var val string
+	switch value.(type) {
+	case string:
+		val = value.(string)
+	case int:
+		val = strconv.Itoa(value.(int))
+	case float64:
+		val = strconv.FormatFloat(value.(float64), 'f', 6, 64)
+	case bool:
+		b := value.(bool)
+		if b {
+			val = "true"
+		} else {
+			val = "false"
+		}
+	case elementInterface:
+		return value.(elementInterface).ToString()
+	default:
+		e.s = nil
+		return e
+	}
+	e.s = &val
+	return e
+}
+
+func (e intElement) Set(value interface{}) elementInterface {
+	var val int
+	switch value.(type) {
+	case string:
+		i, err := strconv.Atoi(value.(string))
+		if err != nil {
+			e.i = nil
+			return e
+		} else {
+			val = i
+		}
+	case int:
+		val = value.(int)
+	case float64:
+		f := value.(float64)
+		if math.IsNaN(f) ||
+			math.IsInf(f, 0) ||
+			math.IsInf(f, 1) {
+			e.i = nil
+			return e
+		}
+		val = int(f)
+	case bool:
+		b := value.(bool)
+		if b {
+			val = 1
+		} else {
+			val = 0
+		}
+	case elementInterface:
+		return value.(elementInterface).ToInt()
+	default:
+		e.i = nil
+		return e
+	}
+	e.i = &val
+	return e
+}
+
+func (e floatElement) Set(value interface{}) elementInterface {
+	var val float64
+	switch value.(type) {
+	case string:
+		f, err := strconv.ParseFloat(value.(string), 64)
+		if err != nil {
+			e.f = nil
+			return e
+		} else {
+			val = f
+		}
+	case int:
+		val = float64(value.(int))
+	case float64:
+		val = value.(float64)
+	case bool:
+		b := value.(bool)
+		if b {
+			val = 1
+		} else {
+			val = 0
+		}
+	case elementInterface:
+		return value.(elementInterface).ToFloat()
+	default:
+		e.f = nil
+		return e
+	}
+	e.f = &val
+	return e
+}
+
+func (e boolElement) Set(value interface{}) elementInterface {
+	var val bool
+	switch value.(type) {
+	case string:
+		switch strings.ToLower(value.(string)) {
+		case "true", "t", "1":
+			val = true
+		case "false", "f", "0":
+			val = false
+		default:
+			e.b = nil
+			return e
+		}
+	case int:
+		switch value.(int) {
+		case 1:
+			val = true
+		case 0:
+			val = false
+		default:
+			e.b = nil
+			return e
+		}
+	case float64:
+		switch value.(float64) {
+		case 1:
+			val = true
+		case 0:
+			val = false
+		default:
+			e.b = nil
+			return e
+		}
+	case bool:
+		val = value.(bool)
+	case elementInterface:
+		return value.(elementInterface).ToBool()
+	default:
+		e.b = nil
+		return e
+	}
+	e.b = &val
+	return e
+}
 
 func (e stringElement) Val() elementValue {
 	if e.IsNA() {
@@ -165,11 +310,13 @@ func (s stringElement) ToBool() boolElement {
 		return boolElement{nil}
 	}
 	var b bool
-	if *s.s == "false" {
-		b = false
-	}
-	if *s.s == "true" {
+	switch strings.ToLower(*s.s) {
+	case "true", "t", "1":
 		b = true
+	case "false", "f", "0":
+		b = false
+	default:
+		return boolElement{nil}
 	}
 	return boolElement{&b}
 }
@@ -432,25 +579,25 @@ func (s boolElement) Eq(elem elementInterface) bool {
 
 func (s stringElement) String() string {
 	if s.s == nil {
-		return "NA"
+		return "NaN"
 	}
 	return *s.s
 }
 func (i intElement) String() string {
 	if i.i == nil {
-		return "NA"
+		return "NaN"
 	}
 	return fmt.Sprint(*i.i)
 }
 func (f floatElement) String() string {
 	if f.f == nil {
-		return "NA"
+		return "NaN"
 	}
-	return fmt.Sprint(*f.f)
+	return fmt.Sprintf("%f", *f.f)
 }
 func (b boolElement) String() string {
 	if b.b == nil {
-		return "NA"
+		return "NaN"
 	}
 	if *b.b {
 		return "true"
