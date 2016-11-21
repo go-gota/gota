@@ -774,7 +774,7 @@ func TestBools(t *testing.T) {
 	}
 }
 
-func TestCopy(t *testing.T) {
+func TestSeries_Copy(t *testing.T) {
 	tests := []Series{
 		Strings([]string{"1", "2", "3", "a", "b", "c"}),
 		Ints([]string{"1", "2", "3", "a", "b", "c"}),
@@ -793,7 +793,7 @@ func TestCopy(t *testing.T) {
 	}
 }
 
-func TestRecords(t *testing.T) {
+func TestSeries_Records(t *testing.T) {
 	tests := []struct {
 		series   Series
 		expected []string
@@ -819,6 +819,54 @@ func TestRecords(t *testing.T) {
 		expected := test.expected
 		received := test.series.Records()
 		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Float(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected []float64
+	}{
+		{
+			Strings([]string{"1", "2", "3", "a", "b", "c"}),
+			[]float64{1, 2, 3, math.NaN(), math.NaN(), math.NaN()},
+		},
+		{
+			Ints([]string{"1", "2", "3", "a", "b", "c"}),
+			[]float64{1, 2, 3, math.NaN(), math.NaN(), math.NaN()},
+		},
+		{
+			Floats([]string{"1", "2", "3", "a", "b", "c"}),
+			[]float64{1, 2, 3, math.NaN(), math.NaN(), math.NaN()},
+		},
+		{
+			Bools([]string{"1", "0", "1", "t", "f", "c"}),
+			[]float64{1, 0, 1, 1, 0, math.NaN()},
+		},
+	}
+	for testnum, test := range tests {
+		var precision float64 = 0.0000001
+		floatEquals := func(x, y []float64) bool {
+			if len(x) != len(y) {
+				return false
+			}
+			for i := 0; i < len(x); i++ {
+				a := x[i]
+				b := y[i]
+				if (a-b) > precision || (b-a) > precision {
+					return false
+				}
+			}
+			return true
+		}
+		expected := test.expected
+		received := test.series.Float()
+		if !floatEquals(expected, received) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,

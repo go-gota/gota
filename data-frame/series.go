@@ -3,6 +3,7 @@ package df
 import (
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
 )
 
@@ -697,56 +698,21 @@ func (s Series) Records() []string {
 	return ret
 }
 
-//func (s Series) Float() ([]float64, error) {
-//var ret []float64
-//switch s.t {
-//case String:
-//elems := s.elements.(stringElements)
-//for _, elem := range elems {
-//val := elem.ToFloat().Val()
-//if val == nil {
-//ret = append(ret, math.NaN())
-//} else {
-//ret = append(ret, val.(float64))
-//}
-//}
-//return ret, nil
-//case Int:
-//elems := s.elements.(intElements)
-//for _, elem := range elems {
-//val := elem.ToFloat().Val()
-//if val == nil {
-//ret = append(ret, math.NaN())
-//} else {
-//ret = append(ret, val.(float64))
-//}
-//}
-//return ret, nil
-//case Float:
-//elems := s.elements.(floatElements)
-//for _, elem := range elems {
-//val := elem.ToFloat().Val()
-//if val == nil {
-//ret = append(ret, math.NaN())
-//} else {
-//ret = append(ret, val.(float64))
-//}
-//}
-//return ret, nil
-//case Bool:
-//elems := s.elements.(boolElements)
-//for _, elem := range elems {
-//val := elem.ToFloat().Val()
-//if val == nil {
-//ret = append(ret, math.NaN())
-//} else {
-//ret = append(ret, val.(float64))
-//}
-//}
-//return ret, nil
-//}
-//return nil, errors.New("Couldn't convert to []float64")
-//}
+// Float returns the elements of a Series in a []float64. If the elements can not
+// be converted to float64 or contains a NaN returns the float representation of
+// NaN.
+func (s Series) Float() []float64 {
+	var ret []float64
+	for _, e := range s.elements {
+		val := e.ToFloat().Val()
+		if val == nil {
+			ret = append(ret, math.NaN())
+		} else {
+			ret = append(ret, val.(float64))
+		}
+	}
+	return ret
+}
 
 // Type returns the type of a given series
 func (s Series) Type() Type {
