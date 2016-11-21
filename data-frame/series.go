@@ -146,7 +146,7 @@ func Bools(values interface{}) Series {
 //return elem, nil
 //}
 
-// Append adds elements to the end of the Series
+// Append appends elements to the end of the Series. The Series is modified in situ
 func (s *Series) Append(values interface{}) {
 	appendElements := func(val interface{}) error {
 		var newelem elementInterface
@@ -202,23 +202,13 @@ func (s *Series) Append(values interface{}) {
 	}
 }
 
-//// Concat concatenates two series together
-//func (s Series) Concat(x Series) Series {
-//var y Series
-//switch s.t {
-//case String:
-//y = NamedStrings(s.Name, s, x)
-//case Int:
-//y = NamedInts(s.Name, s, x)
-//case Float:
-//y = NamedFloats(s.Name, s, x)
-//case Bool:
-//y = NamedBools(s.Name, s, x)
-//default:
-//return Series{err: errors.New("Unknown Series type")}
-//}
-//return y
-//}
+// Concat concatenates two series together. It will return a new Series with the
+// combined elements of both Series.
+func (s Series) Concat(x Series) Series {
+	y := s.Copy()
+	y.Append(x)
+	return y
+}
 
 //// Subset returns a subset of the series based on the given indexes
 //func (s Series) Subset(indexes interface{}) Series {

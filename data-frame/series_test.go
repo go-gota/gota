@@ -828,6 +828,20 @@ func TestSeries_Records(t *testing.T) {
 }
 
 func TestSeries_Float(t *testing.T) {
+	var precision float64 = 0.0000001
+	floatEquals := func(x, y []float64) bool {
+		if len(x) != len(y) {
+			return false
+		}
+		for i := 0; i < len(x); i++ {
+			a := x[i]
+			b := y[i]
+			if (a-b) > precision || (b-a) > precision {
+				return false
+			}
+		}
+		return true
+	}
 	tests := []struct {
 		series   Series
 		expected []float64
@@ -850,26 +864,60 @@ func TestSeries_Float(t *testing.T) {
 		},
 	}
 	for testnum, test := range tests {
-		var precision float64 = 0.0000001
-		floatEquals := func(x, y []float64) bool {
-			if len(x) != len(y) {
-				return false
-			}
-			for i := 0; i < len(x); i++ {
-				a := x[i]
-				b := y[i]
-				if (a-b) > precision || (b-a) > precision {
-					return false
-				}
-			}
-			return true
-		}
 		expected := test.expected
 		received := test.series.Float()
 		if !floatEquals(expected, received) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Concat(t *testing.T) {
+	tests := []struct {
+		a        Series
+		b        Series
+		expected []string
+	}{
+		{
+			Strings([]string{"1", "2", "3"}),
+			Strings([]string{"a", "b", "c"}),
+			[]string{"1", "2", "3", "a", "b", "c"},
+		},
+		{
+			Ints([]string{"1", "2", "3"}),
+			Ints([]string{"a", "4", "c"}),
+			[]string{"1", "2", "3", "NaN", "4", "NaN"},
+		},
+		{
+			Floats([]string{"1", "2", "3"}),
+			Floats([]string{"a", "4", "c"}),
+			[]string{"1.000000", "2.000000", "3.000000", "NaN", "4.000000", "NaN"},
+		},
+		{
+			Bools([]string{"1", "1", "0"}),
+			Bools([]string{"0", "0", "0"}),
+			[]string{"true", "true", "false", "false", "false", "false"},
+		},
+	}
+	for testnum, test := range tests {
+		ab := test.a.Concat(test.b)
+		received := ab.Records()
+		expected := test.expected
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		addrorig := append(addr(test.a), addr(test.b)...)
+		addrcombined := addr(ab)
+		if reflect.DeepEqual(addrorig, addrcombined) {
+			t.Errorf(
+				"Test:%v\nSame memory addresses:\nOriginal:\n%v\nCombined:\n%v",
+				testnum, addrorig, addrcombined,
 			)
 		}
 	}
