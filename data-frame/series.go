@@ -624,11 +624,6 @@ func Bools(values interface{}) Series {
 //return ret, nil
 //}
 
-//// Records returns the elements of a Series in a []string
-//func (s Series) Records() []string {
-//return s.elements.Records()
-//}
-
 // String implements the Stringer interface for Series
 func (s Series) String() string {
 	return fmt.Sprint(s.elements)
@@ -693,9 +688,9 @@ func (s Series) Copy() Series {
 //return strings.Join(ret, "\n")
 //}
 
-//// Len returns the length of a given Series
-//func (s Series) Len() int {
-//return s.elements.Len()
+//// Records returns the elements of a Series in a []string
+//func (s Series) Records() []string {
+//return s.elements.Records()
 //}
 
 //func (s Series) Float() ([]float64, error) {
@@ -749,10 +744,15 @@ func (s Series) Copy() Series {
 //return nil, errors.New("Couldn't convert to []float64")
 //}
 
-//// Type returns the type of a given series
-//func (s Series) Type() Type {
-//return s.t
-//}
+// Type returns the type of a given series
+func (s Series) Type() Type {
+	return s.t
+}
+
+// Len returns the length of a given Series
+func (s Series) Len() int {
+	return len(s.elements)
+}
 
 func addr(s Series) []string {
 	var ret []string
