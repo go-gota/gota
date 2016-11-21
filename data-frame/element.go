@@ -42,10 +42,23 @@ type elementInterface interface {
 	Set(interface{}) elementInterface
 	Copy() elementInterface
 	Type() Type
+	Addr() string
 }
 
 type elementValue interface{}
 
+func (e stringElement) Addr() string {
+	return fmt.Sprint(e.s)
+}
+func (e intElement) Addr() string {
+	return fmt.Sprint(e.i)
+}
+func (e floatElement) Addr() string {
+	return fmt.Sprint(e.f)
+}
+func (e boolElement) Addr() string {
+	return fmt.Sprint(e.b)
+}
 func (e stringElement) Type() Type {
 	return String
 }

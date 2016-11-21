@@ -3,6 +3,7 @@ package df
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"testing"
 )
 
@@ -773,115 +774,24 @@ func TestBools(t *testing.T) {
 	}
 }
 
-//func TestCopy(t *testing.T) {
-//a := Strings(1, 2, 3, "a", "b", "c")
-//b := a
-//c := a.Copy()
-//if fmt.Sprint(a) != fmt.Sprint(b) ||
-//fmt.Sprint(a) != fmt.Sprint(c) {
-//t.Error(
-//"Different values when copying String elements",
-//)
-//}
-//if !reflect.DeepEqual(addr(a), addr(b)) {
-//t.Error(
-//"Different memory address when assigning String elements",
-//)
-//}
-//if reflect.DeepEqual(addr(a), addr(c)) {
-//t.Error(
-//"Same memory address when copying String elements",
-//)
-//}
-//a = NamedStrings("Name!", 1, 2, 3, "a", "b", "c")
-//c = a.Copy()
-//if a.Name != c.Name {
-//t.Error(
-//"Series names are different when copying",
-//)
-//}
-
-//a = Ints(1, 2, 3, "a", "b", "c")
-//b = a
-//c = a.Copy()
-//if fmt.Sprint(a) != fmt.Sprint(b) ||
-//fmt.Sprint(a) != fmt.Sprint(c) {
-//t.Error(
-//"Different values when copying Int elements",
-//)
-//}
-//if !reflect.DeepEqual(addr(a), addr(b)) {
-//t.Error(
-//"Different memory address when assigning Int elements",
-//)
-//}
-//if reflect.DeepEqual(addr(a), addr(c)) {
-//t.Error(
-//"Same memory address when copying Int elements",
-//)
-//}
-//a = NamedInts("Name!", 1, 2, 3, "a", "b", "c")
-//c = a.Copy()
-//if a.Name != c.Name {
-//t.Error(
-//"Series names are different when copying",
-//)
-//}
-
-//a = Floats(1, 2, 3, 0.1, 0.2)
-//b = a
-//c = a.Copy()
-//if fmt.Sprint(a) != fmt.Sprint(b) ||
-//fmt.Sprint(a) != fmt.Sprint(c) {
-//t.Error(
-//"Different values when copying Float elements",
-//)
-//}
-//if !reflect.DeepEqual(addr(a), addr(b)) {
-//t.Error(
-//"Different memory address when assigning Float elements",
-//)
-//}
-//if reflect.DeepEqual(addr(a), addr(c)) {
-//t.Error(
-//"Same memory address when copying Float elements",
-//)
-//}
-//a = NamedFloats("Name!", 1, 2, 3, "a", "b", "c")
-//c = a.Copy()
-//if a.Name != c.Name {
-//t.Error(
-//"Series names are different when copying",
-//)
-//}
-
-//a = Bools(true, false, 1, 0)
-//b = a
-//c = a.Copy()
-//if fmt.Sprint(a) != fmt.Sprint(b) ||
-//fmt.Sprint(a) != fmt.Sprint(c) {
-//t.Error(
-//"Different values when copying Bool elements",
-//)
-//}
-//if !reflect.DeepEqual(addr(a), addr(b)) {
-//t.Error(
-//"Different memory address when assigning Bool elements",
-//)
-//}
-//if reflect.DeepEqual(addr(a), addr(c)) {
-//t.Error(
-//"Same memory address when copying Bool elements",
-//)
-//}
-//a = NamedBools("Name!", true, false, 1, 0)
-//c = a.Copy()
-//if a.Name != c.Name {
-//t.Error(
-//"Series names are different when copying",
-//)
-//}
-//}
+func TestCopy(t *testing.T) {
+	tests := []Series{
+		Strings([]string{"1", "2", "3", "a", "b", "c"}),
+		Ints([]string{"1", "2", "3", "a", "b", "c"}),
+		Floats([]string{"1", "2", "3", "a", "b", "c"}),
+		Bools([]string{"1", "0", "1", "t", "f", "c"}),
+	}
+	for testnum, test := range tests {
+		a := test
+		b := a.Copy()
+		if fmt.Sprint(a) != fmt.Sprint(b) {
+			t.Error("Different values when copying String elements")
+		}
+		if reflect.DeepEqual(addr(a), addr(b)) {
+			t.Errorf("Test:%v\nSame memory address:\na:%v\nb:%v", testnum, addr(a), addr(b))
+		}
+	}
+}
 
 //func TestEq(t *testing.T) {
 //s1 := "123"

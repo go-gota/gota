@@ -634,14 +634,21 @@ func (s Series) String() string {
 	return fmt.Sprint(s.elements)
 }
 
-//// Copy wil copy the values of a given Series
-//func (s Series) Copy() Series {
-//copy := Series{}
-//copy.Name = s.Name
-//copy.t = s.t
-//copy.elements = s.elements.Copy()
-//return copy
-//}
+// Copy wil copy the values of a given Series
+func (s Series) Copy() Series {
+	name := s.Name
+	t := s.t
+	elements := make([]elementInterface, 0)
+	for _, e := range s.elements {
+		elements = append(elements, e.Copy())
+	}
+	ret := Series{
+		Name:     name,
+		t:        t,
+		elements: elements,
+	}
+	return ret
+}
 
 //// NamedStrings is a constructor for a named String series
 //func NamedStrings(name string, args ...interface{}) Series {
@@ -747,29 +754,10 @@ func (s Series) String() string {
 //return s.t
 //}
 
-//func addr(s Series) []string {
-//var ret []string
-//switch s.t {
-//case String:
-//elems := s.elements.(stringElements)
-//for _, elem := range elems {
-//ret = append(ret, fmt.Sprint(elem.s))
-//}
-//case Int:
-//elems := s.elements.(intElements)
-//for _, elem := range elems {
-//ret = append(ret, fmt.Sprint(elem.i))
-//}
-//case Float:
-//elems := s.elements.(floatElements)
-//for _, elem := range elems {
-//ret = append(ret, fmt.Sprint(elem.f))
-//}
-//case Bool:
-//elems := s.elements.(boolElements)
-//for _, elem := range elems {
-//ret = append(ret, fmt.Sprint(elem.b))
-//}
-//}
-//return ret
-//}
+func addr(s Series) []string {
+	var ret []string
+	for _, e := range s.elements {
+		ret = append(ret, e.Addr())
+	}
+	return ret
+}
