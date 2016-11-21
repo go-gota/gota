@@ -40,9 +40,24 @@ type elementInterface interface {
 	IsNA() bool
 	Val() elementValue
 	Set(interface{}) elementInterface
+	Copy() elementInterface
+	Type() Type
 }
 
 type elementValue interface{}
+
+func (e stringElement) Type() Type {
+	return String
+}
+func (e intElement) Type() Type {
+	return Int
+}
+func (e floatElement) Type() Type {
+	return Float
+}
+func (e boolElement) Type() Type {
+	return Bool
+}
 
 func (e stringElement) Set(value interface{}) elementInterface {
 	var val string
@@ -212,7 +227,7 @@ func (e boolElement) Val() elementValue {
 }
 
 func (s stringElement) ToString() stringElement {
-	return s.Copy()
+	return s.Copy().(stringElement)
 }
 func (i intElement) ToString() stringElement {
 	if i.IsNA() {
@@ -250,7 +265,7 @@ func (s stringElement) ToInt() intElement {
 	return intElement{&i}
 }
 func (i intElement) ToInt() intElement {
-	return i.Copy()
+	return i.Copy().(intElement)
 }
 func (f floatElement) ToInt() intElement {
 	if f.f != nil {
@@ -283,7 +298,7 @@ func (s stringElement) ToFloat() floatElement {
 	return floatElement{&f}
 }
 func (i floatElement) ToFloat() floatElement {
-	return i.Copy()
+	return i.Copy().(floatElement)
 }
 func (i intElement) ToFloat() floatElement {
 	if i.i != nil {
@@ -348,7 +363,7 @@ func (f floatElement) ToBool() boolElement {
 	return boolElement{&b}
 }
 func (i boolElement) ToBool() boolElement {
-	return i.Copy()
+	return i.Copy().(boolElement)
 }
 
 func (s stringElement) LessEq(elem elementInterface) bool {
@@ -605,7 +620,7 @@ func (b boolElement) String() string {
 	return "false"
 }
 
-func (s stringElement) Copy() stringElement {
+func (s stringElement) Copy() elementInterface {
 	if s.s == nil {
 		return stringElement{nil}
 	}
@@ -613,7 +628,7 @@ func (s stringElement) Copy() stringElement {
 	return stringElement{&copy}
 }
 
-func (i intElement) Copy() intElement {
+func (i intElement) Copy() elementInterface {
 	if i.i == nil {
 		return intElement{nil}
 	}
@@ -621,7 +636,7 @@ func (i intElement) Copy() intElement {
 	return intElement{&copy}
 }
 
-func (f floatElement) Copy() floatElement {
+func (f floatElement) Copy() elementInterface {
 	if f.f == nil {
 		return floatElement{nil}
 	}
@@ -629,7 +644,7 @@ func (f floatElement) Copy() floatElement {
 	return floatElement{&copy}
 }
 
-func (b boolElement) Copy() boolElement {
+func (b boolElement) Copy() elementInterface {
 	if b.b == nil {
 		return boolElement{nil}
 	}

@@ -396,6 +396,19 @@ import (
 //}
 //}
 
+func checkTypes(s Series) error {
+	var types []Type
+	for _, e := range s.elements {
+		types = append(types, e.Type())
+	}
+	for _, t := range types {
+		if t != s.t {
+			return fmt.Errorf("bad types for %v Series:\n%v", s.t, types)
+		}
+	}
+	return nil
+}
+
 func TestStrings(t *testing.T) {
 	table := []struct {
 		series   Series
@@ -478,6 +491,10 @@ func TestStrings(t *testing.T) {
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
+		}
+		err := checkTypes(test.series)
+		if err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
 }
@@ -569,6 +586,10 @@ func TestInts(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
+		err := checkTypes(test.series)
+		if err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 	}
 }
 
@@ -655,6 +676,10 @@ func TestFloats(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
+		err := checkTypes(test.series)
+		if err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 	}
 }
 
@@ -740,6 +765,10 @@ func TestBools(t *testing.T) {
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
+		}
+		err := checkTypes(test.series)
+		if err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
 }

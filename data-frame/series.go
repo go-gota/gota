@@ -38,6 +38,8 @@ const (
 	Bool        = "bool"
 )
 
+// CONSTRUCTORS
+
 // NewSeries is the generic Series constructor
 func NewSeries(values interface{}, t Type) Series {
 	elements := make([]elementInterface, 0)
@@ -93,9 +95,29 @@ func NewSeries(values interface{}, t Type) Series {
 	ret := Series{
 		Name:     "",
 		elements: elements,
-		t:        String,
+		t:        t,
 	}
 	return ret
+}
+
+// Strings is a constructor for a String series
+func Strings(values interface{}) Series {
+	return NewSeries(values, String)
+}
+
+// Ints is a constructor for an Int series
+func Ints(values interface{}) Series {
+	return NewSeries(values, Int)
+}
+
+// Floats is a constructor for a Float series
+func Floats(values interface{}) Series {
+	return NewSeries(values, Float)
+}
+
+// Bools is a constructor for a bools series
+func Bools(values interface{}) Series {
+	return NewSeries(values, Bool)
 }
 
 //// Empty returns an empty Series of the same type
@@ -648,26 +670,6 @@ func (s Series) String() string {
 //s.Name = name
 //return s
 //}
-
-// Strings is a constructor for a String series
-func Strings(values interface{}) Series {
-	return NewSeries(values, String)
-}
-
-// Ints is a constructor for an Int series
-func Ints(values interface{}) Series {
-	return NewSeries(values, Int)
-}
-
-// Floats is a constructor for a Float series
-func Floats(values interface{}) Series {
-	return NewSeries(values, Float)
-}
-
-// Bools is a constructor for a bools series
-func Bools(values interface{}) Series {
-	return NewSeries(values, Bool)
-}
 
 //// Str prints some extra information about a given series
 //func (s Series) Str() string {
