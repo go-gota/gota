@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 )
 
 // Series is the main structure for a series of elements of the same type. It is
@@ -625,11 +626,6 @@ func Bools(values interface{}) Series {
 //return ret, nil
 //}
 
-// String implements the Stringer interface for Series
-func (s Series) String() string {
-	return fmt.Sprint(s.elements)
-}
-
 // Copy wil copy the values of a given Series
 func (s Series) Copy() Series {
 	name := s.Name
@@ -674,21 +670,6 @@ func (s Series) Copy() Series {
 //return s
 //}
 
-//// Str prints some extra information about a given series
-//func (s Series) Str() string {
-//var ret []string
-//// If name exists print name
-//if s.Name != "" {
-//ret = append(ret, "Name: "+s.Name)
-//}
-//ret = append(ret, "Type: "+fmt.Sprint(s.t))
-//ret = append(ret, "Length: "+fmt.Sprint(s.Len()))
-//if s.Len() != 0 {
-//ret = append(ret, "Values: "+fmt.Sprint(s))
-//}
-//return strings.Join(ret, "\n")
-//}
-
 // Records returns the elements of a Series in a []string
 func (s Series) Records() []string {
 	var ret []string
@@ -722,6 +703,26 @@ func (s Series) Type() Type {
 // Len returns the length of a given Series
 func (s Series) Len() int {
 	return len(s.elements)
+}
+
+// String implements the Stringer interface for Series
+func (s Series) String() string {
+	return fmt.Sprint(s.elements)
+}
+
+// Str prints some extra information about a given series
+func (s Series) Str() string {
+	var ret []string
+	// If name exists print name
+	if s.Name != "" {
+		ret = append(ret, "Name: "+s.Name)
+	}
+	ret = append(ret, "Type: "+fmt.Sprint(s.t))
+	ret = append(ret, "Length: "+fmt.Sprint(s.Len()))
+	if s.Len() != 0 {
+		ret = append(ret, "Values: "+fmt.Sprint(s))
+	}
+	return strings.Join(ret, "\n")
 }
 
 func addr(s Series) []string {
