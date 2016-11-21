@@ -793,6 +793,40 @@ func TestCopy(t *testing.T) {
 	}
 }
 
+func TestRecords(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected []string
+	}{
+		{
+			Strings([]string{"1", "2", "3", "a", "b", "c"}),
+			[]string{"1", "2", "3", "a", "b", "c"},
+		},
+		{
+			Ints([]string{"1", "2", "3", "a", "b", "c"}),
+			[]string{"1", "2", "3", "NaN", "NaN", "NaN"},
+		},
+		{
+			Floats([]string{"1", "2", "3", "a", "b", "c"}),
+			[]string{"1.000000", "2.000000", "3.000000", "NaN", "NaN", "NaN"},
+		},
+		{
+			Bools([]string{"1", "0", "1", "t", "f", "c"}),
+			[]string{"true", "false", "true", "true", "false", "NaN"},
+		},
+	}
+	for testnum, test := range tests {
+		expected := test.expected
+		received := test.series.Records()
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
 //func TestEq(t *testing.T) {
 //s1 := "123"
 //s2 := "Hello"

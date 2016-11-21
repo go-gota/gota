@@ -43,6 +43,7 @@ type elementInterface interface {
 	Copy() elementInterface
 	Type() Type
 	Addr() string
+	String() string
 }
 
 type elementValue interface{}

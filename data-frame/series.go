@@ -688,10 +688,14 @@ func (s Series) Copy() Series {
 //return strings.Join(ret, "\n")
 //}
 
-//// Records returns the elements of a Series in a []string
-//func (s Series) Records() []string {
-//return s.elements.Records()
-//}
+// Records returns the elements of a Series in a []string
+func (s Series) Records() []string {
+	var ret []string
+	for _, e := range s.elements {
+		ret = append(ret, e.String())
+	}
+	return ret
+}
 
 //func (s Series) Float() ([]float64, error) {
 //var ret []float64
