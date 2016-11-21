@@ -1,6 +1,7 @@
 package df
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 )
@@ -40,7 +41,7 @@ const (
 // NewSeries is the generic Series constructor
 func NewSeries(values interface{}, t Type) Series {
 	elements := make([]elementInterface, 0)
-	appendElements := func(val interface{}) {
+	appendElements := func(val interface{}) error {
 		var newelem elementInterface
 		switch t {
 		case String:
@@ -52,9 +53,10 @@ func NewSeries(values interface{}, t Type) Series {
 		case Bool:
 			newelem = boolElement{}
 		default:
-			// TODO: Should throw error!
+			return errors.New("can't create seriesunknown type")
 		}
 		elements = append(elements, newelem.Set(val))
+		return nil
 	}
 	if values == nil {
 		appendElements(values)
@@ -64,7 +66,10 @@ func NewSeries(values interface{}, t Type) Series {
 			s := reflect.ValueOf(values)
 			for i := 0; i < s.Len(); i++ {
 				val := s.Index(i).Interface()
-				appendElements(val)
+				err := appendElements(val)
+				if err != nil {
+					return Series{err: err}
+				}
 			}
 		default:
 			s := reflect.ValueOf(values)
@@ -72,10 +77,16 @@ func NewSeries(values interface{}, t Type) Series {
 			switch val.(type) {
 			case Series:
 				for _, v := range val.(Series).elements {
-					appendElements(v)
+					err := appendElements(v)
+					if err != nil {
+						return Series{err: err}
+					}
 				}
 			default:
-				appendElements(val)
+				err := appendElements(val)
+				if err != nil {
+					return Series{err: err}
+				}
 			}
 		}
 	}
