@@ -45,60 +45,12 @@ const (
 // NewSeries is the generic Series constructor
 func NewSeries(values interface{}, t Type) Series {
 	elements := make([]elementInterface, 0)
-	appendElements := func(val interface{}) error {
-		var newelem elementInterface
-		switch t {
-		case String:
-			newelem = stringElement{}
-		case Int:
-			newelem = intElement{}
-		case Float:
-			newelem = floatElement{}
-		case Bool:
-			newelem = boolElement{}
-		default:
-			return errors.New("can't create seriesunknown type")
-		}
-		elements = append(elements, newelem.Set(val))
-		return nil
-	}
-	if values == nil {
-		appendElements(values)
-	} else {
-		switch reflect.TypeOf(values).Kind() {
-		case reflect.Slice:
-			s := reflect.ValueOf(values)
-			for i := 0; i < s.Len(); i++ {
-				val := s.Index(i).Interface()
-				err := appendElements(val)
-				if err != nil {
-					return Series{err: err}
-				}
-			}
-		default:
-			s := reflect.ValueOf(values)
-			val := s.Interface()
-			switch val.(type) {
-			case Series:
-				for _, v := range val.(Series).elements {
-					err := appendElements(v)
-					if err != nil {
-						return Series{err: err}
-					}
-				}
-			default:
-				err := appendElements(val)
-				if err != nil {
-					return Series{err: err}
-				}
-			}
-		}
-	}
 	ret := Series{
 		Name:     "",
 		elements: elements,
 		t:        t,
 	}
+	ret.Append(values)
 	return ret
 }
 
@@ -194,10 +146,61 @@ func Bools(values interface{}) Series {
 //return elem, nil
 //}
 
-//// Append adds elements to the end of the Series
-//func (s *Series) Append(x interface{}) {
-//s.elements = s.elements.Append(x)
-//}
+// Append adds elements to the end of the Series
+func (s *Series) Append(values interface{}) {
+	appendElements := func(val interface{}) error {
+		var newelem elementInterface
+		switch s.t {
+		case String:
+			newelem = stringElement{}
+		case Int:
+			newelem = intElement{}
+		case Float:
+			newelem = floatElement{}
+		case Bool:
+			newelem = boolElement{}
+		default:
+			return errors.New("can't create series, unknown type")
+		}
+		s.elements = append(s.elements, newelem.Set(val))
+		return nil
+	}
+	if values == nil {
+		appendElements(values)
+	} else {
+		switch reflect.TypeOf(values).Kind() {
+		case reflect.Slice:
+			v := reflect.ValueOf(values)
+			for i := 0; i < v.Len(); i++ {
+				val := v.Index(i).Interface()
+				err := appendElements(val)
+				if err != nil {
+					s.err = err
+					return
+				}
+			}
+		default:
+			v := reflect.ValueOf(values)
+			val := v.Interface()
+			switch val.(type) {
+			case Series:
+				for _, v := range val.(Series).elements {
+					err := appendElements(v)
+					if err != nil {
+						s.err = err
+						return
+					}
+				}
+			default:
+				err := appendElements(val)
+				if err != nil {
+					s.err = err
+					return
+				}
+			}
+		}
+	}
+}
 
 //// Concat concatenates two series together
 //func (s Series) Concat(x Series) Series {
