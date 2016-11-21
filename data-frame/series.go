@@ -122,6 +122,31 @@ func Bools(values interface{}) Series {
 	return NewSeries(values, Bool)
 }
 
+//// NamedStrings is a constructor for a named String series
+//func NamedStrings(name string, args ...interface{}) Series {
+//s := Strings(args...)
+//s.Name = name
+//return s
+//}
+//// NamedInts is a constructor for a named Int series
+//func NamedInts(name string, args ...interface{}) Series {
+//s := Ints(args...)
+//s.Name = name
+//return s
+//}
+//// NamedFloats is a constructor for a named Float series
+//func NamedFloats(name string, args ...interface{}) Series {
+//s := Floats(args...)
+//s.Name = name
+//return s
+//}
+//// NamedBools is a constructor for a named Bool series
+//func NamedBools(name string, args ...interface{}) Series {
+//s := Bools(args...)
+//s.Name = name
+//return s
+//}
+
 //// Empty returns an empty Series of the same type
 //func (s Series) Empty() Series {
 //ret := Series{Name: s.Name, t: s.t}
@@ -136,11 +161,6 @@ func Bools(values interface{}) Series {
 //ret.elements = boolElements{}
 //}
 //return ret
-//}
-
-//// Err returns the error contained in the series
-//func (s Series) Err() error {
-//return s.err
 //}
 
 //func (s Series) set(i int, val elementValue) Series {
@@ -642,34 +662,6 @@ func (s Series) Copy() Series {
 	return ret
 }
 
-//// NamedStrings is a constructor for a named String series
-//func NamedStrings(name string, args ...interface{}) Series {
-//s := Strings(args...)
-//s.Name = name
-//return s
-//}
-
-//// NamedInts is a constructor for a named Int series
-//func NamedInts(name string, args ...interface{}) Series {
-//s := Ints(args...)
-//s.Name = name
-//return s
-//}
-
-//// NamedFloats is a constructor for a named Float series
-//func NamedFloats(name string, args ...interface{}) Series {
-//s := Floats(args...)
-//s.Name = name
-//return s
-//}
-
-//// NamedBools is a constructor for a named Bool series
-//func NamedBools(name string, args ...interface{}) Series {
-//s := Bools(args...)
-//s.Name = name
-//return s
-//}
-
 // Records returns the elements of a Series in a []string
 func (s Series) Records() []string {
 	var ret []string
@@ -723,6 +715,11 @@ func (s Series) Str() string {
 		ret = append(ret, "Values: "+fmt.Sprint(s))
 	}
 	return strings.Join(ret, "\n")
+}
+
+// Err returns the error contained in the series
+func (s Series) Err() error {
+	return s.err
 }
 
 func addr(s Series) []string {
