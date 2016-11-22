@@ -20,19 +20,21 @@ type Series struct {
 // Comparator is a comparator that can be used for filtering Series and DataFrames
 type Comparator string
 
+// Alias for Comparator operations
 const (
-	Eq        Comparator = "=="
-	Neq                  = "!="
-	Greater              = ">"
-	GreaterEq            = ">="
-	Less                 = "<"
-	LessEq               = "<="
-	In                   = "in"
+	Eq        Comparator = "==" // Equal
+	Neq                  = "!=" // Non equal
+	Greater              = ">"  // Greater than
+	GreaterEq            = ">=" // Greater or equal than
+	Less                 = "<"  // Lesser than
+	LessEq               = "<=" // Lesser or equal than
+	In                   = "in" // Inside
 )
 
 // Type represents the type of the elements that can be stored on Series
 type Type string
 
+// Alias for the supported types of Series
 const (
 	String Type = "string"
 	Int         = "int"
@@ -40,11 +42,9 @@ const (
 	Bool        = "bool"
 )
 
-// CONSTRUCTORS
-
 // NewSeries is the generic Series constructor
 func NewSeries(values interface{}, t Type) Series {
-	elements := make([]elementInterface, 0)
+	var elements []elementInterface
 	ret := Series{
 		Name:     "",
 		elements: elements,
@@ -101,10 +101,11 @@ func Bools(values interface{}) Series {
 
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
+	var elements []elementInterface
 	return Series{
 		Name:     s.Name,
 		t:        s.t,
-		elements: make([]elementInterface, 0),
+		elements: elements,
 	}
 }
 
@@ -257,7 +258,7 @@ func (s Series) Subset(indexes interface{}) Series {
 		return s
 	}
 
-	elements := make([]elementInterface, 0)
+	var elements []elementInterface
 	for _, i := range idx {
 		if i < 0 || i >= s.Len() {
 			s.err = errors.New("subsetting error: index out of range")
@@ -398,7 +399,7 @@ func (s Series) HasNaN() bool {
 func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
-	elements := make([]elementInterface, 0)
+	var elements []elementInterface
 	for _, e := range s.elements {
 		elements = append(elements, e.Copy())
 	}
@@ -435,6 +436,8 @@ func (s Series) Float() []float64 {
 	return ret
 }
 
+// Int returns the elements of a Series in a []int or an error if NaN or can't be
+// converted.
 func (s Series) Int() ([]int, error) {
 	var ret []int
 	for _, e := range s.elements {
@@ -447,6 +450,8 @@ func (s Series) Int() ([]int, error) {
 	return ret, nil
 }
 
+// Bool returns the elements of a Series in a []bool or an error if NaN or can't be
+// converted.
 func (s Series) Bool() ([]bool, error) {
 	var ret []bool
 	for _, e := range s.elements {

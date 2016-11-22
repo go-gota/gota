@@ -663,7 +663,7 @@ func TestSeries_Records(t *testing.T) {
 }
 
 func TestSeries_Float(t *testing.T) {
-	var precision float64 = 0.0000001
+	precision := 0.0000001
 	floatEquals := func(x, y []float64) bool {
 		if len(x) != len(y) {
 			return false
