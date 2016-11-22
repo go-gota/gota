@@ -99,21 +99,14 @@ func Bools(values interface{}) Series {
 //return s
 //}
 
-//// Empty returns an empty Series of the same type
-//func (s Series) Empty() Series {
-//ret := Series{Name: s.Name, t: s.t}
-//switch ret.t {
-//case String:
-//ret.elements = stringElements{}
-//case Int:
-//ret.elements = intElements{}
-//case Float:
-//ret.elements = floatElements{}
-//case Bool:
-//ret.elements = boolElements{}
-//}
-//return ret
-//}
+// Empty returns an empty Series of the same type
+func (s Series) Empty() Series {
+	return Series{
+		Name:     s.Name,
+		t:        s.t,
+		elements: make([]elementInterface, 0),
+	}
+}
 
 //func (s Series) set(i int, val elementValue) Series {
 //if s.Err() != nil {
