@@ -170,232 +170,67 @@ import (
 //}
 //}
 
-//func TestSeries_Index(t *testing.T) {
-//a := Strings("A", "B", "C", "B", "D")
-//a2 := Ints(1, 2, 3, nil, 5)
-//a3 := Floats(1, 2, 3, nil, 5)
-//a4 := Bools(1, 0, 3, nil, 5)
-//b := a.Subset([]int{2, 3, 4, 4, 4, 1})
-//expected := "C B D D D B"
-//received := fmt.Sprint(b)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b = a.Subset([]bool{true, false, false, false, true})
-//expected = "A D"
-//received = fmt.Sprint(b)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b = a.Subset(Bools([]bool{true, false, false, false, true}))
-//expected = "A D"
-//received = fmt.Sprint(b)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b = a.Subset(Floats([]float64{2, 3, 4, 4, 4.1, 1}))
-//expected = "C B D D D B"
-//received = fmt.Sprint(b)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b = a.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
-//expected = "C B D D D B"
-//received = fmt.Sprint(b)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b2 := a2.Subset([]int{2, 3, 4, 4, 4, 1})
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b2)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b2 = a2.Subset([]bool{true, false, false, true, true})
-//expected = "1 NA 5"
-//received = fmt.Sprint(b2)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b2 = a2.Subset(Bools([]bool{true, false, false, true, true}))
-//expected = "1 NA 5"
-//received = fmt.Sprint(b2)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b2 = a2.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b2)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b2 = a2.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b2)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b3 := a3.Subset([]int{2, 3, 4, 4, 4, 1})
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b3)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b3 = a3.Subset([]bool{true, false, false, true, true})
-//expected = "1 NA 5"
-//received = fmt.Sprint(b3)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b3 = a3.Subset(Bools([]bool{true, false, false, true, true}))
-//expected = "1 NA 5"
-//received = fmt.Sprint(b3)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b3 = a3.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b3)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b3 = a3.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
-//expected = "3 NA 5 5 5 2"
-//received = fmt.Sprint(b3)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b4 := a4.Subset([]int{2, 3, 4, 4, 4, 1})
-//expected = "true NA true true true false"
-//received = fmt.Sprint(b4)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b4 = a4.Subset([]bool{true, false, false, true, true})
-//expected = "true NA true"
-//received = fmt.Sprint(b4)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b4 = a4.Subset(Bools([]bool{true, false, false, true, true}))
-//expected = "true NA true"
-//received = fmt.Sprint(b4)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b4 = a4.Subset(Ints([]int{2, 3, 4, 4, 4, 1}))
-//expected = "true NA true true true false"
-//received = fmt.Sprint(b4)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//b4 = a4.Subset(Floats([]int{2, 3, 4, 4, 4, 1}))
-//expected = "true NA true true true false"
-//received = fmt.Sprint(b4)
-//if expected != received {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
+func TestSeries_Index(t *testing.T) {
+	table := []struct {
+		series   Series
+		indexes  interface{}
+		expected string
+	}{
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]int{2, 1, 4, 4, 0, 3},
+			"[C B D D A K]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			int(1),
+			"[B]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]bool{true, false, false, true, true},
+			"[A K D]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Ints([]int{3, 2, 1, 0}),
+			"[K C B A]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Ints([]int{1}),
+			"[B]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Ints(2),
+			"[C]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Bools([]bool{true, false, false, true, true}),
+			"[A K D]",
+		},
+	}
+	for testnum, test := range table {
+		sub := test.series.Subset(test.indexes)
+		if sub.Err() != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, sub.Err(),
+			)
+			continue
+		}
+		expected := test.expected
+		received := fmt.Sprint(sub)
+		if expected != received {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
 
 func checkTypes(s Series) error {
 	var types []Type
@@ -953,79 +788,5 @@ func TestSeries_Concat(t *testing.T) {
 //}
 //if !f1.Eq(c) || f1.Eq(d) || f1.Eq(stringElement{nil}) {
 //t.Error("Float Eq() not working properly")
-//}
-//}
-
-//func TestSeries_Float(t *testing.T) {
-//a := Floats(1, 2, 3, 4, nil, 6, 7, 8)
-//b := Ints(1, 2, 3, 4, nil, 6, 7, 8)
-//c := Strings(1, 2, 3, 4, nil, 6, 7, 8)
-//d := Bools(1, 2, 3, 4, nil, 6, 7, 8)
-//received, err := a.Float()
-//if err != nil {
-//t.Errorf(
-//"Some error happen when converting to float from Float Series: %v",
-//err,
-//)
-//}
-//expected := "[1 2 3 4 NaN 6 7 8]"
-//if fmt.Sprint(received) != expected {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-
-//received, err = b.Float()
-//if err != nil {
-//t.Errorf(
-//"Some error happen when converting to float from Int Series: %v",
-//err,
-//)
-//}
-//expected = "[1 2 3 4 NaN 6 7 8]"
-//if fmt.Sprint(received) != expected {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-
-//received, err = c.Float()
-//if err != nil {
-//t.Errorf(
-//"Some error happen when converting to float from String Series: %v",
-//err,
-//)
-//}
-//expected = "[1 2 3 4 NaN 6 7 8]"
-//if fmt.Sprint(received) != expected {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-
-//received, err = d.Float()
-//if err != nil {
-//t.Errorf(
-//"Some error happen when converting to float from Bool Series: %v",
-//err,
-//)
-//}
-//expected = "[1 1 1 1 NaN 1 1 1]"
-//if fmt.Sprint(received) != expected {
-//t.Error(
-//"Expected:\n",
-//expected, "\n",
-//"Received:\n",
-//received,
-//)
 //}
 //}
