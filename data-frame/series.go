@@ -223,7 +223,11 @@ func (s Series) Subset(indexes Indexes) Series {
 // Set sets the values on the indexes of a Series and returns a new one with these
 // modifications. The original Series does not change.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
-	if s.Err() != nil {
+	if err := s.Err(); err != nil {
+		return s
+	}
+	if err := newvalues.Err(); err != nil {
+		s.err = fmt.Errorf("set error: new values has errors: %v", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -232,13 +236,13 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.err = errors.New("subsetting error: dimensions mismatch")
+		s.err = errors.New("set error: dimensions mismatch")
 		return s
 	}
 	ret := s.Copy()
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.err = errors.New("subsetting error: index out of range")
+			s.err = errors.New("set error: index out of range")
 			return s
 		}
 		ret.elements[i] = ret.elements[i].Set(newvalues.elements[k])
@@ -482,7 +486,7 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 	case []bool:
 		bools := indexes.([]bool)
 		if len(bools) != l {
-			return nil, errors.New("subsetting error: index dimensions mismatch")
+			return nil, errors.New("indexing error: index dimensions mismatch")
 		}
 		for i, b := range bools {
 			if b {
@@ -491,8 +495,11 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 		}
 	case Series:
 		s := indexes.(Series)
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
+		}
 		if s.HasNaN() {
-			return nil, errors.New("subsetting error: indexes contain NaN")
+			return nil, errors.New("indexing error: indexes contain NaN")
 		}
 		switch s.t {
 		case Int:
@@ -500,14 +507,14 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 		case Bool:
 			bools, err := s.Bool()
 			if err != nil {
-				return nil, fmt.Errorf("subsetting error: %v", err)
+				return nil, fmt.Errorf("indexing error: %v", err)
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, errors.New("subsetting error: unknown indexing mode")
+			return nil, errors.New("indexing error: unknown indexing mode")
 		}
 	default:
-		return nil, errors.New("subsetting error: unknown indexing mode")
+		return nil, errors.New("indexing error: unknown indexing mode")
 	}
 	return idx, nil
 }
