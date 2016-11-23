@@ -270,117 +270,87 @@ func (s Series) HasNaN() bool {
 	return false
 }
 
-//// Compare compares the values of a Series with other series, scalars, text, etc
-//func (s Series) Compare(comparator Comparator, comparando interface{}) ([]bool, error) {
-//var comp Series
-//switch s.t {
-//case String:
-//comp = Strings(comparando)
-//case Int:
-//comp = Ints(comparando)
-//case Float:
-//comp = Floats(comparando)
-//case Bool:
-//comp = Bools(comparando)
-//default:
-//return nil, errors.New("Unknown Series type")
-//}
-//ret := []bool{}
-//switch comparator {
-//case Eq:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Eq(comp.elements.Elem(i)))
-//}
-//case Neq:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, !s.elements.Elem(i).Eq(comp.elements.Elem(i)))
-//}
-//case Greater:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Greater(comp.elements.Elem(i)))
-//}
-//case GreaterEq:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).GreaterEq(comp.elements.Elem(i)))
-//}
-//case Less:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).Less(comp.elements.Elem(i)))
-//}
-//case LessEq:
-//if comp.Len() == 1 {
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(0)))
-//}
-//return ret, nil
-//}
-//if s.Len() != comp.Len() {
-//return nil, errors.New("Can't compare Series: Different dimensions")
-//}
-//for i := 0; i < s.Len(); i++ {
-//ret = append(ret, s.elements.Elem(i).LessEq(comp.elements.Elem(i)))
-//}
-//case In:
-//for i := 0; i < s.Len(); i++ {
-//found := false
-//for j := 0; j < comp.Len(); j++ {
-//if s.elements.Elem(i).Eq(comp.elements.Elem(j)) {
-//found = true
-//break
-//}
-//}
-//ret = append(ret, found)
-//}
-//default:
-//return nil, errors.New("Unknown comparator")
-//}
-//return ret, nil
-//}
+// Compare compares the values of a Series with other series, scalars, text, etc
+func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
+	if err := s.Err(); err != nil {
+		return s
+	}
+	compareElements := func(a, b elementInterface, c Comparator) (bool, error) {
+		var ret bool
+		switch c {
+		case Eq:
+			ret = a.Eq(b)
+		case Neq:
+			ret = a.Neq(b)
+		case Greater:
+			ret = a.Greater(b)
+		case GreaterEq:
+			ret = a.GreaterEq(b)
+		case Less:
+			ret = a.Less(b)
+		case LessEq:
+			ret = a.LessEq(b)
+		default:
+			return false, fmt.Errorf("unknown comparator: %v", c)
+		}
+		return ret, nil
+	}
+
+	comp := NewSeries(comparando, s.t)
+	// In comparator comparation
+	if comparator == In {
+		var bools []bool
+		for _, e := range s.elements {
+			b := false
+			for _, m := range comp.elements {
+				c, err := compareElements(e, m, Eq)
+				if err != nil {
+					s = s.Empty()
+					s.err = err
+					return s
+				}
+				if c {
+					b = true
+					break
+				}
+			}
+			bools = append(bools, b)
+		}
+		return Bools(bools)
+	}
+
+	// Single element comparation
+	var bools []bool
+	if comp.Len() == 1 {
+		for _, e := range s.elements {
+			c, err := compareElements(e, comp.elements[0], comparator)
+			if err != nil {
+				s = s.Empty()
+				s.err = err
+				return s
+			}
+			bools = append(bools, c)
+		}
+		return Bools(bools)
+	}
+
+	// Multiple element comparation
+	if s.Len() != comp.Len() {
+		s := s.Empty()
+		s.err = fmt.Errorf("can't compare: length mismatch")
+		return s
+	}
+	for k, e := range s.elements {
+		c, err := compareElements(e, comp.elements[k], comparator)
+		if err != nil {
+			s = s.Empty()
+			s.err = err
+			return s
+		}
+		bools = append(bools, c)
+	}
+	return Bools(bools)
+}
 
 // Copy wil copy the values of a given Series
 func (s Series) Copy() Series {

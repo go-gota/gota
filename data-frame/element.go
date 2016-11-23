@@ -29,6 +29,7 @@ type boolElement struct {
 
 type elementInterface interface {
 	Eq(elementInterface) bool
+	Neq(elementInterface) bool
 	Less(elementInterface) bool
 	LessEq(elementInterface) bool
 	Greater(elementInterface) bool
@@ -560,6 +561,50 @@ func (s boolElement) Greater(elem elementInterface) bool {
 		return true
 	}
 	return false
+}
+
+func (s stringElement) Neq(elem elementInterface) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToString()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.s != *e.s
+}
+
+func (s intElement) Neq(elem elementInterface) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToInt()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.i != *e.i
+}
+
+func (s floatElement) Neq(elem elementInterface) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToFloat()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.f != *e.f
+}
+
+func (s boolElement) Neq(elem elementInterface) bool {
+	if elem == nil {
+		return false
+	}
+	e := elem.ToBool()
+	if s.IsNA() || e.IsNA() {
+		return false
+	}
+	return *s.b != *e.b
 }
 
 func (s stringElement) Eq(elem elementInterface) bool {

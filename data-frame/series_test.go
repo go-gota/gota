@@ -39,33 +39,72 @@ func checkTypes(s Series) error {
 	return nil
 }
 
-//func TestSeries_Compare(t *testing.T) {
-//a := Strings("A", "B", "C", "B", "D", "BADA")
-//testData := []struct {
-//comparator Comparator
-//comparando string
-//expected   []bool
-//}{
-//{Eq, "B", []bool{false, true, false, true, false, false}},
-//{In, "BADA", []bool{false, false, false, false, false, true}},
-//{Neq, "C", []bool{true, true, false, true, true, true}},
-//{Less, "B", []bool{true, false, false, false, false, false}},
-//{LessEq, "B", []bool{true, true, false, true, false, false}},
-//{Greater, "C", []bool{false, false, false, false, true, false}},
-//{GreaterEq, "C", []bool{false, false, true, false, true, false}},
-//}
-//for k, v := range testData {
-//received, _ := a.Compare(v.comparator, v.comparando)
-//if !reflect.DeepEqual(v.expected, received) {
-//t.Error(
-//"\nTest: ", k+1, "\n",
-//"Expected:\n",
-//v.expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
+func TestSeries_Compare(t *testing.T) {
+	table := []struct {
+		series     Series
+		comparator Comparator
+		comparando interface{}
+		expected   Series
+	}{
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Eq,
+			"B",
+			Bools([]bool{false, true, false, true, false, false}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Eq,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{false, true, true, false, false, false}),
+		},
+		// TODO: Test other series types for equality. It can be a problem with Float series...
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Neq,
+			"B",
+			Bools([]bool{true, false, true, false, true, true}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Neq,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{true, false, false, true, true, true}),
+		},
+		// TODO: Test other series types for inequality. It can be a problem with Float series...
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), In, "BADA", []bool{false, false, false, false, false, true}},
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Neq, "C", []bool{true, true, false, true, true, true}},
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Less, "B", []bool{true, false, false, false, false, false}},
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), LessEq, "B", []bool{true, true, false, true, false, false}},
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Greater, "C", []bool{false, false, false, false, true, false}},
+		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), GreaterEq, "C", []bool{false, false, true, false, true, false}},
+	}
+	for testnum, test := range table {
+		a := test.series
+		b := a.Compare(test.comparator, test.comparando)
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		expected := test.expected.Records()
+		received := b.Records()
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		//if err := checkTypes(b); err != nil {
+		//t.Errorf(
+		//"Test:%v\nError:%v",
+		//testnum, err,
+		//)
+		//}
+		//if err := checkAddr(a, b); err != nil {
+		//t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
+		//}
+	}
+}
+
 //b := Strings("A", "B", "A")
 //testData2 := []struct {
 //comparator Comparator
