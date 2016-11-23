@@ -241,12 +241,8 @@ func TestSeries_Subset(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := test.series.Subset(test.indexes)
-		if b.Err() != nil {
-			t.Errorf(
-				"Test:%v\nError:%v",
-				testnum, b.Err(),
-			)
-			continue
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
 		received := fmt.Sprint(b)
@@ -303,12 +299,8 @@ func TestSeries_Set(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := test.series.Set(test.indexes, test.values)
-		if b.Err() != nil {
-			t.Errorf(
-				"Test:%v\nError:%v",
-				testnum, b.Err(),
-			)
-			continue
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
 		received := fmt.Sprint(b)
@@ -318,15 +310,13 @@ func TestSeries_Set(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		err := checkTypes(b)
-		if err != nil {
+		if err := checkTypes(b); err != nil {
 			t.Errorf(
 				"Test:%v\nError:%v",
 				testnum, err,
 			)
 		}
-		err = checkAddr(a, b)
-		if err != nil {
+		if err := checkAddr(a, b); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
@@ -407,6 +397,9 @@ func TestStrings(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		if err := test.series.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		expected := test.expected
 		received := fmt.Sprint(test.series)
 		if expected != received {
@@ -415,8 +408,7 @@ func TestStrings(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		err := checkTypes(test.series)
-		if err != nil {
+		if err := checkTypes(test.series); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
@@ -501,6 +493,9 @@ func TestInts(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		if err := test.series.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		expected := test.expected
 		received := fmt.Sprint(test.series)
 		if expected != received {
@@ -509,8 +504,7 @@ func TestInts(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		err := checkTypes(test.series)
-		if err != nil {
+		if err := checkTypes(test.series); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
@@ -591,6 +585,9 @@ func TestFloats(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		if err := test.series.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		expected := test.expected
 		received := fmt.Sprint(test.series)
 		if expected != received {
@@ -599,8 +596,7 @@ func TestFloats(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		err := checkTypes(test.series)
-		if err != nil {
+		if err := checkTypes(test.series); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
@@ -681,6 +677,9 @@ func TestBools(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		if err := test.series.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		expected := test.expected
 		received := fmt.Sprint(test.series)
 		if expected != received {
@@ -689,8 +688,7 @@ func TestBools(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		err := checkTypes(test.series)
-		if err != nil {
+		if err := checkTypes(test.series); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 	}
@@ -709,11 +707,11 @@ func TestSeries_Copy(t *testing.T) {
 		if fmt.Sprint(a) != fmt.Sprint(b) {
 			t.Error("Different values when copying String elements")
 		}
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		if err := checkTypes(b); err != nil {
-			t.Errorf(
-				"Test:%v\nError:%v",
-				testnum, err,
-			)
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddr(a, b); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
@@ -832,6 +830,9 @@ func TestSeries_Concat(t *testing.T) {
 	}
 	for testnum, test := range tests {
 		ab := test.a.Concat(test.b)
+		if err := ab.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
 		received := ab.Records()
 		expected := test.expected
 		if !reflect.DeepEqual(expected, received) {

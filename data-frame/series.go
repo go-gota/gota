@@ -149,37 +149,40 @@ func (s *Series) Append(values interface{}) {
 		return nil
 	}
 	if values == nil {
-		appendElements(values)
-	} else {
-		switch reflect.TypeOf(values).Kind() {
-		case reflect.Slice:
-			v := reflect.ValueOf(values)
-			for i := 0; i < v.Len(); i++ {
-				val := v.Index(i).Interface()
-				err := appendElements(val)
+		err := appendElements(values)
+		if err != nil {
+			s.err = err
+		}
+		return
+	}
+	switch reflect.TypeOf(values).Kind() {
+	case reflect.Slice:
+		v := reflect.ValueOf(values)
+		for i := 0; i < v.Len(); i++ {
+			val := v.Index(i).Interface()
+			err := appendElements(val)
+			if err != nil {
+				s.err = err
+				return
+			}
+		}
+	default:
+		v := reflect.ValueOf(values)
+		val := v.Interface()
+		switch val.(type) {
+		case Series:
+			for _, v := range val.(Series).elements {
+				err := appendElements(v)
 				if err != nil {
 					s.err = err
 					return
 				}
 			}
 		default:
-			v := reflect.ValueOf(values)
-			val := v.Interface()
-			switch val.(type) {
-			case Series:
-				for _, v := range val.(Series).elements {
-					err := appendElements(v)
-					if err != nil {
-						s.err = err
-						return
-					}
-				}
-			default:
-				err := appendElements(val)
-				if err != nil {
-					s.err = err
-					return
-				}
+			err := appendElements(val)
+			if err != nil {
+				s.err = err
+				return
 			}
 		}
 	}
@@ -188,6 +191,13 @@ func (s *Series) Append(values interface{}) {
 // Concat concatenates two series together. It will return a new Series with the
 // combined elements of both Series.
 func (s Series) Concat(x Series) Series {
+	if err := s.Err(); err != nil {
+		return s
+	}
+	if err := x.Err(); err != nil {
+		s.err = fmt.Errorf("concat error: argument has errors: %v", err)
+		return s
+	}
 	y := s.Copy()
 	y.Append(x)
 	return y
@@ -197,7 +207,7 @@ func (s Series) Concat(x Series) Series {
 // supports numeric indexes in the form of []int or int, boolean []bool and the
 // respective Series of types Int/Bool.
 func (s Series) Subset(indexes Indexes) Series {
-	if s.Err() != nil {
+	if err := s.Err(); err != nil {
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -227,7 +237,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if err := newvalues.Err(); err != nil {
-		s.err = fmt.Errorf("set error: new values has errors: %v", err)
+		s.err = fmt.Errorf("set error: argument has errors: %v", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -376,6 +386,7 @@ func (s Series) HasNaN() bool {
 func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
+	err := s.err
 	var elements []elementInterface
 	for _, e := range s.elements {
 		elements = append(elements, e.Copy())
@@ -384,6 +395,7 @@ func (s Series) Copy() Series {
 		Name:     name,
 		t:        t,
 		elements: elements,
+		err:      err,
 	}
 	return ret
 }
