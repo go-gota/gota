@@ -58,7 +58,42 @@ func TestSeries_Compare(t *testing.T) {
 			[]string{"B", "B", "C", "D", "A", "A"},
 			Bools([]bool{false, true, true, false, false, false}),
 		},
-		// TODO: Test other series types for equality. It can be a problem with Float series...
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Eq,
+			"2",
+			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Eq,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{true, true, false, true, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Eq,
+			"2",
+			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Eq,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{true, true, false, true, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Eq,
+			"true",
+			Bools([]bool{true, true, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Eq,
+			[]bool{true, false, false},
+			Bools([]bool{true, false, true}),
+		},
 		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			Neq,
@@ -71,13 +106,43 @@ func TestSeries_Compare(t *testing.T) {
 			[]string{"B", "B", "C", "D", "A", "A"},
 			Bools([]bool{true, false, false, true, true, true}),
 		},
-		// TODO: Test other series types for inequality. It can be a problem with Float series...
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), In, "BADA", []bool{false, false, false, false, false, true}},
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Neq, "C", []bool{true, true, false, true, true, true}},
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Less, "B", []bool{true, false, false, false, false, false}},
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), LessEq, "B", []bool{true, true, false, true, false, false}},
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), Greater, "C", []bool{false, false, false, false, true, false}},
-		//{Strings([]string{"A", "B", "C", "B", "D", "BADA"}), GreaterEq, "C", []bool{false, false, true, false, true, false}},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Neq,
+			"2",
+			Bools([]bool{true, false, true, true, true}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Neq,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{false, false, true, false, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Neq,
+			"2",
+			Bools([]bool{true, false, true, true, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Neq,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{false, false, true, false, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Neq,
+			"true",
+			Bools([]bool{false, false, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Neq,
+			[]bool{true, false, false},
+			Bools([]bool{false, true, false}),
+		},
+		// TODO: Test other Comparator operations
 	}
 	for testnum, test := range table {
 		a := test.series
@@ -93,15 +158,15 @@ func TestSeries_Compare(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		//if err := checkTypes(b); err != nil {
-		//t.Errorf(
-		//"Test:%v\nError:%v",
-		//testnum, err,
-		//)
-		//}
-		//if err := checkAddr(a, b); err != nil {
-		//t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
-		//}
+		if err := checkTypes(b); err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
+		}
+		if err := checkAddr(a, b); err != nil {
+			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
+		}
 	}
 }
 
