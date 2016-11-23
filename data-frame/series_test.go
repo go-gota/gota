@@ -7,11 +7,37 @@ import (
 	"testing"
 )
 
-//import (
-//"fmt"
-//"reflect"
-//"testing"
-//)
+// Check that there are no shared memory addreses between the elements of two Series
+func checkAddr(a Series, b Series) error {
+	addra := a.addr()
+	addrb := b.addr()
+	for i := 0; i < a.Len(); i++ {
+		for j := 0; j < b.Len(); j++ {
+			if addra[i] == "<nil>" || addrb[j] == "<nil>" {
+				continue
+			}
+			if addra[i] == addrb[j] {
+				return fmt.Errorf("found same address on\nA:%v\nB:%v", i, j)
+			}
+		}
+	}
+	return nil
+}
+
+// Check that all the types on a Series are the same type and that it matches with
+// Series.t
+func checkTypes(s Series) error {
+	var types []Type
+	for _, e := range s.elements {
+		types = append(types, e.Type())
+	}
+	for _, t := range types {
+		if t != s.t {
+			return fmt.Errorf("bad types for %v Series:\n%v", s.t, types)
+		}
+	}
+	return nil
+}
 
 //func TestSeries_Compare(t *testing.T) {
 //a := Strings("A", "B", "C", "B", "D", "BADA")
@@ -170,10 +196,10 @@ import (
 //}
 //}
 
-func TestSeries_Index(t *testing.T) {
+func TestSeries_Subset(t *testing.T) {
 	table := []struct {
 		series   Series
-		indexes  interface{}
+		indexes  Indexes
 		expected string
 	}{
 		{
@@ -213,36 +239,97 @@ func TestSeries_Index(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		sub := test.series.Subset(test.indexes)
-		if sub.Err() != nil {
+		a := test.series
+		b := test.series.Subset(test.indexes)
+		if b.Err() != nil {
 			t.Errorf(
 				"Test:%v\nError:%v",
-				testnum, sub.Err(),
+				testnum, b.Err(),
 			)
 			continue
 		}
 		expected := test.expected
-		received := fmt.Sprint(sub)
+		received := fmt.Sprint(b)
 		if expected != received {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
 		}
+		if err := checkTypes(b); err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
+		}
+		if err := checkAddr(a, b); err != nil {
+			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
+		}
 	}
 }
 
-func checkTypes(s Series) error {
-	var types []Type
-	for _, e := range s.elements {
-		types = append(types, e.Type())
+func TestSeries_Set(t *testing.T) {
+	table := []struct {
+		series   Series
+		indexes  Indexes
+		values   Series
+		expected string
+	}{
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]int{1, 2, 4},
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]bool{false, true, true, false, true},
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Ints([]int{1, 2, 4}),
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Bools([]bool{false, true, true, false, true}),
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
 	}
-	for _, t := range types {
-		if t != s.t {
-			return fmt.Errorf("bad types for %v Series:\n%v", s.t, types)
+	for testnum, test := range table {
+		a := test.series
+		b := test.series.Set(test.indexes, test.values)
+		if b.Err() != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, b.Err(),
+			)
+			continue
+		}
+		expected := test.expected
+		received := fmt.Sprint(b)
+		if expected != received {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		err := checkTypes(b)
+		if err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
+		}
+		err = checkAddr(a, b)
+		if err != nil {
+			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
-	return nil
 }
 
 func TestStrings(t *testing.T) {
@@ -622,8 +709,14 @@ func TestSeries_Copy(t *testing.T) {
 		if fmt.Sprint(a) != fmt.Sprint(b) {
 			t.Error("Different values when copying String elements")
 		}
-		if reflect.DeepEqual(addr(a), addr(b)) {
-			t.Errorf("Test:%v\nSame memory address:\na:%v\nb:%v", testnum, addr(a), addr(b))
+		if err := checkTypes(b); err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
+		}
+		if err := checkAddr(a, b); err != nil {
+			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
 }
@@ -747,46 +840,15 @@ func TestSeries_Concat(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		addrorig := append(addr(test.a), addr(test.b)...)
-		addrcombined := addr(ab)
-		if reflect.DeepEqual(addrorig, addrcombined) {
-			t.Errorf(
-				"Test:%v\nSame memory addresses:\nOriginal:\n%v\nCombined:\n%v",
-				testnum, addrorig, addrcombined,
-			)
+		a := test.a
+		b := ab
+		if err := checkAddr(a, b); err != nil {
+			t.Errorf("Test:%v\nError:%v\nA:%v\nAB:%v", testnum, err, a.addr(), b.addr())
+		}
+		a = test.b
+		b = ab
+		if err := checkAddr(a, b); err != nil {
+			t.Errorf("Test:%v\nError:%v\nB:%v\nAB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
 }
-
-//func TestEq(t *testing.T) {
-//s1 := "123"
-//s2 := "Hello"
-//a := stringElement{&s1}
-//b := stringElement{&s2}
-//if !a.Eq(a) || a.Eq(b) {
-//t.Error("String Eq() not working properly")
-//}
-//i1 := 123
-//i2 := 234
-//c := intElement{&i1}
-//d := intElement{&i2}
-//if !c.Eq(c) || d.Eq(c) {
-//t.Error("Int Eq() not working properly")
-//}
-//if !c.Eq(a) || c.Eq(b) || c.Eq(stringElement{nil}) {
-//t.Error("Int Eq() not working properly")
-//}
-//if !a.Eq(c) || a.Eq(d) || a.Eq(stringElement{nil}) {
-//t.Error("String Eq() not working properly")
-//}
-//fval1 := 123.0
-//fval2 := 321.456
-//f1 := floatElement{&fval1}
-//f2 := floatElement{&fval2}
-//if !f1.Eq(f1) || f1.Eq(f2) {
-//t.Error("Float Eq() not working properly")
-//}
-//if !f1.Eq(c) || f1.Eq(d) || f1.Eq(stringElement{nil}) {
-//t.Error("Float Eq() not working properly")
-//}
-//}

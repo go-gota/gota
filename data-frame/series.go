@@ -42,6 +42,10 @@ const (
 	Bool        = "bool"
 )
 
+// Indexes represent the elements that can be used for selecting a subset of
+// indexes. Currently supported are: []int, int, []bool, Series (Int/Bool)
+type Indexes interface{}
+
 // NewSeries is the generic Series constructor
 func NewSeries(values interface{}, t Type) Series {
 	var elements []elementInterface
@@ -108,21 +112,6 @@ func (s Series) Empty() Series {
 		elements: elements,
 	}
 }
-
-//func (s Series) set(i int, val elementValue) Series {
-//if s.Err() != nil {
-//return s
-//}
-//if i >= s.Len() || i < 0 {
-//return Series{err: errors.New("Couldn't set element. Index out of bounds")}
-//}
-//elems, err := s.elements.Set(i, val)
-//if err != nil {
-//return Series{err: errors.New("Couldn't set element: " + err.Error())}
-//}
-//s.elements = elems
-//return s
-//}
 
 //func (s Series) elem(i int) elementInterface {
 //if i >= s.Len() || i < 0 {
@@ -204,60 +193,18 @@ func (s Series) Concat(x Series) Series {
 	return y
 }
 
-func subsetIndexParse(l int, indexes interface{}) ([]int, error) {
-	var idx []int
-	switch indexes.(type) {
-	case []int:
-		idx = indexes.([]int)
-	case int:
-		idx = []int{indexes.(int)}
-	case []bool:
-		bools := indexes.([]bool)
-		if len(bools) != l {
-			return nil, errors.New("subsetting error: index dimensions mismatch")
-		}
-		for i, b := range bools {
-			if b {
-				idx = append(idx, i)
-			}
-		}
-	case Series:
-		s := indexes.(Series)
-		if s.HasNaN() {
-			return nil, errors.New("subsetting error: indexes contain NaN")
-		}
-		switch s.t {
-		case Int:
-			return s.Int()
-		case Bool:
-			bools, err := s.Bool()
-			if err != nil {
-				return nil, fmt.Errorf("subsetting error: %v", err)
-			}
-			return subsetIndexParse(l, bools)
-		default:
-			return nil, errors.New("subsetting error: unknown indexing mode")
-		}
-	default:
-		return nil, errors.New("subsetting error: unknown indexing mode")
-	}
-	return idx, nil
-}
-
 // Subset returns a subset of the series based on the given indexes. Currently
 // supports numeric indexes in the form of []int or int, boolean []bool and the
 // respective Series of types Int/Bool.
-func (s Series) Subset(indexes interface{}) Series {
+func (s Series) Subset(indexes Indexes) Series {
 	if s.Err() != nil {
 		return s
 	}
-
-	idx, err := subsetIndexParse(s.Len(), indexes)
+	idx, err := parseIndexes(s.Len(), indexes)
 	if err != nil {
 		s.err = err
 		return s
 	}
-
 	var elements []elementInterface
 	for _, i := range idx {
 		if i < 0 || i >= s.Len() {
@@ -271,6 +218,32 @@ func (s Series) Subset(indexes interface{}) Series {
 		t:        s.t,
 		elements: elements,
 	}
+}
+
+// Set sets the values on the indexes of a Series and returns a new one with these
+// modifications. The original Series does not change.
+func (s Series) Set(indexes Indexes, newvalues Series) Series {
+	if s.Err() != nil {
+		return s
+	}
+	idx, err := parseIndexes(s.Len(), indexes)
+	if err != nil {
+		s.err = err
+		return s
+	}
+	if len(idx) != newvalues.Len() {
+		s.err = errors.New("subsetting error: dimensions mismatch")
+		return s
+	}
+	ret := s.Copy()
+	for k, i := range idx {
+		if i < 0 || i >= s.Len() {
+			s.err = errors.New("subsetting error: index out of range")
+			return s
+		}
+		ret.elements[i] = ret.elements[i].Set(newvalues.elements[k])
+	}
+	return ret
 }
 
 // HasNaN checks whether the Series contain NaN elements
@@ -499,7 +472,47 @@ func (s Series) Err() error {
 	return s.err
 }
 
-func addr(s Series) []string {
+func parseIndexes(l int, indexes interface{}) ([]int, error) {
+	var idx []int
+	switch indexes.(type) {
+	case []int:
+		idx = indexes.([]int)
+	case int:
+		idx = []int{indexes.(int)}
+	case []bool:
+		bools := indexes.([]bool)
+		if len(bools) != l {
+			return nil, errors.New("subsetting error: index dimensions mismatch")
+		}
+		for i, b := range bools {
+			if b {
+				idx = append(idx, i)
+			}
+		}
+	case Series:
+		s := indexes.(Series)
+		if s.HasNaN() {
+			return nil, errors.New("subsetting error: indexes contain NaN")
+		}
+		switch s.t {
+		case Int:
+			return s.Int()
+		case Bool:
+			bools, err := s.Bool()
+			if err != nil {
+				return nil, fmt.Errorf("subsetting error: %v", err)
+			}
+			return parseIndexes(l, bools)
+		default:
+			return nil, errors.New("subsetting error: unknown indexing mode")
+		}
+	default:
+		return nil, errors.New("subsetting error: unknown indexing mode")
+	}
+	return idx, nil
+}
+
+func (s Series) addr() []string {
 	var ret []string
 	for _, e := range s.elements {
 		ret = append(ret, e.Addr())
