@@ -142,7 +142,246 @@ func TestSeries_Compare(t *testing.T) {
 			[]bool{true, false, false},
 			Bools([]bool{false, true, false}),
 		},
-		// TODO: Test other Comparator operations
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Greater,
+			"B",
+			Bools([]bool{false, false, true, false, true, true}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Greater,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{false, false, false, false, true, true}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Greater,
+			"2",
+			Bools([]bool{false, false, false, true, true}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Greater,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{false, false, true, false, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Greater,
+			"2",
+			Bools([]bool{false, false, false, true, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Greater,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{false, false, true, false, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Greater,
+			"true",
+			Bools([]bool{false, false, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Greater,
+			[]bool{true, false, false},
+			Bools([]bool{false, true, false}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			GreaterEq,
+			"B",
+			Bools([]bool{false, true, true, true, true, true}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			GreaterEq,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{false, true, true, false, true, true}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			GreaterEq,
+			"2",
+			Bools([]bool{false, true, false, true, true}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			GreaterEq,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{true, true, true, true, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			GreaterEq,
+			"2",
+			Bools([]bool{false, true, false, true, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			GreaterEq,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{true, true, true, true, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			GreaterEq,
+			"true",
+			Bools([]bool{true, true, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			GreaterEq,
+			[]bool{true, false, false},
+			Bools([]bool{true, true, true}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Less,
+			"B",
+			Bools([]bool{true, false, false, false, false, false}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Less,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{true, false, false, true, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Less,
+			"2",
+			Bools([]bool{true, false, true, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Less,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{false, false, false, false, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Less,
+			"2",
+			Bools([]bool{true, false, true, false, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Less,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{false, false, false, false, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Less,
+			"true",
+			Bools([]bool{false, false, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Less,
+			[]bool{true, false, false},
+			Bools([]bool{false, false, false}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			LessEq,
+			"B",
+			Bools([]bool{true, true, false, true, false, false}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			LessEq,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Bools([]bool{true, true, true, true, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			LessEq,
+			"2",
+			Bools([]bool{true, true, true, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			LessEq,
+			[]int{0, 2, 0, 5, 10},
+			Bools([]bool{true, true, false, true, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			LessEq,
+			"2",
+			Bools([]bool{true, true, true, false, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			LessEq,
+			[]float64{0.1, 2, 0, 5, 10},
+			Bools([]bool{true, true, false, true, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			LessEq,
+			"true",
+			Bools([]bool{true, true, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			LessEq,
+			[]bool{true, false, false},
+			Bools([]bool{true, false, true}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			In,
+			"B",
+			Bools([]bool{false, true, false, true, false, false}),
+		},
+		{
+			Strings([]string{"Hello", "world", "this", "is", "a", "test"}),
+			In,
+			[]string{"cat", "world", "hello", "a"},
+			Bools([]bool{false, true, false, false, true, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			In,
+			"2",
+			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			In,
+			[]int{2, 99, 1234, 9},
+			Bools([]bool{false, true, false, false, true}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			In,
+			"2",
+			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			In,
+			[]float64{2, 99, 1234, 9},
+			Bools([]bool{false, true, false, false, true}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			In,
+			"true",
+			Bools([]bool{true, true, false}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			In,
+			[]bool{false, false, false},
+			Bools([]bool{false, false, true}),
+		},
 	}
 	for testnum, test := range table {
 		a := test.series
@@ -169,136 +408,6 @@ func TestSeries_Compare(t *testing.T) {
 		}
 	}
 }
-
-//b := Strings("A", "B", "A")
-//testData2 := []struct {
-//comparator Comparator
-//comparando []string
-//expected   []bool
-//}{
-//{Eq, []string{"B", "A", "A"}, []bool{false, false, true}},
-//{Neq, []string{"B", "B", "A"}, []bool{true, false, false}},
-//{In, []string{"C", "A"}, []bool{true, false, true}},
-//{In, []string{"B"}, []bool{false, true, false}},
-//{In, []string{"A", "B"}, []bool{true, true, true}},
-//{Less, []string{"B", "B", "A"}, []bool{true, false, false}},
-//{LessEq, []string{"B", "B", "A"}, []bool{true, true, true}},
-//{Greater, []string{"B", "B", "A"}, []bool{false, false, false}},
-//{GreaterEq, []string{"B", "B", "A"}, []bool{false, true, true}},
-//}
-//for k, v := range testData2 {
-//received, _ := b.Compare(v.comparator, v.comparando)
-//if !reflect.DeepEqual(v.expected, received) {
-//t.Error(
-//"\nTest: ", k+1, "\n",
-//"Expected:\n",
-//v.expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
-
-//c := Ints(1, 2, 3, 2, 1)
-//testData3 := []struct {
-//comparator Comparator
-//comparando []int
-//expected   []bool
-//}{
-//{Eq, []int{1}, []bool{true, false, false, false, true}},
-//{Eq, []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
-//{Neq, []int{3}, []bool{true, true, false, true, true}},
-//{Neq, []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
-//{In, []int{5, 6, 7}, []bool{false, false, false, false, false}},
-//{In, []int{2, 3}, []bool{false, true, true, true, false}},
-//{Less, []int{2}, []bool{true, false, false, false, true}},
-//{Less, []int{3}, []bool{true, true, false, true, true}},
-//{Less, []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
-//{LessEq, []int{2}, []bool{true, true, false, true, true}},
-//{LessEq, []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
-//{Greater, []int{2}, []bool{false, false, true, false, false}},
-//{Greater, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
-//{GreaterEq, []int{2}, []bool{false, true, true, true, false}},
-//{GreaterEq, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
-//}
-//for k, v := range testData3 {
-//received, _ := c.Compare(v.comparator, v.comparando)
-//if !reflect.DeepEqual(v.expected, received) {
-//t.Error(
-//"\nTest: ", k+1, "\n",
-//"Expected:\n",
-//v.expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
-
-//d := Floats(1, 2, 3, 2, 1)
-//testData4 := []struct {
-//comparator Comparator
-//comparando []int
-//expected   []bool
-//}{
-//{Eq, []int{1}, []bool{true, false, false, false, true}},
-//{Eq, []int{1, 3, 3, 1, 1}, []bool{true, false, true, false, true}},
-//{Neq, []int{3}, []bool{true, true, false, true, true}},
-//{Neq, []int{1, 3, 3, 1, 1}, []bool{false, true, false, true, false}},
-//{In, []int{5, 6, 7}, []bool{false, false, false, false, false}},
-//{In, []int{2, 3}, []bool{false, true, true, true, false}},
-//{Less, []int{2}, []bool{true, false, false, false, true}},
-//{Less, []int{3}, []bool{true, true, false, true, true}},
-//{Less, []int{2, 2, 2, 1, 1}, []bool{true, false, false, false, false}},
-//{LessEq, []int{2}, []bool{true, true, false, true, true}},
-//{LessEq, []int{2, 2, 2, 1, 1}, []bool{true, true, false, false, true}},
-//{Greater, []int{2}, []bool{false, false, true, false, false}},
-//{Greater, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, false}},
-//{GreaterEq, []int{2}, []bool{false, true, true, true, false}},
-//{GreaterEq, []int{2, 1, 2, 1, 1}, []bool{false, true, true, true, true}},
-//}
-//for k, v := range testData4 {
-//received, _ := d.Compare(v.comparator, v.comparando)
-//if !reflect.DeepEqual(v.expected, received) {
-//t.Error(
-//"\nTest: ", k+1, "\n",
-//"Expected:\n",
-//v.expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
-
-//e := Bools(1, 1, 0, 0)
-//testData5 := []struct {
-//comparator Comparator
-//comparando []bool
-//expected   []bool
-//}{
-//{Eq, []bool{true}, []bool{true, true, false, false}},
-//{Eq, []bool{true, false, false, true}, []bool{true, false, true, false}},
-//{Neq, []bool{false}, []bool{true, true, false, false}},
-//{Neq, []bool{false, true, true, false}, []bool{true, false, true, false}},
-//{In, []bool{false}, []bool{false, false, true, true}},
-//{In, []bool{false, true}, []bool{true, true, true, true}},
-//{Less, []bool{true}, []bool{false, false, true, true}},
-//{LessEq, []bool{true}, []bool{true, true, true, true}},
-//{Greater, []bool{false}, []bool{true, true, false, false}},
-//{GreaterEq, []bool{false}, []bool{true, true, true, true}},
-//}
-//for k, v := range testData5 {
-//received, _ := e.Compare(v.comparator, v.comparando)
-//if !reflect.DeepEqual(v.expected, received) {
-//t.Error(
-//"\nTest: ", k+1, "\n",
-//"Expected:\n",
-//v.expected, "\n",
-//"Received:\n",
-//received,
-//)
-//}
-//}
-//}
 
 func TestSeries_Subset(t *testing.T) {
 	table := []struct {
