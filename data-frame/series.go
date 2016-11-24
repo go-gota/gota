@@ -106,6 +106,9 @@ func (s Series) Val(i int) (interface{}, error) {
 
 // Append appends elements to the end of the Series. The Series is modified in situ
 func (s *Series) Append(values interface{}) {
+	if err := s.Err(); err != nil {
+		return
+	}
 	appendElements := func(val interface{}) error {
 		var newelem elementInterface
 		switch s.t {

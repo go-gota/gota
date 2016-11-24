@@ -44,14 +44,14 @@ func New(series ...Series) DataFrame {
 	return df
 }
 
-//// Copy wil copy the values of a given DataFrame
-//func (df DataFrame) Copy() DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//copy := New(df.columns...)
-//return copy
-//}
+// Copy returns a copy of the DataFrame
+func (df DataFrame) Copy() DataFrame {
+	copy := New(df.columns...)
+	if df.Err() != nil {
+		copy.err = df.Err()
+	}
+	return copy
+}
 
 func (df DataFrame) Err() error {
 	return df.err

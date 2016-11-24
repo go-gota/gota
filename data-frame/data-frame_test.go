@@ -1,9 +1,50 @@
 package df
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
+
+func checkAddrDf(a, b DataFrame) error {
+	var addra []string
+	for _, s := range a.columns {
+		addra = append(addra, s.addr()...)
+	}
+	var addrb []string
+	for _, s := range b.columns {
+		addrb = append(addrb, s.addr()...)
+	}
+	if err := checkAddr(addra, addrb); err != nil {
+		return fmt.Errorf("Error:%v\nA:%v\nB:%v", err, addra, addrb)
+	}
+	return nil
+}
+
+// Helper function to compare DataFrames even if the value to compare is NA
+func compareRecords(a, b DataFrame) bool {
+	if a.nrows != b.nrows || a.ncols != b.ncols {
+		return false
+	}
+	if !reflect.DeepEqual(a.Names(), b.Names()) {
+		return false
+	}
+	if !reflect.DeepEqual(a.Types(), b.Types()) {
+		return false
+	}
+	recordsa := a.Records()
+	recordsb := b.Records()
+	for i := 0; i < a.nrows; i++ {
+		for j := 0; j < a.ncols; j++ {
+			x := recordsa[i][j]
+			y := recordsb[i][j]
+			if x != y {
+				return false
+			}
+		}
+	}
+	return true
+}
 
 func TestDataFrame_New(t *testing.T) {
 	series := []Series{
@@ -28,27 +69,40 @@ func TestDataFrame_New(t *testing.T) {
 
 	// Check that the memory addresses of the original series and the series
 	// inside the DataFrame are different
-	var originalAddr []string
+	var addra []string
 	for _, s := range series {
-		originalAddr = append(originalAddr, s.addr()...)
+		addra = append(addra, s.addr()...)
 	}
-	var dfAddr []string
+	var addrb []string
 	for _, s := range d.columns {
-		dfAddr = append(dfAddr, s.addr()...)
+		addrb = append(addrb, s.addr()...)
 	}
-	if err := checkAddr(originalAddr, dfAddr); err != nil {
-		t.Errorf("Error:%v\nA:%v\nB:%v", err, originalAddr, dfAddr)
+	if err := checkAddr(addra, addrb); err != nil {
+		t.Errorf("Error:%v\nA:%v\nB:%v", err, addra, addrb)
 	}
 }
 
-//func TestDataFrame_Copy(t *testing.T) {
-//a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))
-//b := a.Copy()
-//if a.columns[0].elements.(stringElements)[0] == b.columns[0].elements.(stringElements)[0] {
-//t.Error("Copy error: The memory address should be different even if the content is the same")
-//}
-//// TODO: More error checking, this is not exhaustive enough
-//}
+func TestDataFrame_Copy(t *testing.T) {
+	a := New(
+		NewSeries([]string{"b", "a"}, String, "COL.1"),
+		NewSeries([]int{1, 2}, Int, "COL.2"),
+		NewSeries([]float64{3.0, 4.0}, Float, "COL.3"),
+	)
+	b := a.Copy()
+
+	// Check that there are no shared memory addresses between DataFrames
+	if err := checkAddrDf(a, b); err != nil {
+		t.Error(err)
+	}
+	// Check that the types are the same between both DataFrames
+	if !reflect.DeepEqual(a.Types(), b.Types()) {
+		t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+	}
+	// Check that the values are the same between both DataFrames
+	if !compareRecords(a, b) {
+		t.Error("Different values copied")
+	}
+}
 
 //func TestDataFrame_Subset(t *testing.T) {
 //a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
