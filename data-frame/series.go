@@ -1,7 +1,6 @@
 package df
 
 import (
-	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -47,10 +46,10 @@ const (
 type Indexes interface{}
 
 // NewSeries is the generic Series constructor
-func NewSeries(values interface{}, t Type) Series {
+func NewSeries(values interface{}, t Type, name string) Series {
 	var elements []elementInterface
 	ret := Series{
-		Name:     "",
+		Name:     name,
 		elements: elements,
 		t:        t,
 	}
@@ -60,48 +59,23 @@ func NewSeries(values interface{}, t Type) Series {
 
 // Strings is a constructor for a String series
 func Strings(values interface{}) Series {
-	return NewSeries(values, String)
+	return NewSeries(values, String, "")
 }
 
 // Ints is a constructor for an Int series
 func Ints(values interface{}) Series {
-	return NewSeries(values, Int)
+	return NewSeries(values, Int, "")
 }
 
 // Floats is a constructor for a Float series
 func Floats(values interface{}) Series {
-	return NewSeries(values, Float)
+	return NewSeries(values, Float, "")
 }
 
 // Bools is a constructor for a bools series
 func Bools(values interface{}) Series {
-	return NewSeries(values, Bool)
+	return NewSeries(values, Bool, "")
 }
-
-//// NamedStrings is a constructor for a named String series
-//func NamedStrings(name string, args ...interface{}) Series {
-//s := Strings(args...)
-//s.Name = name
-//return s
-//}
-//// NamedInts is a constructor for a named Int series
-//func NamedInts(name string, args ...interface{}) Series {
-//s := Ints(args...)
-//s.Name = name
-//return s
-//}
-//// NamedFloats is a constructor for a named Float series
-//func NamedFloats(name string, args ...interface{}) Series {
-//s := Floats(args...)
-//s.Name = name
-//return s
-//}
-//// NamedBools is a constructor for a named Bool series
-//func NamedBools(name string, args ...interface{}) Series {
-//s := Bools(args...)
-//s.Name = name
-//return s
-//}
 
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
@@ -113,21 +87,22 @@ func (s Series) Empty() Series {
 	}
 }
 
-//func (s Series) elem(i int) elementInterface {
-//if i >= s.Len() || i < 0 {
-//return nil
-//}
-//return s.elements.Elem(i)
-//}
+// FIXME: NOT NEEDED ANYMORE
+func (s Series) elem(i int) elementInterface {
+	if i >= s.Len() || i < 0 {
+		return nil
+	}
+	return s.elements[i]
+}
 
-//// Val returns the value of a series for the given index
-//func (s Series) Val(i int) (interface{}, error) {
-//if i >= s.Len() || i < 0 {
-//return nil, errors.New("index out of bounds")
-//}
-//elem := s.elements.Elem(i).Val()
-//return elem, nil
-//}
+// FIXME: SHOULD NOT BE ALLOWED
+// Val returns the value of a series for the given index
+func (s Series) Val(i int) (interface{}, error) {
+	if i >= s.Len() || i < 0 {
+		return nil, fmt.Errorf("index out of bounds")
+	}
+	return s.elements[i].Val(), nil
+}
 
 // Append appends elements to the end of the Series. The Series is modified in situ
 func (s *Series) Append(values interface{}) {
@@ -143,7 +118,7 @@ func (s *Series) Append(values interface{}) {
 		case Bool:
 			newelem = boolElement{}
 		default:
-			return errors.New("can't create series, unknown type")
+			return fmt.Errorf("can't create series, unknown type")
 		}
 		s.elements = append(s.elements, newelem.Set(val))
 		return nil
@@ -218,7 +193,7 @@ func (s Series) Subset(indexes Indexes) Series {
 	var elements []elementInterface
 	for _, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.err = errors.New("subsetting error: index out of range")
+			s.err = fmt.Errorf("subsetting error: index out of range")
 			return s
 		}
 		elements = append(elements, s.elements[i].Copy())
@@ -246,13 +221,13 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.err = errors.New("set error: dimensions mismatch")
+		s.err = fmt.Errorf("set error: dimensions mismatch")
 		return s
 	}
 	ret := s.Copy()
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.err = errors.New("set error: index out of range")
+			s.err = fmt.Errorf("set error: index out of range")
 			return s
 		}
 		ret.elements[i] = ret.elements[i].Set(newvalues.elements[k])
@@ -296,7 +271,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return ret, nil
 	}
 
-	comp := NewSeries(comparando, s.t)
+	comp := NewSeries(comparando, s.t, "")
 	// In comparator comparation
 	if comparator == In {
 		var bools []bool
@@ -402,7 +377,7 @@ func (s Series) Int() ([]int, error) {
 	for _, e := range s.elements {
 		val := e.ToInt().Val()
 		if val == nil {
-			return nil, errors.New("can't convert NaN to int")
+			return nil, fmt.Errorf("can't convert NaN to int")
 		}
 		ret = append(ret, val.(int))
 	}
@@ -416,7 +391,7 @@ func (s Series) Bool() ([]bool, error) {
 	for _, e := range s.elements {
 		val := e.ToBool().Val()
 		if val == nil {
-			return nil, errors.New("can't convert NaN to bool")
+			return nil, fmt.Errorf("can't convert NaN to bool")
 		}
 		ret = append(ret, val.(bool))
 	}
@@ -468,7 +443,7 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 	case []bool:
 		bools := indexes.([]bool)
 		if len(bools) != l {
-			return nil, errors.New("indexing error: index dimensions mismatch")
+			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
 		for i, b := range bools {
 			if b {
@@ -481,7 +456,7 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
 		if s.HasNaN() {
-			return nil, errors.New("indexing error: indexes contain NaN")
+			return nil, fmt.Errorf("indexing error: indexes contain NaN")
 		}
 		switch s.t {
 		case Int:
@@ -493,10 +468,10 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, errors.New("indexing error: unknown indexing mode")
+			return nil, fmt.Errorf("indexing error: unknown indexing mode")
 		}
 	default:
-		return nil, errors.New("indexing error: unknown indexing mode")
+		return nil, fmt.Errorf("indexing error: unknown indexing mode")
 	}
 	return idx, nil
 }

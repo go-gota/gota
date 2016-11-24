@@ -1,49 +1,45 @@
 package df
 
-//import (
-//"bytes"
-//"encoding/json"
-//"reflect"
-//"strings"
-//"testing"
-//)
+import (
+	"reflect"
+	"testing"
+)
 
-//func TestDataFrame_New(t *testing.T) {
-//a := New(Strings("b"), Ints(1, 2))
-//if a.Err() == nil {
-//t.Error("Expected error, got success")
-//}
-//a = New(Strings("b", "a"), NamedInts("Y", 1, 2), Floats(3.0, 4.0))
-//if a.Err() != nil {
-//t.Error("Expected success, got error")
-//}
-//expectedNames := []string{"X0", "Y", "X1"}
-//receivedNames := a.Names()
-//if !reflect.DeepEqual(expectedNames, receivedNames) {
-//t.Error(
-//"Expected Names:",
-//expectedNames,
-//"Received Names:",
-//receivedNames,
-//)
-//}
-//expectedTypes := []Type{String, Int, Float}
-//receivedTypes := a.Types()
-//if !reflect.DeepEqual(expectedTypes, receivedTypes) {
-//t.Error(
-//"Expected Types:",
-//expectedTypes,
-//"Received Types:",
-//receivedTypes,
-//)
-//}
-//// TODO: Check that the address of the columns are different that of the original series
-//// TODO: Check that dimensions match
-//a = New()
-//if a.Err() == nil {
-//t.Error("Expected error, got success")
-//}
-//}
+func TestDataFrame_New(t *testing.T) {
+	series := []Series{
+		Strings([]int{1, 2, 3, 4, 5}),
+		NewSeries([]int{1, 2, 3, 4, 5}, String, "0"),
+		Ints([]int{1, 2, 3, 4, 5}),
+		NewSeries([]int{1, 2, 3, 4, 5}, String, "0"),
+		NewSeries([]int{1, 2, 3, 4, 5}, Float, "1"),
+		NewSeries([]int{1, 2, 3, 4, 5}, Bool, "1"),
+	}
+	d := New(series...)
+
+	// Check that the names are renamed properly
+	received := d.Names()
+	expected := []string{"X0", "0_0", "X1", "0_1", "1_0", "1_1"}
+	if !reflect.DeepEqual(received, expected) {
+		t.Errorf(
+			"Expected:\n%v\nReceived:\n%v",
+			expected, received,
+		)
+	}
+
+	// Check that the memory addresses of the original series and the series
+	// inside the DataFrame are different
+	var originalAddr []string
+	for _, s := range series {
+		originalAddr = append(originalAddr, s.addr()...)
+	}
+	var dfAddr []string
+	for _, s := range d.columns {
+		dfAddr = append(dfAddr, s.addr()...)
+	}
+	if err := checkAddr(originalAddr, dfAddr); err != nil {
+		t.Errorf("Error:%v\nA:%v\nB:%v", err, originalAddr, dfAddr)
+	}
+}
 
 //func TestDataFrame_Copy(t *testing.T) {
 //a := New(NamedStrings("COL.1", "b", "a"), NamedInts("COL.2", 1, 2), NamedFloats("COL.3", 3.0, 4.0))

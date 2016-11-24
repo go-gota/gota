@@ -8,11 +8,9 @@ import (
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
-func checkAddr(a Series, b Series) error {
-	addra := a.addr()
-	addrb := b.addr()
-	for i := 0; i < a.Len(); i++ {
-		for j := 0; j < b.Len(); j++ {
+func checkAddr(addra, addrb []string) error {
+	for i := 0; i < len(addra); i++ {
+		for j := 0; j < len(addrb); j++ {
 			if addra[i] == "<nil>" || addrb[j] == "<nil>" {
 				continue
 			}
@@ -403,7 +401,7 @@ func TestSeries_Compare(t *testing.T) {
 				testnum, err,
 			)
 		}
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
@@ -471,7 +469,7 @@ func TestSeries_Subset(t *testing.T) {
 				testnum, err,
 			)
 		}
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
@@ -529,7 +527,7 @@ func TestSeries_Set(t *testing.T) {
 				testnum, err,
 			)
 		}
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
@@ -926,7 +924,7 @@ func TestSeries_Copy(t *testing.T) {
 		if err := checkTypes(b); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}
@@ -1056,12 +1054,12 @@ func TestSeries_Concat(t *testing.T) {
 		}
 		a := test.a
 		b := ab
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nA:%v\nAB:%v", testnum, err, a.addr(), b.addr())
 		}
 		a = test.b
 		b = ab
-		if err := checkAddr(a, b); err != nil {
+		if err := checkAddr(a.addr(), b.addr()); err != nil {
 			t.Errorf("Test:%v\nError:%v\nB:%v\nAB:%v", testnum, err, a.addr(), b.addr())
 		}
 	}

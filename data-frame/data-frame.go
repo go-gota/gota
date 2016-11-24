@@ -1,119 +1,48 @@
 package df
 
-//import (
-//"encoding/csv"
-//"encoding/json"
-//"errors"
-//"fmt"
-//"io"
-//"sort"
-//"strconv"
-//"strings"
-//"unicode/utf8"
+import (
+	"fmt"
+	"sort"
+	"strconv"
+	"strings"
+	"unicode/utf8"
+)
 
-//"github.com/gonum/matrix/mat64"
-//)
+// DataFrame is the base data structure
+type DataFrame struct {
+	columns []Series
+	ncols   int
+	nrows   int
+	err     error
+}
 
-//// DataFrame is the base data structure
-//type DataFrame struct {
-//columns []Series
-//ncols   int
-//nrows   int
-//err     error
-//}
+// New is a constructor for DataFrames
+func New(series ...Series) DataFrame {
+	if series == nil || len(series) == 0 {
+		return DataFrame{err: fmt.Errorf("empty DataFrame")}
+	}
+	prevLength := 0
+	var columns []Series
+	var colnames []string
+	for k, s := range series {
+		columns = append(columns, s.Copy())
+		colnames = append(colnames, s.Name)
+		l := s.Len()
+		if k > 0 && l != prevLength {
+			return DataFrame{err: fmt.Errorf("arguments have different dimensions")}
+		}
+		prevLength = l
+	}
 
-//// New is a constructor for DataFrames
-//func New(series ...Series) DataFrame {
-//if series == nil || len(series) == 0 {
-//return DataFrame{
-//err: errors.New("No arguments given, returning empty DataFrame"),
-//}
-//}
-//allEqual := true
-//lastLength := 0
-//colnames := make([]string, len(series))
-//var columns []Series
-//for k, v := range series {
-//columns = append(columns, v.Copy())
-//colnames[k] = v.Name
-//l := v.Len()
-//// Check that all given Series have the same length
-//if k > 0 {
-//allEqual = l == lastLength
-//if !allEqual {
-//return DataFrame{
-//err: errors.New("Series have different dimensions"),
-//}
-//}
-//}
-//lastLength = l
-//}
-//// Fill empty colnames
-//strInsideSlice := func(i string, s []string) bool {
-//for _, v := range s {
-//if v == i {
-//return true
-//}
-//}
-//return false
-//}
-//strInsideSliceIdx := func(i string, s []string, j int) (bool, []int) {
-//inside := false
-//var idx []int
-//for k, v := range s {
-//if v == i && k != j {
-//inside = true
-//idx = append(idx, k)
-//}
-//}
-//return inside, idx
-//}
-//i := 0
-//// Autofill missing column names
-//for k, v := range colnames {
-//if v == "" {
-//proposedName := "X" + fmt.Sprint(i)
-//// Make sure that we don't have duplicate column names when autofilling
-//inside, _ := strInsideSliceIdx(proposedName, colnames, k)
-//for inside {
-//i++
-//proposedName = "X" + fmt.Sprint(i)
-//inside, _ = strInsideSliceIdx(proposedName, colnames, k)
-//}
-//colnames[k] = proposedName
-//columns[k].Name = proposedName
-//i++
-//}
-//}
-
-//// Make sure that colnames are unique renaming them if necessary
-//for k, v := range colnames {
-//inside, idx := strInsideSliceIdx(v, colnames, k)
-//if inside {
-//idx = append([]int{k}, idx...)
-//i := 0
-//for _, j := range idx {
-//proposedName := v + "." + fmt.Sprint(i)
-//for strInsideSlice(proposedName, colnames) {
-//i++
-//proposedName = v + "." + fmt.Sprint(i)
-//}
-//colnames[j] = proposedName
-//columns[j].Name = proposedName
-//i++
-//}
-//}
-//}
-
-//// Fill DataFrame base structure
-//df := DataFrame{
-//columns: columns,
-//ncols:   len(series),
-//nrows:   lastLength,
-//err:     nil,
-//}
-//return df
-//}
+	// Fill DataFrame base structure
+	df := DataFrame{
+		columns: columns,
+		ncols:   len(series),
+		nrows:   prevLength,
+	}
+	fixColnames(&df)
+	return df
+}
 
 //// Copy wil copy the values of a given DataFrame
 //func (df DataFrame) Copy() DataFrame {
@@ -124,51 +53,51 @@ package df
 //return copy
 //}
 
-//func (df DataFrame) Err() error {
-//return df.err
-//}
+func (df DataFrame) Err() error {
+	return df.err
+}
 
-//// String implements the Stringer interface for DataFrame
-//func (df DataFrame) String() (str string) {
-//if df.Err() != nil {
-//str = "Empty DataFrame:" + df.Err().Error()
-//return
-//}
-//if df.nrows == 0 {
-//str = "Empty DataFrame..."
-//return
-//}
-//records := df.Records()
-//// Add the row numbers
-//for i := 0; i < df.nrows+1; i++ {
-//add := ""
-//if i != 0 {
-//add = strconv.Itoa(i) + ":"
-//}
-//records[i] = append([]string{add}, records[i]...)
-//}
+// String implements the Stringer interface for DataFrame
+func (df DataFrame) String() (str string) {
+	if df.Err() != nil {
+		str = "Empty DataFrame:" + df.Err().Error()
+		return
+	}
+	if df.nrows == 0 {
+		str = "Empty DataFrame..."
+		return
+	}
+	records := df.Records()
+	// Add the row numbers
+	for i := 0; i < df.nrows+1; i++ {
+		add := ""
+		if i != 0 {
+			add = strconv.Itoa(i) + ":"
+		}
+		records[i] = append([]string{add}, records[i]...)
+	}
 
-//// Get the maximum number of characters per column
-//maxChars := make([]int, df.ncols+1)
-//for i := 0; i < df.nrows+1; i++ {
-//for j := 0; j < df.ncols+1; j++ {
-//if len(records[i][j]) > maxChars[j] {
-//maxChars[j] = utf8.RuneCountInString(records[i][j])
-//}
-//}
-//}
-//for i := 0; i < df.nrows+1; i++ {
-//// Add right padding to all elements
-//records[i][0] = addLeftPadding(records[i][0], maxChars[0]+1)
-//for j := 1; j < df.ncols+1; j++ {
-//records[i][j] = addRightPadding(records[i][j], maxChars[j])
-//}
-//// Create the final string
-//str += strings.Join(records[i], " ")
-//str += "\n"
-//}
-//return str
-//}
+	// Get the maximum number of characters per column
+	maxChars := make([]int, df.ncols+1)
+	for i := 0; i < df.nrows+1; i++ {
+		for j := 0; j < df.ncols+1; j++ {
+			if len(records[i][j]) > maxChars[j] {
+				maxChars[j] = utf8.RuneCountInString(records[i][j])
+			}
+		}
+	}
+	for i := 0; i < df.nrows+1; i++ {
+		// Add right padding to all elements
+		records[i][0] = addLeftPadding(records[i][0], maxChars[0]+1)
+		for j := 1; j < df.ncols+1; j++ {
+			records[i][j] = addRightPadding(records[i][j], maxChars[j])
+		}
+		// Create the final string
+		str += strings.Join(records[i], " ")
+		str += "\n"
+	}
+	return str
+}
 
 //// Subsetting, mutating and transforming DataFrame methods
 //// =======================================================
@@ -194,7 +123,7 @@ package df
 //if df.Err() != nil {
 //return df
 //}
-//strInsideSlice := func(i string, s []string) bool {
+//inStringSlice := func(i string, s []string) bool {
 //for _, v := range s {
 //if v == i {
 //return true
@@ -213,9 +142,9 @@ package df
 //}
 //for k, v := range colnames {
 //// Check duplicate colnames
-//if strInsideSlice(v, colnames[k+1:]) {
+//if inStringSlice(v, colnames[k+1:]) {
 //return DataFrame{
-//err: errors.New("Duplicated colnames on Select"),
+//err: fmt.Errorf("Duplicated colnames on Select"),
 //}
 //}
 //// Check that colnames exist on dataframe
@@ -224,7 +153,7 @@ package df
 //columnsSelected = append(columnsSelected, df.columns[idx])
 //} else {
 //return DataFrame{
-//err: errors.New("The given colname doesn't exist"),
+//err: fmt.Errorf("The given colname doesn't exist"),
 //}
 //}
 //}
@@ -251,7 +180,7 @@ package df
 //copy.columns[idx].Name = newname
 //} else {
 //return DataFrame{
-//err: errors.New("The given colname doesn't exist"),
+//err: fmt.Errorf("The given colname doesn't exist"),
 //}
 //}
 //return copy
@@ -298,7 +227,7 @@ package df
 //}
 //expandedSeries = append(expandedSeries, newSeries)
 //} else {
-//return DataFrame{err: errors.New("Not compatible column names")}
+//return DataFrame{err: fmt.Errorf("Not compatible column names")}
 //}
 //}
 //return New(expandedSeries...)
@@ -319,7 +248,7 @@ package df
 //}
 //if series.Len() != df.nrows {
 //return DataFrame{
-//err: errors.New("Can't set column. Different dimensions"),
+//err: fmt.Errorf("Can't set column. Different dimensions"),
 //}
 //}
 //// Check that colname exist on dataframe
@@ -340,48 +269,48 @@ package df
 //Comparando interface{}
 //}
 
-//// Filter will filter the rows of a DataFrame
-//func (df DataFrame) Filter(filters ...F) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//strInsideSliceIdx := func(i string, s []string) (bool, int) {
-//for k, v := range s {
-//if v == i {
-//return true, k
-//}
-//}
-//return false, -1
-//}
-//var compResults [][]bool
-//for _, f := range filters {
-//if exists, idx := strInsideSliceIdx(f.Colname, df.Names()); exists {
-//res, err := df.columns[idx].Compare(f.Comparator, f.Comparando)
-//if err != nil {
-//return DataFrame{
-//err: err,
-//}
-//}
-//compResults = append(compResults, res)
-//} else {
-//return DataFrame{
-//err: errors.New("The given colname doesn't exist"),
-//}
-//}
-//}
-//// Join compResults via "OR"
-//if len(compResults) == 0 {
-//return df.Copy()
-//}
-//res := compResults[0]
-//for i := 1; i < len(compResults); i++ {
-//nextRes := compResults[i]
-//for j := 0; j < len(res); j++ {
-//res[j] = res[j] || nextRes[j]
-//}
-//}
-//return df.Subset(res)
-//}
+////// Filter will filter the rows of a DataFrame
+////func (df DataFrame) Filter(filters ...F) DataFrame {
+////if df.Err() != nil {
+////return df
+////}
+////strInsideSliceIdx := func(i string, s []string) (bool, int) {
+////for k, v := range s {
+////if v == i {
+////return true, k
+////}
+////}
+////return false, -1
+////}
+////var compResults []Series
+////for _, f := range filters {
+////if exists, idx := strInsideSliceIdx(f.Colname, df.Names()); exists {
+////res := df.columns[idx].Compare(f.Comparator, f.Comparando)
+////if err := res.Err(); err != nil {
+////return DataFrame{
+////err: err,
+////}
+////}
+////compResults = append(compResults, res)
+////} else {
+////return DataFrame{
+////err: fmt.Errorf("The given colname doesn't exist"),
+////}
+////}
+////}
+////// Join compResults via "OR"
+////if len(compResults) == 0 {
+////return df.Copy()
+////}
+////res := compResults[0]
+////for i := 1; i < len(compResults); i++ {
+////nextRes := compResults[i]
+////for j := 0; j < res.Len(); j++ {
+////res[j] = res[j] || nextRes[j]
+////}
+////}
+////return df.Subset(res)
+////}
 
 //// Read/Write Methods
 //// =================
@@ -431,10 +360,10 @@ package df
 //}
 
 //if len(records) == 0 {
-//return DataFrame{err: errors.New("Empty DataFrame")}
+//return DataFrame{err: fmt.Errorf("Empty DataFrame")}
 //}
 //if cfg.hasHeader && len(records) <= 1 {
-//return DataFrame{err: errors.New("Empty DataFrame")}
+//return DataFrame{err: fmt.Errorf("Empty DataFrame")}
 //}
 
 //// Extract headers
@@ -483,7 +412,7 @@ package df
 //func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
 //if len(maps) == 0 {
 //return DataFrame{
-//err: errors.New("Can't parse empty map array"),
+//err: fmt.Errorf("Can't parse empty map array"),
 //}
 //}
 //inStrSlice := func(i string, s []string) bool {
@@ -559,52 +488,52 @@ package df
 //// Getters/Setters for DataFrame fields
 //// ====================================
 
-//func (df DataFrame) Names() []string {
-//var colnames []string
-//for _, v := range df.columns {
-//colnames = append(colnames, v.Name)
-//}
-//return colnames
-//}
+func (df DataFrame) Names() []string {
+	var colnames []string
+	for _, v := range df.columns {
+		colnames = append(colnames, v.Name)
+	}
+	return colnames
+}
 
-//func (df DataFrame) Types() []Type {
-//var coltypes []Type
-//for _, v := range df.columns {
-//coltypes = append(coltypes, v.t)
-//}
-//return coltypes
-//}
+func (df DataFrame) Types() []Type {
+	var coltypes []Type
+	for _, v := range df.columns {
+		coltypes = append(coltypes, v.t)
+	}
+	return coltypes
+}
 
-//func (df DataFrame) SetNames(colnames []string) error {
-//if df.Err() != nil {
-//return df.Err()
-//}
-//if len(colnames) != df.ncols {
-//err := errors.New("Couldn't set the column names. Wrong dimensions.")
-//return err
-//}
-//for k, v := range colnames {
-//df.columns[k].Name = v
-//}
-//return nil
-//}
+func (df DataFrame) SetNames(colnames []string) error {
+	if df.Err() != nil {
+		return df.Err()
+	}
+	if len(colnames) != df.ncols {
+		err := fmt.Errorf("Couldn't set the column names. Wrong dimensions.")
+		return err
+	}
+	for k, v := range colnames {
+		df.columns[k].Name = v
+	}
+	return nil
+}
 
-//// Dim retrieves the dimensiosn of a DataFrame
-//func (df DataFrame) Dim() (dim [2]int) {
-//dim[0] = df.nrows
-//dim[1] = df.ncols
-//return
-//}
+// Dim retrieves the dimensiosn of a DataFrame
+func (df DataFrame) Dim() (dim [2]int) {
+	dim[0] = df.nrows
+	dim[1] = df.ncols
+	return
+}
 
-//// NRows is the getter method for the number of rows in a DataFrame
-//func (df DataFrame) Nrow() int {
-//return df.nrows
-//}
+// NRows is the getter method for the number of rows in a DataFrame
+func (df DataFrame) Nrow() int {
+	return df.nrows
+}
 
-//// NCols is the getter method for the number of rows in a DataFrame
-//func (df DataFrame) Ncol() int {
-//return df.ncols
-//}
+// NCols is the getter method for the number of rows in a DataFrame
+func (df DataFrame) Ncol() int {
+	return df.ncols
+}
 
 //// Col returns the Series with the given column name contained in the DataFrame
 //func (df DataFrame) Col(colname string) Series {
@@ -626,7 +555,7 @@ package df
 //ret = df.columns[idx].Copy()
 //} else {
 //return Series{
-//err: errors.New("The given colname doesn't exist"),
+//err: fmt.Errorf("The given colname doesn't exist"),
 //}
 //}
 //return ret
@@ -636,7 +565,7 @@ package df
 //// This operation matches all rows that appear on both dataframes.
 //func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 //if len(keys) == 0 {
-//return DataFrame{err: errors.New("Unspecified Join keys")}
+//return DataFrame{err: fmt.Errorf("Unspecified Join keys")}
 //}
 //// Check that we have all given keys in both DataFrames
 //errorArr := []string{}
@@ -655,7 +584,7 @@ package df
 //iKeysB = append(iKeysB, j)
 //}
 //if len(errorArr) != 0 {
-//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+//return DataFrame{err: fmt.Errorf(strings.Join(errorArr, "\n"))}
 //}
 
 //aCols := df.columns
@@ -716,7 +645,7 @@ package df
 //// This operation matches all rows that appear on both dataframes.
 //func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 //if len(keys) == 0 {
-//return DataFrame{err: errors.New("Unspecified Join keys")}
+//return DataFrame{err: fmt.Errorf("Unspecified Join keys")}
 //}
 //// Check that we have all given keys in both DataFrames
 //errorArr := []string{}
@@ -735,7 +664,7 @@ package df
 //iKeysB = append(iKeysB, j)
 //}
 //if len(errorArr) != 0 {
-//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+//return DataFrame{err: fmt.Errorf(strings.Join(errorArr, "\n"))}
 //}
 
 //aCols := df.columns
@@ -815,7 +744,7 @@ package df
 //// This operation matches all rows that appear on both dataframes.
 //func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 //if len(keys) == 0 {
-//return DataFrame{err: errors.New("Unspecified Join keys")}
+//return DataFrame{err: fmt.Errorf("Unspecified Join keys")}
 //}
 //// Check that we have all given keys in both DataFrames
 //errorArr := []string{}
@@ -834,7 +763,7 @@ package df
 //iKeysB = append(iKeysB, j)
 //}
 //if len(errorArr) != 0 {
-//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+//return DataFrame{err: fmt.Errorf(strings.Join(errorArr, "\n"))}
 //}
 
 //aCols := df.columns
@@ -924,7 +853,7 @@ package df
 //// This operation matches all rows that appear on both dataframes.
 //func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 //if len(keys) == 0 {
-//return DataFrame{err: errors.New("Unspecified Join keys")}
+//return DataFrame{err: fmt.Errorf("Unspecified Join keys")}
 //}
 //// Check that we have all given keys in both DataFrames
 //errorArr := []string{}
@@ -943,7 +872,7 @@ package df
 //iKeysB = append(iKeysB, j)
 //}
 //if len(errorArr) != 0 {
-//return DataFrame{err: errors.New(strings.Join(errorArr, "\n"))}
+//return DataFrame{err: fmt.Errorf(strings.Join(errorArr, "\n"))}
 //}
 
 //aCols := df.columns
@@ -1091,19 +1020,19 @@ package df
 //return -1
 //}
 
-//func (df DataFrame) Records() [][]string {
-//var records [][]string
-//records = append(records, df.Names())
-//if df.ncols == 0 || df.nrows == 0 {
-//return records
-//}
-//var tRecords [][]string
-//for _, col := range df.columns {
-//tRecords = append(tRecords, col.Records())
-//}
-//records = append(records, transposeRecords(tRecords)...)
-//return records
-//}
+func (df DataFrame) Records() [][]string {
+	var records [][]string
+	records = append(records, df.Names())
+	if df.ncols == 0 || df.nrows == 0 {
+		return records
+	}
+	var tRecords [][]string
+	for _, col := range df.columns {
+		tRecords = append(tRecords, col.Records())
+	}
+	records = append(records, transposeRecords(tRecords)...)
+	return records
+}
 
 //func (df DataFrame) Maps() []map[string]interface{} {
 //maps := make([]map[string]interface{}, df.nrows)
@@ -1125,12 +1054,79 @@ package df
 //}
 //var floats []float64
 //for _, col := range df.columns {
-//f, err := col.Float()
-//if err != nil {
-//return nil, err
-//}
-//floats = append(floats, f...)
+//floats = append(floats, col.Float()...)
 //}
 //dense := mat64.NewDense(df.nrows, df.ncols, floats)
 //return dense, nil
 //}
+
+// fixColnames assigns a name to the missing column names and makes it so that the
+// column names are unique.
+func fixColnames(df *DataFrame) {
+	inStringSlice := func(i string, s []string) bool {
+		for _, v := range s {
+			if v == i {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Find duplicated colnames
+	colnames := df.Names()
+	dupnamesidx := make(map[string][]int)
+	var missingnames []int
+	for i := 0; i < len(colnames); i++ {
+		a := colnames[i]
+		if a == "" {
+			missingnames = append(missingnames, i)
+			continue
+		}
+		for j := 0; j < len(colnames); j++ {
+			b := colnames[j]
+			if i != j && a == b {
+				temp := dupnamesidx[a]
+				dupnamesidx[a] = append(temp, i)
+			}
+		}
+	}
+
+	// Autofill missing column names
+	counter := 0
+	for _, i := range missingnames {
+		proposedName := fmt.Sprintf("X%v", counter)
+		for inStringSlice(proposedName, colnames) {
+			counter++
+			proposedName = fmt.Sprintf("X%v", counter)
+		}
+		colnames[i] = proposedName
+		df.columns[i].Name = proposedName
+		counter++
+	}
+
+	// Sort map keys to make sure it always follows the same order
+	var keys []string
+	for k := range dupnamesidx {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	// Add a suffix to the duplicated colnames
+	for _, name := range keys {
+		idx := dupnamesidx[name]
+		if name == "" {
+			name = "X"
+		}
+		counter := 0
+		for _, i := range idx {
+			proposedName := fmt.Sprintf("%v_%v", name, counter)
+			for inStringSlice(proposedName, colnames) {
+				counter++
+				proposedName = fmt.Sprintf("%v_%v", name, counter)
+			}
+			colnames[i] = proposedName
+			df.columns[i].Name = proposedName
+			counter++
+		}
+	}
+}
