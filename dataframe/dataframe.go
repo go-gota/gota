@@ -1,4 +1,4 @@
-package df
+package dataframe
 
 import (
 	"fmt"
@@ -6,23 +6,27 @@ import (
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/kniren/gota/series"
 )
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns []Series
+	columns Columns
 	ncols   int
 	nrows   int
 	err     error
 }
 
+type Columns []series.Series
+
 // New is a constructor for DataFrames
-func New(series ...Series) DataFrame {
+func New(series ...series.Series) DataFrame {
 	if series == nil || len(series) == 0 {
 		return DataFrame{err: fmt.Errorf("empty DataFrame")}
 	}
 	prevLength := 0
-	var columns []Series
+	var columns Columns
 	var colnames []string
 	for k, s := range series {
 		columns = append(columns, s.Copy())
@@ -99,23 +103,24 @@ func (df DataFrame) String() (str string) {
 	return str
 }
 
-//// Subsetting, mutating and transforming DataFrame methods
-//// =======================================================
+// Subsetting, mutating and transforming DataFrame methods
+// =======================================================
 
 //// Subsets the DataFrame based on the Series subsetting rules
 //func (df DataFrame) Subset(indexes interface{}) DataFrame {
 //if df.Err() != nil {
 //return df
 //}
-//var columnsSubset []Series
+//var columns []series.Series
 //for _, column := range df.columns {
-//columnSubset := column.Subset(indexes)
-//if columnSubset.Err() != nil {
-//return DataFrame{err: columnSubset.Err()}
+//sub := column.Subset(indexes)
+//if sub.Err() != nil {
+//return DataFrame{err: fmt.Errorf("can't subset: %v", sub.Err())}
 //}
-//columnsSubset = append(columnsSubset, columnSubset)
+//columns = append(columns, sub)
 //}
-//return New(columnsSubset...)
+//// FIXME: We are performing two copies, one on column.Subset and another one on New...
+//return New(columns...)
 //}
 
 //// Select the given DataFrame columns
@@ -496,10 +501,10 @@ func (df DataFrame) Names() []string {
 	return colnames
 }
 
-func (df DataFrame) Types() []Type {
-	var coltypes []Type
-	for _, v := range df.columns {
-		coltypes = append(coltypes, v.t)
+func (df DataFrame) Types() []series.Type {
+	var coltypes []series.Type
+	for _, s := range df.columns {
+		coltypes = append(coltypes, s.Type())
 	}
 	return coltypes
 }

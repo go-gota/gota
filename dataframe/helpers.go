@@ -1,10 +1,12 @@
-package df
+package dataframe
 
 import (
 	"errors"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/kniren/gota/series"
 )
 
 func transposeRecords(x [][]string) [][]string {
@@ -38,7 +40,7 @@ func addLeftPadding(s string, nchar int) string {
 	return s
 }
 
-func findType(arr []string) Type {
+func findType(arr []string) series.Type {
 	hasFloats := false
 	hasInts := false
 	hasBools := false
@@ -62,15 +64,15 @@ func findType(arr []string) Type {
 		hasStrings = true
 	}
 	if hasFloats && !hasBools && !hasStrings {
-		return Float
+		return series.Float
 	}
 	if hasInts && !hasFloats && !hasBools && !hasStrings {
-		return Int
+		return series.Int
 	}
 	if !hasInts && !hasFloats && hasBools && !hasStrings {
-		return Bool
+		return series.Bool
 	}
-	return String
+	return series.String
 }
 
 func orBool(a []bool, b []bool) ([]bool, error) {

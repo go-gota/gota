@@ -1,4 +1,4 @@
-package df
+package series
 
 import (
 	"fmt"
@@ -45,8 +45,8 @@ const (
 // indexes. Currently supported are: []int, int, []bool, Series (Int/Bool)
 type Indexes interface{}
 
-// NewSeries is the generic Series constructor
-func NewSeries(values interface{}, t Type, name string) Series {
+// New is the generic Series constructor
+func New(values interface{}, t Type, name string) Series {
 	var elements []elementInterface
 	ret := Series{
 		Name:     name,
@@ -59,22 +59,22 @@ func NewSeries(values interface{}, t Type, name string) Series {
 
 // Strings is a constructor for a String series
 func Strings(values interface{}) Series {
-	return NewSeries(values, String, "")
+	return New(values, String, "")
 }
 
 // Ints is a constructor for an Int series
 func Ints(values interface{}) Series {
-	return NewSeries(values, Int, "")
+	return New(values, Int, "")
 }
 
 // Floats is a constructor for a Float series
 func Floats(values interface{}) Series {
-	return NewSeries(values, Float, "")
+	return New(values, Float, "")
 }
 
 // Bools is a constructor for a bools series
 func Bools(values interface{}) Series {
-	return NewSeries(values, Bool, "")
+	return New(values, Bool, "")
 }
 
 // Empty returns an empty Series of the same type
@@ -85,23 +85,6 @@ func (s Series) Empty() Series {
 		t:        s.t,
 		elements: elements,
 	}
-}
-
-// FIXME: NOT NEEDED ANYMORE
-func (s Series) elem(i int) elementInterface {
-	if i >= s.Len() || i < 0 {
-		return nil
-	}
-	return s.elements[i]
-}
-
-// FIXME: SHOULD NOT BE ALLOWED
-// Val returns the value of a series for the given index
-func (s Series) Val(i int) (interface{}, error) {
-	if i >= s.Len() || i < 0 {
-		return nil, fmt.Errorf("index out of bounds")
-	}
-	return s.elements[i].Val(), nil
 }
 
 // Append appends elements to the end of the Series. The Series is modified in situ
@@ -274,7 +257,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return ret, nil
 	}
 
-	comp := NewSeries(comparando, s.t, "")
+	comp := New(comparando, s.t, "")
 	// In comparator comparation
 	if comparator == In {
 		var bools []bool
@@ -479,7 +462,7 @@ func parseIndexes(l int, indexes interface{}) ([]int, error) {
 	return idx, nil
 }
 
-func (s Series) addr() []string {
+func (s Series) Addr() []string {
 	var ret []string
 	for _, e := range s.elements {
 		ret = append(ret, e.Addr())
