@@ -384,7 +384,7 @@ func TestSeries_Compare(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := a.Compare(test.comparator, test.comparando)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected.Records()
@@ -452,7 +452,7 @@ func TestSeries_Subset(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := test.series.Subset(test.indexes)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -510,7 +510,7 @@ func TestSeries_Set(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := test.series.Set(test.indexes, test.values)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -608,7 +608,7 @@ func TestStrings(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err(); err != nil {
+		if err := test.series.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -704,7 +704,7 @@ func TestInts(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err(); err != nil {
+		if err := test.series.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -796,7 +796,7 @@ func TestFloats(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err(); err != nil {
+		if err := test.series.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -888,7 +888,7 @@ func TestBools(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err(); err != nil {
+		if err := test.series.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -918,7 +918,7 @@ func TestSeries_Copy(t *testing.T) {
 		if fmt.Sprint(a) != fmt.Sprint(b) {
 			t.Error("Different values when copying String elements")
 		}
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkTypes(b); err != nil {
@@ -1041,7 +1041,7 @@ func TestSeries_Concat(t *testing.T) {
 	}
 	for testnum, test := range tests {
 		ab := test.a.Concat(test.b)
-		if err := ab.Err(); err != nil {
+		if err := ab.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		received := ab.Records()

@@ -13,7 +13,7 @@ type Series struct {
 	Name     string             // The name of the series
 	elements []elementInterface // The values of the elements
 	t        Type               // The type of the series
-	err      error
+	Err      error
 }
 
 // Comparator is a comparator that can be used for filtering Series and DataFrames
@@ -89,7 +89,7 @@ func (s Series) Empty() Series {
 
 // Append appends elements to the end of the Series. The Series is modified in situ
 func (s *Series) Append(values interface{}) {
-	if err := s.Err(); err != nil {
+	if err := s.Err; err != nil {
 		return
 	}
 	appendElements := func(val interface{}) error {
@@ -112,7 +112,7 @@ func (s *Series) Append(values interface{}) {
 	if values == nil {
 		err := appendElements(values)
 		if err != nil {
-			s.err = err
+			s.Err = err
 		}
 		return
 	}
@@ -123,7 +123,7 @@ func (s *Series) Append(values interface{}) {
 			val := v.Index(i).Interface()
 			err := appendElements(val)
 			if err != nil {
-				s.err = err
+				s.Err = err
 				return
 			}
 		}
@@ -135,14 +135,14 @@ func (s *Series) Append(values interface{}) {
 			for _, v := range val.(Series).elements {
 				err := appendElements(v)
 				if err != nil {
-					s.err = err
+					s.Err = err
 					return
 				}
 			}
 		default:
 			err := appendElements(val)
 			if err != nil {
-				s.err = err
+				s.Err = err
 				return
 			}
 		}
@@ -152,11 +152,11 @@ func (s *Series) Append(values interface{}) {
 // Concat concatenates two series together. It will return a new Series with the
 // combined elements of both Series.
 func (s Series) Concat(x Series) Series {
-	if err := s.Err(); err != nil {
+	if err := s.Err; err != nil {
 		return s
 	}
-	if err := x.Err(); err != nil {
-		s.err = fmt.Errorf("concat error: argument has errors: %v", err)
+	if err := x.Err; err != nil {
+		s.Err = fmt.Errorf("concat error: argument has errors: %v", err)
 		return s
 	}
 	y := s.Copy()
@@ -168,18 +168,18 @@ func (s Series) Concat(x Series) Series {
 // supports numeric indexes in the form of []int or int, boolean []bool and the
 // respective Series of types Int/Bool.
 func (s Series) Subset(indexes Indexes) Series {
-	if err := s.Err(); err != nil {
+	if err := s.Err; err != nil {
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
 	if err != nil {
-		s.err = err
+		s.Err = err
 		return s
 	}
 	var elements []elementInterface
 	for _, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.err = fmt.Errorf("subsetting error: index out of range")
+			s.Err = fmt.Errorf("subsetting error: index out of range")
 			return s
 		}
 		elements = append(elements, s.elements[i].Copy())
@@ -194,26 +194,26 @@ func (s Series) Subset(indexes Indexes) Series {
 // Set sets the values on the indexes of a Series and returns a new one with these
 // modifications. The original Series does not change.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
-	if err := s.Err(); err != nil {
+	if err := s.Err; err != nil {
 		return s
 	}
-	if err := newvalues.Err(); err != nil {
-		s.err = fmt.Errorf("set error: argument has errors: %v", err)
+	if err := newvalues.Err; err != nil {
+		s.Err = fmt.Errorf("set error: argument has errors: %v", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
 	if err != nil {
-		s.err = err
+		s.Err = err
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.err = fmt.Errorf("set error: dimensions mismatch")
+		s.Err = fmt.Errorf("set error: dimensions mismatch")
 		return s
 	}
 	ret := s.Copy()
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.err = fmt.Errorf("set error: index out of range")
+			s.Err = fmt.Errorf("set error: index out of range")
 			return s
 		}
 		ret.elements[i] = ret.elements[i].Set(newvalues.elements[k])
@@ -233,7 +233,7 @@ func (s Series) HasNaN() bool {
 
 // Compare compares the values of a Series with other series, scalars, text, etc
 func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
-	if err := s.Err(); err != nil {
+	if err := s.Err; err != nil {
 		return s
 	}
 	compareElements := func(a, b elementInterface, c Comparator) (bool, error) {
@@ -267,7 +267,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 				c, err := compareElements(e, m, Eq)
 				if err != nil {
 					s = s.Empty()
-					s.err = err
+					s.Err = err
 					return s
 				}
 				if c {
@@ -287,7 +287,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 			c, err := compareElements(e, comp.elements[0], comparator)
 			if err != nil {
 				s = s.Empty()
-				s.err = err
+				s.Err = err
 				return s
 			}
 			bools = append(bools, c)
@@ -298,14 +298,14 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	// Multiple element comparation
 	if s.Len() != comp.Len() {
 		s := s.Empty()
-		s.err = fmt.Errorf("can't compare: length mismatch")
+		s.Err = fmt.Errorf("can't compare: length mismatch")
 		return s
 	}
 	for k, e := range s.elements {
 		c, err := compareElements(e, comp.elements[k], comparator)
 		if err != nil {
 			s = s.Empty()
-			s.err = err
+			s.Err = err
 			return s
 		}
 		bools = append(bools, c)
@@ -317,7 +317,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
-	err := s.err
+	err := s.Err
 	var elements []elementInterface
 	for _, e := range s.elements {
 		elements = append(elements, e.Copy())
@@ -326,7 +326,7 @@ func (s Series) Copy() Series {
 		Name:     name,
 		t:        t,
 		elements: elements,
-		err:      err,
+		Err:      err,
 	}
 	return ret
 }
@@ -414,11 +414,6 @@ func (s Series) Str() string {
 	return strings.Join(ret, "\n")
 }
 
-// Err returns the error contained in the series
-func (s Series) Err() error {
-	return s.err
-}
-
 // Val returns the value of a series for the given index
 func (s Series) Val(i int) (interface{}, error) {
 	if i >= s.Len() || i < 0 {
@@ -446,7 +441,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		}
 	case Series:
 		s := indexes.(Series)
-		if err := s.Err(); err != nil {
+		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
 		if s.HasNaN() {

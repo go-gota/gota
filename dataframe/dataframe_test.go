@@ -141,7 +141,7 @@ func TestDataFrame_Subset(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.Subset(test.indexes)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -256,7 +256,7 @@ func TestDataFrame_Select(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.Select(test.indexes)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -318,7 +318,7 @@ func TestDataFrame_Rename(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.Rename(test.newname, test.oldname)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -391,7 +391,7 @@ func TestDataFrame_CBind(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.CBind(test.dfb)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -449,7 +449,7 @@ func TestDataFrame_RBind(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.RBind(test.dfb)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -529,7 +529,7 @@ func TestDataFrame_Mutate(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.Mutate(test.s)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -594,7 +594,7 @@ func TestDataFrame_Filter(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := a.Filter(test.filters...)
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
@@ -717,7 +717,7 @@ func TestLoadRecords(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := test.b
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		// Check that the types are the same between both DataFrames
@@ -882,7 +882,7 @@ func TestDataFrame_LoadMaps(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := test.b
-		if err := b.Err(); err != nil {
+		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		// Check that the types are the same between both DataFrames
@@ -915,8 +915,24 @@ Country,Date,Age,Amount,Id
 Spain,2012-02-01,66,555.42,00241
 `
 	a := ReadCSV(strings.NewReader(csvStr))
-	if a.Err() != nil {
-		t.Errorf("Expected success, got error: %v", a.Err())
+	if a.Err != nil {
+		t.Errorf("Expected success, got error: %v", a.Err)
+	}
+}
+
+func TestDataFrame_SetNames(t *testing.T) {
+	a := New(
+		series.New([]string{"a", "b", "c"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 3}, series.Int, "COL.2"),
+		series.New([]float64{3, 2, 1}, series.Float, "COL.3"))
+	n := []string{"wot", "tho", "tree"}
+	err := a.SetNames(n)
+	if err != nil {
+		t.Error("Expected success, got error")
+	}
+	err = a.SetNames([]string{"yaaa"})
+	if err == nil {
+		t.Error("Expected error, got success")
 	}
 }
 
@@ -1258,8 +1274,8 @@ Spain,2012-02-01,66,555.42,00241
 ////CfgColumnTypes(map[string]Type{
 ////"A.1": String,
 ////}))
-////if c.Err() != nil {
-////t.Error("Expected success, got error: ", c.Err())
+////if c.Err != nil {
+////t.Error("Expected success, got error: ", c.Err)
 ////}
 ////if !joinTestEq(c, expected) {
 ////t.Errorf(
@@ -1291,19 +1307,6 @@ Spain,2012-02-01,66,555.42,00241
 ////}
 ////}
 ////return true
-////}
-
-////func TestDataFrame_SetNames(t *testing.T) {
-////a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
-////n := []string{"wot", "tho", "tree"}
-////err := a.SetNames(n)
-////if err != nil {
-////t.Error("Expected success, got error")
-////}
-////err = a.SetNames([]string{"yaaa"})
-////if err == nil {
-////t.Error("Expected error, got success")
-////}
 ////}
 
 ////func TestDataFrame_Maps(t *testing.T) {
@@ -1358,7 +1361,7 @@ Spain,2012-02-01,66,555.42,00241
 ////func TestDataFrame_Column(t *testing.T) {
 ////a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
 ////b := a.Col("COL.2")
-////if b.Err() != nil {
+////if b.Err != nil {
 ////t.Error("Expected success, got error")
 ////}
 ////}
