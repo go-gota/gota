@@ -25,24 +25,29 @@ func New(series ...series.Series) DataFrame {
 	if series == nil || len(series) == 0 {
 		return DataFrame{err: fmt.Errorf("empty DataFrame")}
 	}
-	prevLength := 0
+
+	nrows := 0
 	var columns Columns
 	var colnames []string
 	for k, s := range series {
+		if s.Err() != nil {
+			err := fmt.Errorf("error on series %v: %v", k, s.Err())
+			return DataFrame{err: err}
+		}
 		columns = append(columns, s.Copy())
 		colnames = append(colnames, s.Name)
 		l := s.Len()
-		if k > 0 && l != prevLength {
+		if k > 0 && l != nrows {
 			return DataFrame{err: fmt.Errorf("arguments have different dimensions")}
 		}
-		prevLength = l
+		nrows = l
 	}
 
 	// Fill DataFrame base structure
 	df := DataFrame{
 		columns: columns,
 		ncols:   len(series),
-		nrows:   prevLength,
+		nrows:   nrows,
 	}
 	fixColnames(&df)
 	return df
@@ -106,22 +111,21 @@ func (df DataFrame) String() (str string) {
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-//// Subsets the DataFrame based on the Series subsetting rules
-//func (df DataFrame) Subset(indexes interface{}) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//var columns []series.Series
-//for _, column := range df.columns {
-//sub := column.Subset(indexes)
-//if sub.Err() != nil {
-//return DataFrame{err: fmt.Errorf("can't subset: %v", sub.Err())}
-//}
-//columns = append(columns, sub)
-//}
-//// FIXME: We are performing two copies, one on column.Subset and another one on New...
-//return New(columns...)
-//}
+// Subsets the DataFrame based on the Series subsetting rules
+func (df DataFrame) Subset(indexes interface{}) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	var columns []series.Series
+	for _, column := range df.columns {
+		sub := column.Subset(indexes)
+		if sub.Err() != nil {
+			return DataFrame{err: fmt.Errorf("can't subset: %v", sub.Err())}
+		}
+		columns = append(columns, sub)
+	}
+	return New(columns...)
+}
 
 //// Select the given DataFrame columns
 //func (df DataFrame) Select(colnames ...string) DataFrame {
