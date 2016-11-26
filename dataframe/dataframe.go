@@ -68,11 +68,11 @@ func (df DataFrame) Copy() DataFrame {
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
 	if df.Err != nil {
-		str = "Empty DataFrame:" + df.Err.Error()
+		str = "DataFrame error: " + df.Err.Error()
 		return
 	}
 	if df.nrows == 0 {
-		str = "Empty DataFrame..."
+		str = "Empty DataFrame"
 		return
 	}
 	records := df.Records()
@@ -226,7 +226,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 		copy.columns[idx].Name = newname
 	} else {
 		return DataFrame{
-			Err: fmt.Errorf("The given colname doesn't exist"),
+			Err: fmt.Errorf("rename: can't find column name"),
 		}
 	}
 	return copy
@@ -257,13 +257,13 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	for k, v := range df.Names() {
 		idx := findInStringSlice(v, dfb.Names())
 		if idx < 0 {
-			return DataFrame{Err: fmt.Errorf("rbind error: column names are not compatible")}
+			return DataFrame{Err: fmt.Errorf("rbind: column names are not compatible")}
 		}
 		originalSeries := df.columns[k]
 		addedSeries := dfb.columns[idx]
 		newSeries := originalSeries.Concat(addedSeries)
 		if err := newSeries.Err; err != nil {
-			return DataFrame{Err: fmt.Errorf("rbind error: %v", err)}
+			return DataFrame{Err: fmt.Errorf("rbind: %v", err)}
 		}
 		expandedSeries = append(expandedSeries, newSeries)
 	}
@@ -278,7 +278,7 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 	colname := s.Name
 	if s.Len() != df.nrows {
 		return DataFrame{
-			Err: fmt.Errorf("Can't set column. Different dimensions"),
+			Err: fmt.Errorf("mutate: wrong dimensions"),
 		}
 	}
 	df = df.Copy()
@@ -310,11 +310,11 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	for _, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
 		if idx < 0 {
-			return DataFrame{Err: fmt.Errorf("filter error: can't find column name")}
+			return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
 		}
 		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
 		if err := res.Err; err != nil {
-			return DataFrame{Err: fmt.Errorf("filter error: %v", err)}
+			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
 		compResults = append(compResults, res)
 	}
@@ -324,12 +324,12 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	}
 	res, err := compResults[0].Bool()
 	if err != nil {
-		return DataFrame{Err: fmt.Errorf("filter error: %v", err)}
+		return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 	}
 	for i := 1; i < len(compResults); i++ {
 		nextRes, err := compResults[i].Bool()
 		if err != nil {
-			return DataFrame{Err: fmt.Errorf("filter error: %v", err)}
+			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
 		for j := 0; j < len(res); j++ {
 			res[j] = res[j] || nextRes[j]
@@ -386,10 +386,10 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	}
 
 	if len(records) == 0 {
-		return DataFrame{Err: fmt.Errorf("Empty DataFrame")}
+		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
 	}
 	if cfg.hasHeader && len(records) <= 1 {
-		return DataFrame{Err: fmt.Errorf("Empty DataFrame")}
+		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
 	}
 
 	// Extract headers
@@ -435,7 +435,7 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
-			Err: fmt.Errorf("Can't parse empty map array"),
+			Err: fmt.Errorf("load maps: empty array"),
 		}
 	}
 	inStrSlice := func(i string, s []string) bool {
@@ -530,7 +530,7 @@ func (df DataFrame) SetNames(colnames []string) error {
 		return df.Err
 	}
 	if len(colnames) != df.ncols {
-		err := fmt.Errorf("Couldn't set the column names. Wrong dimensions.")
+		err := fmt.Errorf("setting names: wrong dimensions")
 		return err
 	}
 	for k, v := range colnames {
@@ -566,7 +566,7 @@ func (df DataFrame) Col(colname string) series.Series {
 	idx := findInStringSlice(colname, df.Names())
 	if idx < 0 {
 		return series.Series{
-			Err: fmt.Errorf("The given colname doesn't exist"),
+			Err: fmt.Errorf("unknown column name"),
 		}
 	}
 	ret = df.columns[idx].Copy()
@@ -577,7 +577,7 @@ func (df DataFrame) Col(colname string) series.Series {
 // This operation matches all rows that appear on both dataframes.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
@@ -586,17 +586,17 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
 		iKeysB = append(iKeysB, j)
 	}
 	if len(errorArr) != 0 {
-		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
+		return DataFrame{Err: fmt.Errorf("%v", strings.Join(errorArr, "\n"))}
 	}
 
 	aCols := df.columns
@@ -657,7 +657,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 // This operation matches all rows that appear on both dataframes.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
@@ -666,12 +666,12 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -756,7 +756,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 // This operation matches all rows that appear on both dataframes.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
@@ -765,12 +765,12 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -865,7 +865,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 // This operation matches all rows that appear on both dataframes.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
 	errorArr := []string{}
@@ -874,12 +874,12 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
 		iKeysB = append(iKeysB, j)
 	}
