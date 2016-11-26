@@ -504,13 +504,13 @@ func (df DataFrame) WriteCSV(w io.Writer) error {
 	return csv.NewWriter(w).WriteAll(records)
 }
 
-//func (df DataFrame) WriteJSON(w io.Writer) error {
-//if df.Err() != nil {
-//return df.Err()
-//}
-//m := df.Maps()
-//return json.NewEncoder(w).Encode(m)
-//}
+func (df DataFrame) WriteJSON(w io.Writer) error {
+	if df.Err() != nil {
+		return df.Err()
+	}
+	m := df.Maps()
+	return json.NewEncoder(w).Encode(m)
+}
 
 //// Getters/Setters for DataFrame fields
 //// ====================================
@@ -1061,19 +1061,19 @@ func (df DataFrame) Records() [][]string {
 	return records
 }
 
-//func (df DataFrame) Maps() []map[string]interface{} {
-//maps := make([]map[string]interface{}, df.nrows)
-//colnames := df.Names()
-//for i := 0; i < df.nrows; i++ {
-//m := make(map[string]interface{})
-//for k, v := range colnames {
-//val, _ := df.columns[k].Val(i) // Ignoring the error as the index should not be out of bounds
-//m[v] = val
-//}
-//maps[i] = m
-//}
-//return maps
-//}
+func (df DataFrame) Maps() []map[string]interface{} {
+	maps := make([]map[string]interface{}, df.nrows)
+	colnames := df.Names()
+	for i := 0; i < df.nrows; i++ {
+		m := make(map[string]interface{})
+		for k, v := range colnames {
+			val, _ := df.columns[k].Val(i) // Ignoring the error as the index should not be out of bounds
+			m[v] = val
+		}
+		maps[i] = m
+	}
+	return maps
+}
 
 //func (df DataFrame) Dense() (*mat64.Dense, error) {
 //if df.Err() != nil {

@@ -419,6 +419,14 @@ func (s Series) Err() error {
 	return s.err
 }
 
+// Val returns the value of a series for the given index
+func (s Series) Val(i int) (interface{}, error) {
+	if i >= s.Len() || i < 0 {
+		return nil, fmt.Errorf("index out of bounds")
+	}
+	return s.elements[i].Val(), nil
+}
+
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
 	switch indexes.(type) {
