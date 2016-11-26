@@ -339,102 +339,101 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	return df.Subset(res)
 }
 
-//// Read/Write Methods
-//// =================
+// Read/Write Methods
+// =================
 
-//// LoadOptions is the configuration that will be used for the loading operations
-//type LoadOptions struct {
-//detectTypes bool
-//hasHeader   bool
-//types       map[string]Type
-//defaultType Type
-//}
+// LoadOptions is the configuration that will be used for the loading operations
+type LoadOptions struct {
+	detectTypes bool
+	hasHeader   bool
+	types       map[string]series.Type
+	defaultType series.Type
+}
 
-//func CfgDetectTypes(b bool) func(*LoadOptions) {
-//return func(c *LoadOptions) {
-//c.detectTypes = b
-//}
-//}
+func CfgDetectTypes(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.detectTypes = b
+	}
+}
 
-//func CfgHasHeader(b bool) func(*LoadOptions) {
-//return func(c *LoadOptions) {
-//c.hasHeader = b
-//}
-//}
+func CfgHasHeader(b bool) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.hasHeader = b
+	}
+}
 
-//func CfgColumnTypes(coltypes map[string]Type) func(*LoadOptions) {
-//return func(c *LoadOptions) {
-//c.types = coltypes
-//}
-//}
+func CfgColumnTypes(coltypes map[string]series.Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.types = coltypes
+	}
+}
 
-//func CfgDefaultType(t Type) func(*LoadOptions) {
-//return func(c *LoadOptions) {
-//c.defaultType = t
-//}
-//}
+func CfgDefaultType(t series.Type) func(*LoadOptions) {
+	return func(c *LoadOptions) {
+		c.defaultType = t
+	}
+}
 
-//func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
-//// Load the options
-//cfg := LoadOptions{
-//types:       make(map[string]Type),
-//detectTypes: true,
-//defaultType: String,
-//hasHeader:   true,
-//}
-//for _, option := range options {
-//option(&cfg)
-//}
+func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
+	// Load the options
+	cfg := LoadOptions{
+		types:       make(map[string]series.Type),
+		detectTypes: true,
+		defaultType: series.String,
+		hasHeader:   true,
+	}
+	for _, option := range options {
+		option(&cfg)
+	}
 
-//if len(records) == 0 {
-//return DataFrame{err: fmt.Errorf("Empty DataFrame")}
-//}
-//if cfg.hasHeader && len(records) <= 1 {
-//return DataFrame{err: fmt.Errorf("Empty DataFrame")}
-//}
+	if len(records) == 0 {
+		return DataFrame{err: fmt.Errorf("Empty DataFrame")}
+	}
+	if cfg.hasHeader && len(records) <= 1 {
+		return DataFrame{err: fmt.Errorf("Empty DataFrame")}
+	}
 
-//// Extract headers
-//var headers []string
-//if cfg.hasHeader {
-//headers = records[0]
-//records = records[1:]
-//} else {
-//for i := 0; i < len(records[0]); i++ {
-//headers = append(headers, fmt.Sprint(i))
-//}
-//}
-//types := make([]Type, len(headers))
-//var rawcols [][]string
-//for i, colname := range headers {
-//var rawcol []string
-//for j := 0; j < len(records); j++ {
-//rawcol = append(rawcol, records[j][i])
-//}
-//rawcols = append(rawcols, rawcol)
+	// Extract headers
+	var headers []string
+	if cfg.hasHeader {
+		headers = records[0]
+		records = records[1:]
+	} else {
+		for i := 0; i < len(records[0]); i++ {
+			headers = append(headers, fmt.Sprint(i))
+		}
+	}
+	types := make([]series.Type, len(headers))
+	var rawcols [][]string
+	for i, colname := range headers {
+		var rawcol []string
+		for j := 0; j < len(records); j++ {
+			rawcol = append(rawcol, records[j][i])
+		}
+		rawcols = append(rawcols, rawcol)
 
-//t, ok := cfg.types[colname]
-//if !ok {
-//t = cfg.defaultType
-//if cfg.detectTypes {
-//t = findType(rawcol)
-//}
-//}
-//types[i] = t
-//}
+		t, ok := cfg.types[colname]
+		if !ok {
+			t = cfg.defaultType
+			if cfg.detectTypes {
+				t = findType(rawcol)
+			}
+		}
+		types[i] = t
+	}
 
-//var columns []Series
-//for i, colname := range headers {
-//col := NewSeries(rawcols[i], types[i])
-//if col.Err() != nil {
-//return DataFrame{
-//err: col.Err(),
-//}
-//}
-//col.Name = colname
-//columns = append(columns, col)
-//}
-//return New(columns...)
-//}
+	var columns Columns
+	for i, colname := range headers {
+		col := series.New(rawcols[i], types[i], colname)
+		if col.Err() != nil {
+			return DataFrame{
+				err: col.Err(),
+			}
+		}
+		columns = append(columns, col)
+	}
+	return New(columns...)
+}
 
 //func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
 //if len(maps) == 0 {

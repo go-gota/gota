@@ -639,6 +639,126 @@ func TestDataFrame_Filter(t *testing.T) {
 	}
 }
 
+func TestLoadRecords(t *testing.T) {
+	table := []struct {
+		b     DataFrame
+		expDf DataFrame
+	}{
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0, 0.5}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.String, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0", "0.5"}, series.String, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				CfgHasHeader(false),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+			),
+			New(
+				series.New([]string{"A", "a", "b"}, series.String, "0"),
+				series.New([]string{"B", "1", "2"}, series.String, "1"),
+				series.New([]string{"C", "true", "true"}, series.String, "2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+				CfgColumnTypes(map[string]series.Type{
+					"B": series.Float,
+					"C": series.String,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0", "0.5"}, series.String, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(true),
+				CfgDefaultType(series.String),
+				CfgColumnTypes(map[string]series.Type{
+					"B": series.Float,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]string{"0", "0.5"}, series.Float, "D"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := test.b
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !compareRecords(test.expDf, b) {
+			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
 ////func TestDataFrame_LoadMaps(t *testing.T) {
 ////m := []map[string]interface{}{
 ////map[string]interface{}{
@@ -1034,23 +1154,6 @@ func TestDataFrame_Filter(t *testing.T) {
 ////}
 ////}
 ////return true
-////}
-
-////func TestLoadRecords(t *testing.T) {
-////_ = LoadRecords(
-////[][]string{
-////{"A", "B", "C", "D"},
-////{"a", "1", "true", "0"},
-////{"b", "2", "true", "0.5"},
-////},
-////CfgHasHeader(true),
-////CfgDetectTypes(true),
-////CfgColumnTypes(map[string]Type{
-////"A": String,
-////"B": Int,
-////}),
-////CfgDefaultType(String),
-////)
 ////}
 
 ////func TestDataFrame_ReadCSV(t *testing.T) {
