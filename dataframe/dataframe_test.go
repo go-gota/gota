@@ -37,31 +37,6 @@ func checkAddrDf(a, b DataFrame) error {
 	return nil
 }
 
-// Helper function to compare DataFrames even if the value to compare is NA
-func compareRecords(a, b DataFrame) bool {
-	if a.nrows != b.nrows || a.ncols != b.ncols {
-		return false
-	}
-	if !reflect.DeepEqual(a.Names(), b.Names()) {
-		return false
-	}
-	if !reflect.DeepEqual(a.Types(), b.Types()) {
-		return false
-	}
-	recordsa := a.Records()
-	recordsb := b.Records()
-	for i := 0; i < a.nrows; i++ {
-		for j := 0; j < a.ncols; j++ {
-			x := recordsa[i][j]
-			y := recordsb[i][j]
-			if x != y {
-				return false
-			}
-		}
-	}
-	return true
-}
-
 func TestDataFrame_New(t *testing.T) {
 	series := []series.Series{
 		series.Strings([]int{1, 2, 3, 4, 5}),
@@ -115,8 +90,8 @@ func TestDataFrame_Copy(t *testing.T) {
 		t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
 	}
 	// Check that the values are the same between both DataFrames
-	if !compareRecords(a, b) {
-		t.Error("Different values copied")
+	if !reflect.DeepEqual(a.Records(), b.Records()) {
+		t.Errorf("Different values:\nA:%v\nB:%v", a.Records(), b.Records())
 	}
 }
 
@@ -180,8 +155,8 @@ func TestDataFrame_Subset(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Error("Different values copied")
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -295,8 +270,8 @@ func TestDataFrame_Select(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Error("Different values copied")
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -357,8 +332,8 @@ func TestDataFrame_Rename(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Error("Different values copied")
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -430,8 +405,8 @@ func TestDataFrame_CBind(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Error("Different values copied")
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -488,8 +463,8 @@ func TestDataFrame_RBind(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Error("Different values copied")
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -568,8 +543,8 @@ func TestDataFrame_Mutate(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -633,8 +608,8 @@ func TestDataFrame_Filter(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -753,35 +728,196 @@ func TestLoadRecords(t *testing.T) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !compareRecords(test.expDf, b) {
-			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
 		}
 	}
 }
 
-////func TestDataFrame_LoadMaps(t *testing.T) {
-////m := []map[string]interface{}{
-////map[string]interface{}{
-////"Age":    23,
-////"Name":   "Alice",
-////"Credit": 12.10,
-////},
-////map[string]interface{}{
-////"Age":    32,
-////"Name":   "Bob",
-////"Credit": 15.1,
-////},
-////map[string]interface{}{
-////"Age":    41,
-////"Name":   "Daniel",
-////"Credit": 16.2,
-////},
-////}
-////b := LoadMaps(m)
-////if b.Err() != nil {
-////t.Error("Expected success, got error: ", b.Err())
-////}
-////}
+func TestDataFrame_LoadMaps(t *testing.T) {
+	table := []struct {
+		b     DataFrame
+		expDf DataFrame
+	}{
+		{
+			LoadMaps(
+				[]map[string]interface{}{
+					map[string]interface{}{
+						"A": "a",
+						"B": 1,
+						"C": true,
+						"D": 0,
+					},
+					map[string]interface{}{
+						"A": "b",
+						"B": 2,
+						"C": true,
+						"D": 0.5,
+					},
+				},
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0, 0.5}, series.Float, "D"),
+			),
+		},
+		{
+			LoadMaps(
+				[]map[string]interface{}{
+					map[string]interface{}{
+						"A": "a",
+						"B": 1,
+						"C": true,
+						"D": 0,
+					},
+					map[string]interface{}{
+						"A": "b",
+						"B": 2,
+						"C": true,
+						"D": 0.5,
+					},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.String, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0", "0.5"}, series.String, "D"),
+			),
+		},
+		{
+			LoadMaps(
+				[]map[string]interface{}{
+					map[string]interface{}{
+						"A": "a",
+						"B": 1,
+						"C": true,
+						"D": 0,
+					},
+					map[string]interface{}{
+						"A": "b",
+						"B": 2,
+						"C": true,
+						"D": 0.5,
+					},
+				},
+				CfgHasHeader(false),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+			),
+			New(
+				series.New([]string{"A", "a", "b"}, series.String, "0"),
+				series.New([]string{"B", "1", "2"}, series.String, "1"),
+				series.New([]string{"C", "true", "true"}, series.String, "2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+			),
+		},
+		{
+			LoadMaps(
+				[]map[string]interface{}{
+					map[string]interface{}{
+						"A": "a",
+						"B": 1,
+						"C": true,
+						"D": 0,
+					},
+					map[string]interface{}{
+						"A": "b",
+						"B": 2,
+						"C": true,
+						"D": 0.5,
+					},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(false),
+				CfgDefaultType(series.String),
+				CfgColumnTypes(map[string]series.Type{
+					"B": series.Float,
+					"C": series.String,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0", "0.5"}, series.String, "D"),
+			),
+		},
+		{
+			LoadMaps(
+				[]map[string]interface{}{
+					map[string]interface{}{
+						"A": "a",
+						"B": 1,
+						"C": true,
+						"D": 0,
+					},
+					map[string]interface{}{
+						"A": "b",
+						"B": 2,
+						"C": true,
+						"D": 0.5,
+					},
+				},
+				CfgHasHeader(true),
+				CfgDetectTypes(true),
+				CfgDefaultType(series.String),
+				CfgColumnTypes(map[string]series.Type{
+					"B": series.Float,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]string{"0", "0.5"}, series.Float, "D"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := test.b
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+//func TestDataFrame_ReadCSV(t *testing.T) {
+//// Load the data from a CSV string and try to infer the type of the
+//// columns
+//csvStr := `
+//Country,Date,Age,Amount,Id
+//"United States",2012-02-01,50,112.1,01234
+//"United States",2012-02-01,32,321.31,54320
+//"United Kingdom",2012-02-01,17,18.2,12345
+//"United States",2012-02-01,32,321.31,54320
+//"United Kingdom",2012-02-01,NA,18.2,12345
+//"United States",2012-02-01,32,321.31,54320
+//"United States",2012-02-01,32,321.31,54320
+//Spain,2012-02-01,66,555.42,00241
+//`
+//a := ReadCSV(strings.NewReader(csvStr))
+//if a.Err() != nil {
+//t.Errorf("Expected success, got error: %v", a.Err())
+//}
+//}
 
 ////func TestDataFrame_InnerJoin(t *testing.T) {
 ////a := New(
@@ -1154,26 +1290,6 @@ func TestLoadRecords(t *testing.T) {
 ////}
 ////}
 ////return true
-////}
-
-////func TestDataFrame_ReadCSV(t *testing.T) {
-////// Load the data from a CSV string and try to infer the type of the
-////// columns
-////csvStr := `
-////Country,Date,Age,Amount,Id
-////"United States",2012-02-01,50,112.1,01234
-////"United States",2012-02-01,32,321.31,54320
-////"United Kingdom",2012-02-01,17,18.2,12345
-////"United States",2012-02-01,32,321.31,54320
-////"United Kingdom",2012-02-01,NA,18.2,12345
-////"United States",2012-02-01,32,321.31,54320
-////"United States",2012-02-01,32,321.31,54320
-////Spain,2012-02-01,66,555.42,00241
-////`
-////a := ReadCSV(strings.NewReader(csvStr))
-////if a.Err() != nil {
-////t.Errorf("Expected success, got error: %v", a.Err())
-////}
 ////}
 
 ////func TestDataFrame_SetNames(t *testing.T) {

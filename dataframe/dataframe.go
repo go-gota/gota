@@ -435,45 +435,52 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	return New(columns...)
 }
 
-//func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
-//if len(maps) == 0 {
-//return DataFrame{
-//err: fmt.Errorf("Can't parse empty map array"),
-//}
-//}
-//inStrSlice := func(i string, s []string) bool {
-//for _, v := range s {
-//if v == i {
-//return true
-//}
-//}
-//return false
-//}
+func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
+	if len(maps) == 0 {
+		return DataFrame{
+			err: fmt.Errorf("Can't parse empty map array"),
+		}
+	}
+	inStrSlice := func(i string, s []string) bool {
+		for _, v := range s {
+			if v == i {
+				return true
+			}
+		}
+		return false
+	}
+	// Detect all colnames
+	var colnames []string
+	for _, v := range maps {
+		for k, _ := range v {
+			if exists := inStrSlice(k, colnames); !exists {
+				colnames = append(colnames, k)
+			}
+		}
+	}
+	sort.Strings(colnames)
+	records := [][]string{colnames}
+	for _, m := range maps {
+		var row []string
+		for _, colname := range colnames {
+			element := ""
+			val, ok := m[colname]
+			if ok {
+				element = fmt.Sprint(val)
+			}
+			row = append(row, element)
+		}
+		records = append(records, row)
+	}
+	return LoadRecords(records, options...)
+}
 
-//// Detect all colnames
-//var colnames []string
-//for _, v := range maps {
-//for k, _ := range v {
-//if exists := inStrSlice(k, colnames); !exists {
-//colnames = append(colnames, k)
+//func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+//csvReader := csv.NewReader(r)
+//records, err := csvReader.ReadAll()
+//if err != nil {
+//return DataFrame{err: err}
 //}
-//}
-//}
-//sort.Strings(colnames)
-//records := [][]string{colnames}
-//for _, m := range maps {
-//var row []string
-//for _, colname := range colnames {
-//element := ""
-//val, ok := m[colname]
-//if ok {
-//element = fmt.Sprint(val)
-//}
-//row = append(row, element)
-//}
-//records = append(records, row)
-//}
-
 //return LoadRecords(records, options...)
 //}
 
@@ -484,15 +491,6 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 //return DataFrame{err: err}
 //}
 //return LoadMaps(m, options...)
-//}
-
-//func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
-//csvReader := csv.NewReader(r)
-//records, err := csvReader.ReadAll()
-//if err != nil {
-//return DataFrame{err: err}
-//}
-//return LoadRecords(records, options...)
 //}
 
 //func (df DataFrame) WriteJSON(w io.Writer) error {
