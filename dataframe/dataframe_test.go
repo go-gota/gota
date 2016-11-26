@@ -1249,52 +1249,66 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 	}
 }
 
-////func TestDataFrame_CrossJoin(t *testing.T) {
-////a := New(
-////series.New(1, 2, 3, 1, series.Int,"A" ),
-////NamedStrings("B", "a", "b", "c", "d"),
-////NamedFloats("C", 5.1, 6.0, 6.0, 7.1),
-////NamedBools("D", true, true, false, false),
-////)
-////b := New(
-////NamedStrings("A", "1", "4", "2", "5"),
-////series.New(1, 2, 8, 9, series.Int,"F" ),
-////NamedBools("D", true, false, false, false),
-////)
-////c := a.CrossJoin(b)
-////expectedCSV := `
-////A.0,B,C,D.0,A.1,F,D.1
-////1,a,5.1,true,1,1,true
-////1,a,5.1,true,4,2,false
-////1,a,5.1,true,2,8,false
-////1,a,5.1,true,5,9,false
-////2,b,6.0,true,1,1,true
-////2,b,6.0,true,4,2,false
-////2,b,6.0,true,2,8,false
-////2,b,6.0,true,5,9,false
-////3,c,6.0,false,1,1,true
-////3,c,6.0,false,4,2,false
-////3,c,6.0,false,2,8,false
-////3,c,6.0,false,5,9,false
-////1,d,7.1,false,1,1,true
-////1,d,7.1,false,4,2,false
-////1,d,7.1,false,2,8,false
-////1,d,7.1,false,5,9,false
-////`
-////expected := ReadCSV(
-////strings.NewReader(expectedCSV),
-////CfgColumnTypes(map[string]Type{
-////"A.1": String,
-////}))
-////if c.Err != nil {
-////t.Error("Expected success, got error: ", c.Err)
-////}
-////if !joinTestEq(c, expected) {
-////t.Errorf(
-////"Error:\nExpected:\n%v\nReceived:\n%v",
-////expected, c)
-////}
-////}
+func TestDataFrame_CrossJoin(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "a", "5.1", "true"},
+			[]string{"2", "b", "6.0", "true"},
+			[]string{"3", "c", "6.0", "false"},
+			[]string{"1", "d", "7.1", "false"},
+		},
+	)
+	b := LoadRecords(
+		[][]string{
+			[]string{"A", "F", "D"},
+			[]string{"1", "1", "true"},
+			[]string{"4", "2", "false"},
+			[]string{"2", "8", "false"},
+			[]string{"5", "9", "false"},
+		},
+	)
+	c := a.CrossJoin(b)
+	expectedCSV := `
+A_0,B,C,D_0,A_1,F,D_1
+1,a,5.1,true,1,1,true
+1,a,5.1,true,4,2,false
+1,a,5.1,true,2,8,false
+1,a,5.1,true,5,9,false
+2,b,6.0,true,1,1,true
+2,b,6.0,true,4,2,false
+2,b,6.0,true,2,8,false
+2,b,6.0,true,5,9,false
+3,c,6.0,false,1,1,true
+3,c,6.0,false,4,2,false
+3,c,6.0,false,2,8,false
+3,c,6.0,false,5,9,false
+1,d,7.1,false,1,1,true
+1,d,7.1,false,4,2,false
+1,d,7.1,false,2,8,false
+1,d,7.1,false,5,9,false
+`
+	expected := ReadCSV(
+		strings.NewReader(expectedCSV),
+		CfgColumnTypes(map[string]series.Type{
+			"A.1": series.String,
+		}))
+	if err := c.Err; err != nil {
+		t.Errorf("Error:%v", err)
+	}
+	// Check that the types are the same between both DataFrames
+	if !reflect.DeepEqual(expected.Types(), c.Types()) {
+		t.Errorf("Different types:\nA:%v\nB:%v", expected.Types(), c.Types())
+	}
+	// Check that the colnames are the same between both DataFrames
+	if !reflect.DeepEqual(expected.Names(), c.Names()) {
+		t.Errorf("Different colnames:\nA:%v\nB:%v", expected.Names(), c.Names())
+	}
+	// Check that the values are the same between both DataFrames
+	if !reflect.DeepEqual(expected.Records(), c.Records()) {
+		t.Errorf("Different values:\nA:%v\nB:%v", expected.Records(), c.Records())
+	}
+}
 
 ////// Helper function to compare DataFrames even if the value to compare is NA
 ////func joinTestEq(a, b DataFrame) bool {

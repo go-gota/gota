@@ -991,35 +991,35 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	return New(newCols...)
 }
 
-//// CrossJoin returns a DataFrame containing the cross join of two DataFrames.
-//// This operation matches all rows that appear on both dataframes.
-//func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
-//aCols := df.columns
-//bCols := b.columns
-//// Initialize newCols
-//var newCols Columns
-//for i := 0; i < df.ncols; i++ {
-//newCols = append(newCols, aCols[i].Empty())
-//}
-//for i := 0; i < b.ncols; i++ {
-//newCols = append(newCols, bCols[i].Empty())
-//}
-//// Fill newCols
-//for i := 0; i < df.nrows; i++ {
-//for j := 0; j < b.nrows; j++ {
-//for ii := 0; ii < df.ncols; ii++ {
-//elem := aCols[ii].Elem(i)
-//newCols[ii].Append(elem)
-//}
-//for ii := 0; ii < b.ncols; ii++ {
-//jj := ii + df.ncols
-//elem := bCols[ii].Elem(j)
-//newCols[jj].Append(elem)
-//}
-//}
-//}
-//return New(newCols...)
-//}
+// CrossJoin returns a DataFrame containing the cross join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
+	aCols := df.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols Columns
+	for i := 0; i < df.ncols; i++ {
+		newCols = append(newCols, aCols[i].Empty())
+	}
+	for i := 0; i < b.ncols; i++ {
+		newCols = append(newCols, bCols[i].Empty())
+	}
+	// Fill newCols
+	for i := 0; i < df.nrows; i++ {
+		for j := 0; j < b.nrows; j++ {
+			for ii := 0; ii < df.ncols; ii++ {
+				elem := aCols[ii].Elem(i)
+				newCols[ii].Append(elem)
+			}
+			for ii := 0; ii < b.ncols; ii++ {
+				jj := ii + df.ncols
+				elem := bCols[ii].Elem(j)
+				newCols[jj].Append(elem)
+			}
+		}
+	}
+	return New(newCols...)
+}
 
 // colIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.
