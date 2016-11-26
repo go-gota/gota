@@ -1364,27 +1364,33 @@ c,3,1
 	}
 }
 
-////func TestDataFrame_WriteJSON(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////series.New(1, 2, 3, series.Int,"COL.2" ),
-////NamedFloats("COL.3", 3, nil, 1))
-////buf := new(bytes.Buffer)
-////err := a.WriteJSON(buf)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
-////`
-////if expected != buf.String() {
-////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
-////}
-////}
+func TestDataFrame_WriteJSON(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"COL.1", "COL.2", "COL.3"},
+			[]string{"NaN", "1", "3"},
+			[]string{"5", "2", "2"},
+			[]string{"6", "3", "1"},
+		},
+		CfgDetectTypes(false),
+		CfgDefaultType(series.Int),
+	)
+	buf := new(bytes.Buffer)
+	err := a.WriteJSON(buf)
+	if err != nil {
+		t.Errorf("Expected success, got error: %v", err)
+	}
+	expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]
+`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
+	}
+}
 
-////func TestDataFrame_Column(t *testing.T) {
-////a := New(nil, "b", "c", series.Int,NamedStrings("COL.1" ), series.New("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-////b := a.Col("COL.2")
-////if b.Err != nil {
-////t.Error("Expected success, got error")
-////}
-////}
+//func TestDataFrame_Column(t *testing.T) {
+//a := New(nil, "b", "c", series.Int,NamedStrings("COL.1" ), series.New("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+//b := a.Col("COL.2")
+//if b.Err != nil {
+//t.Error("Expected success, got error")
+//}
+//}
