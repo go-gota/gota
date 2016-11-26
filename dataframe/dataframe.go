@@ -197,13 +197,9 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 	return idx, nil
 }
 
-// SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported:
-// - []int{}
-// - int{}
-// - []string{}
-// - string{}
-// - []bool{}
-// - series.Series of types Int, String or Bool
+// SelectIndexes are the supported indexes used for the DataFrame.Select method.
+// Currently supported are: []int, int, []bool, string, []string, Series (Int,
+// Bool, String)
 type SelectIndexes interface{}
 
 // Select the given DataFrame columns
@@ -225,31 +221,31 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	return New(columns...)
 }
 
-//func (df DataFrame) Rename(newname, oldname string) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//strInsideSliceIdx := func(i string, s []string) (bool, int) {
-//for k, v := range s {
-//if v == i {
-//return true, k
-//}
-//}
-//return false, -1
-//}
-//// Check that colname exist on dataframe
-//var copy DataFrame
-//colnames := df.Names()
-//if exists, idx := strInsideSliceIdx(oldname, colnames); exists {
-//copy = df.Copy()
-//copy.columns[idx].Name = newname
-//} else {
-//return DataFrame{
-//err: fmt.Errorf("The given colname doesn't exist"),
-//}
-//}
-//return copy
-//}
+func (df DataFrame) Rename(newname, oldname string) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	strInsideSliceIdx := func(i string, s []string) (bool, int) {
+		for k, v := range s {
+			if v == i {
+				return true, k
+			}
+		}
+		return false, -1
+	}
+	// Check that colname exist on dataframe
+	var copy DataFrame
+	colnames := df.Names()
+	if exists, idx := strInsideSliceIdx(oldname, colnames); exists {
+		copy = df.Copy()
+		copy.columns[idx].Name = newname
+	} else {
+		return DataFrame{
+			err: fmt.Errorf("The given colname doesn't exist"),
+		}
+	}
+	return copy
+}
 
 //// CBind combines the columns of two DataFrames
 //func (df DataFrame) CBind(newdf DataFrame) DataFrame {
