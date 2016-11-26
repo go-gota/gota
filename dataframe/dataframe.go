@@ -111,8 +111,9 @@ func (df DataFrame) String() (str string) {
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Subsets the DataFrame based on the Series subsetting rules
-func (df DataFrame) Subset(indexes interface{}) DataFrame {
+// Subsets returns a subset of the rows of the original DataFrame based on the
+// Series subsetting indexes
+func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	if df.Err() != nil {
 		return df
 	}
@@ -221,6 +222,7 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	return New(columns...)
 }
 
+// Rename changes the name of one of the columns of a DataFrame
 func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	if df.Err() != nil {
 		return df
@@ -247,22 +249,20 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
-//// CBind combines the columns of two DataFrames
-//func (df DataFrame) CBind(newdf DataFrame) DataFrame {
-//// TODO: Expand to accept DataFrames, Series, and potentially other objects
-//if df.Err() != nil {
-//return df
-//}
-//if newdf.Err() != nil {
-//return newdf
-//}
-//cols := append(df.columns, newdf.columns...)
-//return New(cols...)
-//}
+// CBind combines the columns of two DataFrames
+func (df DataFrame) CBind(dfb DataFrame) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	if dfb.Err() != nil {
+		return dfb
+	}
+	cols := append(df.columns, dfb.columns...)
+	return New(cols...)
+}
 
-//// RBind combines the rows of two DataFrames
+// RBind combines the rows of two DataFrames
 //func (df DataFrame) RBind(newdf DataFrame) DataFrame {
-//// TODO: Expand to accept DataFrames, Series, and potentially other objects
 //if df.Err() != nil {
 //return df
 //}
@@ -277,7 +277,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 //}
 //return false, -1
 //}
-//var expandedSeries []Series
+//var expandedSeries Columns
 //for k, v := range df.Names() {
 //if exists, idx := strInsideSliceIdx(v, newdf.Names()); exists {
 //originalSeries := df.columns[k]
