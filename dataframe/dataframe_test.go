@@ -1092,6 +1092,82 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 	}
 }
 
+func TestDataFrame_RightJoin(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "F", "D"},
+			[]string{"1", "1", "1"},
+			[]string{"4", "2", "0"},
+			[]string{"2", "8", "0"},
+			[]string{"5", "9", "0"},
+		},
+		CfgDetectTypes(false),
+		CfgDefaultType(series.Float),
+	)
+	b := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "1"},
+			[]string{"2", "4", "6.0", "1"},
+			[]string{"3", "3", "6.0", "0"},
+			[]string{"1", "2", "7.1", "0"},
+		},
+		CfgDetectTypes(false),
+		CfgDefaultType(series.Float),
+	)
+	table := []struct {
+		keys  []string
+		expDf DataFrame
+	}{
+		{
+			[]string{"A", "D"},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "D", "F", "B", "C"},
+					[]string{"1", "1", "1", "4", "5.1"},
+					[]string{"2", "1", "NaN", "4", "6.0"},
+					[]string{"3", "0", "NaN", "3", "6.0"},
+					[]string{"1", "0", "NaN", "2", "7.1"},
+				},
+				CfgDetectTypes(false),
+				CfgDefaultType(series.Float),
+			),
+		},
+		{
+			[]string{"A"},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "F", "D_0", "B", "C", "D_1"},
+					[]string{"1", "1", "1", "4", "5.1", "1"},
+					[]string{"2", "8", "0", "4", "6.0", "1"},
+					[]string{"1", "1", "1", "2", "7.1", "0"},
+					[]string{"3", "NaN", "NaN", "3", "6.0", "0"},
+				},
+				CfgDetectTypes(false),
+				CfgDefaultType(series.Float),
+			),
+		},
+	}
+	for testnum, test := range table {
+		c := a.RightJoin(b, test.keys...)
+		if err := c.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		}
+	}
+}
+
 ////func TestDataFrame_LeftJoin(t *testing.T) {
 ////a := New(
 ////series.New(1, 2, 3, 1, series.Int,"A" ),

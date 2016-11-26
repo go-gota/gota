@@ -752,114 +752,114 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	return New(newCols...)
 }
 
-//// RightJoin returns a DataFrame containing the right join of two DataFrames.
-//// This operation matches all rows that appear on both dataframes.
-//func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
-//if len(keys) == 0 {
-//return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
-//}
-//// Check that we have all given keys in both DataFrames
-//errorArr := []string{}
-//var iKeysA []int
-//var iKeysB []int
-//for _, key := range keys {
-//i := df.colIndex(key)
-//if i < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
-//}
-//iKeysA = append(iKeysA, i)
-//j := b.colIndex(key)
-//if j < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
-//}
-//iKeysB = append(iKeysB, j)
-//}
-//if len(errorArr) != 0 {
-//return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
-//}
+// RightJoin returns a DataFrame containing the right join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
+	if len(keys) == 0 {
+		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+	}
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	var iKeysA []int
+	var iKeysB []int
+	for _, key := range keys {
+		i := df.colIndex(key)
+		if i < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		iKeysA = append(iKeysA, i)
+		j := b.colIndex(key)
+		if j < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+		}
+		iKeysB = append(iKeysB, j)
+	}
+	if len(errorArr) != 0 {
+		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
+	}
 
-//aCols := df.columns
-//bCols := b.columns
-//// Initialize newCols
-//var newCols Columns
-//for _, i := range iKeysA {
-//newCols = append(newCols, aCols[i].Empty())
-//}
-//var iNotKeysA []int
-//for i := 0; i < df.ncols; i++ {
-//if !inIntSlice(i, iKeysA) {
-//iNotKeysA = append(iNotKeysA, i)
-//newCols = append(newCols, aCols[i].Empty())
-//}
-//}
-//var iNotKeysB []int
-//for i := 0; i < b.ncols; i++ {
-//if !inIntSlice(i, iKeysB) {
-//iNotKeysB = append(iNotKeysB, i)
-//newCols = append(newCols, bCols[i].Empty())
-//}
-//}
+	aCols := df.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols Columns
+	for _, i := range iKeysA {
+		newCols = append(newCols, aCols[i].Empty())
+	}
+	var iNotKeysA []int
+	for i := 0; i < df.ncols; i++ {
+		if !inIntSlice(i, iKeysA) {
+			iNotKeysA = append(iNotKeysA, i)
+			newCols = append(newCols, aCols[i].Empty())
+		}
+	}
+	var iNotKeysB []int
+	for i := 0; i < b.ncols; i++ {
+		if !inIntSlice(i, iKeysB) {
+			iNotKeysB = append(iNotKeysB, i)
+			newCols = append(newCols, bCols[i].Empty())
+		}
+	}
 
-//// Fill newCols
-//var yesmatched []struct{ i, j int }
-//var nonmatched []int
-//for j := 0; j < b.nrows; j++ {
-//matched := false
-//for i := 0; i < df.nrows; i++ {
-//match := true
-//for k := range keys {
-//aElem := aCols[iKeysA[k]].Elem(i)
-//bElem := bCols[iKeysB[k]].Elem(j)
-//match = match && aElem.Eq(bElem)
-//}
-//if match {
-//matched = true
-//yesmatched = append(yesmatched, struct{ i, j int }{i, j})
-//}
-//}
-//if !matched {
-//nonmatched = append(nonmatched, j)
-//}
-//}
-//for _, v := range yesmatched {
-//i := v.i
-//j := v.j
-//ii := 0
-//for _, k := range iKeysA {
-//elem := aCols[k].Elem(i)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//for _, k := range iNotKeysA {
-//elem := aCols[k].Elem(i)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//for _, k := range iNotKeysB {
-//elem := bCols[k].Elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//for _, j := range nonmatched {
-//ii := 0
-//for _, k := range iKeysB {
-//elem := bCols[k].Elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//for _, _ = range iNotKeysA {
-//newCols[ii].Append(nil)
-//ii++
-//}
-//for _, k := range iNotKeysB {
-//elem := bCols[k].Elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//return New(newCols...)
-//}
+	// Fill newCols
+	var yesmatched []struct{ i, j int }
+	var nonmatched []int
+	for j := 0; j < b.nrows; j++ {
+		matched := false
+		for i := 0; i < df.nrows; i++ {
+			match := true
+			for k := range keys {
+				aElem := aCols[iKeysA[k]].Elem(i)
+				bElem := bCols[iKeysB[k]].Elem(j)
+				match = match && aElem.Eq(bElem)
+			}
+			if match {
+				matched = true
+				yesmatched = append(yesmatched, struct{ i, j int }{i, j})
+			}
+		}
+		if !matched {
+			nonmatched = append(nonmatched, j)
+		}
+	}
+	for _, v := range yesmatched {
+		i := v.i
+		j := v.j
+		ii := 0
+		for _, k := range iKeysA {
+			elem := aCols[k].Elem(i)
+			newCols[ii].Append(elem)
+			ii++
+		}
+		for _, k := range iNotKeysA {
+			elem := aCols[k].Elem(i)
+			newCols[ii].Append(elem)
+			ii++
+		}
+		for _, k := range iNotKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
+		}
+	}
+	for _, j := range nonmatched {
+		ii := 0
+		for _, k := range iKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
+		}
+		for _, _ = range iNotKeysA {
+			newCols[ii].Append(nil)
+			ii++
+		}
+		for _, k := range iNotKeysB {
+			elem := bCols[k].Elem(j)
+			newCols[ii].Append(elem)
+			ii++
+		}
+	}
+	return New(newCols...)
+}
 
 //// OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 //// This operation matches all rows that appear on both dataframes.
