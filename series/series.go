@@ -419,7 +419,7 @@ func (s Series) Err() error {
 	return s.err
 }
 
-func parseIndexes(l int, indexes interface{}) ([]int, error) {
+func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
 	switch indexes.(type) {
 	case []int:

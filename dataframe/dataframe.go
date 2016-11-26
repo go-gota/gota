@@ -127,47 +127,103 @@ func (df DataFrame) Subset(indexes interface{}) DataFrame {
 	return New(columns...)
 }
 
-//// Select the given DataFrame columns
-//func (df DataFrame) Select(colnames ...string) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//inStringSlice := func(i string, s []string) bool {
-//for _, v := range s {
-//if v == i {
-//return true
-//}
-//}
-//return false
-//}
-//var columnsSelected []Series
-//strInsideSliceIdx := func(i string, s []string) (bool, int) {
-//for k, v := range s {
-//if v == i {
-//return true, k
-//}
-//}
-//return false, -1
-//}
-//for k, v := range colnames {
-//// Check duplicate colnames
-//if inStringSlice(v, colnames[k+1:]) {
-//return DataFrame{
-//err: fmt.Errorf("Duplicated colnames on Select"),
-//}
-//}
-//// Check that colnames exist on dataframe
-//dfColnames := df.Names()
-//if exists, idx := strInsideSliceIdx(v, dfColnames); exists {
-//columnsSelected = append(columnsSelected, df.columns[idx])
-//} else {
-//return DataFrame{
-//err: fmt.Errorf("The given colname doesn't exist"),
-//}
-//}
-//}
-//return New(columnsSelected...)
-//}
+func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
+	findInStringSlice := func(str string, s []string) int {
+		for i, e := range s {
+			if e == str {
+				return i
+			}
+		}
+		return -1
+	}
+	var idx []int
+	switch indexes.(type) {
+	case []int:
+		idx = indexes.([]int)
+	case int:
+		idx = []int{indexes.(int)}
+	case []bool:
+		bools := indexes.([]bool)
+		if len(bools) != l {
+			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
+		}
+		for i, b := range bools {
+			if b {
+				idx = append(idx, i)
+			}
+		}
+	case string:
+		s := indexes.(string)
+		i := findInStringSlice(s, colnames)
+		if i < 0 {
+			return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+		}
+		idx = append(idx, i)
+	case []string:
+		xs := indexes.([]string)
+		for _, s := range xs {
+			i := findInStringSlice(s, colnames)
+			if i < 0 {
+				return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+			}
+			idx = append(idx, i)
+		}
+	case series.Series:
+		s := indexes.(series.Series)
+		if err := s.Err(); err != nil {
+			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
+		}
+		if s.HasNaN() {
+			return nil, fmt.Errorf("indexing error: indexes contain NaN")
+		}
+		switch s.Type() {
+		case series.Int:
+			return s.Int()
+		case series.Bool:
+			bools, err := s.Bool()
+			if err != nil {
+				return nil, fmt.Errorf("indexing error: %v", err)
+			}
+			return parseSelectIndexes(l, bools, colnames)
+		case series.String:
+			xs := indexes.(series.Series).Records()
+			return parseSelectIndexes(l, xs, colnames)
+		default:
+			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		}
+	default:
+		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+	}
+	return idx, nil
+}
+
+// SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported:
+// - []int{}
+// - int{}
+// - []string{}
+// - string{}
+// - []bool{}
+// - series.Series of types Int, String or Bool
+type SelectIndexes interface{}
+
+// Select the given DataFrame columns
+func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	var columns Columns
+	idx, err := parseSelectIndexes(df.ncols, indexes, df.Names())
+	if err != nil {
+		return DataFrame{err: fmt.Errorf("can't select columns: %v", err)}
+	}
+	for _, i := range idx {
+		if i < 0 || i >= df.ncols {
+			return DataFrame{err: fmt.Errorf("can't select columns: index out of range")}
+		}
+		columns = append(columns, df.columns[i])
+	}
+	return New(columns...)
+}
 
 //func (df DataFrame) Rename(newname, oldname string) DataFrame {
 //if df.Err() != nil {

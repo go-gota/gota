@@ -139,6 +139,14 @@ func TestDataFrame_Subset(t *testing.T) {
 			),
 		},
 		{
+			[]bool{false, true, true, false, false},
+			New(
+				series.New([]string{"a", "b"}, series.String, "COL.1"),
+				series.New([]int{2, 4}, series.Int, "COL.2"),
+				series.New([]float64{4.0, 5.3}, series.Float, "COL.3"),
+			),
+		},
+		{
 			series.Ints([]int{1, 2}),
 			New(
 				series.New([]string{"a", "b"}, series.String, "COL.1"),
@@ -164,11 +172,11 @@ func TestDataFrame_Subset(t *testing.T) {
 			t.Error(err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(a.Types(), b.Types()) {
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
 			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(a.Names(), b.Names()) {
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
 			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
@@ -178,22 +186,120 @@ func TestDataFrame_Subset(t *testing.T) {
 	}
 }
 
-////func TestDataFrame_Select(t *testing.T) {
-////a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
-////b := a.Select([]string{"COL.1", "COL.3", "COL.1"}...)
-////if b.Err() == nil {
-////t.Error("Expected error, got success")
-////}
-////b = a.Select([]string{"COL.3", "COL.1"}...)
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////b = a.Subset([]int{0, 1}).Select([]string{"COL.3", "COL.1"}...)
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////// TODO: More error checking, this is not exhaustive enough
-////}
+func TestDataFrame_Select(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+	)
+	table := []struct {
+		indexes interface{}
+		expDf   DataFrame
+	}{
+		{
+			series.Bools([]bool{false, true, true}),
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]bool{false, true, true},
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			series.Ints([]int{1, 2}),
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]int{1, 2},
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]int{1},
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+			),
+		},
+		{
+			1,
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+			),
+		},
+		{
+			[]int{1, 2, 0},
+			New(
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+			),
+		},
+		{
+			[]int{0, 0},
+			New(
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+			),
+		},
+		{
+			"COL.3",
+			New(
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]string{"COL.3"},
+			New(
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]string{"COL.3", "COL.1"},
+			New(
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+			),
+		},
+		{
+			series.Strings([]string{"COL.3", "COL.1"}),
+			New(
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Select(test.indexes)
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !compareRecords(test.expDf, b) {
+			t.Error("Different values copied")
+		}
+	}
+}
 
 ////func TestDataFrame_Rename(t *testing.T) {
 ////a := New(NamedStrings("COL.1", "b", "a", "c", "d"), NamedInts("COL.2", 1, 2, 3, 4), NamedFloats("COL.3", 3.0, 4.0, 2.1, 1))
