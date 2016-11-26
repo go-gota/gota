@@ -3,6 +3,7 @@ package dataframe
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/kniren/gota/series"
@@ -899,25 +900,25 @@ func TestDataFrame_LoadMaps(t *testing.T) {
 	}
 }
 
-//func TestDataFrame_ReadCSV(t *testing.T) {
-//// Load the data from a CSV string and try to infer the type of the
-//// columns
-//csvStr := `
-//Country,Date,Age,Amount,Id
-//"United States",2012-02-01,50,112.1,01234
-//"United States",2012-02-01,32,321.31,54320
-//"United Kingdom",2012-02-01,17,18.2,12345
-//"United States",2012-02-01,32,321.31,54320
-//"United Kingdom",2012-02-01,NA,18.2,12345
-//"United States",2012-02-01,32,321.31,54320
-//"United States",2012-02-01,32,321.31,54320
-//Spain,2012-02-01,66,555.42,00241
-//`
-//a := ReadCSV(strings.NewReader(csvStr))
-//if a.Err() != nil {
-//t.Errorf("Expected success, got error: %v", a.Err())
-//}
-//}
+func TestDataFrame_ReadCSV(t *testing.T) {
+	// Load the data from a CSV string and try to infer the type of the
+	// columns
+	csvStr := `
+Country,Date,Age,Amount,Id
+"United States",2012-02-01,50,112.1,01234
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,17,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United Kingdom",2012-02-01,NA,18.2,12345
+"United States",2012-02-01,32,321.31,54320
+"United States",2012-02-01,32,321.31,54320
+Spain,2012-02-01,66,555.42,00241
+`
+	a := ReadCSV(strings.NewReader(csvStr))
+	if a.Err() != nil {
+		t.Errorf("Expected success, got error: %v", a.Err())
+	}
+}
 
 ////func TestDataFrame_InnerJoin(t *testing.T) {
 ////a := New(

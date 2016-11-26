@@ -1,7 +1,10 @@
 package dataframe
 
 import (
+	"encoding/csv"
+	"encoding/json"
 	"fmt"
+	"io"
 	"sort"
 	"strconv"
 	"strings"
@@ -475,23 +478,31 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 	return LoadRecords(records, options...)
 }
 
-//func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
-//csvReader := csv.NewReader(r)
-//records, err := csvReader.ReadAll()
-//if err != nil {
-//return DataFrame{err: err}
-//}
-//return LoadRecords(records, options...)
-//}
+func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+	csvReader := csv.NewReader(r)
+	records, err := csvReader.ReadAll()
+	if err != nil {
+		return DataFrame{err: err}
+	}
+	return LoadRecords(records, options...)
+}
 
-//func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
-//var m []map[string]interface{}
-//err := json.NewDecoder(r).Decode(&m)
-//if err != nil {
-//return DataFrame{err: err}
-//}
-//return LoadMaps(m, options...)
-//}
+func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+	var m []map[string]interface{}
+	err := json.NewDecoder(r).Decode(&m)
+	if err != nil {
+		return DataFrame{err: err}
+	}
+	return LoadMaps(m, options...)
+}
+
+func (df DataFrame) WriteCSV(w io.Writer) error {
+	if df.Err() != nil {
+		return df.Err()
+	}
+	records := df.Records()
+	return csv.NewWriter(w).WriteAll(records)
+}
 
 //func (df DataFrame) WriteJSON(w io.Writer) error {
 //if df.Err() != nil {
@@ -499,14 +510,6 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 //}
 //m := df.Maps()
 //return json.NewEncoder(w).Encode(m)
-//}
-
-//func (df DataFrame) WriteCSV(w io.Writer) error {
-//if df.Err() != nil {
-//return df.Err()
-//}
-//records := df.Records()
-//return csv.NewWriter(w).WriteAll(records)
 //}
 
 //// Getters/Setters for DataFrame fields
