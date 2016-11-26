@@ -129,14 +129,6 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 }
 
 func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
-	findInStringSlice := func(str string, s []string) int {
-		for i, e := range s {
-			if e == str {
-				return i
-			}
-		}
-		return -1
-	}
 	var idx []int
 	switch indexes.(type) {
 	case []int:
@@ -227,18 +219,10 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	if df.Err() != nil {
 		return df
 	}
-	strInsideSliceIdx := func(i string, s []string) (bool, int) {
-		for k, v := range s {
-			if v == i {
-				return true, k
-			}
-		}
-		return false, -1
-	}
 	// Check that colname exist on dataframe
 	var copy DataFrame
 	colnames := df.Names()
-	if exists, idx := strInsideSliceIdx(oldname, colnames); exists {
+	if idx := findInStringSlice(oldname, colnames); idx >= 0 {
 		copy = df.Copy()
 		copy.columns[idx].Name = newname
 	} else {
@@ -261,38 +245,31 @@ func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	return New(cols...)
 }
 
-// RBind combines the rows of two DataFrames
-//func (df DataFrame) RBind(newdf DataFrame) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//if newdf.Err() != nil {
-//return newdf
-//}
-//strInsideSliceIdx := func(i string, s []string) (bool, int) {
-//for k, v := range s {
-//if v == i {
-//return true, k
-//}
-//}
-//return false, -1
-//}
-//var expandedSeries Columns
-//for k, v := range df.Names() {
-//if exists, idx := strInsideSliceIdx(v, newdf.Names()); exists {
-//originalSeries := df.columns[k]
-//addedSeries := newdf.columns[idx]
-//newSeries := originalSeries.Concat(addedSeries)
-//if err := newSeries.Err(); err != nil {
-//return DataFrame{err: err}
-//}
-//expandedSeries = append(expandedSeries, newSeries)
-//} else {
-//return DataFrame{err: fmt.Errorf("Not compatible column names")}
-//}
-//}
-//return New(expandedSeries...)
-//}
+// RBind matches the column names of two DataFrames and returns the combination of
+// the rows of both of them
+func (df DataFrame) RBind(dfb DataFrame) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	if dfb.Err() != nil {
+		return dfb
+	}
+	var expandedSeries Columns
+	for k, v := range df.Names() {
+		idx := findInStringSlice(v, dfb.Names())
+		if idx < 0 {
+			return DataFrame{err: fmt.Errorf("rbind error: column names are not compatible")}
+		}
+		originalSeries := df.columns[k]
+		addedSeries := dfb.columns[idx]
+		newSeries := originalSeries.Concat(addedSeries)
+		if err := newSeries.Err(); err != nil {
+			return DataFrame{err: fmt.Errorf("rbind error: %v", err)}
+		}
+		expandedSeries = append(expandedSeries, newSeries)
+	}
+	return New(expandedSeries...)
+}
 
 //// Mutate changes a column of the DataFrame with the given Series
 //func (df DataFrame) Mutate(colname string, series Series) DataFrame {
@@ -1124,15 +1101,6 @@ func (df DataFrame) Records() [][]string {
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(df *DataFrame) {
-	inStringSlice := func(i string, s []string) bool {
-		for _, v := range s {
-			if v == i {
-				return true
-			}
-		}
-		return false
-	}
-
 	// Find duplicated colnames
 	colnames := df.Names()
 	dupnamesidx := make(map[string][]int)
@@ -1156,7 +1124,7 @@ func fixColnames(df *DataFrame) {
 	counter := 0
 	for _, i := range missingnames {
 		proposedName := fmt.Sprintf("X%v", counter)
-		for inStringSlice(proposedName, colnames) {
+		for findInStringSlice(proposedName, colnames) >= 0 {
 			counter++
 			proposedName = fmt.Sprintf("X%v", counter)
 		}
@@ -1181,7 +1149,7 @@ func fixColnames(df *DataFrame) {
 		counter := 0
 		for _, i := range idx {
 			proposedName := fmt.Sprintf("%v_%v", name, counter)
-			for inStringSlice(proposedName, colnames) {
+			for findInStringSlice(proposedName, colnames) >= 0 {
 				counter++
 				proposedName = fmt.Sprintf("%v_%v", name, counter)
 			}
@@ -1190,4 +1158,13 @@ func fixColnames(df *DataFrame) {
 			counter++
 		}
 	}
+}
+
+func findInStringSlice(str string, s []string) int {
+	for i, e := range s {
+		if e == str {
+			return i
+		}
+	}
+	return -1
 }
