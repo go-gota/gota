@@ -15,24 +15,22 @@ import (
 
 // DataFrame is the base data structure
 type DataFrame struct {
-	columns Columns
+	columns []series.Series
 	ncols   int
 	nrows   int
 	Err     error
 }
 
-type Columns []series.Series
-
 // New is a constructor for DataFrames
-func New(series ...series.Series) DataFrame {
-	if series == nil || len(series) == 0 {
+func New(se ...series.Series) DataFrame {
+	if se == nil || len(se) == 0 {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
 
 	nrows := 0
-	var columns Columns
+	var columns []series.Series
 	var colnames []string
-	for k, s := range series {
+	for k, s := range se {
 		if s.Err != nil {
 			err := fmt.Errorf("error on series %v: %v", k, s.Err)
 			return DataFrame{Err: err}
@@ -49,7 +47,7 @@ func New(series ...series.Series) DataFrame {
 	// Fill DataFrame base structure
 	df := DataFrame{
 		columns: columns,
-		ncols:   len(series),
+		ncols:   len(se),
 		nrows:   nrows,
 	}
 	fixColnames(&df)
@@ -199,7 +197,7 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var columns Columns
+	var columns []series.Series
 	idx, err := parseSelectIndexes(df.ncols, indexes, df.Names())
 	if err != nil {
 		return DataFrame{Err: fmt.Errorf("can't select columns: %v", err)}
@@ -253,7 +251,7 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if dfb.Err != nil {
 		return dfb
 	}
-	var expandedSeries Columns
+	var expandedSeries []series.Series
 	for k, v := range df.Names() {
 		idx := findInStringSlice(v, dfb.Names())
 		if idx < 0 {
@@ -306,7 +304,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var compResults Columns
+	var compResults []series.Series
 	for _, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
 		if idx < 0 {
@@ -421,7 +419,7 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 		types[i] = t
 	}
 
-	var columns Columns
+	var columns []series.Series
 	for i, colname := range headers {
 		col := series.New(rawcols[i], types[i], colname)
 		if col.Err != nil {
@@ -602,7 +600,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
-	var newCols Columns
+	var newCols []series.Series
 	for _, i := range iKeysA {
 		newCols = append(newCols, aCols[i].Empty())
 	}
@@ -682,7 +680,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
-	var newCols Columns
+	var newCols []series.Series
 	for _, i := range iKeysA {
 		newCols = append(newCols, aCols[i].Empty())
 	}
@@ -781,7 +779,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
-	var newCols Columns
+	var newCols []series.Series
 	for _, i := range iKeysA {
 		newCols = append(newCols, aCols[i].Empty())
 	}
@@ -890,7 +888,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
-	var newCols Columns
+	var newCols []series.Series
 	for _, i := range iKeysA {
 		newCols = append(newCols, aCols[i].Empty())
 	}
@@ -997,7 +995,7 @@ func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
-	var newCols Columns
+	var newCols []series.Series
 	for i := 0; i < df.ncols; i++ {
 		newCols = append(newCols, aCols[i].Empty())
 	}
