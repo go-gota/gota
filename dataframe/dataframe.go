@@ -294,55 +294,50 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 	return New(newSeries...)
 }
 
-//// F is the filtering structure
-//type F struct {
-//Colname    string
-//Comparator series.Comparator
-//Comparando interface{}
-//}
+// F is the filtering structure
+type F struct {
+	Colname    string
+	Comparator series.Comparator
+	Comparando interface{}
+}
 
-//// Filter will filter the rows of a DataFrame
-//func (df DataFrame) Filter(filters ...F) DataFrame {
-//if df.Err() != nil {
-//return df
-//}
-//strInsideSliceIdx := func(i string, s []string) (bool, int) {
-//for k, v := range s {
-//if v == i {
-//return true, k
-//}
-//}
-//return false, -1
-//}
-//var compResults []Series
-//for _, f := range filters {
-//if exists, idx := strInsideSliceIdx(f.Colname, df.Names()); exists {
-//res := df.columns[idx].Compare(f.Comparator, f.Comparando)
-//if err := res.Err(); err != nil {
-//return DataFrame{
-//err: err,
-//}
-//}
-//compResults = append(compResults, res)
-//} else {
-//return DataFrame{
-//err: fmt.Errorf("The given colname doesn't exist"),
-//}
-//}
-//}
-//// Join compResults via "OR"
-//if len(compResults) == 0 {
-//return df.Copy()
-//}
-//res := compResults[0]
-//for i := 1; i < len(compResults); i++ {
-//nextRes := compResults[i]
-//for j := 0; j < res.Len(); j++ {
-//res[j] = res[j] || nextRes[j]
-//}
-//}
-//return df.Subset(res)
-//}
+// Filter will filter the rows of a DataFrame based on the given filters. All
+// filters on the argument of a Filter call are aggregated as an Or operation.
+func (df DataFrame) Filter(filters ...F) DataFrame {
+	if df.Err() != nil {
+		return df
+	}
+	var compResults Columns
+	for _, f := range filters {
+		idx := findInStringSlice(f.Colname, df.Names())
+		if idx < 0 {
+			return DataFrame{err: fmt.Errorf("filter error: can't find column name")}
+		}
+		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
+		if err := res.Err(); err != nil {
+			return DataFrame{err: fmt.Errorf("filter error: %v", err)}
+		}
+		compResults = append(compResults, res)
+	}
+	// Join compResults via "OR"
+	if len(compResults) == 0 {
+		return df.Copy()
+	}
+	res, err := compResults[0].Bool()
+	if err != nil {
+		return DataFrame{err: fmt.Errorf("filter error: %v", err)}
+	}
+	for i := 1; i < len(compResults); i++ {
+		nextRes, err := compResults[i].Bool()
+		if err != nil {
+			return DataFrame{err: fmt.Errorf("filter error: %v", err)}
+		}
+		for j := 0; j < len(res); j++ {
+			res[j] = res[j] || nextRes[j]
+		}
+	}
+	return df.Subset(res)
+}
 
 //// Read/Write Methods
 //// =================

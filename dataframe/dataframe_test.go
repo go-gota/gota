@@ -574,23 +574,70 @@ func TestDataFrame_Mutate(t *testing.T) {
 	}
 }
 
-////func TestDataFrame_Filter(t *testing.T) {
-////a := New(
-////NamedInts("Age", 23, 32, 41),
-////NamedStrings("Names", "Alice", "Bob", "Daniel"),
-////NamedFloats("Credit", 12.10, 15.1, 16.2),
-////)
-////b := a.Filter(
-////F{"Age", "<", 30},
-////F{"Age", ">", 40},
-////).Filter(F{"Names", "==", "Alice"})
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////if b.Nrow() != 1 {
-////t.Error("Expected Nrow=1, got ", b.Nrow())
-////}
-////}
+func TestDataFrame_Filter(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+	)
+	table := []struct {
+		filters []F
+		expDf   DataFrame
+	}{
+		{
+			[]F{{"COL.2", series.GreaterEq, 4}},
+			New(
+				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
+				{"COL.2", series.Greater, 4},
+				{"COL.2", series.Eq, 1},
+			},
+			New(
+				series.New([]string{"b", "c"}, series.String, "COL.1"),
+				series.New([]int{1, 5}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 3.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
+				{"COL.2", series.Greater, 4},
+				{"COL.2", series.Eq, 1},
+				{"COL.1", series.Eq, "d"},
+			},
+			New(
+				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{1, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Filter(test.filters...)
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !compareRecords(test.expDf, b) {
+			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
 
 ////func TestDataFrame_LoadMaps(t *testing.T) {
 ////m := []map[string]interface{}{
