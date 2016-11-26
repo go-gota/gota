@@ -1310,42 +1310,34 @@ A_0,B,C,D_0,A_1,F,D_1
 	}
 }
 
-////// Helper function to compare DataFrames even if the value to compare is NA
-////func joinTestEq(a, b DataFrame) bool {
-////if a.nrows != b.nrows || a.ncols != b.ncols {
-////return false
-////}
-////if !reflect.DeepEqual(a.Names(), b.Names()) {
-////return false
-////}
-////if !reflect.DeepEqual(a.Types(), b.Types()) {
-////return false
-////}
-////for i := 0; i < a.nrows; i++ {
-////for j := 0; j < a.ncols; j++ {
-////aElem := a.columns[j].elem(i)
-////bElem := b.columns[j].elem(i)
-
-////if !(aElem.IsNA() && bElem.IsNA()) &&
-////!aElem.Eq(bElem) {
-////return false
-////}
-////}
-////}
-////return true
-////}
-
-////func TestDataFrame_Maps(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////series.New(1, 2, 3, series.Int,"COL.2" ),
-////NamedFloats("COL.3", 3, nil, 1))
-////m := a.Maps()
-////_, err := json.Marshal(m)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////}
+func TestDataFrame_Maps(t *testing.T) {
+	a := New(
+		series.New([]string{"a", "b", "c"}, series.String, "COL.1"),
+		series.New([]string{"", "2", "3"}, series.Int, "COL.2"),
+		series.New([]string{"", "", "3"}, series.Int, "COL.3"),
+	)
+	m := a.Maps()
+	expected := []map[string]interface{}{
+		map[string]interface{}{
+			"COL.1": "a",
+			"COL.2": nil,
+			"COL.3": nil,
+		},
+		map[string]interface{}{
+			"COL.1": "b",
+			"COL.2": 2,
+			"COL.3": nil,
+		},
+		map[string]interface{}{
+			"COL.1": "c",
+			"COL.2": 3,
+			"COL.3": 3,
+		},
+	}
+	if !reflect.DeepEqual(expected, m) {
+		t.Errorf("Different values:\nA:%v\nB:%v", expected, m)
+	}
+}
 
 ////func TestDataFrame_WriteCSV(t *testing.T) {
 ////a := New(
