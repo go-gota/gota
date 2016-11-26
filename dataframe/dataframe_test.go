@@ -1387,10 +1387,20 @@ func TestDataFrame_WriteJSON(t *testing.T) {
 	}
 }
 
-//func TestDataFrame_Column(t *testing.T) {
-//a := New(nil, "b", "c", series.Int,NamedStrings("COL.1" ), series.New("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-//b := a.Col("COL.2")
-//if b.Err != nil {
-//t.Error("Expected success, got error")
-//}
-//}
+func TestDataFrame_Col(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"COL.1", "COL.2", "COL.3"},
+			[]string{"NaN", "1", "3"},
+			[]string{"5", "2", "2"},
+			[]string{"6", "3", "1"},
+		},
+		CfgDetectTypes(false),
+		CfgDefaultType(series.Int),
+	)
+	b := a.Col("COL.2")
+	expected := series.New([]int{1, 2, 3}, series.Int, "COL.2")
+	if !reflect.DeepEqual(b.Records(), expected.Records()) {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, b)
+	}
+}
