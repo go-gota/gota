@@ -422,6 +422,15 @@ func (s Series) Val(i int) (interface{}, error) {
 	return s.elements[i].Val(), nil
 }
 
+// Elem returns the element of a series for the given index or nil if the index is
+// out of bounds
+func (s Series) Elem(i int) elementInterface {
+	if i >= s.Len() || i < 0 {
+		return nil
+	}
+	return s.elements[i]
+}
+
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
 	switch indexes.(type) {

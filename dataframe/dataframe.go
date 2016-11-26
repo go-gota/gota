@@ -573,85 +573,85 @@ func (df DataFrame) Col(colname string) series.Series {
 	return ret
 }
 
-//// InnerJoin returns a DataFrame containing the inner join of two DataFrames.
-//// This operation matches all rows that appear on both dataframes.
-//func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
-//if len(keys) == 0 {
-//return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
-//}
-//// Check that we have all given keys in both DataFrames
-//errorArr := []string{}
-//var iKeysA []int
-//var iKeysB []int
-//for _, key := range keys {
-//i := df.ColIndex(key)
-//if i < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
-//}
-//iKeysA = append(iKeysA, i)
-//j := b.ColIndex(key)
-//if j < 0 {
-//errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
-//}
-//iKeysB = append(iKeysB, j)
-//}
-//if len(errorArr) != 0 {
-//return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
-//}
+// InnerJoin returns a DataFrame containing the inner join of two DataFrames.
+// This operation matches all rows that appear on both dataframes.
+func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
+	if len(keys) == 0 {
+		return DataFrame{Err: fmt.Errorf("Unspecified Join keys")}
+	}
+	// Check that we have all given keys in both DataFrames
+	errorArr := []string{}
+	var iKeysA []int
+	var iKeysB []int
+	for _, key := range keys {
+		i := df.colIndex(key)
+		if i < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
+		}
+		iKeysA = append(iKeysA, i)
+		j := b.colIndex(key)
+		if j < 0 {
+			errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
+		}
+		iKeysB = append(iKeysB, j)
+	}
+	if len(errorArr) != 0 {
+		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
+	}
 
-//aCols := df.columns
-//bCols := b.columns
-//// Initialize newCols
-//var newCols []Series
-//for _, i := range iKeysA {
-//newCols = append(newCols, aCols[i].Empty())
-//}
-//var iNotKeysA []int
-//for i := 0; i < df.ncols; i++ {
-//if !inIntSlice(i, iKeysA) {
-//iNotKeysA = append(iNotKeysA, i)
-//newCols = append(newCols, aCols[i].Empty())
-//}
-//}
-//var iNotKeysB []int
-//for i := 0; i < b.ncols; i++ {
-//if !inIntSlice(i, iKeysB) {
-//iNotKeysB = append(iNotKeysB, i)
-//newCols = append(newCols, bCols[i].Empty())
-//}
-//}
+	aCols := df.columns
+	bCols := b.columns
+	// Initialize newCols
+	var newCols Columns
+	for _, i := range iKeysA {
+		newCols = append(newCols, aCols[i].Empty())
+	}
+	var iNotKeysA []int
+	for i := 0; i < df.ncols; i++ {
+		if !inIntSlice(i, iKeysA) {
+			iNotKeysA = append(iNotKeysA, i)
+			newCols = append(newCols, aCols[i].Empty())
+		}
+	}
+	var iNotKeysB []int
+	for i := 0; i < b.ncols; i++ {
+		if !inIntSlice(i, iKeysB) {
+			iNotKeysB = append(iNotKeysB, i)
+			newCols = append(newCols, bCols[i].Empty())
+		}
+	}
 
-//// Fill newCols
-//for i := 0; i < df.nrows; i++ {
-//for j := 0; j < b.nrows; j++ {
-//match := true
-//for k := range keys {
-//aElem := aCols[iKeysA[k]].elem(i)
-//bElem := bCols[iKeysB[k]].elem(j)
-//match = match && aElem.Eq(bElem)
-//}
-//if match {
-//ii := 0
-//for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
-//newCols[ii].Append(elem)
-//ii++
-//}
-//}
-//}
-//}
-//return New(newCols...)
-//}
+	// Fill newCols
+	for i := 0; i < df.nrows; i++ {
+		for j := 0; j < b.nrows; j++ {
+			match := true
+			for k := range keys {
+				aElem := aCols[iKeysA[k]].Elem(i)
+				bElem := bCols[iKeysB[k]].Elem(j)
+				match = match && aElem.Eq(bElem)
+			}
+			if match {
+				ii := 0
+				for _, k := range iKeysA {
+					elem := aCols[k].Elem(i)
+					newCols[ii].Append(elem)
+					ii++
+				}
+				for _, k := range iNotKeysA {
+					elem := aCols[k].Elem(i)
+					newCols[ii].Append(elem)
+					ii++
+				}
+				for _, k := range iNotKeysB {
+					elem := bCols[k].Elem(j)
+					newCols[ii].Append(elem)
+					ii++
+				}
+			}
+		}
+	}
+	return New(newCols...)
+}
 
 //// LeftJoin returns a DataFrame containing the left join of two DataFrames.
 //// This operation matches all rows that appear on both dataframes.
@@ -664,12 +664,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //var iKeysA []int
 //var iKeysB []int
 //for _, key := range keys {
-//i := df.ColIndex(key)
+//i := df.colIndex(key)
 //if i < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 //}
 //iKeysA = append(iKeysA, i)
-//j := b.ColIndex(key)
+//j := b.colIndex(key)
 //if j < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
 //}
@@ -682,7 +682,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //aCols := df.columns
 //bCols := b.columns
 //// Initialize newCols
-//var newCols []Series
+//var newCols Columns
 //for _, i := range iKeysA {
 //newCols = append(newCols, aCols[i].Empty())
 //}
@@ -707,25 +707,25 @@ func (df DataFrame) Col(colname string) series.Series {
 //for j := 0; j < b.nrows; j++ {
 //match := true
 //for k := range keys {
-//aElem := aCols[iKeysA[k]].elem(i)
-//bElem := bCols[iKeysB[k]].elem(j)
+//aElem := aCols[iKeysA[k]].Elem(i)
+//bElem := bCols[iKeysB[k]].Elem(j)
 //match = match && aElem.Eq(bElem)
 //}
 //if match {
 //matched = true
 //ii := 0
 //for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -734,12 +734,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //if !matched {
 //ii := 0
 //for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -763,12 +763,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //var iKeysA []int
 //var iKeysB []int
 //for _, key := range keys {
-//i := df.ColIndex(key)
+//i := df.colIndex(key)
 //if i < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 //}
 //iKeysA = append(iKeysA, i)
-//j := b.ColIndex(key)
+//j := b.colIndex(key)
 //if j < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
 //}
@@ -781,7 +781,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //aCols := df.columns
 //bCols := b.columns
 //// Initialize newCols
-//var newCols []Series
+//var newCols Columns
 //for _, i := range iKeysA {
 //newCols = append(newCols, aCols[i].Empty())
 //}
@@ -808,8 +808,8 @@ func (df DataFrame) Col(colname string) series.Series {
 //for i := 0; i < df.nrows; i++ {
 //match := true
 //for k := range keys {
-//aElem := aCols[iKeysA[k]].elem(i)
-//bElem := bCols[iKeysB[k]].elem(j)
+//aElem := aCols[iKeysA[k]].Elem(i)
+//bElem := bCols[iKeysB[k]].Elem(j)
 //match = match && aElem.Eq(bElem)
 //}
 //if match {
@@ -826,17 +826,17 @@ func (df DataFrame) Col(colname string) series.Series {
 //j := v.j
 //ii := 0
 //for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -844,7 +844,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //for _, j := range nonmatched {
 //ii := 0
 //for _, k := range iKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -853,7 +853,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //ii++
 //}
 //for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -872,12 +872,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //var iKeysA []int
 //var iKeysB []int
 //for _, key := range keys {
-//i := df.ColIndex(key)
+//i := df.colIndex(key)
 //if i < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key \"", key, "\" on left DataFrame"))
 //}
 //iKeysA = append(iKeysA, i)
-//j := b.ColIndex(key)
+//j := b.colIndex(key)
 //if j < 0 {
 //errorArr = append(errorArr, fmt.Sprint("Can't find key '", key, "' on left DataFrame"))
 //}
@@ -890,7 +890,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //aCols := df.columns
 //bCols := b.columns
 //// Initialize newCols
-//var newCols []Series
+//var newCols Columns
 //for _, i := range iKeysA {
 //newCols = append(newCols, aCols[i].Empty())
 //}
@@ -915,25 +915,25 @@ func (df DataFrame) Col(colname string) series.Series {
 //for j := 0; j < b.nrows; j++ {
 //match := true
 //for k := range keys {
-//aElem := aCols[iKeysA[k]].elem(i)
-//bElem := bCols[iKeysB[k]].elem(j)
+//aElem := aCols[iKeysA[k]].Elem(i)
+//bElem := bCols[iKeysB[k]].Elem(j)
 //match = match && aElem.Eq(bElem)
 //}
 //if match {
 //matched = true
 //ii := 0
 //for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -942,12 +942,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //if !matched {
 //ii := 0
 //for _, k := range iKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
 //for _, k := range iNotKeysA {
-//elem := aCols[k].elem(i)
+//elem := aCols[k].Elem(i)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -962,8 +962,8 @@ func (df DataFrame) Col(colname string) series.Series {
 //for i := 0; i < df.nrows; i++ {
 //match := true
 //for k := range keys {
-//aElem := aCols[iKeysA[k]].elem(i)
-//bElem := bCols[iKeysB[k]].elem(j)
+//aElem := aCols[iKeysA[k]].Elem(i)
+//bElem := bCols[iKeysB[k]].Elem(j)
 //match = match && aElem.Eq(bElem)
 //}
 //if match {
@@ -973,7 +973,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //if !matched {
 //ii := 0
 //for _, k := range iKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -982,7 +982,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //ii++
 //}
 //for _, k := range iNotKeysB {
-//elem := bCols[k].elem(j)
+//elem := bCols[k].Elem(j)
 //newCols[ii].Append(elem)
 //ii++
 //}
@@ -997,7 +997,7 @@ func (df DataFrame) Col(colname string) series.Series {
 //aCols := df.columns
 //bCols := b.columns
 //// Initialize newCols
-//var newCols []Series
+//var newCols Columns
 //for i := 0; i < df.ncols; i++ {
 //newCols = append(newCols, aCols[i].Empty())
 //}
@@ -1008,12 +1008,12 @@ func (df DataFrame) Col(colname string) series.Series {
 //for i := 0; i < df.nrows; i++ {
 //for j := 0; j < b.nrows; j++ {
 //for ii := 0; ii < df.ncols; ii++ {
-//elem := aCols[ii].elem(i)
+//elem := aCols[ii].Elem(i)
 //newCols[ii].Append(elem)
 //}
 //for ii := 0; ii < b.ncols; ii++ {
 //jj := ii + df.ncols
-//elem := bCols[ii].elem(j)
+//elem := bCols[ii].Elem(j)
 //newCols[jj].Append(elem)
 //}
 //}
@@ -1021,16 +1021,16 @@ func (df DataFrame) Col(colname string) series.Series {
 //return New(newCols...)
 //}
 
-//// ColIndex returns the index of the column with name `s`. If it fails to find the
-//// column it returns -1 instead.
-//func (df DataFrame) ColIndex(s string) int {
-//for k, v := range df.Names() {
-//if v == s {
-//return k
-//}
-//}
-//return -1
-//}
+// colIndex returns the index of the column with name `s`. If it fails to find the
+// column it returns -1 instead.
+func (df DataFrame) colIndex(s string) int {
+	for k, v := range df.Names() {
+		if v == s {
+			return k
+		}
+	}
+	return -1
+}
 
 func (df DataFrame) Records() [][]string {
 	var records [][]string
