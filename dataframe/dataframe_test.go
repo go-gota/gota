@@ -1,6 +1,7 @@
 package dataframe
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -1339,25 +1340,29 @@ func TestDataFrame_Maps(t *testing.T) {
 	}
 }
 
-////func TestDataFrame_WriteCSV(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////series.New(1, 2, 3, series.Int,"COL.2" ),
-////NamedFloats("COL.3", 3, nil, 1))
-////buf := new(bytes.Buffer)
-////err := a.WriteCSV(buf)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////expected := `COL.1,COL.2,COL.3
-////NA,1,3
-////b,2,NA
-////c,3,1
-////`
-////if expected != buf.String() {
-////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
-////}
-////}
+func TestDataFrame_WriteCSV(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"COL.1", "COL.2", "COL.3"},
+			[]string{"NaN", "1", "3"},
+			[]string{"b", "2", "2"},
+			[]string{"c", "3", "1"},
+		},
+	)
+	buf := new(bytes.Buffer)
+	err := a.WriteCSV(buf)
+	if err != nil {
+		t.Errorf("Expected success, got error: %v", err)
+	}
+	expected := `COL.1,COL.2,COL.3
+NaN,1,3
+b,2,2
+c,3,1
+`
+	if expected != buf.String() {
+		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
+	}
+}
 
 ////func TestDataFrame_WriteJSON(t *testing.T) {
 ////a := New(
