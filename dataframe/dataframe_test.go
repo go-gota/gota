@@ -173,11 +173,11 @@ func TestDataFrame_Subset(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
 		if !compareRecords(test.expDf, b) {
@@ -288,11 +288,11 @@ func TestDataFrame_Select(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
 		if !compareRecords(test.expDf, b) {
@@ -350,11 +350,11 @@ func TestDataFrame_Rename(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
 		if !compareRecords(test.expDf, b) {
@@ -423,11 +423,11 @@ func TestDataFrame_CBind(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
 		if !compareRecords(test.expDf, b) {
@@ -481,11 +481,11 @@ func TestDataFrame_RBind(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", a.Types(), b.Types())
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", a.Names(), b.Names())
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
 		if !compareRecords(test.expDf, b) {
@@ -494,129 +494,85 @@ func TestDataFrame_RBind(t *testing.T) {
 	}
 }
 
-////func TestDataFrame_Records(t *testing.T) {
-////a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
-////expected := [][]string{
-////[]string{"COL.1", "COL.2", "COL.3"},
-////[]string{"a", "1", "3"},
-////[]string{"b", "2", "2"},
-////[]string{"c", "3", "1"},
-////}
-////received := a.Records()
-////if !reflect.DeepEqual(expected, received) {
-////t.Error(
-////"Error when saving records.\n",
-////"Expected: ", expected, "\n",
-////"Received: ", received,
-////)
-////}
-////}
+func TestDataFrame_Records(t *testing.T) {
+	a := New(
+		series.New([]string{"a", "b", "c"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 3}, series.Int, "COL.2"),
+		series.New([]float64{3, 2, 1}, series.Float, "COL.3"))
+	expected := [][]string{
+		[]string{"COL.1", "COL.2", "COL.3"},
+		[]string{"a", "1", "3.000000"},
+		[]string{"b", "2", "2.000000"},
+		[]string{"c", "3", "1.000000"},
+	}
+	received := a.Records()
+	if !reflect.DeepEqual(expected, received) {
+		t.Error(
+			"Error when saving records.\n",
+			"Expected: ", expected, "\n",
+			"Received: ", received,
+		)
+	}
+}
 
-////func TestDataFrame_ReadCSV(t *testing.T) {
-////// Load the data from a CSV string and try to infer the type of the
-////// columns
-////csvStr := `
-////Country,Date,Age,Amount,Id
-////"United States",2012-02-01,50,112.1,01234
-////"United States",2012-02-01,32,321.31,54320
-////"United Kingdom",2012-02-01,17,18.2,12345
-////"United States",2012-02-01,32,321.31,54320
-////"United Kingdom",2012-02-01,NA,18.2,12345
-////"United States",2012-02-01,32,321.31,54320
-////"United States",2012-02-01,32,321.31,54320
-////Spain,2012-02-01,66,555.42,00241
-////`
-////a := ReadCSV(strings.NewReader(csvStr))
-////if a.Err() != nil {
-////t.Errorf("Expected success, got error: %v", a.Err())
-////}
-////}
-
-////func TestDataFrame_SetNames(t *testing.T) {
-////a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
-////n := []string{"wot", "tho", "tree"}
-////err := a.SetNames(n)
-////if err != nil {
-////t.Error("Expected success, got error")
-////}
-////err = a.SetNames([]string{"yaaa"})
-////if err == nil {
-////t.Error("Expected error, got success")
-////}
-////}
-
-////func TestDataFrame_Maps(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////NamedInts("COL.2", 1, 2, 3),
-////NamedFloats("COL.3", 3, nil, 1))
-////m := a.Maps()
-////_, err := json.Marshal(m)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////}
-
-////func TestDataFrame_WriteCSV(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////NamedInts("COL.2", 1, 2, 3),
-////NamedFloats("COL.3", 3, nil, 1))
-////buf := new(bytes.Buffer)
-////err := a.WriteCSV(buf)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////expected := `COL.1,COL.2,COL.3
-////NA,1,3
-////b,2,NA
-////c,3,1
-////`
-////if expected != buf.String() {
-////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
-////}
-////}
-
-////func TestDataFrame_WriteJSON(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////NamedInts("COL.2", 1, 2, 3),
-////NamedFloats("COL.3", 3, nil, 1))
-////buf := new(bytes.Buffer)
-////err := a.WriteJSON(buf)
-////if err != nil {
-////t.Errorf("Expected success, got error: %v", err)
-////}
-////expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
-////`
-////if expected != buf.String() {
-////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
-////}
-////}
-
-////func TestDataFrame_Column(t *testing.T) {
-////a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
-////b := a.Col("COL.2")
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////}
-
-////func TestDataFrame_Mutate(t *testing.T) {
-////a := New(
-////NamedStrings("COL.1", nil, "b", "c"),
-////NamedInts("COL.2", 1, 2, 3),
-////NamedFloats("COL.3", 3, nil, 1),
-////)
-////b := a.Mutate("COL.2", NamedStrings("ColumnChanged!", "x", 1, "z"))
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////b = b.Mutate("NewColumn!", Strings("x", 1, "z"))
-////if b.Err() != nil {
-////t.Error("Expected success, got error")
-////}
-////}
+func TestDataFrame_Mutate(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+	)
+	table := []struct {
+		s     series.Series
+		expDf DataFrame
+	}{
+		{
+			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+			New(
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
+			New(
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			New(
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Mutate(test.s)
+		if err := b.Err(); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !compareRecords(test.expDf, b) {
+			t.Errorf("Different values copied:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
 
 ////func TestDataFrame_Filter(t *testing.T) {
 ////a := New(
@@ -1048,4 +1004,94 @@ func TestDataFrame_RBind(t *testing.T) {
 ////}),
 ////CfgDefaultType(String),
 ////)
+////}
+
+////func TestDataFrame_ReadCSV(t *testing.T) {
+////// Load the data from a CSV string and try to infer the type of the
+////// columns
+////csvStr := `
+////Country,Date,Age,Amount,Id
+////"United States",2012-02-01,50,112.1,01234
+////"United States",2012-02-01,32,321.31,54320
+////"United Kingdom",2012-02-01,17,18.2,12345
+////"United States",2012-02-01,32,321.31,54320
+////"United Kingdom",2012-02-01,NA,18.2,12345
+////"United States",2012-02-01,32,321.31,54320
+////"United States",2012-02-01,32,321.31,54320
+////Spain,2012-02-01,66,555.42,00241
+////`
+////a := ReadCSV(strings.NewReader(csvStr))
+////if a.Err() != nil {
+////t.Errorf("Expected success, got error: %v", a.Err())
+////}
+////}
+
+////func TestDataFrame_SetNames(t *testing.T) {
+////a := New(NamedStrings("COL.1", "a", "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, 2, 1))
+////n := []string{"wot", "tho", "tree"}
+////err := a.SetNames(n)
+////if err != nil {
+////t.Error("Expected success, got error")
+////}
+////err = a.SetNames([]string{"yaaa"})
+////if err == nil {
+////t.Error("Expected error, got success")
+////}
+////}
+
+////func TestDataFrame_Maps(t *testing.T) {
+////a := New(
+////NamedStrings("COL.1", nil, "b", "c"),
+////NamedInts("COL.2", 1, 2, 3),
+////NamedFloats("COL.3", 3, nil, 1))
+////m := a.Maps()
+////_, err := json.Marshal(m)
+////if err != nil {
+////t.Errorf("Expected success, got error: %v", err)
+////}
+////}
+
+////func TestDataFrame_WriteCSV(t *testing.T) {
+////a := New(
+////NamedStrings("COL.1", nil, "b", "c"),
+////NamedInts("COL.2", 1, 2, 3),
+////NamedFloats("COL.3", 3, nil, 1))
+////buf := new(bytes.Buffer)
+////err := a.WriteCSV(buf)
+////if err != nil {
+////t.Errorf("Expected success, got error: %v", err)
+////}
+////expected := `COL.1,COL.2,COL.3
+////NA,1,3
+////b,2,NA
+////c,3,1
+////`
+////if expected != buf.String() {
+////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
+////}
+////}
+
+////func TestDataFrame_WriteJSON(t *testing.T) {
+////a := New(
+////NamedStrings("COL.1", nil, "b", "c"),
+////NamedInts("COL.2", 1, 2, 3),
+////NamedFloats("COL.3", 3, nil, 1))
+////buf := new(bytes.Buffer)
+////err := a.WriteJSON(buf)
+////if err != nil {
+////t.Errorf("Expected success, got error: %v", err)
+////}
+////expected := `[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":"b","COL.2":2,"COL.3":null},{"COL.1":"c","COL.2":3,"COL.3":1}]
+////`
+////if expected != buf.String() {
+////t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
+////}
+////}
+
+////func TestDataFrame_Column(t *testing.T) {
+////a := New(NamedStrings("COL.1", nil, "b", "c"), NamedInts("COL.2", 1, 2, 3), NamedFloats("COL.3", 3, nil, 1))
+////b := a.Col("COL.2")
+////if b.Err() != nil {
+////t.Error("Expected success, got error")
+////}
 ////}
