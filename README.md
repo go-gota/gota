@@ -163,6 +163,24 @@ sel1 := df.Select([]int{0, 2})
 sel2 := df.Select([]string{"A", "C"})
 ```
 
+#### Updating values
+
+In order to update the values of a DataFrame we can use the Set
+method:
+
+```
+df2 := df.Set(
+    []int{0, 2},
+    dataframe.LoadRecords(
+        [][]string{
+            []string{"A", "B", "C", "D"},
+            []string{"b", "4", "6.0", "true"},
+            []string{"c", "3", "6.0", "false"},
+        },
+    ),
+)
+```
+
 #### Filtering
 
 For more complex row subsetting we can use the Filter method. For

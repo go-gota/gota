@@ -187,3 +187,26 @@ func ExampleDataFrame_InnerJoin() {
 	join := df.InnerJoin(df2, "D")
 	fmt.Println(join)
 }
+
+func ExampleDataFrame_Set() {
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"k", "5", "7.0", "true"},
+			[]string{"k", "4", "6.0", "true"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	df2 := df.Set(
+		series.Ints([]int{0, 2}),
+		dataframe.LoadRecords(
+			[][]string{
+				[]string{"A", "B", "C", "D"},
+				[]string{"b", "4", "6.0", "true"},
+				[]string{"c", "3", "6.0", "false"},
+			},
+		),
+	)
+	fmt.Println(df2)
+}
