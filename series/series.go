@@ -7,19 +7,23 @@ import (
 	"strings"
 )
 
-// Series is the main structure for a series of elements of the same type. It is
-// the primary building block of a DataFrame.
+// Series is a data structure designed for operating on arrays of elements that
+// should comply with a certain type structure. They are flexible enough that can
+// be transformed to other Series types and account for missing or non valid
+// elements. Most of the power of Series resides on the ability to compare and
+// subset Series of different types.
 type Series struct {
 	Name     string             // The name of the series
 	elements []elementInterface // The values of the elements
 	t        Type               // The type of the series
-	Err      error
+	Err      error              // If there are errors they are stored here
 }
 
-// Comparator is a comparator that can be used for filtering Series and DataFrames
+// Comparator is a convenience alias that can be used for a more type safe way of
+// reason and use comparators.
 type Comparator string
 
-// Alias for Comparator operations
+// Supported Comparators
 const (
 	Eq        Comparator = "==" // Equal
 	Neq                  = "!=" // Non equal
@@ -30,10 +34,11 @@ const (
 	In                   = "in" // Inside
 )
 
-// Type represents the type of the elements that can be stored on Series
+// Type is a convenience alias that can be used for a more type safe way of
+// reason and use Series types.
 type Type string
 
-// Alias for the supported types of Series
+// Supported Series Types
 const (
 	String Type = "string"
 	Int         = "int"
@@ -42,7 +47,13 @@ const (
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
-// indexes. Currently supported are: []int, int, []bool, Series (Int/Bool)
+// elements within a Series. Currently supported are:
+//
+//     int            // Matches the given index number
+//     []int          // Matches all given index numbers
+//     []bool         // Matches all elements in a Series marked as true
+//     Series [Int]   // Same as []int
+//     Series [Bool]  // Same as []bool
 type Indexes interface{}
 
 // New is the generic Series constructor
@@ -57,22 +68,22 @@ func New(values interface{}, t Type, name string) Series {
 	return ret
 }
 
-// Strings is a constructor for a String series
+// Strings is a constructor for a String Series
 func Strings(values interface{}) Series {
 	return New(values, String, "")
 }
 
-// Ints is a constructor for an Int series
+// Ints is a constructor for an Int Series
 func Ints(values interface{}) Series {
 	return New(values, Int, "")
 }
 
-// Floats is a constructor for a Float series
+// Floats is a constructor for a Float Series
 func Floats(values interface{}) Series {
 	return New(values, Float, "")
 }
 
-// Bools is a constructor for a bools series
+// Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
 }
@@ -87,7 +98,8 @@ func (s Series) Empty() Series {
 	}
 }
 
-// Append appends elements to the end of the Series. The Series is modified in situ
+// Append adds new elements to the end of the Series. When using Append, the
+// Series is modified in place.
 func (s *Series) Append(values interface{}) {
 	if err := s.Err; err != nil {
 		return
@@ -164,9 +176,7 @@ func (s Series) Concat(x Series) Series {
 	return y
 }
 
-// Subset returns a subset of the series based on the given indexes. Currently
-// supports numeric indexes in the form of []int or int, boolean []bool and the
-// respective Series of types Int/Bool.
+// Subset returns a subset of the series based on the given Indexes.
 func (s Series) Subset(indexes Indexes) Series {
 	if err := s.Err; err != nil {
 		return s
@@ -192,7 +202,7 @@ func (s Series) Subset(indexes Indexes) Series {
 }
 
 // Set sets the values on the indexes of a Series and returns a new one with these
-// modifications. The original Series does not change.
+// modifications. The original Series is not changed.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	if err := s.Err; err != nil {
 		return s
@@ -231,7 +241,9 @@ func (s Series) HasNaN() bool {
 	return false
 }
 
-// Compare compares the values of a Series with other series, scalars, text, etc
+// Compare compares the values of a Series with other elements. To do so, the
+// elements with are to be compared are first transformed to a Series of the same
+// type as the caller.
 func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	if err := s.Err; err != nil {
 		return s
@@ -280,7 +292,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Single element comparation
+	// Single element comparison
 	var bools []bool
 	if comp.Len() == 1 {
 		for _, e := range s.elements {
@@ -295,7 +307,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Multiple element comparation
+	// Multiple element comparison
 	if s.Len() != comp.Len() {
 		s := s.Empty()
 		s.Err = fmt.Errorf("can't compare: length mismatch")
@@ -313,7 +325,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	return Bools(bools)
 }
 
-// Copy wil copy the values of a given Series
+// Copy will return a copy of the Series.
 func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
@@ -331,7 +343,7 @@ func (s Series) Copy() Series {
 	return ret
 }
 
-// Records returns the elements of a Series in a []string
+// Records returns the elements of a Series as a []string
 func (s Series) Records() []string {
 	var ret []string
 	for _, e := range s.elements {
@@ -340,7 +352,7 @@ func (s Series) Records() []string {
 	return ret
 }
 
-// Float returns the elements of a Series in a []float64. If the elements can not
+// Float returns the elements of a Series as a []float64. If the elements can not
 // be converted to float64 or contains a NaN returns the float representation of
 // NaN.
 func (s Series) Float() []float64 {
@@ -356,8 +368,8 @@ func (s Series) Float() []float64 {
 	return ret
 }
 
-// Int returns the elements of a Series in a []int or an error if NaN or can't be
-// converted.
+// Int returns the elements of a Series as a []int or an error if the
+// transformation is not possible.
 func (s Series) Int() ([]int, error) {
 	var ret []int
 	for _, e := range s.elements {
@@ -370,8 +382,8 @@ func (s Series) Int() ([]int, error) {
 	return ret, nil
 }
 
-// Bool returns the elements of a Series in a []bool or an error if NaN or can't be
-// converted.
+// Bool returns the elements of a Series as a []bool or an error if the
+// transformation is not possible.
 func (s Series) Bool() ([]bool, error) {
 	var ret []bool
 	for _, e := range s.elements {
@@ -431,6 +443,16 @@ func (s Series) Elem(i int) elementInterface {
 	return s.elements[i]
 }
 
+// Addr returns the string representation of the memory address that store the
+// values of a given Series.
+func (s Series) Addr() []string {
+	var ret []string
+	for _, e := range s.elements {
+		ret = append(ret, e.Addr())
+	}
+	return ret
+}
+
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
 	switch indexes.(type) {
@@ -472,12 +494,4 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		return nil, fmt.Errorf("indexing error: unknown indexing mode")
 	}
 	return idx, nil
-}
-
-func (s Series) Addr() []string {
-	var ret []string
-	for _, e := range s.elements {
-		ret = append(ret, e.Addr())
-	}
-	return ret
 }
