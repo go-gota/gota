@@ -1404,3 +1404,190 @@ func TestDataFrame_Col(t *testing.T) {
 		t.Errorf("\nexpected: %v\nreceived: %v", expected, b)
 	}
 }
+
+func TestDataFrame_Set(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	table := []struct {
+		indexes   series.Indexes
+		newvalues DataFrame
+		expDf     DataFrame
+	}{
+		{
+			series.Ints([]int{0, 2}),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			series.Ints(0),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			series.Bools([]bool{true, false, false, false}),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			series.Bools([]bool{false, true, true, false}),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]int{0, 2},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			0,
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]bool{true, false, false, false},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]bool{false, true, true, false},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"k", "5", "7.0", "true"},
+					[]string{"k", "4", "6.0", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Set(test.indexes, test.newvalues)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}

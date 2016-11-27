@@ -108,6 +108,23 @@ func (df DataFrame) String() (str string) {
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
+func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if newvalues.Err != nil {
+		return DataFrame{Err: fmt.Errorf("argument has errors: %v", newvalues.Err)}
+	}
+	if df.ncols != newvalues.ncols {
+		return DataFrame{Err: fmt.Errorf("different number of columns")}
+	}
+	var columns []series.Series
+	for i, s := range df.columns {
+		columns = append(columns, s.Set(indexes, newvalues.columns[i]))
+	}
+	return New(columns...)
+}
+
 // Subsets returns a subset of the rows of the original DataFrame based on the
 // Series subsetting indexes
 func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
