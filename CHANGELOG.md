@@ -2,6 +2,31 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.7.0] - 2016-11-27
+### Added
+- Many more table tests for both `series` and `dataframe`
+- Set method for `Series` and `DataFrame`
+- When loading data from CSV, JSON, or Records, different
+  `LoadOptions` can now be configured. This includes assigning
+  a default type, manually specifying the column types and others.
+- More documentation for previously undocumented functions.
+
+### Changed
+- The project has been restructured on separated `dataframe` and
+  `series` packages.
+- Reviewed entire `Series` codebase for better style and
+  maintainability.
+- `DataFrame.Select` now accepts several types of indexes
+- Error messages are now more consistent.
+- The standard way of checking for errors on both `series` and
+  `dataframe` is to check the `Err` field on each structure.
+- `ReadCSV`/`ReadJSON` and `WriteCSV`/`WriteJSON` now accept
+  `io.Reader` and `io.Writer` respectively.
+- Updated README with the new changes.
+
+### Removed
+- Removed unnecessary abstraction layer on `Series.elements`
+
 ## [0.6.0] - 2016-10-29
 ### Added
 - InnerJoin, CrossJoin, RightJoin, LeftJoin, OuterJoin functions
@@ -119,3 +144,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.4.0]:https://github.com/kniren/gota/compare/v0.3.0...v0.4.0
 [0.5.0]:https://github.com/kniren/gota/compare/v0.4.0...v0.5.0
 [0.6.0]:https://github.com/kniren/gota/compare/v0.5.0...v0.6.0
+[0.7.0]:https://github.com/kniren/gota/compare/v0.6.0...v0.7.0

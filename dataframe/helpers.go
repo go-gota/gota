@@ -1,11 +1,12 @@
-package df
+package dataframe
 
 import (
 	"errors"
-	"math"
 	"strconv"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/kniren/gota/series"
 )
 
 func transposeRecords(x [][]string) [][]string {
@@ -39,7 +40,7 @@ func addLeftPadding(s string, nchar int) string {
 	return s
 }
 
-func findType(arr []string) string {
+func findType(arr []string) series.Type {
 	hasFloats := false
 	hasInts := false
 	hasBools := false
@@ -57,54 +58,21 @@ func findType(arr []string) string {
 			hasBools = true
 			continue
 		}
-		if str == "" || str == "NA" {
+		if str == "" || str == "NaN" || str == "<nil>" {
 			continue
 		}
 		hasStrings = true
 	}
 	if hasFloats && !hasBools && !hasStrings {
-		return "float"
+		return series.Float
 	}
 	if hasInts && !hasFloats && !hasBools && !hasStrings {
-		return "int"
+		return series.Int
 	}
 	if !hasInts && !hasFloats && hasBools && !hasStrings {
-		return "bool"
+		return series.Bool
 	}
-	return "string"
-}
-
-func Range(start, end int) []int {
-	if start > end {
-		start, end = end, start
-	}
-	var arr []int
-	for i := start; i <= end; i++ {
-		arr = append(arr, i)
-	}
-	return arr
-}
-
-func Seq(start, end, step int) []int {
-	if start > end {
-		start, end = end, start
-	}
-	if step == 0 {
-		return []int{}
-	}
-	var arr []int
-	if step < 0 {
-		step = int(math.Abs(float64(step)))
-		for i := end; i >= start; i = i - step {
-			arr = append(arr, i)
-		}
-		return arr
-	} else {
-		for i := start; i <= end; i = i + step {
-			arr = append(arr, i)
-		}
-		return arr
-	}
+	return series.String
 }
 
 func orBool(a []bool, b []bool) ([]bool, error) {
