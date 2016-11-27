@@ -90,7 +90,7 @@ func (df DataFrame) String() (str string) {
 	for i := 0; i < df.nrows+1; i++ {
 		add := ""
 		if i != 0 {
-			add = strconv.Itoa(i) + ":"
+			add = strconv.Itoa(i-1) + ":"
 		}
 		records[i] = append([]string{add}, records[i]...)
 	}
