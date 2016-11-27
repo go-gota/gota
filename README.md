@@ -300,8 +300,8 @@ Bool
 
 For more information about the API, make sure to check:
 
-- [3][dataframe godoc]
-- [4][series godoc]
+- [dataframe godoc][3]
+- [series godoc][4]
 
 License
 -------
