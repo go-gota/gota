@@ -86,6 +86,7 @@ func (df DataFrame) String() (str string) {
 	}
 	records := df.Records()
 	// Add the row numbers
+	// TODO: The row numbers should start counting at 0 to be consistent with the indexing
 	for i := 0; i < df.nrows+1; i++ {
 		add := ""
 		if i != 0 {

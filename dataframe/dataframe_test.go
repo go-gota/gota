@@ -736,7 +736,7 @@ func TestLoadRecords(t *testing.T) {
 	}
 }
 
-func TestDataFrame_LoadMaps(t *testing.T) {
+func TestLoadMaps(t *testing.T) {
 	table := []struct {
 		b     DataFrame
 		expDf DataFrame
@@ -901,7 +901,7 @@ func TestDataFrame_LoadMaps(t *testing.T) {
 	}
 }
 
-func TestDataFrame_ReadCSV(t *testing.T) {
+func TestReadCSV(t *testing.T) {
 	// Load the data from a CSV string and try to infer the type of the
 	// columns
 	csvStr := `
@@ -918,6 +918,58 @@ Spain,2012-02-01,66,555.42,00241
 	a := ReadCSV(strings.NewReader(csvStr))
 	if a.Err != nil {
 		t.Errorf("Expected success, got error: %v", a.Err)
+	}
+}
+
+func TestReadJSON(t *testing.T) {
+	table := []struct {
+		jsonStr string
+		expDf   DataFrame
+	}{
+		{
+			`[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`,
+			LoadRecords(
+				[][]string{
+					[]string{"COL.1", "COL.2", "COL.3"},
+					[]string{"NaN", "1", "3"},
+					[]string{"5", "2", "2"},
+					[]string{"6", "3", "1"},
+				},
+				CfgDetectTypes(false),
+				CfgDefaultType(series.Int),
+			),
+		},
+		{
+			`[{"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`,
+			LoadRecords(
+				[][]string{
+					[]string{"COL.1", "COL.2", "COL.3"},
+					[]string{"NaN", "1", "3"},
+					[]string{"5", "2", "2"},
+					[]string{"6", "3", "1"},
+				},
+				CfgDetectTypes(false),
+				CfgDefaultType(series.Int),
+			),
+		},
+	}
+	for testnum, test := range table {
+		c := ReadJSON(strings.NewReader(test.jsonStr))
+		if err := c.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		}
 	}
 }
 

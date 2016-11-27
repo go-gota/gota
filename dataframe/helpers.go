@@ -58,7 +58,7 @@ func findType(arr []string) series.Type {
 			hasBools = true
 			continue
 		}
-		if str == "" || str == "NA" {
+		if str == "" || str == "NaN" || str == "<nil>" {
 			continue
 		}
 		hasStrings = true

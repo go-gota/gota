@@ -2,13 +2,14 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [0.7.0]
+## [0.7.0] - 2016-11-27
 ### Added
 - Many more table tests for both `series` and `dataframe`
-- Set method of `Series`
+- Set method for `Series` and `DataFrame`
 - When loading data from CSV, JSON, or Records, different
   `LoadOptions` can now be configured. This includes assigning
   a default type, manually specifying the column types and others.
+- More documentation for previously undocumented functions.
 
 ### Changed
 - The project has been restructured on separated `dataframe` and
@@ -21,6 +22,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   `dataframe` is to check the `Err` field on each structure.
 - `ReadCSV`/`ReadJSON` and `WriteCSV`/`WriteJSON` now accept
   `io.Reader` and `io.Writer` respectively.
+- Updated README with the new changes.
 
 ### Removed
 - Removed unnecessary abstraction layer on `Series.elements`
