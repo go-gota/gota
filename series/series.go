@@ -56,6 +56,8 @@ const (
 //     Series [Bool]  // Same as []bool
 type Indexes interface{}
 
+// TODO:  New series values as an Alias (type Values interface{}) for better documentation
+
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
 	var elements []elementInterface

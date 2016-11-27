@@ -13,7 +13,18 @@ import (
 	"github.com/kniren/gota/series"
 )
 
-// DataFrame is the base data structure
+// DataFrame is a data structure designed for operating on table like data (Such as Excel, CSV files, SQL table results...) where
+// every column have to keep type integrity. As a general rule of thumb, variables
+// are stored on columns where every row of a DataFrame represents an observation
+// for each variable.
+//
+// On the real world, data is very messy and sometimes there are non measurements
+// or missing data. For this reason, DataFrame has support for NaN elements and
+// allows the most common data cleaning and mungling operations such as
+// subsetting, filtering, type transformations, etc. In addition to this, this
+// library provides the necessary functions to concatenate DataFrames (By rows or
+// columns), different Join operations (Inner, Outer, Left, Right, Cross) and the
+// ability to read and write from different formats (CSV/JSON).
 type DataFrame struct {
 	columns []series.Series
 	ncols   int
@@ -21,7 +32,7 @@ type DataFrame struct {
 	Err     error
 }
 
-// New is a constructor for DataFrames
+// New is the generic DataFrame constructor
 func New(se ...series.Series) DataFrame {
 	if se == nil || len(se) == 0 {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
@@ -108,6 +119,7 @@ func (df DataFrame) String() (str string) {
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
+// Set will updated the values of a DataFrame for the rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -125,8 +137,8 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	return New(columns...)
 }
 
-// Subsets returns a subset of the rows of the original DataFrame based on the
-// Series subsetting indexes
+// Subset returns a subset of the rows of the original DataFrame based on the
+// Series subsetting indexes.
 func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	if df.Err != nil {
 		return df
@@ -142,71 +154,16 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	return New(columns...)
 }
 
-func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
-	var idx []int
-	switch indexes.(type) {
-	case []int:
-		idx = indexes.([]int)
-	case int:
-		idx = []int{indexes.(int)}
-	case []bool:
-		bools := indexes.([]bool)
-		if len(bools) != l {
-			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
-		}
-		for i, b := range bools {
-			if b {
-				idx = append(idx, i)
-			}
-		}
-	case string:
-		s := indexes.(string)
-		i := findInStringSlice(s, colnames)
-		if i < 0 {
-			return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
-		}
-		idx = append(idx, i)
-	case []string:
-		xs := indexes.([]string)
-		for _, s := range xs {
-			i := findInStringSlice(s, colnames)
-			if i < 0 {
-				return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
-			}
-			idx = append(idx, i)
-		}
-	case series.Series:
-		s := indexes.(series.Series)
-		if err := s.Err; err != nil {
-			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
-		}
-		if s.HasNaN() {
-			return nil, fmt.Errorf("indexing error: indexes contain NaN")
-		}
-		switch s.Type() {
-		case series.Int:
-			return s.Int()
-		case series.Bool:
-			bools, err := s.Bool()
-			if err != nil {
-				return nil, fmt.Errorf("indexing error: %v", err)
-			}
-			return parseSelectIndexes(l, bools, colnames)
-		case series.String:
-			xs := indexes.(series.Series).Records()
-			return parseSelectIndexes(l, xs, colnames)
-		default:
-			return nil, fmt.Errorf("indexing error: unknown indexing mode")
-		}
-	default:
-		return nil, fmt.Errorf("indexing error: unknown indexing mode")
-	}
-	return idx, nil
-}
-
-// SelectIndexes are the supported indexes used for the DataFrame.Select method.
-// Currently supported are: []int, int, []bool, string, []string, Series (Int,
-// Bool, String)
+// SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported are:
+//
+//     int              // Matches the given index number
+//     []int            // Matches all given index numbers
+//     []bool           // Matches all columns marked as true
+//     string           // Matches the column with the matching column name
+//     []string         // Matches all columns with the matching column names
+//     Series [Int]     // Same as []int
+//     Series [Bool]    // Same as []bool
+//     Series [String]  // Same as []string
 type SelectIndexes interface{}
 
 // Select the given DataFrame columns
@@ -260,7 +217,7 @@ func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 }
 
 // RBind matches the column names of two DataFrames and returns the combination of
-// the rows of both of them
+// the rows of both of them.
 func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -285,7 +242,8 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
-// Mutate changes a column of the DataFrame with the given Series
+// Mutate changes a column of the DataFrame with the given Series or adds it as
+// a new column if the column name does not exist.
 func (df DataFrame) Mutate(s series.Series) DataFrame {
 	if df.Err != nil {
 		return df
@@ -316,7 +274,9 @@ type F struct {
 }
 
 // Filter will filter the rows of a DataFrame based on the given filters. All
-// filters on the argument of a Filter call are aggregated as an Or operation.
+// filters on the argument of a Filter call are aggregated as an OR operation
+// whereas if we chain Filter calls, every filter will act as an AND operation
+// with regards to the rest.
 func (df DataFrame) Filter(filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
@@ -358,36 +318,50 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 
 // LoadOptions is the configuration that will be used for the loading operations
 type LoadOptions struct {
+	// If set, the type of each column will be automatically detected unless
+	// otherwise specified.
 	detectTypes bool
-	hasHeader   bool
-	types       map[string]series.Type
+
+	// If set, the first row of the tabular structure will be used as column
+	// names.
+	hasHeader bool
+
+	// The types of specific columns can be specified via column name.
+	types map[string]series.Type
+
+	// Specifies which is the default type in case detectTypes is disabled.
 	defaultType series.Type
 }
 
+// CfgDetectTypes set the detectTypes option for LoadOptions.
 func CfgDetectTypes(b bool) func(*LoadOptions) {
 	return func(c *LoadOptions) {
 		c.detectTypes = b
 	}
 }
 
+// CfgHasHeader set the hasHeader option for LoadOptions.
 func CfgHasHeader(b bool) func(*LoadOptions) {
 	return func(c *LoadOptions) {
 		c.hasHeader = b
 	}
 }
 
+// CfgColumnTypes set the types option for LoadOptions.
 func CfgColumnTypes(coltypes map[string]series.Type) func(*LoadOptions) {
 	return func(c *LoadOptions) {
 		c.types = coltypes
 	}
 }
 
+// CfgDefaultType set the defaultType option for LoadOptions.
 func CfgDefaultType(t series.Type) func(*LoadOptions) {
 	return func(c *LoadOptions) {
 		c.defaultType = t
 	}
 }
 
+// LoadRecords creates a new DataFrame based on the given records.
 func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	// Load the options
 	cfg := LoadOptions{
@@ -447,6 +421,8 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 	return New(columns...)
 }
 
+// LoadMaps creates a new DataFrame based on the given maps. This function assumes
+// that every map on the array represents a row of observations.
 func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
@@ -464,7 +440,7 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 	// Detect all colnames
 	var colnames []string
 	for _, v := range maps {
-		for k, _ := range v {
+		for k := range v {
 			if exists := inStrSlice(k, colnames); !exists {
 				colnames = append(colnames, k)
 			}
@@ -487,6 +463,8 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 	return LoadRecords(records, options...)
 }
 
+// ReadCSV reads a CSV file from a io.Reader and builds a DataFrame with the
+// resulting records.
 func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
@@ -496,6 +474,8 @@ func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	return LoadRecords(records, options...)
 }
 
+// ReadJSON reads a JSON array from a io.Reader and builds a DataFrame with the
+// resulting records.
 func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
@@ -505,6 +485,7 @@ func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 	return LoadMaps(m, options...)
 }
 
+// WriteCSV writes the DataFrame to the given io.Writer as a CSV file.
 func (df DataFrame) WriteCSV(w io.Writer) error {
 	if df.Err != nil {
 		return df.Err
@@ -513,6 +494,7 @@ func (df DataFrame) WriteCSV(w io.Writer) error {
 	return csv.NewWriter(w).WriteAll(records)
 }
 
+// WriteJSON writes the DataFrame to the given io.Writer as a JSON array.
 func (df DataFrame) WriteJSON(w io.Writer) error {
 	if df.Err != nil {
 		return df.Err
@@ -524,6 +506,7 @@ func (df DataFrame) WriteJSON(w io.Writer) error {
 // Getters/Setters for DataFrame fields
 // ====================================
 
+// Names returns the name of the columns on a DataFrame.
 func (df DataFrame) Names() []string {
 	var colnames []string
 	for _, v := range df.columns {
@@ -532,6 +515,7 @@ func (df DataFrame) Names() []string {
 	return colnames
 }
 
+// Types returns the types of the columns on a DataFrame.
 func (df DataFrame) Types() []series.Type {
 	var coltypes []series.Type
 	for _, s := range df.columns {
@@ -540,6 +524,8 @@ func (df DataFrame) Types() []series.Type {
 	return coltypes
 }
 
+// SetNames changes the column names of a DataFrame to the ones passed as an
+// argument.
 func (df DataFrame) SetNames(colnames []string) error {
 	if df.Err != nil {
 		return df.Err
@@ -554,24 +540,24 @@ func (df DataFrame) SetNames(colnames []string) error {
 	return nil
 }
 
-// Dim retrieves the dimensiosn of a DataFrame
+// Dim retrieves the dimensions of a DataFrame.
 func (df DataFrame) Dim() (dim [2]int) {
 	dim[0] = df.nrows
 	dim[1] = df.ncols
 	return
 }
 
-// NRows is the getter method for the number of rows in a DataFrame
+// Nrow returns the number of rows on a DataFrame.
 func (df DataFrame) Nrow() int {
 	return df.nrows
 }
 
-// NCols is the getter method for the number of rows in a DataFrame
+// Ncol returns the number of columns on a DataFrame.
 func (df DataFrame) Ncol() int {
 	return df.ncols
 }
 
-// Col returns the Series with the given column name contained in the DataFrame
+// Col returns the Series with the given column name contained in the DataFrame.
 func (df DataFrame) Col(colname string) series.Series {
 	if df.Err != nil {
 		return series.Series{Err: df.Err}
@@ -589,7 +575,6 @@ func (df DataFrame) Col(colname string) series.Series {
 }
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
@@ -669,7 +654,6 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
@@ -758,7 +742,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _, _ = range iNotKeysB {
+			for _ = range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -768,7 +752,6 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
@@ -863,7 +846,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 			newCols[ii].Append(elem)
 			ii++
 		}
-		for _, _ = range iNotKeysA {
+		for _ = range iNotKeysA {
 			newCols[ii].Append(nil)
 			ii++
 		}
@@ -877,7 +860,6 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
@@ -966,7 +948,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _, _ = range iNotKeysB {
+			for _ = range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1007,7 +989,6 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // CrossJoin returns a DataFrame containing the cross join of two DataFrames.
-// This operation matches all rows that appear on both dataframes.
 func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
 	aCols := df.columns
 	bCols := b.columns
@@ -1047,6 +1028,7 @@ func (df DataFrame) colIndex(s string) int {
 	return -1
 }
 
+// Records return the string record representation of a DataFrame.
 func (df DataFrame) Records() [][]string {
 	var records [][]string
 	records = append(records, df.Names())
@@ -1061,6 +1043,7 @@ func (df DataFrame) Records() [][]string {
 	return records
 }
 
+// Maps return the array of maps representation of a DataFrame.
 func (df DataFrame) Maps() []map[string]interface{} {
 	maps := make([]map[string]interface{}, df.nrows)
 	colnames := df.Names()
@@ -1156,4 +1139,66 @@ func findInStringSlice(str string, s []string) int {
 		}
 	}
 	return -1
+}
+
+func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
+	var idx []int
+	switch indexes.(type) {
+	case []int:
+		idx = indexes.([]int)
+	case int:
+		idx = []int{indexes.(int)}
+	case []bool:
+		bools := indexes.([]bool)
+		if len(bools) != l {
+			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
+		}
+		for i, b := range bools {
+			if b {
+				idx = append(idx, i)
+			}
+		}
+	case string:
+		s := indexes.(string)
+		i := findInStringSlice(s, colnames)
+		if i < 0 {
+			return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+		}
+		idx = append(idx, i)
+	case []string:
+		xs := indexes.([]string)
+		for _, s := range xs {
+			i := findInStringSlice(s, colnames)
+			if i < 0 {
+				return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+			}
+			idx = append(idx, i)
+		}
+	case series.Series:
+		s := indexes.(series.Series)
+		if err := s.Err; err != nil {
+			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
+		}
+		if s.HasNaN() {
+			return nil, fmt.Errorf("indexing error: indexes contain NaN")
+		}
+		switch s.Type() {
+		case series.Int:
+			return s.Int()
+		case series.Bool:
+			bools, err := s.Bool()
+			if err != nil {
+				return nil, fmt.Errorf("indexing error: %v", err)
+			}
+			return parseSelectIndexes(l, bools, colnames)
+		case series.String:
+			xs := indexes.(series.Series).Records()
+			return parseSelectIndexes(l, xs, colnames)
+		default:
+			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		}
+	default:
+		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+	}
+	return idx, nil
 }
