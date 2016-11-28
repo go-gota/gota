@@ -259,7 +259,6 @@ df2 := dataframe.LoadRecords(
         []string{"5", "9", "false"},
     },
 )
-// Change column C with a new one
 join := df.InnerJoin(df2, "D")
 ```
 
