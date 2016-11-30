@@ -258,7 +258,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	return ret
 }
 
-// HasNaN checks whether the Series contain NaN elements
+// HasNaN checks whether the Series contain NaN elements.
 func (s Series) HasNaN() bool {
 	for _, e := range s.elements {
 		if e.IsNA() {
@@ -266,6 +266,15 @@ func (s Series) HasNaN() bool {
 		}
 	}
 	return false
+}
+
+// IsNaN returns an array that identifies which of the elements are NaN.
+func (s Series) IsNaN() []bool {
+	var ret []bool
+	for _, e := range s.elements {
+		ret = append(ret, e.IsNA())
+	}
+	return ret
 }
 
 // Compare compares the values of a Series with other elements. To do so, the

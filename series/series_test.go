@@ -1098,3 +1098,29 @@ func TestSeries_Order(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_IsNaN(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected []bool
+	}{
+		{
+			Ints([]string{"2", "1", "3", "NaN", "4", "NaN"}),
+			[]bool{false, false, false, true, false, true},
+		},
+		{
+			Floats([]string{"A", "1", "B", "3"}),
+			[]bool{true, false, true, false},
+		},
+	}
+	for testnum, test := range tests {
+		received := test.series.IsNaN()
+		expected := test.expected
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
