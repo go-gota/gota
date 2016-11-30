@@ -11,7 +11,7 @@ type stringElement struct {
 	e *string
 }
 
-func (e stringElement) Set(value interface{}) elementInterface {
+func (e stringElement) Set(value interface{}) Element {
 	var val string
 	switch value.(type) {
 	case string:
@@ -27,8 +27,8 @@ func (e stringElement) Set(value interface{}) elementInterface {
 		} else {
 			val = "false"
 		}
-	case elementInterface:
-		val = value.(elementInterface).String()
+	case Element:
+		val = value.(Element).String()
 	default:
 		e.e = nil
 		return e
@@ -37,7 +37,7 @@ func (e stringElement) Set(value interface{}) elementInterface {
 	return e
 }
 
-func (e stringElement) Copy() elementInterface {
+func (e stringElement) Copy() Element {
 	if e.e == nil {
 		return stringElement{nil}
 	}
@@ -102,42 +102,42 @@ func (e stringElement) Addr() string {
 	return fmt.Sprint(e.e)
 }
 
-func (e stringElement) Eq(elem elementInterface) bool {
+func (e stringElement) Eq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}
 	return *e.e == elem.String()
 }
 
-func (e stringElement) Neq(elem elementInterface) bool {
+func (e stringElement) Neq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}
 	return *e.e != elem.String()
 }
 
-func (e stringElement) Less(elem elementInterface) bool {
+func (e stringElement) Less(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}
 	return *e.e < elem.String()
 }
 
-func (e stringElement) LessEq(elem elementInterface) bool {
+func (e stringElement) LessEq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}
 	return *e.e <= elem.String()
 }
 
-func (e stringElement) Greater(elem elementInterface) bool {
+func (e stringElement) Greater(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}
 	return *e.e > elem.String()
 }
 
-func (e stringElement) GreaterEq(elem elementInterface) bool {
+func (e stringElement) GreaterEq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
 	}

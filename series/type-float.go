@@ -10,7 +10,7 @@ type floatElement struct {
 	e *float64
 }
 
-func (e floatElement) Set(value interface{}) elementInterface {
+func (e floatElement) Set(value interface{}) Element {
 	var val float64
 	switch value.(type) {
 	case string:
@@ -31,8 +31,8 @@ func (e floatElement) Set(value interface{}) elementInterface {
 		} else {
 			val = 0
 		}
-	case elementInterface:
-		val = value.(elementInterface).Float()
+	case Element:
+		val = value.(Element).Float()
 	default:
 		e.e = nil
 		return e
@@ -41,7 +41,7 @@ func (e floatElement) Set(value interface{}) elementInterface {
 	return e
 }
 
-func (e floatElement) Copy() elementInterface {
+func (e floatElement) Copy() Element {
 	if e.e == nil {
 		return floatElement{nil}
 	}
@@ -112,7 +112,7 @@ func (e floatElement) Addr() string {
 	return fmt.Sprint(e.e)
 }
 
-func (e floatElement) Eq(elem elementInterface) bool {
+func (e floatElement) Eq(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -120,7 +120,7 @@ func (e floatElement) Eq(elem elementInterface) bool {
 	return *e.e == f
 }
 
-func (e floatElement) Neq(elem elementInterface) bool {
+func (e floatElement) Neq(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -128,7 +128,7 @@ func (e floatElement) Neq(elem elementInterface) bool {
 	return *e.e != f
 }
 
-func (e floatElement) Less(elem elementInterface) bool {
+func (e floatElement) Less(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -136,7 +136,7 @@ func (e floatElement) Less(elem elementInterface) bool {
 	return *e.e < f
 }
 
-func (e floatElement) LessEq(elem elementInterface) bool {
+func (e floatElement) LessEq(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -144,7 +144,7 @@ func (e floatElement) LessEq(elem elementInterface) bool {
 	return *e.e <= f
 }
 
-func (e floatElement) Greater(elem elementInterface) bool {
+func (e floatElement) Greater(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -152,7 +152,7 @@ func (e floatElement) Greater(elem elementInterface) bool {
 	return *e.e > f
 }
 
-func (e floatElement) GreaterEq(elem elementInterface) bool {
+func (e floatElement) GreaterEq(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false

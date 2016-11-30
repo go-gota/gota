@@ -12,15 +12,17 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string             // The name of the series
-	elements []elementInterface // The values of the elements
-	t        Type               // The type of the series
-	Err      error              // If there are errors they are stored here
+	Name     string    // The name of the series
+	elements []Element // The values of the elements
+	t        Type      // The type of the series
+	Err      error     // If there are errors they are stored here
 }
 
-type elementInterface interface {
-	Set(interface{}) elementInterface
-	Copy() elementInterface
+// Element is the interface that defines the types of methods to be present for
+// elements of a Series
+type Element interface {
+	Set(interface{}) Element
+	Copy() Element
 	IsNA() bool
 	Type() Type
 	Val() ElementValue
@@ -29,14 +31,16 @@ type elementInterface interface {
 	Float() float64
 	Bool() (bool, error)
 	Addr() string
-	Eq(elementInterface) bool
-	Neq(elementInterface) bool
-	Less(elementInterface) bool
-	LessEq(elementInterface) bool
-	Greater(elementInterface) bool
-	GreaterEq(elementInterface) bool
+	Eq(Element) bool
+	Neq(Element) bool
+	Less(Element) bool
+	LessEq(Element) bool
+	Greater(Element) bool
+	GreaterEq(Element) bool
 }
 
+// ElementValue represents the value that can be used for marshaling or
+// unmarshaling Elements.
 type ElementValue interface{}
 
 // Comparator is a convenience alias that can be used for a more type safe way of
@@ -80,7 +84,7 @@ type Indexes interface{}
 
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
-	var elements []elementInterface
+	var elements []Element
 	ret := Series{
 		Name:     name,
 		elements: elements,
@@ -112,7 +116,7 @@ func Bools(values interface{}) Series {
 
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
-	var elements []elementInterface
+	var elements []Element
 	return Series{
 		Name:     s.Name,
 		t:        s.t,
@@ -127,7 +131,7 @@ func (s *Series) Append(values interface{}) {
 		return
 	}
 	appendElements := func(val interface{}) error {
-		var newelem elementInterface
+		var newelem Element
 		switch s.t {
 		case String:
 			newelem = stringElement{}
@@ -208,7 +212,7 @@ func (s Series) Subset(indexes Indexes) Series {
 		s.Err = err
 		return s
 	}
-	var elements []elementInterface
+	var elements []Element
 	for _, i := range idx {
 		if i < 0 || i >= s.Len() {
 			s.Err = fmt.Errorf("subsetting error: index out of range")
@@ -270,7 +274,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	if err := s.Err; err != nil {
 		return s
 	}
-	compareElements := func(a, b elementInterface, c Comparator) (bool, error) {
+	compareElements := func(a, b Element, c Comparator) (bool, error) {
 		var ret bool
 		switch c {
 		case Eq:
@@ -352,7 +356,7 @@ func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
 	err := s.Err
-	var elements []elementInterface
+	var elements []Element
 	for _, e := range s.elements {
 		elements = append(elements, e.Copy())
 	}
@@ -453,7 +457,7 @@ func (s Series) Val(i int) (interface{}, error) {
 
 // Elem returns the element of a series for the given index or nil if the index is
 // out of bounds
-func (s Series) Elem(i int) elementInterface {
+func (s Series) Elem(i int) Element {
 	if i >= s.Len() || i < 0 {
 		return nil
 	}

@@ -10,7 +10,7 @@ type boolElement struct {
 	e *bool
 }
 
-func (e boolElement) Set(value interface{}) elementInterface {
+func (e boolElement) Set(value interface{}) Element {
 	var val bool
 	switch value.(type) {
 	case string:
@@ -45,8 +45,8 @@ func (e boolElement) Set(value interface{}) elementInterface {
 		}
 	case bool:
 		val = value.(bool)
-	case elementInterface:
-		b, err := value.(elementInterface).Bool()
+	case Element:
+		b, err := value.(Element).Bool()
 		if err != nil {
 			e.e = nil
 			return e
@@ -60,7 +60,7 @@ func (e boolElement) Set(value interface{}) elementInterface {
 	return e
 }
 
-func (e boolElement) Copy() elementInterface {
+func (e boolElement) Copy() Element {
 	if e.e == nil {
 		return boolElement{nil}
 	}
@@ -127,7 +127,7 @@ func (e boolElement) Addr() string {
 	return fmt.Sprint(e.e)
 }
 
-func (e boolElement) Eq(elem elementInterface) bool {
+func (e boolElement) Eq(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
@@ -135,7 +135,7 @@ func (e boolElement) Eq(elem elementInterface) bool {
 	return *e.e == b
 }
 
-func (e boolElement) Neq(elem elementInterface) bool {
+func (e boolElement) Neq(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
@@ -143,7 +143,7 @@ func (e boolElement) Neq(elem elementInterface) bool {
 	return *e.e != b
 }
 
-func (e boolElement) Less(elem elementInterface) bool {
+func (e boolElement) Less(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
@@ -151,7 +151,7 @@ func (e boolElement) Less(elem elementInterface) bool {
 	return !*e.e && b
 }
 
-func (e boolElement) LessEq(elem elementInterface) bool {
+func (e boolElement) LessEq(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
@@ -159,7 +159,7 @@ func (e boolElement) LessEq(elem elementInterface) bool {
 	return !*e.e || b
 }
 
-func (e boolElement) Greater(elem elementInterface) bool {
+func (e boolElement) Greater(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
@@ -167,7 +167,7 @@ func (e boolElement) Greater(elem elementInterface) bool {
 	return *e.e && !b
 }
 
-func (e boolElement) GreaterEq(elem elementInterface) bool {
+func (e boolElement) GreaterEq(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {
 		return false
