@@ -2,7 +2,6 @@ package series
 
 import (
 	"fmt"
-	"math"
 	"reflect"
 	"strings"
 )
@@ -360,12 +359,7 @@ func (s Series) Records() []string {
 func (s Series) Float() []float64 {
 	var ret []float64
 	for _, e := range s.elements {
-		val := e.ToFloat().Val()
-		if val == nil {
-			ret = append(ret, math.NaN())
-		} else {
-			ret = append(ret, val.(float64))
-		}
+		ret = append(ret, e.Float())
 	}
 	return ret
 }
@@ -375,11 +369,11 @@ func (s Series) Float() []float64 {
 func (s Series) Int() ([]int, error) {
 	var ret []int
 	for _, e := range s.elements {
-		val := e.ToInt().Val()
-		if val == nil {
-			return nil, fmt.Errorf("can't convert NaN to int")
+		val, err := e.Int()
+		if err != nil {
+			return nil, err
 		}
-		ret = append(ret, val.(int))
+		ret = append(ret, val)
 	}
 	return ret, nil
 }
@@ -389,11 +383,11 @@ func (s Series) Int() ([]int, error) {
 func (s Series) Bool() ([]bool, error) {
 	var ret []bool
 	for _, e := range s.elements {
-		val := e.ToBool().Val()
-		if val == nil {
-			return nil, fmt.Errorf("can't convert NaN to bool")
+		val, err := e.Bool()
+		if err != nil {
+			return nil, err
 		}
-		ret = append(ret, val.(bool))
+		ret = append(ret, val)
 	}
 	return ret, nil
 }

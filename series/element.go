@@ -34,10 +34,6 @@ type elementInterface interface {
 	LessEq(elementInterface) bool
 	Greater(elementInterface) bool
 	GreaterEq(elementInterface) bool
-	ToString() stringElement
-	ToInt() intElement
-	ToFloat() floatElement
-	ToBool() boolElement
 	IsNA() bool
 	Val() elementValue
 	Set(interface{}) elementInterface
@@ -45,9 +41,119 @@ type elementInterface interface {
 	Type() Type
 	Addr() string
 	String() string
+	Int() (int, error)
+	Float() float64
+	Bool() (bool, error)
 }
 
 type elementValue interface{}
+
+func (e stringElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
+	f, _ := strconv.ParseFloat(*e.e, 64)
+	return f
+}
+func (e intElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
+	return float64(*e.e)
+}
+func (e floatElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
+	return *e.e
+}
+func (e boolElement) Float() float64 {
+	if e.IsNA() {
+		return math.NaN()
+	}
+	if *e.e {
+		return 1
+	}
+	return 0
+}
+
+func (e stringElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	return strconv.Atoi(*e.e)
+}
+func (e intElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	return *e.e, nil
+}
+func (e floatElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	f := *e.e
+	if math.IsInf(f, 1) || math.IsInf(f, -1) {
+		return 0, fmt.Errorf("can't convert Inf to int")
+	}
+	if math.IsNaN(f) {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	return int(f), nil
+}
+func (e boolElement) Int() (int, error) {
+	if e.IsNA() {
+		return 0, fmt.Errorf("can't convert NaN to int")
+	}
+	if *e.e == true {
+		return 1, nil
+	}
+	return 0, nil
+}
+
+func (e stringElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
+	switch strings.ToLower(*e.e) {
+	case "true", "t", "1":
+		return true, nil
+	case "false", "f", "0":
+		return false, nil
+	}
+	return false, fmt.Errorf("can't convert String \"%v\" to bool", *e.e)
+}
+func (e intElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
+	switch *e.e {
+	case 1:
+		return true, nil
+	case 0:
+		return false, nil
+	}
+	return false, fmt.Errorf("can't convert Int \"%v\" to bool", *e.e)
+}
+func (e floatElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
+	switch *e.e {
+	case 1:
+		return true, nil
+	case 0:
+		return false, nil
+	}
+	return false, fmt.Errorf("can't convert Float \"%v\" to bool", *e.e)
+}
+func (e boolElement) Bool() (bool, error) {
+	if e.IsNA() {
+		return false, fmt.Errorf("can't convert NaN to bool")
+	}
+	return *e.e, nil
+}
 
 func (e stringElement) Addr() string {
 	return fmt.Sprint(e.e)
@@ -91,7 +197,7 @@ func (e stringElement) Set(value interface{}) elementInterface {
 			val = "false"
 		}
 	case elementInterface:
-		return value.(elementInterface).ToString()
+		val = value.(elementInterface).String()
 	default:
 		e.e = nil
 		return e
@@ -129,7 +235,12 @@ func (e intElement) Set(value interface{}) elementInterface {
 			val = 0
 		}
 	case elementInterface:
-		return value.(elementInterface).ToInt()
+		v, err := value.(elementInterface).Int()
+		if err != nil {
+			e.e = nil
+			return e
+		}
+		val = v
 	default:
 		e.e = nil
 		return e
@@ -160,7 +271,7 @@ func (e floatElement) Set(value interface{}) elementInterface {
 			val = 0
 		}
 	case elementInterface:
-		return value.(elementInterface).ToFloat()
+		val = value.(elementInterface).Float()
 	default:
 		e.e = nil
 		return e
@@ -205,7 +316,12 @@ func (e boolElement) Set(value interface{}) elementInterface {
 	case bool:
 		val = value.(bool)
 	case elementInterface:
-		return value.(elementInterface).ToBool()
+		b, err := value.(elementInterface).Bool()
+		if err != nil {
+			e.e = nil
+			return e
+		}
+		val = b
 	default:
 		e.e = nil
 		return e
@@ -239,414 +355,178 @@ func (e boolElement) Val() elementValue {
 	return *e.e
 }
 
-func (e stringElement) ToString() stringElement {
-	return e.Copy().(stringElement)
-}
-func (e intElement) ToString() stringElement {
-	if e.IsNA() {
-		return stringElement{nil}
-	}
-	s := e.String()
-	return stringElement{&s}
-}
-func (e floatElement) ToString() stringElement {
-	if e.IsNA() {
-		return stringElement{nil}
-	}
-	s := e.String()
-	return stringElement{&s}
-}
-func (e boolElement) ToString() stringElement {
-	if e.IsNA() {
-		return stringElement{nil}
-	}
-	s := e.String()
-	return stringElement{&s}
-}
-
-func (e stringElement) ToInt() intElement {
-	if e.e == nil {
-		return intElement{nil}
-	}
-	i, err := strconv.Atoi(*e.e)
-	if err != nil {
-		return intElement{nil}
-	}
-	if e.IsNA() {
-		return intElement{nil}
-	}
-	return intElement{&i}
-}
-func (e intElement) ToInt() intElement {
-	return e.Copy().(intElement)
-}
-func (e floatElement) ToInt() intElement {
-	if e.e != nil {
-		i := int(*e.e)
-		return intElement{&i}
-	}
-	return intElement{nil}
-}
-func (e boolElement) ToInt() intElement {
-	if e.e == nil {
-		return intElement{nil}
-	}
-	var i int
-	if *e.e {
-		i = 1
-	} else {
-		i = 0
-	}
-	return intElement{&i}
-}
-
-func (e stringElement) ToFloat() floatElement {
-	if e.e == nil {
-		return floatElement{nil}
-	}
-	f, err := strconv.ParseFloat(*e.e, 64)
-	if err != nil {
-		return floatElement{nil}
-	}
-	return floatElement{&f}
-}
-func (e floatElement) ToFloat() floatElement {
-	return e.Copy().(floatElement)
-}
-func (e intElement) ToFloat() floatElement {
-	if e.e != nil {
-		f := float64(*e.e)
-		return floatElement{&f}
-	}
-	return floatElement{nil}
-}
-func (e boolElement) ToFloat() floatElement {
-	if e.e == nil {
-		return floatElement{nil}
-	}
-	var f float64
-	if *e.e {
-		f = 1.0
-	} else {
-		f = 0.0
-	}
-	return floatElement{&f}
-}
-
-func (e stringElement) ToBool() boolElement {
-	if e.e == nil {
-		return boolElement{nil}
-	}
-	var b bool
-	switch strings.ToLower(*e.e) {
-	case "true", "t", "1":
-		b = true
-	case "false", "f", "0":
-		b = false
-	default:
-		return boolElement{nil}
-	}
-	return boolElement{&b}
-}
-func (e intElement) ToBool() boolElement {
-	if e.e == nil {
-		return boolElement{nil}
-	}
-	var b bool
-	if *e.e == 1 {
-		b = true
-	}
-	if *e.e == 0 {
-		b = false
-	}
-	return boolElement{&b}
-}
-func (e floatElement) ToBool() boolElement {
-	if e.e == nil {
-		return boolElement{nil}
-	}
-	var b bool
-	if *e.e == 1.0 {
-		b = true
-	} else if *e.e == 0.0 {
-		b = false
-	} else {
-		return boolElement{nil}
-	}
-	return boolElement{&b}
-}
-func (e boolElement) ToBool() boolElement {
-	return e.Copy().(boolElement)
-}
-
 func (e stringElement) LessEq(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e <= *e2.e
+	return *e.e <= elem.String()
 }
 func (e intElement) LessEq(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e <= *e2.e
+	return *e.e <= i
 }
 func (e floatElement) LessEq(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e <= *e2.e
+	return *e.e <= f
 }
 func (e boolElement) LessEq(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	if *e.e && !*e2.e {
-		return false
-	}
-	return true
+	return !*e.e || b
 }
 
 func (e stringElement) Less(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e < *e2.e
+	return *e.e < elem.String()
 }
 func (e intElement) Less(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e < *e2.e
+	return *e.e < i
 }
 func (e floatElement) Less(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e < *e2.e
+	return *e.e < f
 }
 func (e boolElement) Less(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	if *e.e {
-		return false
-	}
-	if *e2.e {
-		return true
-	}
-	return false
+	return !*e.e && b
 }
 
 func (e stringElement) GreaterEq(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e >= *e2.e
+	return *e.e >= elem.String()
 }
 func (e intElement) GreaterEq(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e >= *e2.e
+	return *e.e >= i
 }
 func (e floatElement) GreaterEq(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e >= *e2.e
+	return *e.e >= f
 }
 func (e boolElement) GreaterEq(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	if *e.e {
-		return true
-	}
-	if *e2.e {
-		return false
-	}
-	return true
+	return *e.e || !b
 }
 
 func (e stringElement) Greater(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e > *e2.e
+	return *e.e > elem.String()
 }
 func (e intElement) Greater(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e > *e2.e
+	return *e.e > i
 }
 func (e floatElement) Greater(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e > *e2.e
+	return *e.e > f
 }
 func (e boolElement) Greater(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	if *e.e && !*e2.e {
-		return true
-	}
-	return false
+	return *e.e && !b
 }
 
 func (e stringElement) Neq(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e != *e2.e
+	return *e.e != elem.String()
 }
 
 func (e intElement) Neq(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e != *e2.e
+	return *e.e != i
 }
 
 func (e floatElement) Neq(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e != *e2.e
+	return *e.e != f
 }
 
 func (e boolElement) Neq(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e != *e2.e
+	return *e.e != b
 }
 
 func (e stringElement) Eq(elem elementInterface) bool {
-	if elem == nil {
+	if e.IsNA() || elem.IsNA() {
 		return false
 	}
-	e2 := elem.ToString()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e == *e2.e
+	return *e.e == elem.String()
 }
 
 func (e intElement) Eq(elem elementInterface) bool {
-	if elem == nil {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToInt()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e == *e2.e
+	return *e.e == i
 }
 
 func (e floatElement) Eq(elem elementInterface) bool {
-	if elem == nil {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
 		return false
 	}
-	e2 := elem.ToFloat()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e == *e2.e
+	return *e.e == f
 }
 
 func (e boolElement) Eq(elem elementInterface) bool {
-	if elem == nil {
+	b, err := elem.Bool()
+	if err != nil || e.IsNA() {
 		return false
 	}
-	e2 := elem.ToBool()
-	if e.IsNA() || e2.IsNA() {
-		return false
-	}
-	return *e.e == *e2.e
+	return *e.e == b
 }
 
 func (e stringElement) String() string {
