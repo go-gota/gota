@@ -132,11 +132,23 @@ func ExampleDataFrame_Filter() {
 		},
 	)
 	fil := df.Filter(
-		dataframe.F{"A", series.Eq, "a"},
-		dataframe.F{"B", series.Greater, 4},
+		dataframe.F{
+			Colname:    "A",
+			Comparator: series.Eq,
+			Comparando: "a",
+		},
+		dataframe.F{
+			Colname:    "B",
+			Comparator: series.Greater,
+			Comparando: 4,
+		},
 	)
 	fil2 := fil.Filter(
-		dataframe.F{"D", series.Eq, true},
+		dataframe.F{
+			Colname:    "D",
+			Comparator: series.Eq,
+			Comparando: true,
+		},
 	)
 	fmt.Println(fil)
 	fmt.Println(fil2)
