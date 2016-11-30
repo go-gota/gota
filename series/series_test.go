@@ -1064,3 +1064,37 @@ func TestSeries_Concat(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_Order(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected []int
+	}{
+		{
+			Ints([]string{"2", "1", "3", "NaN", "4", "NaN"}),
+			[]int{1, 0, 2, 4, 3, 5},
+		},
+		{
+			Floats([]string{"2", "1", "3", "NaN", "4", "NaN"}),
+			[]int{1, 0, 2, 4, 3, 5},
+		},
+		{
+			Strings([]string{"c", "b", "a"}),
+			[]int{2, 1, 0},
+		},
+		{
+			Bools([]bool{true, false, false, false, true}),
+			[]int{1, 2, 3, 0, 4},
+		},
+	}
+	for testnum, test := range tests {
+		received := test.series.Order()
+		expected := test.expected
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}

@@ -3,6 +3,7 @@ package series
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -516,3 +517,34 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	}
 	return idx, nil
 }
+
+// Order returns the indexes for sorting a Series. NaN elements are pushed to the
+// end by order of appearance.
+func (s Series) Order() []int {
+	var ie indexedElements
+	var nasIdx []int
+	for i, e := range s.elements {
+		if e.IsNA() {
+			nasIdx = append(nasIdx, i)
+		} else {
+			ie = append(ie, indexedElement{i, e})
+		}
+	}
+	sort.Sort(ie)
+	var ret []int
+	for _, e := range ie {
+		ret = append(ret, e.index)
+	}
+	return append(ret, nasIdx...)
+}
+
+type indexedElement struct {
+	index   int
+	element Element
+}
+
+type indexedElements []indexedElement
+
+func (e indexedElements) Len() int           { return len(e) }
+func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
+func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
