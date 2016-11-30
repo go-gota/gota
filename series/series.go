@@ -18,6 +18,27 @@ type Series struct {
 	Err      error              // If there are errors they are stored here
 }
 
+type elementInterface interface {
+	Set(interface{}) elementInterface
+	Copy() elementInterface
+	IsNA() bool
+	Type() Type
+	Val() ElementValue
+	String() string
+	Int() (int, error)
+	Float() float64
+	Bool() (bool, error)
+	Addr() string
+	Eq(elementInterface) bool
+	Neq(elementInterface) bool
+	Less(elementInterface) bool
+	LessEq(elementInterface) bool
+	Greater(elementInterface) bool
+	GreaterEq(elementInterface) bool
+}
+
+type ElementValue interface{}
+
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
 type Comparator string
