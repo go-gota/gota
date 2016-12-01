@@ -1801,3 +1801,79 @@ func TestDataFrame_Arrange(t *testing.T) {
 		}
 	}
 }
+
+func TestDataFrame_Capply(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	mean := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum / float64(len(floats)))
+	}
+	sum := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum)
+	}
+	table := []struct {
+		fun   func(series.Series) series.Series
+		expDf DataFrame
+	}{
+		{
+			mean,
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"NaN", "3.25", "6.05", "0.5"},
+				},
+				CfgDefaultType(series.Float),
+				CfgDetectTypes(false),
+			),
+		},
+		{
+			sum,
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"NaN", "13", "24.2", "2"},
+				},
+				CfgDefaultType(series.Float),
+				CfgDetectTypes(false),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Capply(test.fun)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}

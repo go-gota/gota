@@ -343,6 +343,20 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	return df
 }
 
+// Capply applies the given function to the columns of a DataFrame
+func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	var columns []series.Series
+	for _, s := range df.columns {
+		applied := f(s)
+		applied.Name = s.Name
+		columns = append(columns, applied)
+	}
+	return New(columns...)
+}
+
 // Read/Write Methods
 // =================
 
