@@ -1643,3 +1643,161 @@ func TestDataFrame_Set(t *testing.T) {
 		}
 	}
 }
+
+func TestDataFrame_Arrange(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	table := []struct {
+		colnames []Order
+		expDf    DataFrame
+	}{
+		{
+			[]Order{{"A", false}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", false}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", false}, {"B", false}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", false}, {"A", false}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", false}, {"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", false}, {"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", true}, {"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", true}, {"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Arrange(test.colnames...)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}

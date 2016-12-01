@@ -3,6 +3,7 @@ package series
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -257,7 +258,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	return ret
 }
 
-// HasNaN checks whether the Series contain NaN elements
+// HasNaN checks whether the Series contain NaN elements.
 func (s Series) HasNaN() bool {
 	for _, e := range s.elements {
 		if e.IsNA() {
@@ -265,6 +266,15 @@ func (s Series) HasNaN() bool {
 		}
 	}
 	return false
+}
+
+// IsNaN returns an array that identifies which of the elements are NaN.
+func (s Series) IsNaN() []bool {
+	var ret []bool
+	for _, e := range s.elements {
+		ret = append(ret, e.IsNA())
+	}
+	return ret
 }
 
 // Compare compares the values of a Series with other elements. To do so, the
@@ -516,3 +526,39 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	}
 	return idx, nil
 }
+
+// Order returns the indexes for sorting a Series. NaN elements are pushed to the
+// end by order of appearance.
+func (s Series) Order(reverse bool) []int {
+	var ie indexedElements
+	var nasIdx []int
+	for i, e := range s.elements {
+		if e.IsNA() {
+			nasIdx = append(nasIdx, i)
+		} else {
+			ie = append(ie, indexedElement{i, e})
+		}
+	}
+	var srt sort.Interface
+	srt = ie
+	if reverse {
+		srt = sort.Reverse(srt)
+	}
+	sort.Sort(srt)
+	var ret []int
+	for _, e := range ie {
+		ret = append(ret, e.index)
+	}
+	return append(ret, nasIdx...)
+}
+
+type indexedElement struct {
+	index   int
+	element Element
+}
+
+type indexedElements []indexedElement
+
+func (e indexedElements) Len() int           { return len(e) }
+func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
+func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
