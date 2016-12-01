@@ -357,6 +357,95 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	return New(columns...)
 }
 
+// Rapply applies the given function to the rows of a DataFrame. Prior to applying
+// the function the elements of each row are casted to a Series of a specific
+// type. In order of priority: String -> Float -> Int -> Bool. This casting also
+// takes place after the function application to equalize the type of the columns.
+func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+
+	detectType := func(types []series.Type) series.Type {
+		hasFloats := false
+		hasInts := false
+		hasBools := false
+		hasStrings := false
+		for _, t := range types {
+			switch t {
+			case series.Int:
+				hasInts = true
+			case series.Float:
+				hasFloats = true
+			case series.Bool:
+				hasBools = true
+			case series.String:
+				hasStrings = true
+			}
+		}
+		if hasStrings {
+			return series.String
+		} else if hasFloats {
+			return series.Float
+		} else if hasInts {
+			return series.Int
+		} else if hasBools {
+			return series.Bool
+		}
+		panic("type not supported")
+	}
+
+	// Detect row type prior to function application
+	types := df.Types()
+	rowType := detectType(types)
+
+	// Create Element matrix
+	var elements [][]series.Element
+	rowlen := -1
+	for i := 0; i < df.nrows; i++ {
+		row := series.New(nil, rowType, "").Empty()
+		for _, col := range df.columns {
+			row.Append(col.Elem(i))
+		}
+		row = f(row)
+		if row.Err != nil {
+			return DataFrame{
+				Err: fmt.Errorf("error applying function on row %v: %v", i, row.Err),
+			}
+		}
+
+		if rowlen != -1 && rowlen != row.Len() {
+			return DataFrame{
+				Err: fmt.Errorf("error applying function: rows have different lengths"),
+			}
+		}
+		rowlen = row.Len()
+
+		var rowElems []series.Element
+		for j := 0; j < rowlen; j++ {
+			rowElems = append(rowElems, row.Elem(j))
+		}
+		elements = append(elements, rowElems)
+	}
+
+	// Cast columns if necessary
+	var columns []series.Series
+	for j := 0; j < rowlen; j++ {
+		var types []series.Type
+		for i := 0; i < df.nrows; i++ {
+			types = append(types, elements[i][j].Type())
+		}
+		colType := detectType(types)
+		s := series.New(nil, colType, "").Empty()
+		for i := 0; i < df.nrows; i++ {
+			s.Append(elements[i][j])
+		}
+		columns = append(columns, s)
+	}
+
+	return New(columns...)
+}
+
 // Read/Write Methods
 // =================
 

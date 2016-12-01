@@ -1877,3 +1877,86 @@ func TestDataFrame_Capply(t *testing.T) {
 		}
 	}
 }
+
+func TestDataFrame_Rapply(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "true"},
+			[]string{"1", "4", "6.0", "true"},
+			[]string{"2", "3", "6.0", "false"},
+			[]string{"2", "2", "7.1", "false"},
+		},
+	)
+	mean := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		ret := series.Floats(sum / float64(len(floats)))
+		return ret
+	}
+	sum := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum)
+	}
+	table := []struct {
+		fun   func(series.Series) series.Series
+		expDf DataFrame
+	}{
+		{
+			mean,
+			LoadRecords(
+				[][]string{
+					[]string{"X0"},
+					[]string{"2.775"},
+					[]string{"3"},
+					[]string{"2.75"},
+					[]string{"2.775"},
+				},
+				CfgDefaultType(series.Float),
+				CfgDetectTypes(false),
+			),
+		},
+		{
+			sum,
+			LoadRecords(
+				[][]string{
+					[]string{"X0"},
+					[]string{"11.1"},
+					[]string{"12"},
+					[]string{"11"},
+					[]string{"11.1"},
+				},
+				CfgDefaultType(series.Float),
+				CfgDetectTypes(false),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Rapply(test.fun)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
