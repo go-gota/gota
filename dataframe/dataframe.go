@@ -314,25 +314,31 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	return df.Subset(res)
 }
 
-func (df DataFrame) Arrange(colnames ...string) DataFrame {
+// Order is the ordering structure
+type Order struct {
+	Colname string
+	Reverse bool
+}
+
+// Arrange sort the rows of a DataFrame according to the given Order
+func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	if colnames == nil || len(colnames) == 0 {
+	if order == nil || len(order) == 0 {
 		return DataFrame{
 			Err: fmt.Errorf("rename: no arguments"),
 		}
 	}
-	for i := len(colnames) - 1; i >= 0; i-- {
-		colname := colnames[i]
+	for i := len(order) - 1; i >= 0; i-- {
+		colname := order[i].Colname
 		idx := df.colIndex(colname)
 		if idx < 0 {
 			return DataFrame{
 				Err: fmt.Errorf("rename: can't find column name: %v", colname),
 			}
 		}
-		order := df.columns[idx].Order()
-		df = df.Subset(order)
+		df = df.Subset(df.columns[idx].Order(order[i].Reverse))
 	}
 	return df
 }

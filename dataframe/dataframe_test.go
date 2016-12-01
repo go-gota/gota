@@ -1655,11 +1655,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 		},
 	)
 	table := []struct {
-		colnames []string
+		colnames []Order
 		expDf    DataFrame
 	}{
 		{
-			[]string{"A"},
+			[]Order{{"A", false}},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1671,7 +1671,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]string{"B"},
+			[]Order{{"B", false}},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1683,7 +1683,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]string{"A", "B"},
+			[]Order{{"A", false}, {"B", false}},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1695,7 +1695,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]string{"B", "A"},
+			[]Order{{"B", false}, {"A", false}},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1703,6 +1703,78 @@ func TestDataFrame_Arrange(t *testing.T) {
 					[]string{"c", "3", "6.0", "false"},
 					[]string{"a", "4", "5.1", "true"},
 					[]string{"b", "4", "6.0", "true"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", false}, {"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", false}, {"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+				},
+			),
+		},
+		{
+			[]Order{{"B", true}, {"A", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{{"A", true}, {"B", true}},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
 				},
 			),
 		},

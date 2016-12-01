@@ -529,7 +529,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 
 // Order returns the indexes for sorting a Series. NaN elements are pushed to the
 // end by order of appearance.
-func (s Series) Order() []int {
+func (s Series) Order(reverse bool) []int {
 	var ie indexedElements
 	var nasIdx []int
 	for i, e := range s.elements {
@@ -539,7 +539,12 @@ func (s Series) Order() []int {
 			ie = append(ie, indexedElement{i, e})
 		}
 	}
-	sort.Sort(ie)
+	var srt sort.Interface
+	srt = ie
+	if reverse {
+		srt = sort.Reverse(srt)
+	}
+	sort.Sort(srt)
 	var ret []int
 	for _, e := range ie {
 		ret = append(ret, e.index)
