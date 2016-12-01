@@ -314,6 +314,29 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	return df.Subset(res)
 }
 
+func (df DataFrame) Arrange(colnames ...string) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if colnames == nil || len(colnames) == 0 {
+		return DataFrame{
+			Err: fmt.Errorf("rename: no arguments"),
+		}
+	}
+	for i := len(colnames) - 1; i >= 0; i-- {
+		colname := colnames[i]
+		idx := df.colIndex(colname)
+		if idx < 0 {
+			return DataFrame{
+				Err: fmt.Errorf("rename: can't find column name: %v", colname),
+			}
+		}
+		order := df.columns[idx].Order()
+		df = df.Subset(order)
+	}
+	return df
+}
+
 // Read/Write Methods
 // =================
 
