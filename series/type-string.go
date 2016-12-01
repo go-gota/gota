@@ -81,7 +81,10 @@ func (e stringElement) Float() float64 {
 	if e.IsNA() {
 		return math.NaN()
 	}
-	f, _ := strconv.ParseFloat(*e.e, 64)
+	f, err := strconv.ParseFloat(*e.e, 64)
+	if err != nil {
+		return math.NaN()
+	}
 	return f
 }
 
