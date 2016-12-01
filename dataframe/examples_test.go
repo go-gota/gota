@@ -221,3 +221,26 @@ func ExampleDataFrame_Set() {
 	)
 	fmt.Println(df2)
 }
+
+func ExampleDataFrame_Arrange() {
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	sorted := df.Arrange(
+		dataframe.Order{
+			Colname: "A",
+			Reverse: false,
+		},
+		dataframe.Order{
+			Colname: "B",
+			Reverse: false,
+		},
+	)
+	fmt.Println(sorted)
+}

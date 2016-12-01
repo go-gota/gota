@@ -209,6 +209,33 @@ fil2 := fil.Filter(
 Filters inside Filter act as OR whereas if we chain Filter operations,
 they will behave as AND.
 
+#### Arrange
+
+With Arrange a DataFrame can be sorted by the column name and
+direction:
+
+```
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	sorted := df.Arrange(
+		dataframe.Order{
+			Colname: "A",
+			Reverse: false,
+		},
+		dataframe.Order{
+			Colname: "B",
+			Reverse: false,
+		},
+	)
+```
+
 #### Mutate
 
 If we want to modify a column or add one based on a given Series at
