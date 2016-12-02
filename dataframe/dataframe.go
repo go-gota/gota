@@ -38,21 +38,20 @@ func New(se ...series.Series) DataFrame {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
 
-	nrows := 0
-	var columns []series.Series
-	var colnames []string
+	nrows := -1
+	columns := make([]series.Series, len(se))
 	for k, s := range se {
 		if s.Err != nil {
 			err := fmt.Errorf("error on series %v: %v", k, s.Err)
 			return DataFrame{Err: err}
 		}
-		columns = append(columns, s.Copy())
-		colnames = append(colnames, s.Name)
-		l := s.Len()
-		if k > 0 && l != nrows {
+		columns[k] = s.Copy()
+		if nrows == -1 {
+			nrows = s.Len()
+		}
+		if nrows != s.Len() {
 			return DataFrame{Err: fmt.Errorf("arguments have different dimensions")}
 		}
-		nrows = l
 	}
 
 	// Fill DataFrame base structure
@@ -86,7 +85,6 @@ func (df DataFrame) String() (str string) {
 	}
 	records := df.Records()
 	// Add the row numbers
-	// TODO: The row numbers should start counting at 0 to be consistent with the indexing
 	for i := 0; i < df.nrows+1; i++ {
 		add := ""
 		if i != 0 {
@@ -131,9 +129,9 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.ncols != newvalues.ncols {
 		return DataFrame{Err: fmt.Errorf("different number of columns")}
 	}
-	var columns []series.Series
+	columns := make([]series.Series, df.ncols)
 	for i, s := range df.columns {
-		columns = append(columns, s.Set(indexes, newvalues.columns[i]))
+		columns[i] = s.Set(indexes, newvalues.columns[i])
 	}
 	return New(columns...)
 }
@@ -144,13 +142,13 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var columns []series.Series
-	for _, column := range df.columns {
+	columns := make([]series.Series, df.ncols)
+	for i, column := range df.columns {
 		sub := column.Subset(indexes)
 		if sub.Err != nil {
 			return DataFrame{Err: fmt.Errorf("can't subset: %v", sub.Err)}
 		}
-		columns = append(columns, sub)
+		columns[i] = sub
 	}
 	return New(columns...)
 }
@@ -172,16 +170,16 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var columns []series.Series
 	idx, err := parseSelectIndexes(df.ncols, indexes, df.Names())
 	if err != nil {
 		return DataFrame{Err: fmt.Errorf("can't select columns: %v", err)}
 	}
-	for _, i := range idx {
+	columns := make([]series.Series, len(idx))
+	for k, i := range idx {
 		if i < 0 || i >= df.ncols {
 			return DataFrame{Err: fmt.Errorf("can't select columns: index out of range")}
 		}
-		columns = append(columns, df.columns[i])
+		columns[k] = df.columns[i]
 	}
 	return New(columns...)
 }
@@ -226,7 +224,7 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if dfb.Err != nil {
 		return dfb
 	}
-	var expandedSeries []series.Series
+	expandedSeries := make([]series.Series, df.ncols)
 	for k, v := range df.Names() {
 		idx := findInStringSlice(v, dfb.Names())
 		if idx < 0 {
@@ -238,7 +236,7 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 		if err := newSeries.Err; err != nil {
 			return DataFrame{Err: fmt.Errorf("rbind: %v", err)}
 		}
-		expandedSeries = append(expandedSeries, newSeries)
+		expandedSeries[k] = newSeries
 	}
 	return New(expandedSeries...)
 }
@@ -282,8 +280,8 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var compResults []series.Series
-	for _, f := range filters {
+	compResults := make([]series.Series, len(filters))
+	for i, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
 		if idx < 0 {
 			return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
@@ -292,7 +290,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 		if err := res.Err; err != nil {
 			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
-		compResults = append(compResults, res)
+		compResults[i] = res
 	}
 	// Join compResults via "OR"
 	if len(compResults) == 0 {
@@ -348,11 +346,11 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	var columns []series.Series
-	for _, s := range df.columns {
+	columns := make([]series.Series, df.ncols)
+	for i, s := range df.columns {
 		applied := f(s)
 		applied.Name = s.Name
-		columns = append(columns, applied)
+		columns[i] = applied
 	}
 	return New(columns...)
 }
@@ -400,7 +398,7 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	rowType := detectType(types)
 
 	// Create Element matrix
-	var elements [][]series.Element
+	elements := make([][]series.Element, df.nrows)
 	rowlen := -1
 	for i := 0; i < df.nrows; i++ {
 		row := series.New(nil, rowType, "").Empty()
@@ -421,26 +419,26 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		}
 		rowlen = row.Len()
 
-		var rowElems []series.Element
+		rowElems := make([]series.Element, rowlen)
 		for j := 0; j < rowlen; j++ {
-			rowElems = append(rowElems, row.Elem(j))
+			rowElems[j] = row.Elem(j)
 		}
-		elements = append(elements, rowElems)
+		elements[i] = rowElems
 	}
 
 	// Cast columns if necessary
-	var columns []series.Series
+	columns := make([]series.Series, rowlen)
 	for j := 0; j < rowlen; j++ {
-		var types []series.Type
+		types := make([]series.Type, df.nrows)
 		for i := 0; i < df.nrows; i++ {
-			types = append(types, elements[i][j].Type())
+			types[i] = elements[i][j].Type()
 		}
 		colType := detectType(types)
 		s := series.New(nil, colType, "").Empty()
 		for i := 0; i < df.nrows; i++ {
 			s.Append(elements[i][j])
 		}
-		columns = append(columns, s)
+		columns[j] = s
 	}
 
 	return New(columns...)
@@ -525,13 +523,13 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 		}
 	}
 	types := make([]series.Type, len(headers))
-	var rawcols [][]string
+	rawcols := make([][]string, len(headers))
 	for i, colname := range headers {
-		var rawcol []string
+		rawcol := make([]string, len(records))
 		for j := 0; j < len(records); j++ {
-			rawcol = append(rawcol, records[j][i])
+			rawcol[j] = records[j][i]
 		}
-		rawcols = append(rawcols, rawcol)
+		rawcols[i] = rawcol
 
 		t, ok := cfg.types[colname]
 		if !ok {
@@ -543,13 +541,13 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 		types[i] = t
 	}
 
-	var columns []series.Series
+	columns := make([]series.Series, len(headers))
 	for i, colname := range headers {
 		col := series.New(rawcols[i], types[i], colname)
 		if col.Err != nil {
 			return DataFrame{Err: col.Err}
 		}
-		columns = append(columns, col)
+		columns[i] = col
 	}
 	return New(columns...)
 }
@@ -580,18 +578,19 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 		}
 	}
 	sort.Strings(colnames)
-	records := [][]string{colnames}
-	for _, m := range maps {
-		var row []string
-		for _, colname := range colnames {
+	records := make([][]string, len(maps)+1)
+	records[0] = colnames
+	for k, m := range maps {
+		row := make([]string, len(colnames))
+		for i, colname := range colnames {
 			element := ""
 			val, ok := m[colname]
 			if ok {
 				element = fmt.Sprint(val)
 			}
-			row = append(row, element)
+			row[i] = element
 		}
-		records = append(records, row)
+		records[k+1] = row
 	}
 	return LoadRecords(records, options...)
 }
@@ -641,18 +640,18 @@ func (df DataFrame) WriteJSON(w io.Writer) error {
 
 // Names returns the name of the columns on a DataFrame.
 func (df DataFrame) Names() []string {
-	var colnames []string
-	for _, v := range df.columns {
-		colnames = append(colnames, v.Name)
+	colnames := make([]string, df.ncols)
+	for i, s := range df.columns {
+		colnames[i] = s.Name
 	}
 	return colnames
 }
 
 // Types returns the types of the columns on a DataFrame.
 func (df DataFrame) Types() []series.Type {
-	var coltypes []series.Type
-	for _, s := range df.columns {
-		coltypes = append(coltypes, s.Type())
+	coltypes := make([]series.Type, df.ncols)
+	for i, s := range df.columns {
+		coltypes[i] = s.Type()
 	}
 	return coltypes
 }
@@ -667,8 +666,8 @@ func (df DataFrame) SetNames(colnames []string) error {
 		err := fmt.Errorf("setting names: wrong dimensions")
 		return err
 	}
-	for k, v := range colnames {
-		df.columns[k].Name = v
+	for k, s := range colnames {
+		df.columns[k].Name = s
 	}
 	return nil
 }
@@ -696,15 +695,13 @@ func (df DataFrame) Col(colname string) series.Series {
 		return series.Series{Err: df.Err}
 	}
 	// Check that colname exist on dataframe
-	var ret series.Series
 	idx := findInStringSlice(colname, df.Names())
 	if idx < 0 {
 		return series.Series{
 			Err: fmt.Errorf("unknown column name"),
 		}
 	}
-	ret = df.columns[idx].Copy()
-	return ret
+	return df.columns[idx].Copy()
 }
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
@@ -1190,18 +1187,6 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	}
 	return maps
 }
-
-//func (df DataFrame) Dense() (*mat64.Dense, error) {
-//if df.Err != nil {
-//return nil, df.Err
-//}
-//var floats []float64
-//for _, col := range df.columns {
-//floats = append(floats, col.Float()...)
-//}
-//dense := mat64.NewDense(df.nrows, df.ncols, floats)
-//return dense, nil
-//}
 
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.

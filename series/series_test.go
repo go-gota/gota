@@ -599,6 +599,10 @@ func TestStrings(t *testing.T) {
 			"[true]",
 		},
 		{
+			Strings([]int{}),
+			"[]",
+		},
+		{
 			Strings(nil),
 			"[NaN]",
 		},
@@ -689,6 +693,10 @@ func TestInts(t *testing.T) {
 		{
 			Ints(true),
 			"[1]",
+		},
+		{
+			Ints([]int{}),
+			"[]",
 		},
 		{
 			Ints(nil),
@@ -787,6 +795,10 @@ func TestFloats(t *testing.T) {
 			"[1.000000]",
 		},
 		{
+			Floats([]int{}),
+			"[]",
+		},
+		{
 			Floats(nil),
 			"[NaN]",
 		},
@@ -877,6 +889,10 @@ func TestBools(t *testing.T) {
 		{
 			Bools(true),
 			"[true]",
+		},
+		{
+			Bools([]int{}),
+			"[]",
 		},
 		{
 			Bools(nil),
