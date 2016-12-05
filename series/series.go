@@ -280,6 +280,35 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	return ret
 }
 
+// SetInplace sets the values on the indexes of a Series and returns the reference
+// for itself. The original Series is modifyed.
+func (s *Series) SetInplace(indexes Indexes, newvalues Series) *Series {
+	if err := s.Err; err != nil {
+		return s
+	}
+	if err := newvalues.Err; err != nil {
+		s.Err = fmt.Errorf("set error: argument has errors: %v", err)
+		return s
+	}
+	idx, err := parseIndexes(s.Len(), indexes)
+	if err != nil {
+		s.Err = err
+		return s
+	}
+	if len(idx) != newvalues.Len() {
+		s.Err = fmt.Errorf("set error: dimensions mismatch")
+		return s
+	}
+	for k, i := range idx {
+		if i < 0 || i >= s.Len() {
+			s.Err = fmt.Errorf("set error: index out of range")
+			return s
+		}
+		s.elements[i] = s.elements[i].Set(newvalues.elements[k])
+	}
+	return s
+}
+
 // HasNaN checks whether the Series contain NaN elements.
 func (s Series) HasNaN() bool {
 	for _, e := range s.elements {

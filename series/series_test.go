@@ -533,6 +533,63 @@ func TestSeries_Set(t *testing.T) {
 	}
 }
 
+func TestSeries_SetInplace(t *testing.T) {
+	table := []struct {
+		series   Series
+		indexes  Indexes
+		values   Series
+		expected string
+	}{
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]int{1, 2, 4},
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]bool{false, true, true, false, true},
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Ints([]int{1, 2, 4}),
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Bools([]bool{false, true, true, false, true}),
+			Ints([]string{"1", "2", "3"}),
+			"[A 1 2 K 3]",
+		},
+	}
+	for testnum, test := range table {
+		b := test.series.SetInplace(test.indexes, test.values)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		expected := test.expected
+		received := fmt.Sprint(b)
+		if expected != received {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		if err := checkTypes(*b); err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
+		}
+		if err := checkAddr(test.values.Addr(), b.Addr()); err != nil {
+			t.Errorf("Test:%v\nError:%v\nNV:%v\nB:%v", testnum, err, test.values.Addr(), b.Addr())
+		}
+	}
+}
+
 func TestStrings(t *testing.T) {
 	table := []struct {
 		series   Series
