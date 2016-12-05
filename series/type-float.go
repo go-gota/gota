@@ -23,7 +23,7 @@ func (e floatElement) Set(value interface{}) Element {
 	case int:
 		val = float64(value.(int))
 	case float64:
-		val = value.(float64)
+		val = float64(value.(float64))
 	case bool:
 		b := value.(bool)
 		if b {
@@ -45,7 +45,7 @@ func (e floatElement) Copy() Element {
 	if e.e == nil {
 		return floatElement{nil}
 	}
-	copy := *e.e
+	copy := float64(*e.e)
 	return floatElement{&copy}
 }
 
@@ -64,7 +64,7 @@ func (e floatElement) Val() ElementValue {
 	if e.IsNA() {
 		return nil
 	}
-	return *e.e
+	return float64(*e.e)
 }
 
 func (e floatElement) String() string {
@@ -92,7 +92,7 @@ func (e floatElement) Float() float64 {
 	if e.IsNA() {
 		return math.NaN()
 	}
-	return *e.e
+	return float64(*e.e)
 }
 
 func (e floatElement) Bool() (bool, error) {

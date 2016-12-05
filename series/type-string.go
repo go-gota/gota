@@ -15,7 +15,7 @@ func (e stringElement) Set(value interface{}) Element {
 	var val string
 	switch value.(type) {
 	case string:
-		val = value.(string)
+		val = string(value.(string))
 	case int:
 		val = strconv.Itoa(value.(int))
 	case float64:
@@ -41,7 +41,7 @@ func (e stringElement) Copy() Element {
 	if e.e == nil {
 		return stringElement{nil}
 	}
-	copy := *e.e
+	copy := string(*e.e)
 	return stringElement{&copy}
 }
 
@@ -60,14 +60,14 @@ func (e stringElement) Val() ElementValue {
 	if e.IsNA() {
 		return nil
 	}
-	return *e.e
+	return string(*e.e)
 }
 
 func (e stringElement) String() string {
 	if e.e == nil {
 		return "NaN"
 	}
-	return *e.e
+	return string(*e.e)
 }
 
 func (e stringElement) Int() (int, error) {

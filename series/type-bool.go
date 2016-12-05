@@ -64,7 +64,7 @@ func (e boolElement) Copy() Element {
 	if e.e == nil {
 		return boolElement{nil}
 	}
-	copy := *e.e
+	copy := bool(*e.e)
 	return boolElement{&copy}
 }
 
@@ -83,7 +83,7 @@ func (e boolElement) Val() ElementValue {
 	if e.IsNA() {
 		return nil
 	}
-	return *e.e
+	return bool(*e.e)
 }
 
 func (e boolElement) String() string {
@@ -111,16 +111,16 @@ func (e boolElement) Float() float64 {
 		return math.NaN()
 	}
 	if *e.e {
-		return 1
+		return 1.0
 	}
-	return 0
+	return 0.0
 }
 
 func (e boolElement) Bool() (bool, error) {
 	if e.IsNA() {
 		return false, fmt.Errorf("can't convert NaN to bool")
 	}
-	return *e.e, nil
+	return bool(*e.e), nil
 }
 
 func (e boolElement) Addr() string {

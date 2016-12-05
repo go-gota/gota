@@ -21,7 +21,7 @@ func (e intElement) Set(value interface{}) Element {
 		}
 		val = i
 	case int:
-		val = value.(int)
+		val = int(value.(int))
 	case float64:
 		f := value.(float64)
 		if math.IsNaN(f) ||
@@ -57,7 +57,7 @@ func (e intElement) Copy() Element {
 	if e.e == nil {
 		return intElement{nil}
 	}
-	copy := *e.e
+	copy := int(*e.e)
 	return intElement{&copy}
 }
 
@@ -76,7 +76,7 @@ func (e intElement) Val() ElementValue {
 	if e.IsNA() {
 		return nil
 	}
-	return *e.e
+	return int(*e.e)
 }
 
 func (e intElement) String() string {
@@ -90,7 +90,7 @@ func (e intElement) Int() (int, error) {
 	if e.IsNA() {
 		return 0, fmt.Errorf("can't convert NaN to int")
 	}
-	return *e.e, nil
+	return int(*e.e), nil
 }
 
 func (e intElement) Float() float64 {
