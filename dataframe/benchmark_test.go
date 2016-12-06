@@ -79,3 +79,42 @@ func BenchmarkNew(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkDataFrame_Arrange(b *testing.B) {
+	data := dataframe.New(generateSeries(100000, 5)...)
+	table := []struct {
+		name string
+		data dataframe.DataFrame
+		key  []dataframe.Order
+	}{
+		{
+			"100000x20_1",
+			data,
+			[]dataframe.Order{dataframe.Order{"X0", false}},
+		},
+		{
+			"100000x20_2",
+			data,
+			[]dataframe.Order{
+				dataframe.Order{"X0", false},
+				dataframe.Order{"X1", false},
+			},
+		},
+		{
+			"100000x20_3",
+			data,
+			[]dataframe.Order{
+				dataframe.Order{"X0", false},
+				dataframe.Order{"X1", false},
+				dataframe.Order{"X2", false},
+			},
+		},
+	}
+	for _, test := range table {
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				test.data.Arrange(test.key...)
+			}
+		})
+	}
+}

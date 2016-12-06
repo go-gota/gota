@@ -336,17 +336,39 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 			Err: fmt.Errorf("rename: no arguments"),
 		}
 	}
+
+	// Check that all colnames exist before starting to sort
+	for i := 0; i < len(order); i++ {
+		colname := order[i].Colname
+		if df.colIndex(colname) == -1 {
+			return DataFrame{Err: fmt.Errorf("colname %v doesn't exist", colname)}
+		}
+	}
+
+	// Initialize the index that will be used to store temporary and final order
+	// results.
+	origIdx := make([]int, df.nrows)
+	for i := 0; i < df.nrows; i++ {
+		origIdx[i] = i
+	}
+
+	swapOrigIdx := func(newidx []int) {
+		newOrigIdx := make([]int, len(newidx))
+		for k, i := range newidx {
+			newOrigIdx[k] = origIdx[i]
+		}
+		origIdx = newOrigIdx
+	}
+
+	suborder := origIdx
 	for i := len(order) - 1; i >= 0; i-- {
 		colname := order[i].Colname
 		idx := df.colIndex(colname)
-		if idx < 0 {
-			return DataFrame{
-				Err: fmt.Errorf("rename: can't find column name: %v", colname),
-			}
-		}
-		df = df.Subset(df.columns[idx].Order(order[i].Reverse))
+		nextSeries := df.columns[idx].Subset(suborder)
+		suborder = nextSeries.Order(order[i].Reverse)
+		swapOrigIdx(suborder)
 	}
-	return df
+	return df.Subset(origIdx)
 }
 
 // Capply applies the given function to the columns of a DataFrame
