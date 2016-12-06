@@ -447,8 +447,10 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 // Read/Write Methods
 // =================
 
-// LoadOptions is the configuration that will be used for the loading operations
-type LoadOptions struct {
+// LoadOption is the type used to configure the load of elements
+type LoadOption func(*loadOptions)
+
+type loadOptions struct {
 	// If set, the type of each column will be automatically detected unless
 	// otherwise specified.
 	detectTypes bool
@@ -464,38 +466,38 @@ type LoadOptions struct {
 	defaultType series.Type
 }
 
-// CfgDetectTypes set the detectTypes option for LoadOptions.
-func CfgDetectTypes(b bool) func(*LoadOptions) {
-	return func(c *LoadOptions) {
+// DetectTypes set the detectTypes option for loadOptions.
+func DetectTypes(b bool) LoadOption {
+	return func(c *loadOptions) {
 		c.detectTypes = b
 	}
 }
 
-// CfgHasHeader set the hasHeader option for LoadOptions.
-func CfgHasHeader(b bool) func(*LoadOptions) {
-	return func(c *LoadOptions) {
+// HasHeader set the hasHeader option for loadOptions.
+func HasHeader(b bool) LoadOption {
+	return func(c *loadOptions) {
 		c.hasHeader = b
 	}
 }
 
-// CfgColumnTypes set the types option for LoadOptions.
-func CfgColumnTypes(coltypes map[string]series.Type) func(*LoadOptions) {
-	return func(c *LoadOptions) {
+// WithTypes set the types option for loadOptions.
+func WithTypes(coltypes map[string]series.Type) LoadOption {
+	return func(c *loadOptions) {
 		c.types = coltypes
 	}
 }
 
-// CfgDefaultType set the defaultType option for LoadOptions.
-func CfgDefaultType(t series.Type) func(*LoadOptions) {
-	return func(c *LoadOptions) {
+// DefaultType set the defaultType option for loadOptions.
+func DefaultType(t series.Type) LoadOption {
+	return func(c *loadOptions) {
 		c.defaultType = t
 	}
 }
 
 // LoadRecords creates a new DataFrame based on the given records.
-func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
+func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	// Load the options
-	cfg := LoadOptions{
+	cfg := loadOptions{
 		types:       make(map[string]series.Type),
 		detectTypes: true,
 		defaultType: series.String,
@@ -554,7 +556,7 @@ func LoadRecords(records [][]string, options ...func(*LoadOptions)) DataFrame {
 
 // LoadMaps creates a new DataFrame based on the given maps. This function assumes
 // that every map on the array represents a row of observations.
-func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) DataFrame {
+func LoadMaps(maps []map[string]interface{}, options ...LoadOption) DataFrame {
 	if len(maps) == 0 {
 		return DataFrame{
 			Err: fmt.Errorf("load maps: empty array"),
@@ -597,7 +599,7 @@ func LoadMaps(maps []map[string]interface{}, options ...func(*LoadOptions)) Data
 
 // ReadCSV reads a CSV file from a io.Reader and builds a DataFrame with the
 // resulting records.
-func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 	csvReader := csv.NewReader(r)
 	records, err := csvReader.ReadAll()
 	if err != nil {
@@ -608,7 +610,7 @@ func ReadCSV(r io.Reader, options ...func(*LoadOptions)) DataFrame {
 
 // ReadJSON reads a JSON array from a io.Reader and builds a DataFrame with the
 // resulting records.
-func ReadJSON(r io.Reader, options ...func(*LoadOptions)) DataFrame {
+func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	var m []map[string]interface{}
 	err := json.NewDecoder(r).Decode(&m)
 	if err != nil {

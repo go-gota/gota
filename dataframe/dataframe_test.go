@@ -643,9 +643,9 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"a", "b"}, series.String, "A"),
@@ -661,9 +661,9 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(false),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(false),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"A", "a", "b"}, series.String, "0"),
@@ -679,10 +679,10 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 					"C": series.String,
 				}),
@@ -701,10 +701,10 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(true),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(true),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 				}),
 			),
@@ -781,9 +781,9 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"a", "b"}, series.String, "A"),
@@ -808,9 +808,9 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(false),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(false),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"A", "a", "b"}, series.String, "0"),
@@ -835,10 +835,10 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 					"C": series.String,
 				}),
@@ -866,10 +866,10 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(true),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(true),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 				}),
 			),
@@ -935,8 +935,8 @@ func TestReadJSON(t *testing.T) {
 					[]string{"5", "2", "2"},
 					[]string{"6", "3", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Int),
+				DetectTypes(false),
+				DefaultType(series.Int),
 			),
 		},
 		{
@@ -948,8 +948,8 @@ func TestReadJSON(t *testing.T) {
 					[]string{"5", "2", "2"},
 					[]string{"6", "3", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Int),
+				DetectTypes(false),
+				DefaultType(series.Int),
 			),
 		},
 	}
@@ -1078,8 +1078,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1089,8 +1089,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1106,8 +1106,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 					[]string{"3", "0", "3", "6.0", "NaN"},
 					[]string{"1", "0", "2", "7.1", "NaN"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1120,8 +1120,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 					[]string{"3", "3", "6.0", "0", "NaN", "NaN"},
 					[]string{"1", "2", "7.1", "0", "1", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1154,8 +1154,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1165,8 +1165,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1182,8 +1182,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 					[]string{"3", "0", "NaN", "3", "6.0"},
 					[]string{"1", "0", "NaN", "2", "7.1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1196,8 +1196,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 					[]string{"1", "1", "1", "2", "7.1", "0"},
 					[]string{"3", "NaN", "NaN", "3", "6.0", "0"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1230,8 +1230,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1241,8 +1241,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1261,8 +1261,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 					[]string{"2", "0", "NaN", "NaN", "8"},
 					[]string{"5", "0", "NaN", "NaN", "9"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1277,8 +1277,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 					[]string{"4", "NaN", "NaN", "NaN", "2", "0"},
 					[]string{"5", "NaN", "NaN", "NaN", "9", "0"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1343,7 +1343,7 @@ A_0,B,C,D_0,A_1,F,D_1
 `
 	expected := ReadCSV(
 		strings.NewReader(expectedCSV),
-		CfgColumnTypes(map[string]series.Type{
+		WithTypes(map[string]series.Type{
 			"A.1": series.String,
 		}))
 	if err := c.Err; err != nil {
@@ -1424,8 +1424,8 @@ func TestDataFrame_WriteJSON(t *testing.T) {
 			[]string{"5", "2", "2"},
 			[]string{"6", "3", "1"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Int),
+		DetectTypes(false),
+		DefaultType(series.Int),
 	)
 	buf := new(bytes.Buffer)
 	err := a.WriteJSON(buf)
@@ -1447,8 +1447,8 @@ func TestDataFrame_Col(t *testing.T) {
 			[]string{"5", "2", "2"},
 			[]string{"6", "3", "1"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Int),
+		DetectTypes(false),
+		DefaultType(series.Int),
 	)
 	b := a.Col("COL.2")
 	expected := series.New([]int{1, 2, 3}, series.Int, "COL.2")
@@ -1839,8 +1839,8 @@ func TestDataFrame_Capply(t *testing.T) {
 					[]string{"A", "B", "C", "D"},
 					[]string{"NaN", "3.25", "6.05", "0.5"},
 				},
-				CfgDefaultType(series.Float),
-				CfgDetectTypes(false),
+				DefaultType(series.Float),
+				DetectTypes(false),
 			),
 		},
 		{
@@ -1850,8 +1850,8 @@ func TestDataFrame_Capply(t *testing.T) {
 					[]string{"A", "B", "C", "D"},
 					[]string{"NaN", "13", "24.2", "2"},
 				},
-				CfgDefaultType(series.Float),
-				CfgDetectTypes(false),
+				DefaultType(series.Float),
+				DetectTypes(false),
 			),
 		},
 	}
@@ -1919,8 +1919,8 @@ func TestDataFrame_Rapply(t *testing.T) {
 					[]string{"2.75"},
 					[]string{"2.775"},
 				},
-				CfgDefaultType(series.Float),
-				CfgDetectTypes(false),
+				DefaultType(series.Float),
+				DetectTypes(false),
 			),
 		},
 		{
@@ -1933,8 +1933,8 @@ func TestDataFrame_Rapply(t *testing.T) {
 					[]string{"11"},
 					[]string{"11.1"},
 				},
-				CfgDefaultType(series.Float),
-				CfgDetectTypes(false),
+				DefaultType(series.Float),
+				DetectTypes(false),
 			),
 		},
 	}

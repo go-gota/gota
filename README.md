@@ -71,9 +71,9 @@ df := dataframe.LoadRecords(
         []string{"k", "4", "6.0", "true"},
         []string{"a", "2", "7.1", "false"},
     },
-    dataframe.CfgDetectTypes(false),
-    dataframe.CfgDefaultType(series.Float),
-    dataframe.CfgColumnTypes(map[string]series.Type{
+    dataframe.DetectTypes(false),
+    dataframe.DefaultType(series.Float),
+    dataframe.WithTypes(map[string]series.Type{
         "A": series.String,
         "D": series.Bool,
     }),
