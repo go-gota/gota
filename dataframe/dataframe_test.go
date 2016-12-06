@@ -1622,12 +1622,10 @@ func TestDataFrame_Set(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		a := a.Copy()
 		b := a.Set(test.indexes, test.newvalues)
 		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
-		}
-		if err := checkAddrDf(a, b); err != nil {
-			t.Error(err)
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {

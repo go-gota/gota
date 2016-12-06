@@ -135,9 +135,13 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	}
 	columns := make([]series.Series, df.ncols)
 	for i, s := range df.columns {
-		columns[i] = s.Set(indexes, newvalues.columns[i])
+		columns[i] = s.SetInplace(indexes, newvalues.columns[i])
+		if columns[i].Err != nil {
+			df = DataFrame{Err: fmt.Errorf("setting error on column %v: %v", i, columns[i].Err)}
+			return df
+		}
 	}
-	return New(columns...)
+	return df
 }
 
 // Subset returns a subset of the rows of the original DataFrame based on the

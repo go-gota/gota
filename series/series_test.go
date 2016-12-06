@@ -578,7 +578,7 @@ func TestSeries_SetInplace(t *testing.T) {
 				testnum, expected, received,
 			)
 		}
-		if err := checkTypes(*b); err != nil {
+		if err := checkTypes(b); err != nil {
 			t.Errorf(
 				"Test:%v\nError:%v",
 				testnum, err,

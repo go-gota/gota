@@ -281,8 +281,8 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 }
 
 // SetInplace sets the values on the indexes of a Series and returns the reference
-// for itself. The original Series is modifyed.
-func (s *Series) SetInplace(indexes Indexes, newvalues Series) *Series {
+// for itself. The original Series is modified.
+func (s Series) SetInplace(indexes Indexes, newvalues Series) Series {
 	if err := s.Err; err != nil {
 		return s
 	}
