@@ -248,52 +248,10 @@ func BenchmarkSeries_Set(b *testing.B) {
 		},
 	}
 	for _, test := range table {
-		b.Run(test.name, func(b *testing.B) {
-			for i := 0; i < b.N; i++ {
-				test.series.Set(test.indexes, test.newValues)
-			}
-		})
-	}
-}
-
-func BenchmarkSeries_SetInplace(b *testing.B) {
-	rand.Seed(100)
-	table := []struct {
-		name      string
-		indexes   interface{}
-		newValues series.Series
-		series    series.Series
-	}{
-		{
-			"[]int(100000)_Int",
-			generateIntsN(10000, 2),
-			series.Ints(generateIntsN(10000, 2)),
-			series.Ints(generateInts(100000)),
-		},
-		{
-			"[]int(100000)_String",
-			generateIntsN(10000, 2),
-			series.Strings(generateIntsN(10000, 2)),
-			series.Strings(generateInts(100000)),
-		},
-		{
-			"[]int(100000)_Bool",
-			generateIntsN(10000, 2),
-			series.Bools(generateIntsN(10000, 2)),
-			series.Bools(generateInts(100000)),
-		},
-		{
-			"[]int(100000)_Float",
-			generateIntsN(10000, 2),
-			series.Floats(generateIntsN(10000, 2)),
-			series.Floats(generateInts(100000)),
-		},
-	}
-	for _, test := range table {
 		s := test.series.Copy()
 		b.Run(test.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				s.SetInplace(test.indexes, test.newValues)
+				s.Set(test.indexes, test.newValues)
 			}
 		})
 	}
