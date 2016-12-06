@@ -666,10 +666,10 @@ func TestLoadRecords(t *testing.T) {
 				DefaultType(series.String),
 			),
 			New(
-				series.New([]string{"A", "a", "b"}, series.String, "0"),
-				series.New([]string{"B", "1", "2"}, series.String, "1"),
-				series.New([]string{"C", "true", "true"}, series.String, "2"),
-				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+				series.New([]string{"A", "a", "b"}, series.String, "X0"),
+				series.New([]string{"B", "1", "2"}, series.String, "X1"),
+				series.New([]string{"C", "true", "true"}, series.String, "X2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
 		},
 		{
@@ -813,10 +813,10 @@ func TestLoadMaps(t *testing.T) {
 				DefaultType(series.String),
 			),
 			New(
-				series.New([]string{"A", "a", "b"}, series.String, "0"),
-				series.New([]string{"B", "1", "2"}, series.String, "1"),
-				series.New([]string{"C", "true", "true"}, series.String, "2"),
-				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+				series.New([]string{"A", "a", "b"}, series.String, "X0"),
+				series.New([]string{"B", "1", "2"}, series.String, "X1"),
+				series.New([]string{"C", "true", "true"}, series.String, "X2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
 		},
 		{

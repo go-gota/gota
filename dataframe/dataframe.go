@@ -60,7 +60,11 @@ func New(se ...series.Series) DataFrame {
 		ncols:   len(se),
 		nrows:   nrows,
 	}
-	fixColnames(&df)
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
 	return df
 }
 
@@ -464,6 +468,9 @@ type loadOptions struct {
 
 	// Specifies which is the default type in case detectTypes is disabled.
 	defaultType series.Type
+
+	// Defines which valeus are going to be considered as NaN when parsing from string
+	nanValues []string
 }
 
 // DetectTypes set the detectTypes option for loadOptions.
@@ -502,6 +509,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		detectTypes: true,
 		defaultType: series.String,
 		hasHeader:   true,
+		nanValues:   []string{"", "NA", "NaN", "<nil>"},
 	}
 	for _, option := range options {
 		option(&cfg)
@@ -515,14 +523,12 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	}
 
 	// Extract headers
-	var headers []string
+	headers := make([]string, len(records[0]))
 	if cfg.hasHeader {
 		headers = records[0]
 		records = records[1:]
 	} else {
-		for i := 0; i < len(records[0]); i++ {
-			headers = append(headers, fmt.Sprint(i))
-		}
+		fixColnames(headers)
 	}
 	types := make([]series.Type, len(headers))
 	rawcols := make([][]string, len(headers))
@@ -1192,9 +1198,8 @@ func (df DataFrame) Maps() []map[string]interface{} {
 
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
-func fixColnames(df *DataFrame) {
+func fixColnames(colnames []string) {
 	// Find duplicated colnames
-	colnames := df.Names()
 	dupnamesidx := make(map[string][]int)
 	var missingnames []int
 	for i := 0; i < len(colnames); i++ {
@@ -1221,7 +1226,6 @@ func fixColnames(df *DataFrame) {
 			proposedName = fmt.Sprintf("X%v", counter)
 		}
 		colnames[i] = proposedName
-		df.columns[i].Name = proposedName
 		counter++
 	}
 
@@ -1246,7 +1250,6 @@ func fixColnames(df *DataFrame) {
 				proposedName = fmt.Sprintf("%v_%v", name, counter)
 			}
 			colnames[i] = proposedName
-			df.columns[i].Name = proposedName
 			counter++
 		}
 	}
