@@ -14,6 +14,10 @@ func (e boolElement) Set(value interface{}) Element {
 	var val bool
 	switch value.(type) {
 	case string:
+		if value.(string) == "NaN" {
+			e.e = nil
+			return e
+		}
 		switch strings.ToLower(value.(string)) {
 		case "true", "t", "1":
 			val = true

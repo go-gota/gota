@@ -14,6 +14,10 @@ func (e intElement) Set(value interface{}) Element {
 	var val int
 	switch value.(type) {
 	case string:
+		if value.(string) == "NaN" {
+			e.e = nil
+			return e
+		}
 		i, err := strconv.Atoi(value.(string))
 		if err != nil {
 			e.e = nil

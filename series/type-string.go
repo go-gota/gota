@@ -16,6 +16,10 @@ func (e stringElement) Set(value interface{}) Element {
 	switch value.(type) {
 	case string:
 		val = string(value.(string))
+		if val == "NaN" {
+			e.e = nil
+			return e
+		}
 	case int:
 		val = strconv.Itoa(value.(int))
 	case float64:

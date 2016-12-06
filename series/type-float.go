@@ -14,6 +14,10 @@ func (e floatElement) Set(value interface{}) Element {
 	var val float64
 	switch value.(type) {
 	case string:
+		if value.(string) == "NaN" {
+			e.e = nil
+			return e
+		}
 		f, err := strconv.ParseFloat(value.(string), 64)
 		if err != nil {
 			e.e = nil

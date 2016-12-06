@@ -473,6 +473,13 @@ type loadOptions struct {
 	nanValues []string
 }
 
+// DefaultType set the defaultType option for loadOptions.
+func DefaultType(t series.Type) LoadOption {
+	return func(c *loadOptions) {
+		c.defaultType = t
+	}
+}
+
 // DetectTypes set the detectTypes option for loadOptions.
 func DetectTypes(b bool) LoadOption {
 	return func(c *loadOptions) {
@@ -487,17 +494,17 @@ func HasHeader(b bool) LoadOption {
 	}
 }
 
+// NaNValues set which values are to be parsed as NaN
+func NaNValues(nanValues []string) LoadOption {
+	return func(c *loadOptions) {
+		c.nanValues = nanValues
+	}
+}
+
 // WithTypes set the types option for loadOptions.
 func WithTypes(coltypes map[string]series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.types = coltypes
-	}
-}
-
-// DefaultType set the defaultType option for loadOptions.
-func DefaultType(t series.Type) LoadOption {
-	return func(c *loadOptions) {
-		c.defaultType = t
 	}
 }
 
@@ -509,7 +516,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		detectTypes: true,
 		defaultType: series.String,
 		hasHeader:   true,
-		nanValues:   []string{"", "NA", "NaN", "<nil>"},
+		nanValues:   []string{"NA", "NaN", "<nil>"},
 	}
 	for _, option := range options {
 		option(&cfg)
@@ -536,6 +543,9 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		rawcol := make([]string, len(records))
 		for j := 0; j < len(records); j++ {
 			rawcol[j] = records[j][i]
+			if findInStringSlice(rawcol[j], cfg.nanValues) != -1 {
+				rawcol[j] = "NaN"
+			}
 		}
 		rawcols[i] = rawcol
 

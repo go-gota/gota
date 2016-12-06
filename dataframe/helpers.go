@@ -46,7 +46,7 @@ func findType(arr []string) series.Type {
 	hasBools := false
 	hasStrings := false
 	for _, str := range arr {
-		if str == "" || str == "NA" || str == "NaN" || str == "<nil>" {
+		if str == "" || str == "NaN" {
 			continue
 		}
 		if _, err := strconv.Atoi(str); err == nil {
