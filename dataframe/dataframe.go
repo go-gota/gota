@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/gonum/matrix/mat64"
 	"github.com/kniren/gota/series"
 )
 
@@ -639,6 +640,20 @@ func LoadMaps(maps []map[string]interface{}, options ...LoadOption) DataFrame {
 	return LoadRecords(records, options...)
 }
 
+// LoadMatrix loads the  given mat64.Matrix as a DataFrame
+func LoadMatrix(mat mat64.Matrix) DataFrame {
+	nrows, ncols := mat.Dims()
+	columns := make([]series.Series, ncols)
+	for i := 0; i < ncols; i++ {
+		floats := make([]float64, nrows)
+		for j := 0; j < nrows; j++ {
+			floats[j] = mat.At(j, i)
+		}
+		columns[i] = series.Floats(floats)
+	}
+	return New(columns...)
+}
+
 // ReadCSV reads a CSV file from a io.Reader and builds a DataFrame with the
 // resulting records.
 func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
@@ -1232,6 +1247,11 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	return maps
 }
 
+// Matrix returns the mat64.Matrix representation of a DataFrame
+func (df DataFrame) Matrix() mat64.Matrix {
+	return matrix{df}
+}
+
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(colnames []string) {
@@ -1360,4 +1380,21 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		return nil, fmt.Errorf("indexing error: unknown indexing mode")
 	}
 	return idx, nil
+}
+
+type matrix struct {
+	DataFrame
+}
+
+func (m matrix) At(i, j int) float64 {
+	return m.columns[j].Elem(i).Float()
+}
+
+func (m matrix) Dims() (r, c int) {
+	r, c = m.Nrow(), m.Ncol()
+	return
+}
+
+func (m matrix) T() mat64.Matrix {
+	return mat64.Transpose{Matrix: m}
 }

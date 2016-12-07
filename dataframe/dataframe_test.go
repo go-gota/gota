@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gonum/matrix/mat64"
 	"github.com/kniren/gota/series"
 )
 
@@ -1943,6 +1944,64 @@ func TestDataFrame_Rapply(t *testing.T) {
 		}
 		if err := checkAddrDf(a, b); err != nil {
 			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+func TestDataFrame_Matrix(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "true"},
+			[]string{"1", "4", "6.0", "true"},
+			[]string{"2", "3", "6.0", "false"},
+			[]string{"2", "2", "7.1", "false"},
+		},
+	)
+	sum := mat64.Sum(a.Matrix())
+	expected := 45.2
+	if sum != expected {
+		t.Errorf("\nExpected: %v\nReceived: %v", expected, sum)
+	}
+}
+
+func TestLoadMatrix(t *testing.T) {
+	table := []struct {
+		b     DataFrame
+		expDf DataFrame
+	}{
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"4", "1", "true", "0"},
+					{"3", "2", "true", "0.5"},
+				},
+			),
+			New(
+				series.New([]string{"4", "3"}, series.Float, "X0"),
+				series.New([]int{1, 2}, series.Float, "X1"),
+				series.New([]bool{true, true}, series.Float, "X2"),
+				series.New([]float64{0, 0.5}, series.Float, "X3"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := LoadMatrix(test.b.Matrix())
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
