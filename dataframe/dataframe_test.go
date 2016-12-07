@@ -1658,7 +1658,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 		expDf    DataFrame
 	}{
 		{
-			[]Order{{"A", false}},
+			[]Order{Sort("A")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1670,7 +1670,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"B", false}},
+			[]Order{Sort("B")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1682,7 +1682,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"A", false}, {"B", false}},
+			[]Order{Sort("A"), Sort("B")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1694,7 +1694,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"B", false}, {"A", false}},
+			[]Order{Sort("B"), Sort("A")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1706,7 +1706,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"A", true}},
+			[]Order{RevSort("A")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1718,7 +1718,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"B", true}},
+			[]Order{RevSort("B")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1730,7 +1730,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"A", false}, {"B", true}},
+			[]Order{Sort("A"), RevSort("B")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1742,7 +1742,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"B", false}, {"A", true}},
+			[]Order{Sort("B"), RevSort("A")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1754,7 +1754,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"B", true}, {"A", true}},
+			[]Order{RevSort("B"), RevSort("A")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},
@@ -1766,7 +1766,7 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 		{
-			[]Order{{"A", true}, {"B", true}},
+			[]Order{RevSort("A"), RevSort("B")},
 			LoadRecords(
 				[][]string{
 					[]string{"A", "B", "C", "D"},

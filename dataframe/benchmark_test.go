@@ -90,23 +90,23 @@ func BenchmarkDataFrame_Arrange(b *testing.B) {
 		{
 			"100000x20_1",
 			data,
-			[]dataframe.Order{dataframe.Order{"X0", false}},
+			[]dataframe.Order{dataframe.Sort("X0")},
 		},
 		{
 			"100000x20_2",
 			data,
 			[]dataframe.Order{
-				dataframe.Order{"X0", false},
-				dataframe.Order{"X1", false},
+				dataframe.Sort("X0"),
+				dataframe.Sort("X1"),
 			},
 		},
 		{
 			"100000x20_3",
 			data,
 			[]dataframe.Order{
-				dataframe.Order{"X0", false},
-				dataframe.Order{"X1", false},
-				dataframe.Order{"X2", false},
+				dataframe.Sort("X0"),
+				dataframe.Sort("X1"),
+				dataframe.Sort("X2"),
 			},
 		},
 	}

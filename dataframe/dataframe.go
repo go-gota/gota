@@ -327,6 +327,16 @@ type Order struct {
 	Reverse bool
 }
 
+// Sort return an ordering structure for regular column sorting sort.
+func Sort(colname string) Order {
+	return Order{colname, false}
+}
+
+// RevSort return an ordering structure for reverse column sorting.
+func RevSort(colname string) Order {
+	return Order{colname, true}
+}
+
 // Arrange sort the rows of a DataFrame according to the given Order
 func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {

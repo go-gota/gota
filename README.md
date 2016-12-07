@@ -225,14 +225,8 @@ direction:
 		},
 	)
 	sorted := df.Arrange(
-		dataframe.Order{
-			Colname: "A",
-			Reverse: false,
-		},
-		dataframe.Order{
-			Colname: "B",
-			Reverse: false,
-		},
+		dataframe.Sort("A"),
+		dataframe.RevSort("B"),
 	)
 ```
 
