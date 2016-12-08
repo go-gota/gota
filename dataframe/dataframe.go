@@ -741,10 +741,9 @@ func (df DataFrame) SetNames(colnames []string) error {
 	return nil
 }
 
-// Dim retrieves the dimensions of a DataFrame.
-func (df DataFrame) Dim() (dim [2]int) {
-	dim[0] = df.nrows
-	dim[1] = df.ncols
+// Dims retrieves the dimensions of a DataFrame.
+func (df DataFrame) Dims() (r, c int) {
+	r, c = df.Nrow(), df.Ncol()
 	return
 }
 
@@ -1398,11 +1397,6 @@ type matrix struct {
 
 func (m matrix) At(i, j int) float64 {
 	return m.columns[j].Elem(i).Float()
-}
-
-func (m matrix) Dims() (r, c int) {
-	r, c = m.Nrow(), m.Ncol()
-	return
 }
 
 func (m matrix) T() mat64.Matrix {
