@@ -1877,6 +1877,31 @@ func TestDataFrame_Capply(t *testing.T) {
 	}
 }
 
+func TestDataFrame_String(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "C", "D"},
+			[]string{"1", "5.1", "true"},
+			[]string{"NaN", "6.0", "true"},
+			[]string{"2", "6.0", "false"},
+			[]string{"2", "7.1", "false"},
+		},
+	)
+	received := a.String()
+	expected := `[4x3] DataFrame
+
+    A     C        D     
+ 0: 1     5.100000 true  
+ 1: NaN   6.000000 true  
+ 2: 2     6.000000 false 
+ 3: 2     7.100000 false 
+    <int> <float>  <bool>
+`
+	if expected != received {
+		t.Errorf("Different values:\nExpected: \n%v\nReceived: \n%v\n", expected, received)
+	}
+}
+
 func TestDataFrame_Rapply(t *testing.T) {
 	a := LoadRecords(
 		[][]string{

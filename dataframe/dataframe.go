@@ -80,15 +80,55 @@ func (df DataFrame) Copy() DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
+	return df.print(true, true, true, true, 10, 70)
+}
+
+func (df DataFrame) print(
+	shortRows, shortCols, showDims, showTypes bool,
+	maxRows int,
+	maxCharsTotal int) (str string) {
+
+	addRightPadding := func(s string, nchar int) string {
+		if utf8.RuneCountInString(s) < nchar {
+			return s + strings.Repeat(" ", nchar-utf8.RuneCountInString(s))
+		}
+		return s
+	}
+
+	addLeftPadding := func(s string, nchar int) string {
+		if utf8.RuneCountInString(s) < nchar {
+			return strings.Repeat(" ", nchar-utf8.RuneCountInString(s)) + s
+		}
+		return s
+	}
+
 	if df.Err != nil {
 		str = "DataFrame error: " + df.Err.Error()
 		return
 	}
-	if df.nrows == 0 {
+	nrows, ncols := df.Dims()
+	if nrows == 0 || ncols == 0 {
 		str = "Empty DataFrame"
 		return
 	}
-	records := df.Records()
+	idx := make([]int, maxRows)
+	for i := 0; i < len(idx); i++ {
+		idx[i] = i
+	}
+	var records [][]string
+	shortening := false
+	if shortRows && nrows > maxRows {
+		shortening = true
+		df = df.Subset(idx)
+		records = df.Records()
+	} else {
+		records = df.Records()
+	}
+
+	if showDims {
+		str += fmt.Sprintf("[%vx%v] DataFrame\n\n", nrows, ncols)
+	}
+
 	// Add the row numbers
 	for i := 0; i < df.nrows+1; i++ {
 		add := ""
@@ -97,25 +137,93 @@ func (df DataFrame) String() (str string) {
 		}
 		records[i] = append([]string{add}, records[i]...)
 	}
+	if shortening {
+		dots := make([]string, ncols+1)
+		for i := 1; i < ncols+1; i++ {
+			dots[i] = "..."
+		}
+		records = append(records, dots)
+	}
+	types := df.Types()
+	typesrow := make([]string, ncols)
+	for i := 0; i < ncols; i++ {
+		typesrow[i] = fmt.Sprintf("<%v>", types[i])
+	}
+	typesrow = append([]string{""}, typesrow...)
 
-	// Get the maximum number of characters per column
+	if showTypes {
+		records = append(records, typesrow)
+	}
+
 	maxChars := make([]int, df.ncols+1)
-	for i := 0; i < df.nrows+1; i++ {
+	for i := 0; i < len(records); i++ {
 		for j := 0; j < df.ncols+1; j++ {
+			// Escape special characters
+			records[i][j] = strconv.Quote(records[i][j])
+			records[i][j] = records[i][j][1 : len(records[i][j])-1]
+
+			// Detect maximum number of characters per column
 			if len(records[i][j]) > maxChars[j] {
 				maxChars[j] = utf8.RuneCountInString(records[i][j])
 			}
 		}
 	}
-	for i := 0; i < df.nrows+1; i++ {
+	maxCols := len(records[0])
+	var notShowing []string
+	if shortCols {
+		maxCharsCum := 0
+		for colnum, m := range maxChars {
+			maxCharsCum += m
+			if maxCharsCum > maxCharsTotal {
+				maxCols = colnum
+				break
+			}
+		}
+		notShowingNames := records[0][maxCols:]
+		notShowingTypes := typesrow[maxCols:]
+		notShowing = make([]string, len(notShowingNames))
+		for i := 0; i < len(notShowingNames); i++ {
+			notShowing[i] = fmt.Sprintf("%v %v", notShowingNames[i], notShowingTypes[i])
+		}
+	}
+	for i := 0; i < len(records); i++ {
 		// Add right padding to all elements
 		records[i][0] = addLeftPadding(records[i][0], maxChars[0]+1)
 		for j := 1; j < df.ncols+1; j++ {
 			records[i][j] = addRightPadding(records[i][j], maxChars[j])
 		}
+		records[i] = records[i][0:maxCols]
+		if shortCols && len(notShowing) != 0 {
+			records[i] = append(records[i], "...")
+		}
 		// Create the final string
 		str += strings.Join(records[i], " ")
 		str += "\n"
+	}
+	if shortCols && len(notShowing) != 0 {
+		var notShown string
+		var notShownArr [][]string
+		cum := 0
+		i := 0
+		for n, ns := range notShowing {
+			cum += len(ns)
+			if cum > maxCharsTotal {
+				notShownArr = append(notShownArr, notShowing[i:n])
+				cum = 0
+				i = n
+			}
+		}
+		if i < len(notShowing) {
+			notShownArr = append(notShownArr, notShowing[i:len(notShowing)])
+		}
+		for k, ns := range notShownArr {
+			notShown += fmt.Sprintf("%v", strings.Join(ns, ", "))
+			if k != len(notShownArr)-1 {
+				notShown += ","
+			}
+			notShown += "\n"
+		}
+		str += fmt.Sprintf("\nNot Showing: %v", notShown)
 	}
 	return str
 }
@@ -1389,6 +1497,41 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		return nil, fmt.Errorf("indexing error: unknown indexing mode")
 	}
 	return idx, nil
+}
+
+func findType(arr []string) series.Type {
+	hasFloats := false
+	hasInts := false
+	hasBools := false
+	hasStrings := false
+	for _, str := range arr {
+		if str == "" || str == "NaN" {
+			continue
+		}
+		if _, err := strconv.Atoi(str); err == nil {
+			hasInts = true
+			continue
+		}
+		if _, err := strconv.ParseFloat(str, 64); err == nil {
+			hasFloats = true
+			continue
+		}
+		if str == "true" || str == "false" {
+			hasBools = true
+			continue
+		}
+		hasStrings = true
+	}
+	if hasFloats && !hasBools && !hasStrings {
+		return series.Float
+	}
+	if hasInts && !hasFloats && !hasBools && !hasStrings {
+		return series.Int
+	}
+	if !hasInts && !hasFloats && hasBools && !hasStrings {
+		return series.Bool
+	}
+	return series.String
 }
 
 type matrix struct {
