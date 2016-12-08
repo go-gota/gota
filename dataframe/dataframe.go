@@ -1534,6 +1534,32 @@ func findType(arr []string) series.Type {
 	return series.String
 }
 
+func transposeRecords(x [][]string) [][]string {
+	n := len(x)
+	if n == 0 {
+		return x
+	}
+	m := len(x[0])
+	y := make([][]string, m)
+	for i := 0; i < m; i++ {
+		z := make([]string, n)
+		for j := 0; j < n; j++ {
+			z[j] = x[j][i]
+		}
+		y[i] = z
+	}
+	return y
+}
+
+func inIntSlice(i int, is []int) bool {
+	for _, v := range is {
+		if v == i {
+			return true
+		}
+	}
+	return false
+}
+
 type matrix struct {
 	DataFrame
 }
