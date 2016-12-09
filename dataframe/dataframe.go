@@ -1385,7 +1385,9 @@ func fixColnames(colnames []string) {
 			b := colnames[j]
 			if i != j && a == b {
 				temp := dupnamesidx[a]
-				dupnamesidx[a] = append(temp, i)
+				if !inIntSlice(i, temp) {
+					dupnamesidx[a] = append(temp, i)
+				}
 			}
 		}
 	}
