@@ -80,13 +80,14 @@ func (df DataFrame) Copy() DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
-	return df.print(true, true, true, true, 10, 70)
+	return df.print(true, true, true, true, 10, 70, "DataFrame")
 }
 
 func (df DataFrame) print(
 	shortRows, shortCols, showDims, showTypes bool,
 	maxRows int,
-	maxCharsTotal int) (str string) {
+	maxCharsTotal int,
+	class string) (str string) {
 
 	addRightPadding := func(s string, nchar int) string {
 		if utf8.RuneCountInString(s) < nchar {
@@ -103,12 +104,12 @@ func (df DataFrame) print(
 	}
 
 	if df.Err != nil {
-		str = "DataFrame error: " + df.Err.Error()
+		str = fmt.Sprintf("%v error: %v", class, df.Err)
 		return
 	}
 	nrows, ncols := df.Dims()
 	if nrows == 0 || ncols == 0 {
-		str = "Empty DataFrame"
+		str = fmt.Sprintf("Empty %v", class)
 		return
 	}
 	idx := make([]int, maxRows)
@@ -126,7 +127,7 @@ func (df DataFrame) print(
 	}
 
 	if showDims {
-		str += fmt.Sprintf("[%vx%v] DataFrame\n\n", nrows, ncols)
+		str += fmt.Sprintf("[%vx%v] %v\n\n", nrows, ncols, class)
 	}
 
 	// Add the row numbers
@@ -1366,7 +1367,17 @@ func (df DataFrame) Maps() []map[string]interface{} {
 
 // Matrix returns the mat64.Matrix representation of a DataFrame
 func (df DataFrame) Matrix() mat64.Matrix {
-	return matrix{df}
+	columns := make([]series.Series, df.ncols)
+	for i := 0; i < df.ncols; i++ {
+		columns[i] = series.New(df.columns[i], series.Float, df.columns[i].Name)
+	}
+	m := DataFrame{
+		columns: columns,
+		ncols:   df.ncols,
+		nrows:   df.nrows,
+		Err:     df.Err,
+	}
+	return matrix{m}
 }
 
 // fixColnames assigns a name to the missing column names and makes it so that the
@@ -1564,6 +1575,10 @@ func inIntSlice(i int, is []int) bool {
 
 type matrix struct {
 	DataFrame
+}
+
+func (m matrix) String() string {
+	return m.print(true, true, true, true, 10, 70, "Matrix")
 }
 
 func (m matrix) At(i, j int) float64 {
