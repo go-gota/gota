@@ -1995,7 +1995,8 @@ func TestDataFrame_Matrix(t *testing.T) {
 			[]string{"2", "2", "7.1", "false"},
 		},
 	)
-	sum := mat64.Sum(a.Matrix())
+	m := a.Matrix()
+	sum := mat64.Sum(m)
 	expected := 45.2
 	if sum != expected {
 		t.Errorf("\nExpected: %v\nReceived: %v", expected, sum)

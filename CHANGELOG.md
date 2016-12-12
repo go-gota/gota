@@ -2,6 +2,48 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.8.0] - 2016-12-12
+### Added
+- Series.Order method and tests.
+- Series.IsNaN method and tests.
+- DataFrame.Arrange method and tests.
+- DataFrame.Capply method and tests.
+- DataFrame.Rapply method and tests.
+- Benchmarks for several operations on both the `series` and
+  `dataframe` packages.
+- Many optimizations that increase the performance dramatically.
+- New LoadOption where the elements to be parsed as NaN from string
+  can be selected.
+- Gota can now return an implementation of `gonum/mat64.Matrix`
+  interface via `DataFrame.Matrix()` and load a `mat64.Matrix` via
+  `dataframe.LoadMatrix()`.
+
+### Changed
+- elementInterface is now exported as Element.
+- Split element.go into separate files for the implementations of the
+  Element interface.
+- LoadOptions API has been renamed for better documentation via `godoc`.
+- `Series.Set` and `DataFrame.Set` now modify the structure in place
+  for performance considerations. If one wants to use the old
+  behaviour, it is suggested to use `DataFrame.Copy().Set(...)`
+  instead of `DataFrame.Set(...)`.
+- `DataFrame.Dim` has been changed to `DataFrame.Dims` for consistency
+  with the `mat64.Matrix` interface.
+- When printing a large `DataFrame` now the behaviour of the stringer
+  interface is much nicer, showing only the first 10 rows and limiting
+  the number of characters that can be shown by line
+
+### Removed
+- Some unused functions from the helpers.go file.
+
+### Fix
+- Linter errors.
+- stringElement.Float now returns NaN instead of 0 when applicable.
+- Autorenaming column names when `hasHeaders == false` now is
+  consistent with the autorename used with `dataframe.New`
+- Bug where duplicated column names were not been assigned consecutive
+  suffix numbers if the number of duplicates was greater than two.
+
 ## [0.7.0] - 2016-11-27
 ### Added
 - Many more table tests for both `series` and `dataframe`
@@ -145,3 +187,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.5.0]:https://github.com/kniren/gota/compare/v0.4.0...v0.5.0
 [0.6.0]:https://github.com/kniren/gota/compare/v0.5.0...v0.6.0
 [0.7.0]:https://github.com/kniren/gota/compare/v0.6.0...v0.7.0
+[0.8.0]:https://github.com/kniren/gota/compare/v0.7.0...v0.8.0
