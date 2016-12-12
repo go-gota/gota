@@ -1,3 +1,5 @@
+// Package dataframe provides an implementation of data frames and methods to
+// subset, join, mutate, set, arrange, summarize, etc.
 package dataframe
 
 import (
@@ -14,10 +16,10 @@ import (
 	"github.com/kniren/gota/series"
 )
 
-// DataFrame is a data structure designed for operating on table like data (Such as Excel, CSV files, SQL table results...) where
-// every column have to keep type integrity. As a general rule of thumb, variables
-// are stored on columns where every row of a DataFrame represents an observation
-// for each variable.
+// DataFrame is a data structure designed for operating on table like data (Such
+// as Excel, CSV files, SQL table results...) where every column have to keep type
+// integrity. As a general rule of thumb, variables are stored on columns where
+// every row of a DataFrame represents an observation for each variable.
 //
 // On the real world, data is very messy and sometimes there are non measurements
 // or missing data. For this reason, DataFrame has support for NaN elements and
