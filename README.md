@@ -1,10 +1,9 @@
 Gota: DataFrames, Series and Data Wrangling for Go
 ==================================================
 
-This is an initial implementation of DataFrames, Series and data
-wrangling methods for the Go programming language. This is still at an
-early stage of development and changes to the API are to be expected.
-*Use at your own risk*.
+This is an implementation of DataFrames, Series and data wrangling
+methods for the Go programming language. The API is still in flux so
+*use at your own risk*.
 
 DataFrame
 ---------
@@ -16,17 +15,12 @@ measurements. As the data on the real world is not perfect, DataFrame
 supports non measurements or NaN elements.
 
 Common examples of DataFrames can be found on Excel sheets, CSV files
-or data originated on a SQL database, but this data can come on
-a variety of other formats, like a collection of JSON objects or XML
-files.
+or SQL database tables, but this data can come on a variety of other
+formats, like a collection of JSON objects or XML files.
 
 The utility of DataFrames resides on the ability to subset them, merge
 them, summarize the data for individual features or apply functions to
-entire rows or columns, all while keeping type integrity over the
-columns.
-
-When used in data analysis, techniques like Split Apply Combine can be
-used to obtain insightful information for our dataset.
+entire rows or columns, all while keeping column type integrity.
 
 ### Usage
 #### Loading data
@@ -71,9 +65,9 @@ df := dataframe.LoadRecords(
         []string{"k", "4", "6.0", "true"},
         []string{"a", "2", "7.1", "false"},
     },
-    dataframe.CfgDetectTypes(false),
-    dataframe.CfgDefaultType(series.Float),
-    dataframe.CfgColumnTypes(map[string]series.Type{
+    dataframe.DetectTypes(false),
+    dataframe.DefaultType(series.Float),
+    dataframe.WithTypes(map[string]series.Type{
         "A": series.String,
         "D": series.Bool,
     }),
@@ -124,23 +118,12 @@ jsonStr := `[{"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"C
 df := dataframe.ReadJSON(strings.NewReader(jsonStr))
 ```
 
-All `Load`/`Read` methods accept loading option functions.
-
 #### Subsetting
 
 We can subset our DataFrames with the Subset method. For example if we
-want the first and third rows:
+want the first and third rows we can do the following:
 
 ```
-df := dataframe.LoadRecords(
-    [][]string{
-        []string{"A", "B", "C", "D"},
-        []string{"a", "4", "5.1", "true"},
-        []string{"k", "5", "7.0", "true"},
-        []string{"k", "4", "6.0", "true"},
-        []string{"a", "2", "7.1", "false"},
-    },
-)
 sub := df.Subset([]int{0, 2})
 ```
 
@@ -150,15 +133,6 @@ If instead of subsetting the rows we want to select specific columns,
 by an index or column name:
 
 ```
-df := dataframe.LoadRecords(
-    [][]string{
-        []string{"A", "B", "C", "D"},
-        []string{"a", "4", "5.1", "true"},
-        []string{"k", "5", "7.0", "true"},
-        []string{"k", "4", "6.0", "true"},
-        []string{"a", "2", "7.1", "false"},
-    },
-)
 sel1 := df.Select([]int{0, 2})
 sel2 := df.Select([]string{"A", "C"})
 ```
@@ -188,15 +162,6 @@ example, if we want the rows where the column "A" is equal to "a" or
 column "B" is greater than 4:
 
 ```
-df := dataframe.LoadRecords(
-    [][]string{
-        []string{"A", "B", "C", "D"},
-        []string{"a", "4", "5.1", "true"},
-        []string{"k", "5", "7.0", "true"},
-        []string{"k", "4", "6.0", "true"},
-        []string{"a", "2", "7.1", "false"},
-    },
-)
 fil := df.Filter(
     dataframe.F{"A", series.Eq, "a"},
     dataframe.F{"B", series.Greater, 4},
@@ -206,8 +171,19 @@ fil2 := fil.Filter(
 )
 ```
 
-Filters inside Filter act as OR whereas if we chain Filter operations,
-they will behave as AND.
+Filters inside Filter are combined as OR operations whereas if we chain
+Filter methods, they will behave as AND.
+
+#### Arrange
+
+With Arrange a DataFrame can be sorted by the given column names:
+
+```
+sorted := df.Arrange(
+    dataframe.Sort("A"),    // Sort in ascending order
+    dataframe.RevSort("B"), // Sort in descending order
+)
+```
 
 #### Mutate
 
@@ -215,15 +191,6 @@ If we want to modify a column or add one based on a given Series at
 the end we can use the Mutate method:
 
 ```
-df := dataframe.LoadRecords(
-    [][]string{
-        []string{"A", "B", "C", "D"},
-        []string{"a", "4", "5.1", "true"},
-        []string{"k", "5", "7.0", "true"},
-        []string{"k", "4", "6.0", "true"},
-        []string{"a", "2", "7.1", "false"},
-    },
-)
 // Change column C with a new one
 mut := df.Mutate(
     series.New([]string{"a", "b", "c", "d"}, series.String, "C"),
@@ -262,6 +229,24 @@ df2 := dataframe.LoadRecords(
 join := df.InnerJoin(df2, "D")
 ```
 
+#### Function application
+
+Functions can be applied to the rows or columns of a DataFrame,
+casting the types as necessary:
+
+```
+mean := func(s series.Series) series.Series {
+    floats := s.Float()
+    sum := 0.0
+    for _, f := range floats {
+        sum += f
+    }
+    return series.Floats(sum / float64(len(floats)))
+}
+df.Cbind(mean)
+df.Rbind(mean)
+```
+
 #### Chaining operations
 
 DataFrames support a number of methods for wrangling the data,
@@ -286,17 +271,47 @@ if a.Err != nil {
 #### Print to console
 
 ```
-fmt.Println(a)
+fmt.Println(flights)
 
->      Country         Date        Age  Amount  Id
->   0: United States   2012-02-01  50   112.1   01234
->   1: United States   2012-02-01  32   321.31  54320
->   2: United Kingdom  2012-02-01  17   18.2    12345
->   3: United States   2012-02-01  32   321.31  54320
->   4: United Kingdom  2012-02-01  NA   18.2    12345
->   5: United States   2012-02-01  32   321.31  54320
->   6: United States   2012-02-01  32   321.31  54320
->   7: Spain           2012-02-01  66   555.42  00241
+> [336776x20] DataFrame
+> 
+>     X0    year  month day   dep_time sched_dep_time dep_delay arr_time ...
+>  0: 1     2013  1     1     517      515            2         830      ...
+>  1: 2     2013  1     1     533      529            4         850      ...
+>  2: 3     2013  1     1     542      540            2         923      ...
+>  3: 4     2013  1     1     544      545            -1        1004     ...
+>  4: 5     2013  1     1     554      600            -6        812      ...
+>  5: 6     2013  1     1     554      558            -4        740      ...
+>  6: 7     2013  1     1     555      600            -5        913      ...
+>  7: 8     2013  1     1     557      600            -3        709      ...
+>  8: 9     2013  1     1     557      600            -3        838      ...
+>  9: 10    2013  1     1     558      600            -2        753      ...
+>     ...   ...   ...   ...   ...      ...            ...       ...      ...
+>     <int> <int> <int> <int> <int>    <int>          <int>     <int>    ...
+> 
+> Not Showing: sched_arr_time <int>, arr_delay <int>, carrier <string>, flight <int>,
+> tailnum <string>, origin <string>, dest <string>, air_time <int>, distance <int>, hour <int>,
+> minute <int>, time_hour <string>
+```
+
+#### Interfacing with gonum
+
+A `gonum/mat64.Matrix` can be loaded as a `DataFrame` by using the
+`LoadMatrix()` function and back to `mat64.Matrix` via
+`DataFrame.Matrix()`:
+
+```
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "true"},
+			[]string{"1", "4", "6.0", "true"},
+			[]string{"2", "3", "6.0", "false"},
+			[]string{"2", "2", "7.1", "false"},
+		},
+	)
+	m := a.Matrix()
+	sum := mat64.Sum(m)
 ```
 
 Series

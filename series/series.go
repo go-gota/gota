@@ -2,8 +2,8 @@ package series
 
 import (
 	"fmt"
-	"math"
 	"reflect"
+	"sort"
 	"strings"
 )
 
@@ -13,11 +13,36 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string             // The name of the series
-	elements []elementInterface // The values of the elements
-	t        Type               // The type of the series
-	Err      error              // If there are errors they are stored here
+	Name     string    // The name of the series
+	elements []Element // The values of the elements
+	t        Type      // The type of the series
+	Err      error     // If there are errors they are stored here
 }
+
+// Element is the interface that defines the types of methods to be present for
+// elements of a Series
+type Element interface {
+	Set(interface{}) Element
+	Copy() Element
+	IsNA() bool
+	Type() Type
+	Val() ElementValue
+	String() string
+	Int() (int, error)
+	Float() float64
+	Bool() (bool, error)
+	Addr() string
+	Eq(Element) bool
+	Neq(Element) bool
+	Less(Element) bool
+	LessEq(Element) bool
+	Greater(Element) bool
+	GreaterEq(Element) bool
+}
+
+// ElementValue represents the value that can be used for marshaling or
+// unmarshaling Elements.
+type ElementValue interface{}
 
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
@@ -60,13 +85,88 @@ type Indexes interface{}
 
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
-	var elements []elementInterface
+	var elements []Element
 	ret := Series{
 		Name:     name,
 		elements: elements,
 		t:        t,
 	}
-	ret.Append(values)
+
+	// Pre-allocate elements
+	preAlloc := func(n int) {
+		ret.elements = make([]Element, n)
+		for i := 0; i < n; i++ {
+			switch t {
+			case String:
+				ret.elements[i] = stringElement{}
+			case Int:
+				ret.elements[i] = intElement{}
+			case Float:
+				ret.elements[i] = floatElement{}
+			case Bool:
+				ret.elements[i] = boolElement{}
+			default:
+				panic(fmt.Sprintf("unknown type %v", t))
+			}
+		}
+	}
+	if values == nil {
+		preAlloc(1)
+		return ret
+	}
+	switch values.(type) {
+	case []string:
+		v := values.([]string)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements[i] = ret.elements[i].Set(v[i])
+		}
+	case []float64:
+		v := values.([]float64)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements[i] = ret.elements[i].Set(v[i])
+		}
+	case []int:
+		v := values.([]int)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements[i] = ret.elements[i].Set(v[i])
+		}
+	case []bool:
+		v := values.([]bool)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements[i] = ret.elements[i].Set(v[i])
+		}
+	case Series:
+		v := values.(Series)
+		l := v.Len()
+		preAlloc(l)
+		for i, e := range v.elements {
+			ret.elements[i] = ret.elements[i].Set(e)
+		}
+	default:
+		switch reflect.TypeOf(values).Kind() {
+		case reflect.Slice:
+			v := reflect.ValueOf(values)
+			l := v.Len()
+			preAlloc(v.Len())
+			for i := 0; i < l; i++ {
+				val := v.Index(i).Interface()
+				ret.elements[i] = ret.elements[i].Set(val)
+			}
+		default:
+			preAlloc(1)
+			v := reflect.ValueOf(values)
+			val := v.Interface()
+			ret.elements[0] = ret.elements[0].Set(val)
+		}
+	}
 	return ret
 }
 
@@ -92,7 +192,7 @@ func Bools(values interface{}) Series {
 
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
-	var elements []elementInterface
+	var elements []Element
 	return Series{
 		Name:     s.Name,
 		t:        s.t,
@@ -106,61 +206,8 @@ func (s *Series) Append(values interface{}) {
 	if err := s.Err; err != nil {
 		return
 	}
-	appendElements := func(val interface{}) error {
-		var newelem elementInterface
-		switch s.t {
-		case String:
-			newelem = stringElement{}
-		case Int:
-			newelem = intElement{}
-		case Float:
-			newelem = floatElement{}
-		case Bool:
-			newelem = boolElement{}
-		default:
-			return fmt.Errorf("can't create series, unknown type")
-		}
-		s.elements = append(s.elements, newelem.Set(val))
-		return nil
-	}
-	if values == nil {
-		err := appendElements(values)
-		if err != nil {
-			s.Err = err
-		}
-		return
-	}
-	switch reflect.TypeOf(values).Kind() {
-	case reflect.Slice:
-		v := reflect.ValueOf(values)
-		for i := 0; i < v.Len(); i++ {
-			val := v.Index(i).Interface()
-			err := appendElements(val)
-			if err != nil {
-				s.Err = err
-				return
-			}
-		}
-	default:
-		v := reflect.ValueOf(values)
-		val := v.Interface()
-		switch val.(type) {
-		case Series:
-			for _, v := range val.(Series).elements {
-				err := appendElements(v)
-				if err != nil {
-					s.Err = err
-					return
-				}
-			}
-		default:
-			err := appendElements(val)
-			if err != nil {
-				s.Err = err
-				return
-			}
-		}
-	}
+	news := New(values, s.t, s.Name)
+	s.elements = append(s.elements, news.elements...)
 }
 
 // Concat concatenates two series together. It will return a new Series with the
@@ -188,13 +235,13 @@ func (s Series) Subset(indexes Indexes) Series {
 		s.Err = err
 		return s
 	}
-	var elements []elementInterface
-	for _, i := range idx {
+	elements := make([]Element, len(idx))
+	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
 			s.Err = fmt.Errorf("subsetting error: index out of range")
 			return s
 		}
-		elements = append(elements, s.elements[i].Copy())
+		elements[k] = s.elements[i].Copy()
 	}
 	return Series{
 		Name:     s.Name,
@@ -203,8 +250,8 @@ func (s Series) Subset(indexes Indexes) Series {
 	}
 }
 
-// Set sets the values on the indexes of a Series and returns a new one with these
-// modifications. The original Series is not changed.
+// Set sets the values on the indexes of a Series and returns the reference
+// for itself. The original Series is modified.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	if err := s.Err; err != nil {
 		return s
@@ -222,18 +269,17 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		s.Err = fmt.Errorf("set error: dimensions mismatch")
 		return s
 	}
-	ret := s.Copy()
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
 			s.Err = fmt.Errorf("set error: index out of range")
 			return s
 		}
-		ret.elements[i] = ret.elements[i].Set(newvalues.elements[k])
+		s.elements[i] = s.elements[i].Set(newvalues.elements[k])
 	}
-	return ret
+	return s
 }
 
-// HasNaN checks whether the Series contain NaN elements
+// HasNaN checks whether the Series contain NaN elements.
 func (s Series) HasNaN() bool {
 	for _, e := range s.elements {
 		if e.IsNA() {
@@ -243,6 +289,15 @@ func (s Series) HasNaN() bool {
 	return false
 }
 
+// IsNaN returns an array that identifies which of the elements are NaN.
+func (s Series) IsNaN() []bool {
+	ret := make([]bool, s.Len())
+	for i, e := range s.elements {
+		ret[i] = e.IsNA()
+	}
+	return ret
+}
+
 // Compare compares the values of a Series with other elements. To do so, the
 // elements with are to be compared are first transformed to a Series of the same
 // type as the caller.
@@ -250,7 +305,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	if err := s.Err; err != nil {
 		return s
 	}
-	compareElements := func(a, b elementInterface, c Comparator) (bool, error) {
+	compareElements := func(a, b Element, c Comparator) (bool, error) {
 		var ret bool
 		switch c {
 		case Eq:
@@ -272,10 +327,10 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	}
 
 	comp := New(comparando, s.t, "")
+	bools := make([]bool, s.Len())
 	// In comparator comparation
 	if comparator == In {
-		var bools []bool
-		for _, e := range s.elements {
+		for i, e := range s.elements {
 			b := false
 			for _, m := range comp.elements {
 				c, err := compareElements(e, m, Eq)
@@ -289,22 +344,21 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 					break
 				}
 			}
-			bools = append(bools, b)
+			bools[i] = b
 		}
 		return Bools(bools)
 	}
 
 	// Single element comparison
-	var bools []bool
 	if comp.Len() == 1 {
-		for _, e := range s.elements {
+		for i, e := range s.elements {
 			c, err := compareElements(e, comp.elements[0], comparator)
 			if err != nil {
 				s = s.Empty()
 				s.Err = err
 				return s
 			}
-			bools = append(bools, c)
+			bools[i] = c
 		}
 		return Bools(bools)
 	}
@@ -315,14 +369,14 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		s.Err = fmt.Errorf("can't compare: length mismatch")
 		return s
 	}
-	for k, e := range s.elements {
-		c, err := compareElements(e, comp.elements[k], comparator)
+	for i, e := range s.elements {
+		c, err := compareElements(e, comp.elements[i], comparator)
 		if err != nil {
 			s = s.Empty()
 			s.Err = err
 			return s
 		}
-		bools = append(bools, c)
+		bools[i] = c
 	}
 	return Bools(bools)
 }
@@ -332,9 +386,9 @@ func (s Series) Copy() Series {
 	name := s.Name
 	t := s.t
 	err := s.Err
-	var elements []elementInterface
-	for _, e := range s.elements {
-		elements = append(elements, e.Copy())
+	elements := make([]Element, s.Len())
+	for i, e := range s.elements {
+		elements[i] = e.Copy()
 	}
 	ret := Series{
 		Name:     name,
@@ -347,9 +401,9 @@ func (s Series) Copy() Series {
 
 // Records returns the elements of a Series as a []string
 func (s Series) Records() []string {
-	var ret []string
-	for _, e := range s.elements {
-		ret = append(ret, e.String())
+	ret := make([]string, s.Len())
+	for i, e := range s.elements {
+		ret[i] = e.String()
 	}
 	return ret
 }
@@ -358,14 +412,9 @@ func (s Series) Records() []string {
 // be converted to float64 or contains a NaN returns the float representation of
 // NaN.
 func (s Series) Float() []float64 {
-	var ret []float64
-	for _, e := range s.elements {
-		val := e.ToFloat().Val()
-		if val == nil {
-			ret = append(ret, math.NaN())
-		} else {
-			ret = append(ret, val.(float64))
-		}
+	ret := make([]float64, s.Len())
+	for i, e := range s.elements {
+		ret[i] = e.Float()
 	}
 	return ret
 }
@@ -373,13 +422,13 @@ func (s Series) Float() []float64 {
 // Int returns the elements of a Series as a []int or an error if the
 // transformation is not possible.
 func (s Series) Int() ([]int, error) {
-	var ret []int
-	for _, e := range s.elements {
-		val := e.ToInt().Val()
-		if val == nil {
-			return nil, fmt.Errorf("can't convert NaN to int")
+	ret := make([]int, s.Len())
+	for i, e := range s.elements {
+		val, err := e.Int()
+		if err != nil {
+			return nil, err
 		}
-		ret = append(ret, val.(int))
+		ret[i] = val
 	}
 	return ret, nil
 }
@@ -387,13 +436,13 @@ func (s Series) Int() ([]int, error) {
 // Bool returns the elements of a Series as a []bool or an error if the
 // transformation is not possible.
 func (s Series) Bool() ([]bool, error) {
-	var ret []bool
-	for _, e := range s.elements {
-		val := e.ToBool().Val()
-		if val == nil {
-			return nil, fmt.Errorf("can't convert NaN to bool")
+	ret := make([]bool, s.Len())
+	for i, e := range s.elements {
+		val, err := e.Bool()
+		if err != nil {
+			return nil, err
 		}
-		ret = append(ret, val.(bool))
+		ret[i] = val
 	}
 	return ret, nil
 }
@@ -438,7 +487,7 @@ func (s Series) Val(i int) (interface{}, error) {
 
 // Elem returns the element of a series for the given index or nil if the index is
 // out of bounds
-func (s Series) Elem(i int) elementInterface {
+func (s Series) Elem(i int) Element {
 	if i >= s.Len() || i < 0 {
 		return nil
 	}
@@ -448,9 +497,9 @@ func (s Series) Elem(i int) elementInterface {
 // Addr returns the string representation of the memory address that store the
 // values of a given Series.
 func (s Series) Addr() []string {
-	var ret []string
-	for _, e := range s.elements {
-		ret = append(ret, e.Addr())
+	ret := make([]string, s.Len())
+	for i, e := range s.elements {
+		ret[i] = e.Addr()
 	}
 	return ret
 }
@@ -497,3 +546,39 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	}
 	return idx, nil
 }
+
+// Order returns the indexes for sorting a Series. NaN elements are pushed to the
+// end by order of appearance.
+func (s Series) Order(reverse bool) []int {
+	var ie indexedElements
+	var nasIdx []int
+	for i, e := range s.elements {
+		if e.IsNA() {
+			nasIdx = append(nasIdx, i)
+		} else {
+			ie = append(ie, indexedElement{i, e})
+		}
+	}
+	var srt sort.Interface
+	srt = ie
+	if reverse {
+		srt = sort.Reverse(srt)
+	}
+	sort.Sort(srt)
+	var ret []int
+	for _, e := range ie {
+		ret = append(ret, e.index)
+	}
+	return append(ret, nasIdx...)
+}
+
+type indexedElement struct {
+	index   int
+	element Element
+}
+
+type indexedElements []indexedElement
+
+func (e indexedElements) Len() int           { return len(e) }
+func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
+func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }

@@ -39,9 +39,9 @@ func ExampleLoadRecords_options() {
 			[]string{"k", "4", "6.0", "true"},
 			[]string{"a", "2", "7.1", "false"},
 		},
-		dataframe.CfgDetectTypes(false),
-		dataframe.CfgDefaultType(series.Float),
-		dataframe.CfgColumnTypes(map[string]series.Type{
+		dataframe.DetectTypes(false),
+		dataframe.DefaultType(series.Float),
+		dataframe.WithTypes(map[string]series.Type{
 			"A": series.String,
 			"D": series.Bool,
 		}),
@@ -132,11 +132,23 @@ func ExampleDataFrame_Filter() {
 		},
 	)
 	fil := df.Filter(
-		dataframe.F{"A", series.Eq, "a"},
-		dataframe.F{"B", series.Greater, 4},
+		dataframe.F{
+			Colname:    "A",
+			Comparator: series.Eq,
+			Comparando: "a",
+		},
+		dataframe.F{
+			Colname:    "B",
+			Comparator: series.Greater,
+			Comparando: 4,
+		},
 	)
 	fil2 := fil.Filter(
-		dataframe.F{"D", series.Eq, true},
+		dataframe.F{
+			Colname:    "D",
+			Comparator: series.Eq,
+			Comparando: true,
+		},
 	)
 	fmt.Println(fil)
 	fmt.Println(fil2)
@@ -208,4 +220,21 @@ func ExampleDataFrame_Set() {
 		),
 	)
 	fmt.Println(df2)
+}
+
+func ExampleDataFrame_Arrange() {
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	sorted := df.Arrange(
+		dataframe.Sort("A"),
+		dataframe.RevSort("B"),
+	)
+	fmt.Println(sorted)
 }

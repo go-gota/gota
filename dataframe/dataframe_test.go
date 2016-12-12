@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gonum/matrix/mat64"
 	"github.com/kniren/gota/series"
 )
 
@@ -643,9 +644,9 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"a", "b"}, series.String, "A"),
@@ -661,15 +662,15 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(false),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(false),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
-				series.New([]string{"A", "a", "b"}, series.String, "0"),
-				series.New([]string{"B", "1", "2"}, series.String, "1"),
-				series.New([]string{"C", "true", "true"}, series.String, "2"),
-				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+				series.New([]string{"A", "a", "b"}, series.String, "X0"),
+				series.New([]string{"B", "1", "2"}, series.String, "X1"),
+				series.New([]string{"C", "true", "true"}, series.String, "X2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
 		},
 		{
@@ -679,10 +680,10 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 					"C": series.String,
 				}),
@@ -701,10 +702,10 @@ func TestLoadRecords(t *testing.T) {
 					{"a", "1", "true", "0"},
 					{"b", "2", "true", "0.5"},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(true),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(true),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 				}),
 			),
@@ -781,9 +782,9 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
 				series.New([]string{"a", "b"}, series.String, "A"),
@@ -808,15 +809,15 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(false),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
+				HasHeader(false),
+				DetectTypes(false),
+				DefaultType(series.String),
 			),
 			New(
-				series.New([]string{"A", "a", "b"}, series.String, "0"),
-				series.New([]string{"B", "1", "2"}, series.String, "1"),
-				series.New([]string{"C", "true", "true"}, series.String, "2"),
-				series.New([]string{"D", "0", "0.5"}, series.String, "3"),
+				series.New([]string{"A", "a", "b"}, series.String, "X0"),
+				series.New([]string{"B", "1", "2"}, series.String, "X1"),
+				series.New([]string{"C", "true", "true"}, series.String, "X2"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
 		},
 		{
@@ -835,10 +836,10 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(false),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 					"C": series.String,
 				}),
@@ -866,10 +867,10 @@ func TestLoadMaps(t *testing.T) {
 						"D": 0.5,
 					},
 				},
-				CfgHasHeader(true),
-				CfgDetectTypes(true),
-				CfgDefaultType(series.String),
-				CfgColumnTypes(map[string]series.Type{
+				HasHeader(true),
+				DetectTypes(true),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
 					"B": series.Float,
 				}),
 			),
@@ -935,8 +936,8 @@ func TestReadJSON(t *testing.T) {
 					[]string{"5", "2", "2"},
 					[]string{"6", "3", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Int),
+				DetectTypes(false),
+				DefaultType(series.Int),
 			),
 		},
 		{
@@ -948,8 +949,8 @@ func TestReadJSON(t *testing.T) {
 					[]string{"5", "2", "2"},
 					[]string{"6", "3", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Int),
+				DetectTypes(false),
+				DefaultType(series.Int),
 			),
 		},
 	}
@@ -1078,8 +1079,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1089,8 +1090,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1106,8 +1107,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 					[]string{"3", "0", "3", "6.0", "NaN"},
 					[]string{"1", "0", "2", "7.1", "NaN"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1120,8 +1121,8 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 					[]string{"3", "3", "6.0", "0", "NaN", "NaN"},
 					[]string{"1", "2", "7.1", "0", "1", "1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1154,8 +1155,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1165,8 +1166,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1182,8 +1183,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 					[]string{"3", "0", "NaN", "3", "6.0"},
 					[]string{"1", "0", "NaN", "2", "7.1"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1196,8 +1197,8 @@ func TestDataFrame_RightJoin(t *testing.T) {
 					[]string{"1", "1", "1", "2", "7.1", "0"},
 					[]string{"3", "NaN", "NaN", "3", "6.0", "0"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1230,8 +1231,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"3", "3", "6.0", "0"},
 			[]string{"1", "2", "7.1", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
@@ -1241,8 +1242,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"2", "8", "0"},
 			[]string{"5", "9", "0"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Float),
+		DetectTypes(false),
+		DefaultType(series.Float),
 	)
 	table := []struct {
 		keys  []string
@@ -1261,8 +1262,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 					[]string{"2", "0", "NaN", "NaN", "8"},
 					[]string{"5", "0", "NaN", "NaN", "9"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 		{
@@ -1277,8 +1278,8 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 					[]string{"4", "NaN", "NaN", "NaN", "2", "0"},
 					[]string{"5", "NaN", "NaN", "NaN", "9", "0"},
 				},
-				CfgDetectTypes(false),
-				CfgDefaultType(series.Float),
+				DetectTypes(false),
+				DefaultType(series.Float),
 			),
 		},
 	}
@@ -1343,7 +1344,7 @@ A_0,B,C,D_0,A_1,F,D_1
 `
 	expected := ReadCSV(
 		strings.NewReader(expectedCSV),
-		CfgColumnTypes(map[string]series.Type{
+		WithTypes(map[string]series.Type{
 			"A.1": series.String,
 		}))
 	if err := c.Err; err != nil {
@@ -1424,8 +1425,8 @@ func TestDataFrame_WriteJSON(t *testing.T) {
 			[]string{"5", "2", "2"},
 			[]string{"6", "3", "1"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Int),
+		DetectTypes(false),
+		DefaultType(series.Int),
 	)
 	buf := new(bytes.Buffer)
 	err := a.WriteJSON(buf)
@@ -1447,8 +1448,8 @@ func TestDataFrame_Col(t *testing.T) {
 			[]string{"5", "2", "2"},
 			[]string{"6", "3", "1"},
 		},
-		CfgDetectTypes(false),
-		CfgDefaultType(series.Int),
+		DetectTypes(false),
+		DefaultType(series.Int),
 	)
 	b := a.Col("COL.2")
 	expected := series.New([]int{1, 2, 3}, series.Int, "COL.2")
@@ -1622,12 +1623,411 @@ func TestDataFrame_Set(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
+		a := a.Copy()
 		b := a.Set(test.indexes, test.newvalues)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+func TestDataFrame_Arrange(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	table := []struct {
+		colnames []Order
+		expDf    DataFrame
+	}{
+		{
+			[]Order{Sort("A")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{Sort("B")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+				},
+			),
+		},
+		{
+			[]Order{Sort("A"), Sort("B")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{Sort("B"), Sort("A")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+				},
+			),
+		},
+		{
+			[]Order{RevSort("A")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{RevSort("B")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{Sort("A"), RevSort("B")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+				},
+			),
+		},
+		{
+			[]Order{Sort("B"), RevSort("A")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "2", "7.1", "false"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+				},
+			),
+		},
+		{
+			[]Order{RevSort("B"), RevSort("A")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+		{
+			[]Order{RevSort("A"), RevSort("B")},
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"a", "2", "7.1", "false"},
+				},
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Arrange(test.colnames...)
 		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkAddrDf(a, b); err != nil {
 			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+func TestDataFrame_Capply(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	mean := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum / float64(len(floats)))
+	}
+	sum := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum)
+	}
+	table := []struct {
+		fun   func(series.Series) series.Series
+		expDf DataFrame
+	}{
+		{
+			mean,
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"NaN", "3.25", "6.05", "0.5"},
+				},
+				DefaultType(series.Float),
+				DetectTypes(false),
+			),
+		},
+		{
+			sum,
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"NaN", "13", "24.2", "2"},
+				},
+				DefaultType(series.Float),
+				DetectTypes(false),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Capply(test.fun)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+func TestDataFrame_String(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "C", "D"},
+			[]string{"1", "5.1", "true"},
+			[]string{"NaN", "6.0", "true"},
+			[]string{"2", "6.0", "false"},
+			[]string{"2", "7.1", "false"},
+		},
+	)
+	received := a.String()
+	expected := `[4x3] DataFrame
+
+    A     C        D     
+ 0: 1     5.100000 true  
+ 1: NaN   6.000000 true  
+ 2: 2     6.000000 false 
+ 3: 2     7.100000 false 
+    <int> <float>  <bool>
+`
+	if expected != received {
+		t.Errorf("Different values:\nExpected: \n%v\nReceived: \n%v\n", expected, received)
+	}
+}
+
+func TestDataFrame_Rapply(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "true"},
+			[]string{"1", "4", "6.0", "true"},
+			[]string{"2", "3", "6.0", "false"},
+			[]string{"2", "2", "7.1", "false"},
+		},
+	)
+	mean := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		ret := series.Floats(sum / float64(len(floats)))
+		return ret
+	}
+	sum := func(s series.Series) series.Series {
+		floats := s.Float()
+		sum := 0.0
+		for _, f := range floats {
+			sum += f
+		}
+		return series.Floats(sum)
+	}
+	table := []struct {
+		fun   func(series.Series) series.Series
+		expDf DataFrame
+	}{
+		{
+			mean,
+			LoadRecords(
+				[][]string{
+					[]string{"X0"},
+					[]string{"2.775"},
+					[]string{"3"},
+					[]string{"2.75"},
+					[]string{"2.775"},
+				},
+				DefaultType(series.Float),
+				DetectTypes(false),
+			),
+		},
+		{
+			sum,
+			LoadRecords(
+				[][]string{
+					[]string{"X0"},
+					[]string{"11.1"},
+					[]string{"12"},
+					[]string{"11"},
+					[]string{"11.1"},
+				},
+				DefaultType(series.Float),
+				DetectTypes(false),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := a.Rapply(test.fun)
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		if err := checkAddrDf(a, b); err != nil {
+			t.Error(err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		}
+	}
+}
+
+func TestDataFrame_Matrix(t *testing.T) {
+	a := LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"1", "4", "5.1", "true"},
+			[]string{"1", "4", "6.0", "true"},
+			[]string{"2", "3", "6.0", "false"},
+			[]string{"2", "2", "7.1", "false"},
+		},
+	)
+	m := a.Matrix()
+	sum := mat64.Sum(m)
+	expected := 45.2
+	if sum != expected {
+		t.Errorf("\nExpected: %v\nReceived: %v", expected, sum)
+	}
+}
+
+func TestLoadMatrix(t *testing.T) {
+	table := []struct {
+		b     DataFrame
+		expDf DataFrame
+	}{
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"4", "1", "true", "0"},
+					{"3", "2", "true", "0.5"},
+				},
+			),
+			New(
+				series.New([]string{"4", "3"}, series.Float, "X0"),
+				series.New([]int{1, 2}, series.Float, "X1"),
+				series.New([]bool{true, true}, series.Float, "X2"),
+				series.New([]float64{0, 0.5}, series.Float, "X3"),
+			),
+		},
+	}
+	for testnum, test := range table {
+		b := LoadMatrix(test.b.Matrix())
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
