@@ -1,5 +1,5 @@
-// This library provides an implementation of data frames and functions to operate
-// on them (Subsetting, joining, filtering, etc.)
+// Package dataframe provides an implementation of data frames and methods to
+// subset, join, mutate, set, arrange, summarize, etc.
 package dataframe
 
 import (
