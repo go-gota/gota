@@ -118,3 +118,33 @@ func BenchmarkDataFrame_Arrange(b *testing.B) {
 		})
 	}
 }
+
+func BenchmarkDataFrame_Subset(b *testing.B) {
+	b.ReportAllocs()
+	data := dataframe.New(generateSeries(100000, 5)...)
+	table := []struct {
+		name    string
+		data    dataframe.DataFrame
+		indexes interface{}
+	}{
+		{
+			"100000x20_100",
+			data,
+			generateIntsN(100, 1000),
+		},
+	}
+	for _, test := range table {
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				test.data.Subset(test.indexes)
+			}
+		})
+	}
+}
+
+func generateIntsN(n, k int) (data []int) {
+	for i := 0; i < n; i++ {
+		data = append(data, rand.Intn(k))
+	}
+	return
+}

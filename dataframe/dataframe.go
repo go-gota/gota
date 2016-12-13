@@ -41,26 +41,19 @@ func New(se ...series.Series) DataFrame {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
 
-	nrows := -1
 	columns := make([]series.Series, len(se))
 	for k, s := range se {
-		if s.Err != nil {
-			err := fmt.Errorf("error on series %v: %v", k, s.Err)
-			return DataFrame{Err: err}
-		}
 		columns[k] = s.Copy()
-		if nrows == -1 {
-			nrows = s.Len()
-		}
-		if nrows != s.Len() {
-			return DataFrame{Err: fmt.Errorf("arguments have different dimensions")}
-		}
+	}
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
 	}
 
 	// Fill DataFrame base structure
 	df := DataFrame{
 		columns: columns,
-		ncols:   len(se),
+		ncols:   ncols,
 		nrows:   nrows,
 	}
 	colnames := df.Names()
@@ -69,6 +62,29 @@ func New(se ...series.Series) DataFrame {
 		df.columns[i].Name = colname
 	}
 	return df
+}
+
+func checkColumnsDimensions(se ...series.Series) (nrows, ncols int, err error) {
+	ncols = len(se)
+	nrows = -1
+	if se == nil || ncols == 0 {
+		err = fmt.Errorf("no Series given")
+		return
+	}
+	for k, s := range se {
+		if s.Err != nil {
+			err = fmt.Errorf("error on series %v: %v", k, s.Err)
+			return
+		}
+		if nrows == -1 {
+			nrows = s.Len()
+		}
+		if nrows != s.Len() {
+			err = fmt.Errorf("arguments have different dimensions")
+			return
+		}
+	}
+	return
 }
 
 // Copy returns a copy of the DataFrame
@@ -264,13 +280,18 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	}
 	columns := make([]series.Series, df.ncols)
 	for i, column := range df.columns {
-		sub := column.Subset(indexes)
-		if sub.Err != nil {
-			return DataFrame{Err: fmt.Errorf("can't subset: %v", sub.Err)}
-		}
-		columns[i] = sub
+		s := column.Subset(indexes)
+		columns[i] = s
 	}
-	return New(columns...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	return DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
 }
 
 // SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported are:
