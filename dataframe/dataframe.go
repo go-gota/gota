@@ -320,9 +320,23 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 		if i < 0 || i >= df.ncols {
 			return DataFrame{Err: fmt.Errorf("can't select columns: index out of range")}
 		}
-		columns[k] = df.columns[i]
+		columns[k] = df.columns[i].Copy()
 	}
-	return New(columns...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df = DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
 }
 
 // Rename changes the name of one of the columns of a DataFrame
@@ -396,14 +410,28 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 	}
 	df = df.Copy()
 	// Check that colname exist on dataframe
-	newSeries := df.columns
+	columns := df.columns
 	if idx := findInStringSlice(colname, df.Names()); idx >= 0 {
-		newSeries[idx] = s
+		columns[idx] = s
 	} else {
 		s.Name = colname
-		newSeries = append(newSeries, s)
+		columns = append(columns, s)
 	}
-	return New(newSeries...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df = DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
 }
 
 // F is the filtering structure
@@ -614,7 +642,21 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		columns[j] = s
 	}
 
-	return New(columns...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df = DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
 }
 
 // Read/Write Methods
@@ -736,7 +778,21 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		}
 		columns[i] = col
 	}
-	return New(columns...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df := DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
 }
 
 // LoadMaps creates a new DataFrame based on the given maps. This function assumes
@@ -793,7 +849,21 @@ func LoadMatrix(mat mat64.Matrix) DataFrame {
 		}
 		columns[i] = series.Floats(floats)
 	}
-	return New(columns...)
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df := DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
 }
 
 // ReadCSV reads a CSV file from a io.Reader and builds a DataFrame with the
