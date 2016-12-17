@@ -121,16 +121,73 @@ func BenchmarkDataFrame_Arrange(b *testing.B) {
 
 func BenchmarkDataFrame_Subset(b *testing.B) {
 	b.ReportAllocs()
-	data := dataframe.New(generateSeries(100000, 5)...)
+	data1000x20 := dataframe.New(generateSeries(1000, 5)...)
+	data100000x20 := dataframe.New(generateSeries(100000, 5)...)
+	data1000000x20 := dataframe.New(generateSeries(1000000, 5)...)
+	idx100 := generateIntsN(100, 100000)
+	idx1000 := generateIntsN(1000, 100000)
+	idx10000 := generateIntsN(10000, 100000)
+	idx100000 := generateIntsN(100000, 100000)
+	idx1000000 := generateIntsN(1000000, 100000)
 	table := []struct {
 		name    string
 		data    dataframe.DataFrame
 		indexes interface{}
 	}{
 		{
+			"1000000x20_100",
+			data1000000x20,
+			idx100,
+		},
+		{
+			"1000000x20_1000",
+			data1000000x20,
+			idx1000,
+		},
+		{
+			"1000000x20_10000",
+			data1000000x20,
+			idx10000,
+		},
+		{
+			"1000000x20_100000",
+			data1000000x20,
+			idx100000,
+		},
+		{
+			"1000000x20_1000000",
+			data1000000x20,
+			idx1000000,
+		},
+		{
 			"100000x20_100",
-			data,
-			generateIntsN(100, 1000),
+			data100000x20,
+			idx100,
+		},
+		{
+			"100000x20_1000",
+			data100000x20,
+			idx1000,
+		},
+		{
+			"100000x20_10000",
+			data100000x20,
+			idx10000,
+		},
+		{
+			"100000x20_100000",
+			data100000x20,
+			idx100000,
+		},
+		{
+			"1000x20_100",
+			data1000x20,
+			idx100,
+		},
+		{
+			"1000x20_1000",
+			data1000x20,
+			idx1000,
 		},
 	}
 	for _, test := range table {
