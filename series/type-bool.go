@@ -12,6 +12,7 @@ type boolElement struct {
 }
 
 func (e *boolElement) Set(value interface{}) {
+	e.nan = false
 	switch value.(type) {
 	case string:
 		if value.(string) == "NaN" {

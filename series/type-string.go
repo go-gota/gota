@@ -13,6 +13,7 @@ type stringElement struct {
 }
 
 func (e *stringElement) Set(value interface{}) {
+	e.nan = false
 	switch value.(type) {
 	case string:
 		e.e = string(value.(string))
