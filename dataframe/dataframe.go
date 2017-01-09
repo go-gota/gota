@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -654,6 +655,101 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.types = coltypes
 	}
+}
+
+// Load creates a new DataFrame from arbitrary []structs
+func Load(i interface{}) DataFrame {
+	if i == nil {
+		return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from <nil> value")}
+	}
+	tpy, val := reflect.TypeOf(i), reflect.ValueOf(i)
+	switch tpy.Kind() {
+	case reflect.Slice:
+		if tpy.Elem().Kind() != reflect.Struct {
+			return DataFrame{Err: fmt.Errorf("load: type %s (%s %s) is not supported, must be []struct", tpy.Name(), tpy.Elem().Kind(), tpy.Kind())}
+		}
+		if val.Len() == 0 {
+			return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from empty slice")}
+		}
+		structs := []interface{}{}
+		for i := 0; i < val.Len(); i++ {
+			structs = append(structs, val.Index(i).Interface())
+		}
+		se := []series.Series{}
+		for i := range structs {
+			nse := seriesFromStruct(reflect.TypeOf(structs[i]), reflect.ValueOf(structs[i]))
+			canAdd := true
+			index := -1
+			for j := range nse {
+				for k := range se {
+					if se[k].Name == nse[j].Name {
+						canAdd = false
+						index = k
+					}
+				}
+				if canAdd {
+					se = append(se, nse[j])
+				} else {
+					switch se[index].Type() {
+					case series.Int:
+						v := []int{}
+						elems := nse[j].Elements()
+						for k := range elems {
+							nv, _ := elems[k].Int()
+							v = append(v, nv)
+						}
+						se[index].Append(v)
+					case series.Float:
+						v := []float64{}
+						elems := nse[j].Elements()
+						for k := range elems {
+							v = append(v, elems[k].Float())
+						}
+						se[index].Append(v)
+					case series.Bool:
+						v := []bool{}
+						elems := nse[j].Elements()
+						for k := range elems {
+							nv, _ := elems[k].Bool()
+							v = append(v, nv)
+						}
+						se[index].Append(v)
+					case series.String:
+						v := []string{}
+						elems := nse[j].Elements()
+						for k := range elems {
+							v = append(v, elems[k].String())
+						}
+						se[index].Append(v)
+					}
+				}
+			}
+		}
+		return New(se...)
+	}
+	return DataFrame{Err: fmt.Errorf("load: type %s (%s) is not supported, must be []struct", tpy.Name(), tpy.Kind())}
+}
+
+// tpy.Kind() must be == to reflect.Struct, same goes for val
+func seriesFromStruct(tpy reflect.Type, val reflect.Value) []series.Series {
+	se := []series.Series{}
+NextField:
+	for i := 0; i < tpy.NumField(); i++ {
+		if tpy.Field(i).Anonymous {
+			continue NextField
+		}
+		switch val.Field(i).Kind() {
+		case reflect.Int:
+			se = append(se, series.New([]int{int(val.Field(i).Int())}, series.Int, tpy.Field(i).Name))
+		case reflect.Float32, reflect.Float64:
+			se = append(se, series.New([]float64{val.Field(i).Float()}, series.Float, tpy.Field(i).Name))
+		case reflect.Bool:
+			se = append(se, series.New([]bool{val.Field(i).Bool()}, series.Bool, tpy.Field(i).Name))
+		case reflect.String:
+			se = append(se, series.New([]string{val.Field(i).String()}, series.String, tpy.Field(i).Name))
+		}
+	}
+	return se
 }
 
 // LoadRecords creates a new DataFrame based on the given records.
