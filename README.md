@@ -36,7 +36,7 @@ df := dataframe.New(
 )
 ```
 
-You can also load the data directly fromother formats. 
+You can also load the data directly from other formats. 
 The base loading function takes some records in the
 form `[][]string` and returns a new DataFrame from there:
 

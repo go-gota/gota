@@ -17,6 +17,21 @@ func ExampleNew() {
 	fmt.Println(df)
 }
 
+func ExampleLoadStructs() {
+	type User struct {
+		name     string
+		age      int
+		accuracy float64
+	}
+	users := []User{
+		User{"Aram", 17, 0.2},
+		User{"Juan", 18, 0.8},
+		User{"Ana", 22, 0.5},
+	}
+	df := dataframe.LoadStructs(users)
+	fmt.Println(df)
+}
+
 func ExampleLoadRecords() {
 	df := dataframe.LoadRecords(
 		[][]string{

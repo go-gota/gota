@@ -2043,3 +2043,39 @@ func TestLoadMatrix(t *testing.T) {
 		}
 	}
 }
+
+func TestLoadStructs(t *testing.T) {
+	type User struct {
+		name     string
+		age      int
+		accuracy float64
+	}
+	users := []User{
+		User{"Aram", 17, 0.2},
+		User{"Juan", 18, 0.8},
+		User{"Ana", 22, 0.5},
+	}
+	type args struct {
+		i       interface{}
+		options []LoadOption
+	}
+	tests := []struct {
+		name string
+		args args
+		want DataFrame
+	}{
+		{"load structs", args{users, []LoadOption{}}, LoadRecords([][]string{
+			[]string{"accuracy", "age", "name"},
+			[]string{"0.2", "17", "Aram"},
+			[]string{"0.8", "18", "Juan"},
+			[]string{"0.5", "22", "Ana"},
+		})},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := LoadStructs(tt.args.i, tt.args.options...); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("LoadStructs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
