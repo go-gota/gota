@@ -190,9 +190,6 @@ func Bools(values interface{}) Series {
 	return New(values, Bool, "")
 }
 
-// Elements returns s.elements
-func (s Series) Elements() []Element { return s.elements }
-
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	var elements []Element

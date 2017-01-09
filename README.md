@@ -36,7 +36,7 @@ df := dataframe.New(
 )
 ```
 
-You also can load the data directly fromother formats. 
+You can also load the data directly fromother formats. 
 The base loading function takes some records in the
 form `[][]string` and returns a new DataFrame from there:
 
@@ -52,9 +52,7 @@ df := dataframe.LoadRecords(
 )
 ```
 
-But the new and easier way to generate DataFrames is by 
-calling dataframe.Load, which takes arbitrary []structs 
-and converts them into a DataFrame
+Now you can also create DataFrames by loading an slice of arbitrary structs:
 
 ```go
 type User struct {
@@ -67,7 +65,7 @@ users := []User{
 	User{"Juan", 18, 0.8},
 	User{"Ana", 22, 0.5},
 }
-df := dataframe.Load(users)
+df := dataframe.LoadStructs(users)
 ```
 
 By default, the column types will be auto detected but this can be
