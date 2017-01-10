@@ -13,7 +13,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/gonum/matrix/mat64"
 	"github.com/kniren/gota/series"
 )
 
@@ -876,8 +875,9 @@ func LoadMaps(maps []map[string]interface{}, options ...LoadOption) DataFrame {
 	return LoadRecords(records, options...)
 }
 
-// LoadMatrix loads the  given mat64.Matrix as a DataFrame
-func LoadMatrix(mat mat64.Matrix) DataFrame {
+// LoadMatrix loads the given Matrix as a DataFrame
+// TODO: Add Loadoptions
+func LoadMatrix(mat Matrix) DataFrame {
 	nrows, ncols := mat.Dims()
 	columns := make([]series.Series, ncols)
 	for i := 0; i < ncols; i++ {
@@ -1496,21 +1496,6 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	return maps
 }
 
-// Matrix returns the mat64.Matrix representation of a DataFrame
-func (df DataFrame) Matrix() mat64.Matrix {
-	columns := make([]series.Series, df.ncols)
-	for i := 0; i < df.ncols; i++ {
-		columns[i] = series.New(df.columns[i], series.Float, df.columns[i].Name)
-	}
-	m := DataFrame{
-		columns: columns,
-		ncols:   df.ncols,
-		nrows:   df.nrows,
-		Err:     df.Err,
-	}
-	return matrix{m}
-}
-
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(colnames []string) {
@@ -1704,18 +1689,7 @@ func inIntSlice(i int, is []int) bool {
 	return false
 }
 
-type matrix struct {
-	DataFrame
-}
-
-func (m matrix) String() string {
-	return m.print(true, true, true, true, 10, 70, "Matrix")
-}
-
-func (m matrix) At(i, j int) float64 {
-	return m.columns[j].Elem(i).Float()
-}
-
-func (m matrix) T() mat64.Matrix {
-	return mat64.Transpose{Matrix: m}
+type Matrix interface {
+	Dims() (r, c int)
+	At(i, j int) float64
 }

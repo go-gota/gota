@@ -313,22 +313,25 @@ fmt.Println(flights)
 
 #### Interfacing with gonum
 
-A `gonum/mat64.Matrix` can be loaded as a `DataFrame` by using the
-`LoadMatrix()` function and back to `mat64.Matrix` via
-`DataFrame.Matrix()`:
+A `gonum/mat64.Matrix` or any object that implements the `dataframe.Matrix`
+interface can be loaded as a `DataFrame` by using the `LoadMatrix()` method. If
+one wants to convert a `DataFrame` to a `mat64.Matrix` it is necessary to create
+the necessary structs and method implementations. Since a `DataFrame` already
+implements the `Dims() (r, c int)` method, only implementations for the `At` and
+`T` methods are necessary:
 
 ```go
-	a := LoadRecords(
-		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "true"},
-			[]string{"1", "4", "6.0", "true"},
-			[]string{"2", "3", "6.0", "false"},
-			[]string{"2", "2", "7.1", "false"},
-		},
-	)
-	m := a.Matrix()
-	sum := mat64.Sum(m)
+type matrix struct {
+	DataFrame
+}
+
+func (m matrix) At(i, j int) float64 {
+	return m.columns[j].Elem(i).Float()
+}
+
+func (m matrix) T() mat64.Matrix {
+	return mat64.Transpose{Matrix: m}
+}
 ```
 
 Series

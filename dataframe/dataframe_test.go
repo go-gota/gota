@@ -1984,22 +1984,16 @@ func TestDataFrame_Rapply(t *testing.T) {
 	}
 }
 
-func TestDataFrame_Matrix(t *testing.T) {
-	a := LoadRecords(
-		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "true"},
-			[]string{"1", "4", "6.0", "true"},
-			[]string{"2", "3", "6.0", "false"},
-			[]string{"2", "2", "7.1", "false"},
-		},
-	)
-	m := a.Matrix()
-	sum := mat64.Sum(m)
-	expected := 45.2
-	if sum != expected {
-		t.Errorf("\nExpected: %v\nReceived: %v", expected, sum)
-	}
+type mockMatrix struct {
+	DataFrame
+}
+
+func (m mockMatrix) At(i, j int) float64 {
+	return m.columns[j].Elem(i).Float()
+}
+
+func (m mockMatrix) T() mat64.Matrix {
+	return mat64.Transpose{Matrix: m}
 }
 
 func TestLoadMatrix(t *testing.T) {
@@ -2024,7 +2018,7 @@ func TestLoadMatrix(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		b := LoadMatrix(test.b.Matrix())
+		b := LoadMatrix(mockMatrix{test.b})
 		if err := b.Err; err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
