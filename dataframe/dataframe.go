@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -717,6 +718,43 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.types = coltypes
 	}
+}
+
+// LoadStructs creates a new DataFrame from arbitrary []structs
+func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
+	if i == nil {
+		return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from <nil> value")}
+	}
+	tpy, val := reflect.TypeOf(i), reflect.ValueOf(i)
+	switch tpy.Kind() {
+	case reflect.Slice:
+		if tpy.Elem().Kind() != reflect.Struct {
+			return DataFrame{Err: fmt.Errorf("load: type %s (%s %s) is not supported, must be []struct", tpy.Name(), tpy.Elem().Kind(), tpy.Kind())}
+		}
+		if val.Len() == 0 {
+			return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from empty slice")}
+		}
+		structs := []interface{}{}
+		for i := 0; i < val.Len(); i++ {
+			structs = append(structs, val.Index(i).Interface())
+		}
+		maps := []map[string]interface{}{}
+		for i := range structs {
+			strcTpy, strcVal := reflect.TypeOf(structs[i]), reflect.ValueOf(structs[i])
+			temp := map[string]interface{}{}
+		NextField:
+			for i := 0; i < strcTpy.NumField(); i++ {
+				if strcTpy.Field(i).Anonymous || strcTpy.Field(i).PkgPath != "" { // !strcVal.Field(i).CanInterface()
+					continue NextField
+				}
+				temp[strcTpy.Field(i).Name] = strcVal.Field(i).Interface()
+			}
+			maps = append(maps, temp)
+
+		}
+		return LoadMaps(maps, options...)
+	}
+	return DataFrame{Err: fmt.Errorf("load: type %s (%s) is not supported, must be []struct", tpy.Name(), tpy.Kind())}
 }
 
 // LoadRecords creates a new DataFrame based on the given records.

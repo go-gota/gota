@@ -28,7 +28,7 @@ entire rows or columns, all while keeping column type integrity.
 DataFrames can be constructed passing Series to the dataframe.New constructor
 function:
 
-```
+```go
 df := dataframe.New(
 	series.New([]string{"b", "a"}, series.String, "COL.1"),
 	series.New([]int{1, 2}, series.Int, "COL.2"),
@@ -36,11 +36,11 @@ df := dataframe.New(
 )
 ```
 
-But as a general rule it is easier to load the data directly from
-other formats. The base loading function takes some records in the
+You can also load the data directly from other formats. 
+The base loading function takes some records in the
 form `[][]string` and returns a new DataFrame from there:
 
-```
+```go
 df := dataframe.LoadRecords(
     [][]string{
         []string{"A", "B", "C", "D"},
@@ -52,11 +52,28 @@ df := dataframe.LoadRecords(
 )
 ```
 
+Now you can also create DataFrames by loading an slice of arbitrary structs:
+
+```go
+type User struct {
+	Name     string
+	Age      int
+	Accuracy float64
+    ignored  bool // ignored since unexported
+}
+users := []User{
+	{"Aram", 17, 0.2, true},
+	{"Juan", 18, 0.8, true},
+	{"Ana", 22, 0.5, true},
+}
+df := dataframe.LoadStructs(users)
+```
+
 By default, the column types will be auto detected but this can be
 configured. For example, if we wish the default type to be `Float` but
 columns `A` and `D` are `String` and `Bool` respectively:
 
-```
+```go
 df := dataframe.LoadRecords(
     [][]string{
         []string{"A", "B", "C", "D"},
@@ -76,7 +93,7 @@ df := dataframe.LoadRecords(
 
 Similarly, you can load the data stored on a `[]map[string]interface{}`:
 
-```
+```go
 df := dataframe.LoadMaps(
     []map[string]interface{}{
         map[string]interface{}{
@@ -98,7 +115,7 @@ df := dataframe.LoadMaps(
 You can also pass an `io.Reader` to the functions `ReadCSV`/`ReadJSON`
 and it will work as expected given that the data is correct:
 
-```
+```go
 csvStr := `
 Country,Date,Age,Amount,Id
 "United States",2012-02-01,50,112.1,01234
@@ -113,7 +130,7 @@ Spain,2012-02-01,66,555.42,00241
 df := dataframe.ReadCSV(strings.NewReader(csvStr))
 ```
 
-```
+```go
 jsonStr := `[{"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`
 df := dataframe.ReadJSON(strings.NewReader(jsonStr))
 ```
@@ -123,7 +140,7 @@ df := dataframe.ReadJSON(strings.NewReader(jsonStr))
 We can subset our DataFrames with the Subset method. For example if we
 want the first and third rows we can do the following:
 
-```
+```go
 sub := df.Subset([]int{0, 2})
 ```
 
@@ -132,7 +149,7 @@ sub := df.Subset([]int{0, 2})
 If instead of subsetting the rows we want to select specific columns,
 by an index or column name:
 
-```
+```go
 sel1 := df.Select([]int{0, 2})
 sel2 := df.Select([]string{"A", "C"})
 ```
@@ -142,7 +159,7 @@ sel2 := df.Select([]string{"A", "C"})
 In order to update the values of a DataFrame we can use the Set
 method:
 
-```
+```go
 df2 := df.Set(
     []int{0, 2},
     dataframe.LoadRecords(
@@ -161,7 +178,7 @@ For more complex row subsetting we can use the Filter method. For
 example, if we want the rows where the column "A" is equal to "a" or
 column "B" is greater than 4:
 
-```
+```go
 fil := df.Filter(
     dataframe.F{"A", series.Eq, "a"},
     dataframe.F{"B", series.Greater, 4},
@@ -178,7 +195,7 @@ Filter methods, they will behave as AND.
 
 With Arrange a DataFrame can be sorted by the given column names:
 
-```
+```go
 sorted := df.Arrange(
     dataframe.Sort("A"),    // Sort in ascending order
     dataframe.RevSort("B"), // Sort in descending order
@@ -190,7 +207,7 @@ sorted := df.Arrange(
 If we want to modify a column or add one based on a given Series at
 the end we can use the Mutate method:
 
-```
+```go
 // Change column C with a new one
 mut := df.Mutate(
     series.New([]string{"a", "b", "c", "d"}, series.String, "C"),
@@ -207,7 +224,7 @@ Different Join operations are supported (`InnerJoin`, `LeftJoin`,
 `RightJoin`, `CrossJoin`). In order to use these methods you have to
 specify which are the keys to be used for joining the DataFrames:
 
-```
+```go
 df := dataframe.LoadRecords(
     [][]string{
         []string{"A", "B", "C", "D"},
@@ -234,7 +251,7 @@ join := df.InnerJoin(df2, "D")
 Functions can be applied to the rows or columns of a DataFrame,
 casting the types as necessary:
 
-```
+```go
 mean := func(s series.Series) series.Series {
     floats := s.Float()
     sum := 0.0
@@ -257,7 +274,7 @@ errors by the DataFrame Err field. If any of the methods in the chain
 returns an error, the remaining operations on the chain will become
 a no-op.
 
-```
+```go
 a = a.Rename("Origin", "Country").
     Filter(dataframe.F{"Age", "<", 50}).
     Filter(dataframe.F{"Origin", "==", "United States"}).
@@ -270,7 +287,7 @@ if a.Err != nil {
 
 #### Print to console
 
-```
+```go
 fmt.Println(flights)
 
 > [336776x20] DataFrame
@@ -300,7 +317,7 @@ A `gonum/mat64.Matrix` can be loaded as a `DataFrame` by using the
 `LoadMatrix()` function and back to `mat64.Matrix` via
 `DataFrame.Matrix()`:
 
-```
+```go
 	a := LoadRecords(
 		[][]string{
 			[]string{"A", "B", "C", "D"},
@@ -323,7 +340,7 @@ DataFrame columns.
 
 Four types are currently supported:
 
-```
+```go
 Int
 Float
 String
