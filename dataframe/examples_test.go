@@ -19,9 +19,9 @@ func ExampleNew() {
 
 func ExampleLoadStructs() {
 	type User struct {
-		name     string
-		age      int
-		accuracy float64
+		Name     string
+		Age      int
+		Accuracy float64
 	}
 	users := []User{
 		User{"Aram", 17, 0.2},

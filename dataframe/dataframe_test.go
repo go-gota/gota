@@ -2046,14 +2046,21 @@ func TestLoadMatrix(t *testing.T) {
 
 func TestLoadStructs(t *testing.T) {
 	type User struct {
-		name     string
-		age      int
-		accuracy float64
+		Name     string
+		Age      int
+		Accuracy float64
+		ignored  bool
 	}
 	users := []User{
-		User{"Aram", 17, 0.2},
-		User{"Juan", 18, 0.8},
-		User{"Ana", 22, 0.5},
+		{"Aram", 17, 0.2, true},
+		{"Juan", 18, 0.8, true},
+		{"Ana", 22, 0.5, true},
+	}
+	records := [][]string{
+		[]string{"Accuracy", "Age", "Name"},
+		[]string{"0.2", "17", "Aram"},
+		[]string{"0.8", "18", "Juan"},
+		[]string{"0.5", "22", "Ana"},
 	}
 	type args struct {
 		i       interface{}
@@ -2064,12 +2071,8 @@ func TestLoadStructs(t *testing.T) {
 		args args
 		want DataFrame
 	}{
-		{"load structs", args{users, []LoadOption{}}, LoadRecords([][]string{
-			[]string{"accuracy", "age", "name"},
-			[]string{"0.2", "17", "Aram"},
-			[]string{"0.8", "18", "Juan"},
-			[]string{"0.5", "22", "Ana"},
-		})},
+		{"load structs", args{users, []LoadOption{}}, LoadRecords(records)},
+		{"load structs with load options", args{users, []LoadOption{DefaultType(series.Float)}}, LoadRecords(records, DefaultType(series.Float))},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

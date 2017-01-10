@@ -681,19 +681,10 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 			temp := map[string]interface{}{}
 		NextField:
 			for i := 0; i < strcTpy.NumField(); i++ {
-				if strcTpy.Field(i).Anonymous {
+				if strcTpy.Field(i).Anonymous || strcTpy.Field(i).PkgPath != "" { // !strcVal.Field(i).CanInterface()
 					continue NextField
 				}
-				switch strcVal.Field(i).Kind() {
-				case reflect.Int:
-					temp[strcTpy.Field(i).Name] = strcVal.Field(i).Int()
-				case reflect.Float32, reflect.Float64:
-					temp[strcTpy.Field(i).Name] = strcVal.Field(i).Float()
-				case reflect.Bool:
-					temp[strcTpy.Field(i).Name] = strcVal.Field(i).Bool()
-				case reflect.String:
-					temp[strcTpy.Field(i).Name] = strcVal.Field(i).String()
-				}
+				temp[strcTpy.Field(i).Name] = strcVal.Field(i).Interface()
 			}
 			maps = append(maps, temp)
 

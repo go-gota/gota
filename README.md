@@ -56,14 +56,15 @@ Now you can also create DataFrames by loading an slice of arbitrary structs:
 
 ```go
 type User struct {
-	name     string
-	age      int
-	accuracy float64
+	Name     string
+	Age      int
+	Accuracy float64
+    ignored  bool // ignored since unexported
 }
 users := []User{
-	User{"Aram", 17, 0.2},
-	User{"Juan", 18, 0.8},
-	User{"Ana", 22, 0.5},
+	{"Aram", 17, 0.2, true},
+	{"Juan", 18, 0.8, true},
+	{"Ana", 22, 0.5, true},
 }
 df := dataframe.LoadStructs(users)
 ```
