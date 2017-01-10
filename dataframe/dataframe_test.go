@@ -477,10 +477,10 @@ func TestDataFrame_Records(t *testing.T) {
 		series.New([]int{1, 2, 3}, series.Int, "COL.2"),
 		series.New([]float64{3, 2, 1}, series.Float, "COL.3"))
 	expected := [][]string{
-		[]string{"COL.1", "COL.2", "COL.3"},
-		[]string{"a", "1", "3.000000"},
-		[]string{"b", "2", "2.000000"},
-		[]string{"c", "3", "1.000000"},
+		{"COL.1", "COL.2", "COL.3"},
+		{"a", "1", "3.000000"},
+		{"b", "2", "2.000000"},
+		{"c", "3", "1.000000"},
 	}
 	received := a.Records()
 	if !reflect.DeepEqual(expected, received) {
@@ -930,10 +930,10 @@ func TestReadJSON(t *testing.T) {
 			`[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`,
 			LoadRecords(
 				[][]string{
-					[]string{"COL.1", "COL.2", "COL.3"},
-					[]string{"NaN", "1", "3"},
-					[]string{"5", "2", "2"},
-					[]string{"6", "3", "1"},
+					{"COL.1", "COL.2", "COL.3"},
+					{"NaN", "1", "3"},
+					{"5", "2", "2"},
+					{"6", "3", "1"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Int),
@@ -943,10 +943,10 @@ func TestReadJSON(t *testing.T) {
 			`[{"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`,
 			LoadRecords(
 				[][]string{
-					[]string{"COL.1", "COL.2", "COL.3"},
-					[]string{"NaN", "1", "3"},
-					[]string{"5", "2", "2"},
-					[]string{"6", "3", "1"},
+					{"COL.1", "COL.2", "COL.3"},
+					{"NaN", "1", "3"},
+					{"5", "2", "2"},
+					{"6", "3", "1"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Int),
@@ -992,20 +992,20 @@ func TestDataFrame_SetNames(t *testing.T) {
 func TestDataFrame_InnerJoin(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "a", "5.1", "true"},
-			[]string{"2", "b", "6.0", "true"},
-			[]string{"3", "c", "6.0", "false"},
-			[]string{"1", "d", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"1", "a", "5.1", "true"},
+			{"2", "b", "6.0", "true"},
+			{"3", "c", "6.0", "false"},
+			{"1", "d", "7.1", "false"},
 		},
 	)
 	b := LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "true"},
-			[]string{"4", "2", "false"},
-			[]string{"2", "8", "false"},
-			[]string{"5", "9", "false"},
+			{"A", "F", "D"},
+			{"1", "1", "true"},
+			{"4", "2", "false"},
+			{"2", "8", "false"},
+			{"5", "9", "false"},
 		},
 	)
 	table := []struct {
@@ -1016,8 +1016,8 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "D", "B", "C", "F"},
-					[]string{"1", "true", "a", "5.1", "1"},
+					{"A", "D", "B", "C", "F"},
+					{"1", "true", "a", "5.1", "1"},
 				},
 			),
 		},
@@ -1025,10 +1025,10 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D_0", "F", "D_1"},
-					[]string{"1", "a", "5.1", "true", "1", "true"},
-					[]string{"2", "b", "6.0", "true", "8", "false"},
-					[]string{"1", "d", "7.1", "false", "1", "true"},
+					{"A", "B", "C", "D_0", "F", "D_1"},
+					{"1", "a", "5.1", "true", "1", "true"},
+					{"2", "b", "6.0", "true", "8", "false"},
+					{"1", "d", "7.1", "false", "1", "true"},
 				},
 			),
 		},
@@ -1036,15 +1036,15 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			[]string{"D"},
 			LoadRecords(
 				[][]string{
-					[]string{"D", "A_0", "B", "C", "A_1", "F"},
-					[]string{"true", "1", "a", "5.1", "1", "1"},
-					[]string{"true", "2", "b", "6.0", "1", "1"},
-					[]string{"false", "3", "c", "6.0", "4", "2"},
-					[]string{"false", "3", "c", "6.0", "2", "8"},
-					[]string{"false", "3", "c", "6.0", "5", "9"},
-					[]string{"false", "1", "d", "7.1", "4", "2"},
-					[]string{"false", "1", "d", "7.1", "2", "8"},
-					[]string{"false", "1", "d", "7.1", "5", "9"},
+					{"D", "A_0", "B", "C", "A_1", "F"},
+					{"true", "1", "a", "5.1", "1", "1"},
+					{"true", "2", "b", "6.0", "1", "1"},
+					{"false", "3", "c", "6.0", "4", "2"},
+					{"false", "3", "c", "6.0", "2", "8"},
+					{"false", "3", "c", "6.0", "5", "9"},
+					{"false", "1", "d", "7.1", "4", "2"},
+					{"false", "1", "d", "7.1", "2", "8"},
+					{"false", "1", "d", "7.1", "5", "9"},
 				},
 			),
 		},
@@ -1072,22 +1072,22 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 func TestDataFrame_LeftJoin(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "1"},
-			[]string{"2", "4", "6.0", "1"},
-			[]string{"3", "3", "6.0", "0"},
-			[]string{"1", "2", "7.1", "0"},
+			{"A", "B", "C", "D"},
+			{"1", "4", "5.1", "1"},
+			{"2", "4", "6.0", "1"},
+			{"3", "3", "6.0", "0"},
+			{"1", "2", "7.1", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "1"},
-			[]string{"4", "2", "0"},
-			[]string{"2", "8", "0"},
-			[]string{"5", "9", "0"},
+			{"A", "F", "D"},
+			{"1", "1", "1"},
+			{"4", "2", "0"},
+			{"2", "8", "0"},
+			{"5", "9", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
@@ -1100,11 +1100,11 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "D", "B", "C", "F"},
-					[]string{"1", "1", "4", "5.1", "1"},
-					[]string{"2", "1", "4", "6.0", "NaN"},
-					[]string{"3", "0", "3", "6.0", "NaN"},
-					[]string{"1", "0", "2", "7.1", "NaN"},
+					{"A", "D", "B", "C", "F"},
+					{"1", "1", "4", "5.1", "1"},
+					{"2", "1", "4", "6.0", "NaN"},
+					{"3", "0", "3", "6.0", "NaN"},
+					{"1", "0", "2", "7.1", "NaN"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1114,11 +1114,11 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D_0", "F", "D_1"},
-					[]string{"1", "4", "5.1", "1", "1", "1"},
-					[]string{"2", "4", "6.0", "1", "8", "0"},
-					[]string{"3", "3", "6.0", "0", "NaN", "NaN"},
-					[]string{"1", "2", "7.1", "0", "1", "1"},
+					{"A", "B", "C", "D_0", "F", "D_1"},
+					{"1", "4", "5.1", "1", "1", "1"},
+					{"2", "4", "6.0", "1", "8", "0"},
+					{"3", "3", "6.0", "0", "NaN", "NaN"},
+					{"1", "2", "7.1", "0", "1", "1"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1148,22 +1148,22 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 func TestDataFrame_RightJoin(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "1"},
-			[]string{"4", "2", "0"},
-			[]string{"2", "8", "0"},
-			[]string{"5", "9", "0"},
+			{"A", "F", "D"},
+			{"1", "1", "1"},
+			{"4", "2", "0"},
+			{"2", "8", "0"},
+			{"5", "9", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "1"},
-			[]string{"2", "4", "6.0", "1"},
-			[]string{"3", "3", "6.0", "0"},
-			[]string{"1", "2", "7.1", "0"},
+			{"A", "B", "C", "D"},
+			{"1", "4", "5.1", "1"},
+			{"2", "4", "6.0", "1"},
+			{"3", "3", "6.0", "0"},
+			{"1", "2", "7.1", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
@@ -1176,11 +1176,11 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "D", "F", "B", "C"},
-					[]string{"1", "1", "1", "4", "5.1"},
-					[]string{"2", "1", "NaN", "4", "6.0"},
-					[]string{"3", "0", "NaN", "3", "6.0"},
-					[]string{"1", "0", "NaN", "2", "7.1"},
+					{"A", "D", "F", "B", "C"},
+					{"1", "1", "1", "4", "5.1"},
+					{"2", "1", "NaN", "4", "6.0"},
+					{"3", "0", "NaN", "3", "6.0"},
+					{"1", "0", "NaN", "2", "7.1"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1190,11 +1190,11 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "F", "D_0", "B", "C", "D_1"},
-					[]string{"1", "1", "1", "4", "5.1", "1"},
-					[]string{"2", "8", "0", "4", "6.0", "1"},
-					[]string{"1", "1", "1", "2", "7.1", "0"},
-					[]string{"3", "NaN", "NaN", "3", "6.0", "0"},
+					{"A", "F", "D_0", "B", "C", "D_1"},
+					{"1", "1", "1", "4", "5.1", "1"},
+					{"2", "8", "0", "4", "6.0", "1"},
+					{"1", "1", "1", "2", "7.1", "0"},
+					{"3", "NaN", "NaN", "3", "6.0", "0"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1224,22 +1224,22 @@ func TestDataFrame_RightJoin(t *testing.T) {
 func TestDataFrame_OuterJoin(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "1"},
-			[]string{"2", "4", "6.0", "1"},
-			[]string{"3", "3", "6.0", "0"},
-			[]string{"1", "2", "7.1", "0"},
+			{"A", "B", "C", "D"},
+			{"1", "4", "5.1", "1"},
+			{"2", "4", "6.0", "1"},
+			{"3", "3", "6.0", "0"},
+			{"1", "2", "7.1", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
 	)
 	b := LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "1"},
-			[]string{"4", "2", "0"},
-			[]string{"2", "8", "0"},
-			[]string{"5", "9", "0"},
+			{"A", "F", "D"},
+			{"1", "1", "1"},
+			{"4", "2", "0"},
+			{"2", "8", "0"},
+			{"5", "9", "0"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Float),
@@ -1252,14 +1252,14 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"A", "D"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "D", "B", "C", "F"},
-					[]string{"1", "1", "4", "5.1", "1"},
-					[]string{"2", "1", "4", "6.0", "NaN"},
-					[]string{"3", "0", "3", "6.0", "NaN"},
-					[]string{"1", "0", "2", "7.1", "NaN"},
-					[]string{"4", "0", "NaN", "NaN", "2"},
-					[]string{"2", "0", "NaN", "NaN", "8"},
-					[]string{"5", "0", "NaN", "NaN", "9"},
+					{"A", "D", "B", "C", "F"},
+					{"1", "1", "4", "5.1", "1"},
+					{"2", "1", "4", "6.0", "NaN"},
+					{"3", "0", "3", "6.0", "NaN"},
+					{"1", "0", "2", "7.1", "NaN"},
+					{"4", "0", "NaN", "NaN", "2"},
+					{"2", "0", "NaN", "NaN", "8"},
+					{"5", "0", "NaN", "NaN", "9"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1269,13 +1269,13 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			[]string{"A"},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D_0", "F", "D_1"},
-					[]string{"1", "4", "5.1", "1", "1", "1"},
-					[]string{"2", "4", "6.0", "1", "8", "0"},
-					[]string{"3", "3", "6.0", "0", "NaN", "NaN"},
-					[]string{"1", "2", "7.1", "0", "1", "1"},
-					[]string{"4", "NaN", "NaN", "NaN", "2", "0"},
-					[]string{"5", "NaN", "NaN", "NaN", "9", "0"},
+					{"A", "B", "C", "D_0", "F", "D_1"},
+					{"1", "4", "5.1", "1", "1", "1"},
+					{"2", "4", "6.0", "1", "8", "0"},
+					{"3", "3", "6.0", "0", "NaN", "NaN"},
+					{"1", "2", "7.1", "0", "1", "1"},
+					{"4", "NaN", "NaN", "NaN", "2", "0"},
+					{"5", "NaN", "NaN", "NaN", "9", "0"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Float),
@@ -1305,20 +1305,20 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 func TestDataFrame_CrossJoin(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "a", "5.1", "true"},
-			[]string{"2", "b", "6.0", "true"},
-			[]string{"3", "c", "6.0", "false"},
-			[]string{"1", "d", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"1", "a", "5.1", "true"},
+			{"2", "b", "6.0", "true"},
+			{"3", "c", "6.0", "false"},
+			{"1", "d", "7.1", "false"},
 		},
 	)
 	b := LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "true"},
-			[]string{"4", "2", "false"},
-			[]string{"2", "8", "false"},
-			[]string{"5", "9", "false"},
+			{"A", "F", "D"},
+			{"1", "1", "true"},
+			{"4", "2", "false"},
+			{"2", "8", "false"},
+			{"5", "9", "false"},
 		},
 	)
 	c := a.CrossJoin(b)
@@ -1395,10 +1395,10 @@ func TestDataFrame_Maps(t *testing.T) {
 func TestDataFrame_WriteCSV(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"COL.1", "COL.2", "COL.3"},
-			[]string{"NaN", "1", "3"},
-			[]string{"b", "2", "2"},
-			[]string{"c", "3", "1"},
+			{"COL.1", "COL.2", "COL.3"},
+			{"NaN", "1", "3"},
+			{"b", "2", "2"},
+			{"c", "3", "1"},
 		},
 	)
 	buf := new(bytes.Buffer)
@@ -1419,10 +1419,10 @@ c,3,1
 func TestDataFrame_WriteJSON(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"COL.1", "COL.2", "COL.3"},
-			[]string{"NaN", "1", "3"},
-			[]string{"5", "2", "2"},
-			[]string{"6", "3", "1"},
+			{"COL.1", "COL.2", "COL.3"},
+			{"NaN", "1", "3"},
+			{"5", "2", "2"},
+			{"6", "3", "1"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Int),
@@ -1442,10 +1442,10 @@ func TestDataFrame_WriteJSON(t *testing.T) {
 func TestDataFrame_Col(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"COL.1", "COL.2", "COL.3"},
-			[]string{"NaN", "1", "3"},
-			[]string{"5", "2", "2"},
-			[]string{"6", "3", "1"},
+			{"COL.1", "COL.2", "COL.3"},
+			{"NaN", "1", "3"},
+			{"5", "2", "2"},
+			{"6", "3", "1"},
 		},
 		DetectTypes(false),
 		DefaultType(series.Int),
@@ -1460,11 +1460,11 @@ func TestDataFrame_Col(t *testing.T) {
 func TestDataFrame_Set(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"b", "4", "6.0", "true"},
-			[]string{"c", "3", "6.0", "false"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"b", "4", "6.0", "true"},
+			{"c", "3", "6.0", "false"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	table := []struct {
@@ -1476,18 +1476,18 @@ func TestDataFrame_Set(t *testing.T) {
 			series.Ints([]int{0, 2}),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"k", "4", "6.0", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1495,17 +1495,17 @@ func TestDataFrame_Set(t *testing.T) {
 			series.Ints(0),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1513,17 +1513,17 @@ func TestDataFrame_Set(t *testing.T) {
 			series.Bools([]bool{true, false, false, false}),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1531,18 +1531,18 @@ func TestDataFrame_Set(t *testing.T) {
 			series.Bools([]bool{false, true, true, false}),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1550,18 +1550,18 @@ func TestDataFrame_Set(t *testing.T) {
 			[]int{0, 2},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"k", "4", "6.0", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1569,17 +1569,17 @@ func TestDataFrame_Set(t *testing.T) {
 			0,
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1587,17 +1587,17 @@ func TestDataFrame_Set(t *testing.T) {
 			[]bool{true, false, false, false},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1605,18 +1605,18 @@ func TestDataFrame_Set(t *testing.T) {
 			[]bool{false, true, true, false},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
 				},
 			),
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"k", "5", "7.0", "true"},
-					[]string{"k", "4", "6.0", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"k", "5", "7.0", "true"},
+					{"k", "4", "6.0", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1645,11 +1645,11 @@ func TestDataFrame_Set(t *testing.T) {
 func TestDataFrame_Arrange(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"b", "4", "6.0", "true"},
-			[]string{"c", "3", "6.0", "false"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"b", "4", "6.0", "true"},
+			{"c", "3", "6.0", "false"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	table := []struct {
@@ -1660,11 +1660,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("A")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"a", "2", "7.1", "false"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
 				},
 			),
 		},
@@ -1672,11 +1672,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("B")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"b", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"a", "2", "7.1", "false"},
+					{"c", "3", "6.0", "false"},
+					{"a", "4", "5.1", "true"},
+					{"b", "4", "6.0", "true"},
 				},
 			),
 		},
@@ -1684,11 +1684,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("A"), Sort("B")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "2", "7.1", "false"},
+					{"a", "4", "5.1", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
 				},
 			),
 		},
@@ -1696,11 +1696,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("B"), Sort("A")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"b", "4", "6.0", "true"},
+					{"A", "B", "C", "D"},
+					{"a", "2", "7.1", "false"},
+					{"c", "3", "6.0", "false"},
+					{"a", "4", "5.1", "true"},
+					{"b", "4", "6.0", "true"},
 				},
 			),
 		},
@@ -1708,11 +1708,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{RevSort("A")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"c", "3", "6.0", "false"},
+					{"b", "4", "6.0", "true"},
+					{"a", "4", "5.1", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1720,11 +1720,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{RevSort("B")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1732,11 +1732,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("A"), RevSort("B")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"a", "2", "7.1", "false"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
 				},
 			),
 		},
@@ -1744,11 +1744,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{Sort("B"), RevSort("A")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "2", "7.1", "false"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"a", "4", "5.1", "true"},
+					{"A", "B", "C", "D"},
+					{"a", "2", "7.1", "false"},
+					{"c", "3", "6.0", "false"},
+					{"b", "4", "6.0", "true"},
+					{"a", "4", "5.1", "true"},
 				},
 			),
 		},
@@ -1756,11 +1756,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{RevSort("B"), RevSort("A")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"b", "4", "6.0", "true"},
+					{"a", "4", "5.1", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1768,11 +1768,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 			[]Order{RevSort("A"), RevSort("B")},
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"c", "3", "6.0", "false"},
+					{"b", "4", "6.0", "true"},
+					{"a", "4", "5.1", "true"},
+					{"a", "2", "7.1", "false"},
 				},
 			),
 		},
@@ -1803,11 +1803,11 @@ func TestDataFrame_Arrange(t *testing.T) {
 func TestDataFrame_Capply(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"b", "4", "6.0", "true"},
-			[]string{"c", "3", "6.0", "false"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"b", "4", "6.0", "true"},
+			{"c", "3", "6.0", "false"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	mean := func(s series.Series) series.Series {
@@ -1834,8 +1834,8 @@ func TestDataFrame_Capply(t *testing.T) {
 			mean,
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"NaN", "3.25", "6.05", "0.5"},
+					{"A", "B", "C", "D"},
+					{"NaN", "3.25", "6.05", "0.5"},
 				},
 				DefaultType(series.Float),
 				DetectTypes(false),
@@ -1845,8 +1845,8 @@ func TestDataFrame_Capply(t *testing.T) {
 			sum,
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"NaN", "13", "24.2", "2"},
+					{"A", "B", "C", "D"},
+					{"NaN", "13", "24.2", "2"},
 				},
 				DefaultType(series.Float),
 				DetectTypes(false),
@@ -1879,11 +1879,11 @@ func TestDataFrame_Capply(t *testing.T) {
 func TestDataFrame_String(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "C", "D"},
-			[]string{"1", "5.1", "true"},
-			[]string{"NaN", "6.0", "true"},
-			[]string{"2", "6.0", "false"},
-			[]string{"2", "7.1", "false"},
+			{"A", "C", "D"},
+			{"1", "5.1", "true"},
+			{"NaN", "6.0", "true"},
+			{"2", "6.0", "false"},
+			{"2", "7.1", "false"},
 		},
 	)
 	received := a.String()
@@ -1904,11 +1904,11 @@ func TestDataFrame_String(t *testing.T) {
 func TestDataFrame_Rapply(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"1", "4", "5.1", "true"},
-			[]string{"1", "4", "6.0", "true"},
-			[]string{"2", "3", "6.0", "false"},
-			[]string{"2", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"1", "4", "5.1", "true"},
+			{"1", "4", "6.0", "true"},
+			{"2", "3", "6.0", "false"},
+			{"2", "2", "7.1", "false"},
 		},
 	)
 	mean := func(s series.Series) series.Series {
@@ -1936,11 +1936,11 @@ func TestDataFrame_Rapply(t *testing.T) {
 			mean,
 			LoadRecords(
 				[][]string{
-					[]string{"X0"},
-					[]string{"2.775"},
-					[]string{"3"},
-					[]string{"2.75"},
-					[]string{"2.775"},
+					{"X0"},
+					{"2.775"},
+					{"3"},
+					{"2.75"},
+					{"2.775"},
 				},
 				DefaultType(series.Float),
 				DetectTypes(false),
@@ -1950,11 +1950,11 @@ func TestDataFrame_Rapply(t *testing.T) {
 			sum,
 			LoadRecords(
 				[][]string{
-					[]string{"X0"},
-					[]string{"11.1"},
-					[]string{"12"},
-					[]string{"11"},
-					[]string{"11.1"},
+					{"X0"},
+					{"11.1"},
+					{"12"},
+					{"11"},
+					{"11.1"},
 				},
 				DefaultType(series.Float),
 				DetectTypes(false),
@@ -2038,40 +2038,130 @@ func TestLoadMatrix(t *testing.T) {
 }
 
 func TestLoadStructs(t *testing.T) {
-	type User struct {
-		Name     string
-		Age      int
-		Accuracy float64
-		ignored  bool
+	type testStruct struct {
+		A string
+		B int
+		C bool
+		D float64
 	}
-	users := []User{
-		{"Aram", 17, 0.2, true},
-		{"Juan", 18, 0.8, true},
-		{"Ana", 22, 0.5, true},
+	type testStructTags struct {
+		A string  `dataframe:"a,string"`
+		B int     `dataframe:"b,string"`
+		C bool    `dataframe:"c,string"`
+		D float64 `dataframe:"d,string"`
+		E int     `dataframe:"-"` // ignored
+		f int     // ignored
 	}
-	records := [][]string{
-		[]string{"Accuracy", "Age", "Name"},
-		[]string{"0.2", "17", "Aram"},
-		[]string{"0.8", "18", "Juan"},
-		[]string{"0.5", "22", "Ana"},
+	data := []testStruct{
+		{"a", 1, true, 0.0},
+		{"b", 2, true, 0.5},
 	}
-	type args struct {
-		i       interface{}
-		options []LoadOption
+	dataTags := []testStructTags{
+		{"a", 1, true, 0.0, 0, 0},
+		{"NA", 2, true, 0.5, 0, 0},
 	}
-	tests := []struct {
-		name string
-		args args
-		want DataFrame
+	table := []struct {
+		b     DataFrame
+		expDf DataFrame
 	}{
-		{"load structs", args{users, []LoadOption{}}, LoadRecords(records)},
-		{"load structs with load options", args{users, []LoadOption{DefaultType(series.Float)}}, LoadRecords(records, DefaultType(series.Float))},
+		{
+			LoadStructs(dataTags),
+			New(
+				series.New([]string{"a", "NaN"}, series.String, "a"),
+				series.New([]int{1, 2}, series.String, "b"),
+				series.New([]bool{true, true}, series.String, "c"),
+				series.New([]string{"0.000000", "0.500000"}, series.String, "d"),
+			),
+		},
+		{
+			LoadStructs(data),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0, 0.5}, series.Float, "D"),
+			),
+		},
+		{
+			LoadStructs(
+				data,
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.String, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0.000000", "0.500000"}, series.String, "D"),
+			),
+		},
+		{
+			LoadStructs(
+				data,
+				HasHeader(false),
+				DetectTypes(false),
+				DefaultType(series.String),
+			),
+			New(
+				series.New([]string{"A", "a", "b"}, series.String, "X0"),
+				series.New([]string{"B", "1", "2"}, series.String, "X1"),
+				series.New([]string{"C", "true", "true"}, series.String, "X2"),
+				series.New([]string{"D", "0.000000", "0.500000"}, series.String, "X3"),
+			),
+		},
+		{
+			LoadStructs(
+				data,
+				HasHeader(true),
+				DetectTypes(false),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
+					"B": series.Float,
+					"C": series.String,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.String, "C"),
+				series.New([]string{"0.000000", "0.500000"}, series.String, "D"),
+			),
+		},
+		{
+			LoadStructs(
+				data,
+				HasHeader(true),
+				DetectTypes(true),
+				DefaultType(series.String),
+				WithTypes(map[string]series.Type{
+					"B": series.Float,
+				}),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]float64{1, 2}, series.Float, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]string{"0", "0.5"}, series.Float, "D"),
+			),
+		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := LoadStructs(tt.args.i, tt.args.options...); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("LoadStructs() = %v, want %v", got, tt.want)
-			}
-		})
+	for testnum, test := range table {
+		b := test.b
+		if err := b.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
+			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
+			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %v: Different values:\nA:%v\nB:%v", testnum, test.expDf, b)
+		}
 	}
 }
