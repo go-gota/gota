@@ -17,3 +17,18 @@ func (jr JSONReader) Read(r io.Reader, options ...LoadOption) DataFrame {
 	}
 	return LoadMaps(m, options...)
 }
+
+//JSONWriter JSON Writer definition
+type JSONWriter struct {
+	w io.Writer
+}
+
+//MakeJSONWriter creates a new instance of JSONWriter
+func MakeJSONWriter(w io.Writer) JSONWriter {
+	return JSONWriter{w: w}
+}
+
+func (w *JSONWriter) Write(df DataFrame) error {
+	m := df.Maps()
+	return json.NewEncoder(w.w).Encode(m)
+}

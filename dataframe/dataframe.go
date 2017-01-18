@@ -797,6 +797,15 @@ func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	return LoadMaps(m, options...)
 }
 
+//WriteTo writes DataFrame to a dataframe.Writer
+func (df DataFrame) WriteTo(dw Writer) error {
+	if df.Err != nil {
+		return df.Err
+	}
+
+	return dw.Write(df)
+}
+
 // WriteCSV writes the DataFrame to the given io.Writer as a CSV file.
 func (df DataFrame) WriteCSV(w io.Writer) error {
 	if df.Err != nil {

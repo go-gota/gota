@@ -18,3 +18,18 @@ func (cr CsvReader) Read(r io.Reader, options ...LoadOption) DataFrame {
 
 	return LoadRecords(records, options...)
 }
+
+//CsvWriter CSV Writer
+type CsvWriter struct {
+	w io.Writer
+}
+
+//NewCsvWriter creates new instance of CsvWriter
+func NewCsvWriter(w io.Writer) CsvWriter {
+	return CsvWriter{w: w}
+}
+
+func (w *CsvWriter) Write(df DataFrame) error {
+	records := df.Records()
+	return csv.NewWriter(w.w).WriteAll(records)
+}
