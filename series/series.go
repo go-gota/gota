@@ -225,6 +225,23 @@ func (s Series) Concat(x Series) Series {
 	return y
 }
 
+// Slice Subset by start and end
+func (s Series) Slice(start, end int) Series {
+
+	if start < 0 {
+		s.Err = fmt.Errorf("out of range exception, start")
+		return s
+	}
+
+	if end > s.Len() {
+		s.Err = fmt.Errorf("out of range exception, end")
+	}
+
+	elements := s.elements[start:end]
+
+	return New(elements, s.t, s.Name)
+}
+
 // Subset returns a subset of the series based on the given Indexes.
 func (s Series) Subset(indexes Indexes) Series {
 	if err := s.Err; err != nil {
