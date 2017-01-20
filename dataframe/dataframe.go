@@ -42,8 +42,8 @@ func New(se ...series.Series) DataFrame {
 	}
 
 	columns := make([]series.Series, len(se))
-	for k, s := range se {
-		columns[k] = s.Copy()
+	for i, s := range se {
+		columns[i] = s.Copy()
 	}
 	nrows, ncols, err := checkColumnsDimensions(columns...)
 	if err != nil {
@@ -71,9 +71,9 @@ func checkColumnsDimensions(se ...series.Series) (nrows, ncols int, err error) {
 		err = fmt.Errorf("no Series given")
 		return
 	}
-	for k, s := range se {
+	for i, s := range se {
 		if s.Err != nil {
-			err = fmt.Errorf("error on series %v: %v", k, s.Err)
+			err = fmt.Errorf("error on series %d: %v", i, s.Err)
 			return
 		}
 		if nrows == -1 {
@@ -122,12 +122,12 @@ func (df DataFrame) print(
 	}
 
 	if df.Err != nil {
-		str = fmt.Sprintf("%v error: %v", class, df.Err)
+		str = fmt.Sprintf("%s error: %v", class, df.Err)
 		return
 	}
 	nrows, ncols := df.Dims()
 	if nrows == 0 || ncols == 0 {
-		str = fmt.Sprintf("Empty %v", class)
+		str = fmt.Sprintf("Empty %s", class)
 		return
 	}
 	idx := make([]int, maxRows)
@@ -145,7 +145,7 @@ func (df DataFrame) print(
 	}
 
 	if showDims {
-		str += fmt.Sprintf("[%vx%v] %v\n\n", nrows, ncols, class)
+		str += fmt.Sprintf("[%dx%d] %s\n\n", nrows, ncols, class)
 	}
 
 	// Add the row numbers
@@ -202,7 +202,7 @@ func (df DataFrame) print(
 		notShowingTypes := typesrow[maxCols:]
 		notShowing = make([]string, len(notShowingNames))
 		for i := 0; i < len(notShowingNames); i++ {
-			notShowing[i] = fmt.Sprintf("%v %v", notShowingNames[i], notShowingTypes[i])
+			notShowing[i] = fmt.Sprintf("%s %s", notShowingNames[i], notShowingTypes[i])
 		}
 	}
 	for i := 0; i < len(records); i++ {
@@ -236,13 +236,13 @@ func (df DataFrame) print(
 			notShownArr = append(notShownArr, notShowing[i:len(notShowing)])
 		}
 		for k, ns := range notShownArr {
-			notShown += fmt.Sprintf("%v", strings.Join(ns, ", "))
+			notShown += fmt.Sprintf("%s", strings.Join(ns, ", "))
 			if k != len(notShownArr)-1 {
 				notShown += ","
 			}
 			notShown += "\n"
 		}
-		str += fmt.Sprintf("\nNot Showing: %v", notShown)
+		str += fmt.Sprintf("\nNot Showing: %s", notShown)
 	}
 	return str
 }
@@ -265,7 +265,7 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	for i, s := range df.columns {
 		columns[i] = s.Set(indexes, newvalues.columns[i])
 		if columns[i].Err != nil {
-			df = DataFrame{Err: fmt.Errorf("setting error on column %v: %v", i, columns[i].Err)}
+			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Err)}
 			return df
 		}
 	}
@@ -512,7 +512,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	for i := 0; i < len(order); i++ {
 		colname := order[i].Colname
 		if df.colIndex(colname) == -1 {
-			return DataFrame{Err: fmt.Errorf("colname %v doesn't exist", colname)}
+			return DataFrame{Err: fmt.Errorf("colname %s doesn't exist", colname)}
 		}
 	}
 
@@ -608,7 +608,7 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		row = f(row)
 		if row.Err != nil {
 			return DataFrame{
-				Err: fmt.Errorf("error applying function on row %v: %v", i, row.Err),
+				Err: fmt.Errorf("error applying function on row %d: %v", i, row.Err),
 			}
 		}
 
@@ -665,6 +665,9 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 type LoadOption func(*loadOptions)
 
 type loadOptions struct {
+	// Specifies which is the default type in case detectTypes is disabled.
+	defaultType series.Type
+
 	// If set, the type of each column will be automatically detected unless
 	// otherwise specified.
 	detectTypes bool
@@ -673,45 +676,52 @@ type loadOptions struct {
 	// names.
 	hasHeader bool
 
+	// The names to set as columns names.
+	names []string
+
+	// Defines which values are going to be considered as NaN when parsing from string.
+	nanValues []string
+
 	// The types of specific columns can be specified via column name.
 	types map[string]series.Type
-
-	// Specifies which is the default type in case detectTypes is disabled.
-	defaultType series.Type
-
-	// Defines which valeus are going to be considered as NaN when parsing from string
-	nanValues []string
 }
 
-// DefaultType set the defaultType option for loadOptions.
+// DefaultType sets the defaultType option for loadOptions.
 func DefaultType(t series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.defaultType = t
 	}
 }
 
-// DetectTypes set the detectTypes option for loadOptions.
+// DetectTypes sets the detectTypes option for loadOptions.
 func DetectTypes(b bool) LoadOption {
 	return func(c *loadOptions) {
 		c.detectTypes = b
 	}
 }
 
-// HasHeader set the hasHeader option for loadOptions.
+// HasHeader sets the hasHeader option for loadOptions.
 func HasHeader(b bool) LoadOption {
 	return func(c *loadOptions) {
 		c.hasHeader = b
 	}
 }
 
-// NaNValues set which values are to be parsed as NaN
+// Names sets the names option for loadOptions.
+func Names(names []string) LoadOption {
+	return func(c *loadOptions) {
+		c.names = names
+	}
+}
+
+// NaNValues sets the nanValues option for loadOptions.
 func NaNValues(nanValues []string) LoadOption {
 	return func(c *loadOptions) {
 		c.nanValues = nanValues
 	}
 }
 
-// WithTypes set the types option for loadOptions.
+// WithTypes sets the types option for loadOptions.
 func WithTypes(coltypes map[string]series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.types = coltypes
@@ -868,14 +878,15 @@ func parseType(s string) (series.Type, error) {
 
 // LoadRecords creates a new DataFrame based on the given records.
 func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
-	// Load the options
+	// Set the default load options
 	cfg := loadOptions{
-		types:       make(map[string]series.Type),
-		detectTypes: true,
 		defaultType: series.String,
+		detectTypes: true,
 		hasHeader:   true,
 		nanValues:   []string{"NA", "NaN", "<nil>"},
 	}
+
+	// Set any custom load options
 	for _, option := range options {
 		option(&cfg)
 	}
@@ -886,15 +897,23 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	if cfg.hasHeader && len(records) <= 1 {
 		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
 	}
+	if len(cfg.names) > len(records[0]) {
+		return DataFrame{Err: fmt.Errorf("load records: too many column names")}
+	}
 
 	// Extract headers
 	headers := make([]string, len(records[0]))
 	if cfg.hasHeader {
 		headers = records[0]
 		records = records[1:]
-	} else {
+	}
+	for i, name := range cfg.names {
+		headers[len(headers)-len(cfg.names)+i] = name
+	}
+	if !cfg.hasHeader {
 		fixColnames(headers)
 	}
+
 	types := make([]series.Type, len(headers))
 	rawcols := make([][]string, len(headers))
 	for i, colname := range headers {
@@ -1144,7 +1163,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		iKeysB = append(iKeysB, j)
 	}
 	if len(errorArr) != 0 {
-		return DataFrame{Err: fmt.Errorf("%v", strings.Join(errorArr, "\n"))}
+		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
 	}
 
 	aCols := df.columns
@@ -1638,10 +1657,10 @@ func fixColnames(colnames []string) {
 	// Autofill missing column names
 	counter := 0
 	for _, i := range missingnames {
-		proposedName := fmt.Sprintf("X%v", counter)
+		proposedName := fmt.Sprintf("X%d", counter)
 		for findInStringSlice(proposedName, colnames) >= 0 {
 			counter++
-			proposedName = fmt.Sprintf("X%v", counter)
+			proposedName = fmt.Sprintf("X%d", counter)
 		}
 		colnames[i] = proposedName
 		counter++
@@ -1662,10 +1681,10 @@ func fixColnames(colnames []string) {
 		}
 		counter := 0
 		for _, i := range idx {
-			proposedName := fmt.Sprintf("%v_%v", name, counter)
+			proposedName := fmt.Sprintf("%s_%d", name, counter)
 			for findInStringSlice(proposedName, colnames) >= 0 {
 				counter++
-				proposedName = fmt.Sprintf("%v_%v", name, counter)
+				proposedName = fmt.Sprintf("%s_%d", name, counter)
 			}
 			colnames[i] = proposedName
 			counter++
@@ -1703,7 +1722,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		s := indexes.(string)
 		i := findInStringSlice(s, colnames)
 		if i < 0 {
-			return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+			return nil, fmt.Errorf("can't select columns: column name \"%s\" not found", s)
 		}
 		idx = append(idx, i)
 	case []string:
@@ -1711,7 +1730,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		for _, s := range xs {
 			i := findInStringSlice(s, colnames)
 			if i < 0 {
-				return nil, fmt.Errorf("can't select columns: column name \"%v\" not found", s)
+				return nil, fmt.Errorf("can't select columns: column name \"%s\" not found", s)
 			}
 			idx = append(idx, i)
 		}
