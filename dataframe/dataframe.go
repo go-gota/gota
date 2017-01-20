@@ -765,14 +765,15 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 		return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from <nil> value")}
 	}
 
-	// Load the options
+	// Set the default load options
 	cfg := loadOptions{
-		types:       make(map[string]series.Type),
-		detectTypes: true,
 		defaultType: series.String,
+		detectTypes: true,
 		hasHeader:   true,
 		nanValues:   []string{"NA", "NaN", "<nil>"},
 	}
+
+	// Set any custom load options
 	for _, option := range options {
 		option(&cfg)
 	}
@@ -843,11 +844,13 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 			for i := 0; i < val.Len(); i++ {
 				fieldValue := val.Index(i).Field(j)
 				elements[i] = fieldValue.Interface()
+
 				// Handle `nanValues` option
-				if str := fmt.Sprint(elements[i]); findInStringSlice(str, cfg.nanValues) != -1 {
+				if findInStringSlice(fmt.Sprint(elements[i]), cfg.nanValues) != -1 {
 					elements[i] = nil
 				}
 			}
+
 			// Handle `hasHeader` option
 			if !cfg.hasHeader {
 				tmp := make([]interface{}, 1)
@@ -897,8 +900,11 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	if cfg.hasHeader && len(records) <= 1 {
 		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
 	}
-	if len(cfg.names) > len(records[0]) {
-		return DataFrame{Err: fmt.Errorf("load records: too many column names")}
+	if cfg.names != nil && len(cfg.names) != len(records[0]) {
+		if len(cfg.names) > len(records[0]) {
+			return DataFrame{Err: fmt.Errorf("load records: too many column names")}
+		}
+		return DataFrame{Err: fmt.Errorf("load records: not enough column names")}
 	}
 
 	// Extract headers
@@ -907,11 +913,8 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		headers = records[0]
 		records = records[1:]
 	}
-	for i, name := range cfg.names {
-		headers[len(headers)-len(cfg.names)+i] = name
-	}
-	if !cfg.hasHeader {
-		fixColnames(headers)
+	if cfg.names != nil {
+		headers = cfg.names
 	}
 
 	types := make([]series.Type, len(headers))
@@ -953,6 +956,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		ncols:   ncols,
 		nrows:   nrows,
 	}
+
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
@@ -1055,12 +1059,42 @@ func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	return LoadMaps(m, options...)
 }
 
+// WriteOption is the type used to configure the writing of elements
+type WriteOption func(*writeOptions)
+
+type writeOptions struct {
+	// Specifies whether the header is also written
+	writeHeader bool
+}
+
+// WriteHeader sets the writeHeader option for writeOptions.
+func WriteHeader(b bool) WriteOption {
+	return func(c *writeOptions) {
+		c.writeHeader = b
+	}
+}
+
 // WriteCSV writes the DataFrame to the given io.Writer as a CSV file.
-func (df DataFrame) WriteCSV(w io.Writer) error {
+func (df DataFrame) WriteCSV(w io.Writer, options ...WriteOption) error {
 	if df.Err != nil {
 		return df.Err
 	}
+
+	// Set the default write options
+	cfg := writeOptions{
+		writeHeader: true,
+	}
+
+	// Set any custom write options
+	for _, option := range options {
+		option(&cfg)
+	}
+
 	records := df.Records()
+	if !cfg.writeHeader {
+		records = records[1:]
+	}
+
 	return csv.NewWriter(w).WriteAll(records)
 }
 
@@ -1069,8 +1103,7 @@ func (df DataFrame) WriteJSON(w io.Writer) error {
 	if df.Err != nil {
 		return df.Err
 	}
-	m := df.Maps()
-	return json.NewEncoder(w).Encode(m)
+	return json.NewEncoder(w).Encode(df.Maps())
 }
 
 // Getters/Setters for DataFrame fields
@@ -1625,8 +1658,8 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	return maps
 }
 
-// Return the element on row `r` and column `c`. Will panic if the index is out of
-// bounds.
+// Elem returns the element on row `r` and column `c`. Will panic if the index is
+// out of bounds.
 func (df DataFrame) Elem(r, c int) series.Element {
 	return df.columns[c].Elem(r)
 }
@@ -1824,6 +1857,7 @@ func inIntSlice(i int, is []int) bool {
 	return false
 }
 
+// Matrix is an interface which is compatible with the mat64.Matrix interface
 type Matrix interface {
 	Dims() (r, c int)
 	At(i, j int) float64
