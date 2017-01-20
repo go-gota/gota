@@ -1610,7 +1610,7 @@ func (df DataFrame) Maps() []map[string]interface{} {
 // Return the element on row `r` and column `c`. Will panic if the index is out of
 // bounds.
 func (df DataFrame) Elem(r, c int) series.Element {
-	return df.columns[c].Elem(r)
+	return df.columns[c].Elem(r).Copy()
 }
 
 // fixColnames assigns a name to the missing column names and makes it so that the
