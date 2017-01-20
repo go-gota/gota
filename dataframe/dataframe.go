@@ -566,32 +566,31 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	}
 
 	detectType := func(types []series.Type) series.Type {
-		hasFloats := false
-		hasInts := false
-		hasBools := false
-		hasStrings := false
+		var hasStrings, hasFloats, hasInts, hasBools bool
 		for _, t := range types {
 			switch t {
-			case series.Int:
-				hasInts = true
-			case series.Float:
-				hasFloats = true
-			case series.Bool:
-				hasBools = true
 			case series.String:
 				hasStrings = true
+			case series.Float:
+				hasFloats = true
+			case series.Int:
+				hasInts = true
+			case series.Bool:
+				hasBools = true
 			}
 		}
-		if hasStrings {
+		switch {
+		case hasStrings:
 			return series.String
-		} else if hasFloats {
+		case hasFloats:
 			return series.Float
-		} else if hasInts {
+		case hasInts:
 			return series.Int
-		} else if hasBools {
+		case hasBools:
 			return series.Bool
+		default:
+			panic("type not supported")
 		}
-		panic("type not supported")
 	}
 
 	// Detect row type prior to function application
