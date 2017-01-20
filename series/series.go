@@ -134,11 +134,13 @@ func New(values interface{}, t Type, name string) Series {
 			panic(fmt.Sprintf("unknown type %v", t))
 		}
 	}
+
 	if values == nil {
 		preAlloc(1)
 		ret.elements.Elem(0).Set(nil)
 		return ret
 	}
+
 	switch values.(type) {
 	case []string:
 		v := values.([]string)
@@ -192,6 +194,7 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements.Elem(0).Set(val)
 		}
 	}
+
 	return ret
 }
 
