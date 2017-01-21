@@ -29,21 +29,28 @@ type Elements interface {
 // Element is the interface that defines the types of methods to be present for
 // elements of a Series
 type Element interface {
+	// Setter method
 	Set(interface{})
-	Copy() Element // FIXME: Returning interface is a recipe for pain
-	IsNA() bool
-	Type() Type
-	Val() ElementValue // FIXME: Returning interface is a recipe for pain
-	String() string
-	Int() (int, error)
-	Float() float64
-	Bool() (bool, error)
+
+	// Comparation methods
 	Eq(Element) bool
 	Neq(Element) bool
 	Less(Element) bool
 	LessEq(Element) bool
 	Greater(Element) bool
 	GreaterEq(Element) bool
+
+	// Accessor/conversion methods
+	Copy() Element     // FIXME: Returning interface is a recipe for pain
+	Val() ElementValue // FIXME: Returning interface is a recipe for pain
+	String() string
+	Int() (int, error)
+	Float() float64
+	Bool() (bool, error)
+
+	// Information methods
+	IsNA() bool
+	Type() Type
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
