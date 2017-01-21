@@ -111,10 +111,6 @@ func (e floatElement) Bool() (bool, error) {
 	return false, fmt.Errorf("can't convert Float \"%v\" to bool", e.e)
 }
 
-func (e floatElement) Addr() string {
-	return fmt.Sprint(&e)
-}
-
 func (e floatElement) Eq(elem Element) bool {
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {

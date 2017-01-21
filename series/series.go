@@ -38,7 +38,6 @@ type Element interface {
 	Int() (int, error)
 	Float() float64
 	Bool() (bool, error)
-	Addr() string
 	Eq(Element) bool
 	Neq(Element) bool
 	Less(Element) bool
@@ -558,17 +557,6 @@ func (s Series) Val(i int) interface{} {
 // index is out of bounds.
 func (s Series) Elem(i int) Element {
 	return s.elements.Elem(i)
-}
-
-// Addr returns the string representation of the memory address that store the
-// values of a given Series.
-func (s Series) Addr() []string {
-	ret := make([]string, s.Len())
-	for i := 0; i < s.Len(); i++ {
-		e := s.elements.Elem(i)
-		ret[i] = e.Addr()
-	}
-	return ret
 }
 
 // parseIndexes will parse the given indexes for a given series of length `l`. No

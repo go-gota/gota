@@ -10,35 +10,6 @@ import (
 	"github.com/kniren/gota/series"
 )
 
-//func checkAddr(addra, addrb []string) error {
-//for i := 0; i < len(addra); i++ {
-//for j := 0; j < len(addrb); j++ {
-//if addra[i] == "<nil>" || addrb[j] == "<nil>" {
-//continue
-//}
-//if addra[i] == addrb[j] {
-//return fmt.Errorf("found same address on\nA:%v\nB:%v", i, j)
-//}
-//}
-//}
-//return nil
-//}
-
-//func checkAddrDf(a, b DataFrame) error {
-//var addra []string
-//for _, s := range a.columns {
-//addra = append(addra, s.Addr()...)
-//}
-//var addrb []string
-//for _, s := range b.columns {
-//addrb = append(addrb, s.Addr()...)
-//}
-//if err := checkAddr(addra, addrb); err != nil {
-//return fmt.Errorf("Error:%v\nA:%v\nB:%v", err, addra, addrb)
-//}
-//return nil
-//}
-
 func TestDataFrame_New(t *testing.T) {
 	series := []series.Series{
 		series.Strings([]int{1, 2, 3, 4, 5}),
@@ -59,20 +30,6 @@ func TestDataFrame_New(t *testing.T) {
 			expected, received,
 		)
 	}
-
-	// Check that the memory addresses of the original series and the series
-	// inside the DataFrame are different
-	var addra []string
-	for _, s := range series {
-		addra = append(addra, s.Addr()...)
-	}
-	var addrb []string
-	for _, s := range d.columns {
-		addrb = append(addrb, s.Addr()...)
-	}
-	//if err := checkAddr(addra, addrb); err != nil {
-	//t.Errorf("Error:%v\nA:%v\nB:%v", err, addra, addrb)
-	//}
 }
 
 func TestDataFrame_Copy(t *testing.T) {

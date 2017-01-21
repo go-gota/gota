@@ -126,10 +126,6 @@ func (e boolElement) Bool() (bool, error) {
 	return bool(e.e), nil
 }
 
-func (e boolElement) Addr() string {
-	return fmt.Sprint(&e)
-}
-
 func (e boolElement) Eq(elem Element) bool {
 	b, err := elem.Bool()
 	if err != nil || e.IsNA() {

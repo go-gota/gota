@@ -104,10 +104,6 @@ func (e stringElement) Bool() (bool, error) {
 	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
 }
 
-func (e stringElement) Addr() string {
-	return fmt.Sprint(&e)
-}
-
 func (e stringElement) Eq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
 		return false
