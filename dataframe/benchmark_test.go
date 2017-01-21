@@ -41,6 +41,13 @@ func generateSeries(n, rep int) (data []series.Series) {
 	return
 }
 
+func generateIntsN(n, k int) (data []int) {
+	for i := 0; i < n; i++ {
+		data = append(data, rand.Intn(k))
+	}
+	return
+}
+
 func BenchmarkNew(b *testing.B) {
 	table := []struct {
 		name string
@@ -237,9 +244,24 @@ func BenchmarkDataFrame_Subset(b *testing.B) {
 	}
 }
 
-func generateIntsN(n, k int) (data []int) {
-	for i := 0; i < n; i++ {
-		data = append(data, rand.Intn(k))
+func BenchmarkDataFrame_Elem(b *testing.B) {
+	data := dataframe.New(generateSeries(100000, 5)...)
+	table := []struct {
+		name string
+		data dataframe.DataFrame
+	}{
+		{
+			"100000x20_ALL",
+			data,
+		},
 	}
-	return
+	for _, test := range table {
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				for k := 0; k < 100000; k++ {
+					test.data.Elem(k, 0)
+				}
+			}
+		})
+	}
 }
