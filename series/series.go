@@ -545,20 +545,15 @@ func (s Series) Str() string {
 	return strings.Join(ret, "\n")
 }
 
-// Val returns the value of a series for the given index
-func (s Series) Val(i int) (interface{}, error) {
-	if i >= s.Len() || i < 0 {
-		return nil, fmt.Errorf("index out of bounds")
-	}
-	return s.elements.Elem(i).Val(), nil
+// Val returns the value of a series for the given index. Will panic if the index
+// is out of bounds.
+func (s Series) Val(i int) interface{} {
+	return s.elements.Elem(i).Val()
 }
 
-// Elem returns the element of a series for the given index or nil if the index is
-// out of bounds
+// Elem returns the element of a series for the given index. Will panic if the
+// index is out of bounds.
 func (s Series) Elem(i int) Element {
-	if i >= s.Len() || i < 0 {
-		return nil
-	}
 	return s.elements.Elem(i)
 }
 
@@ -573,6 +568,8 @@ func (s Series) Addr() []string {
 	return ret
 }
 
+// parseIndexes will parse the given indexes for a given series of length `l`. No
+// out of bounds checks is performed.
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
 	switch indexes.(type) {
@@ -612,11 +609,6 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		}
 	default:
 		return nil, fmt.Errorf("indexing error: unknown indexing mode")
-	}
-	for i := 0; i < len(idx); i++ {
-		if idx[i] < 0 || idx[i] > l {
-			return nil, fmt.Errorf("indexing error: out of bounds")
-		}
 	}
 	return idx, nil
 }

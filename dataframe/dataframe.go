@@ -1108,7 +1108,7 @@ func (df DataFrame) Ncol() int {
 	return df.ncols
 }
 
-// Col returns the Series with the given column name contained in the DataFrame.
+// Col returns a copy of the Series with the given column name contained in the DataFrame.
 func (df DataFrame) Col(colname string) series.Series {
 	if df.Err != nil {
 		return series.Series{Err: df.Err}
@@ -1599,7 +1599,7 @@ func (df DataFrame) Maps() []map[string]interface{} {
 	for i := 0; i < df.nrows; i++ {
 		m := make(map[string]interface{})
 		for k, v := range colnames {
-			val, _ := df.columns[k].Val(i) // Ignoring the error as the index should not be out of bounds
+			val := df.columns[k].Val(i)
 			m[v] = val
 		}
 		maps[i] = m
@@ -1610,7 +1610,7 @@ func (df DataFrame) Maps() []map[string]interface{} {
 // Return the element on row `r` and column `c`. Will panic if the index is out of
 // bounds.
 func (df DataFrame) Elem(r, c int) series.Element {
-	return df.columns[c].Elem(r).Copy()
+	return df.columns[c].Elem(r)
 }
 
 // fixColnames assigns a name to the missing column names and makes it so that the
