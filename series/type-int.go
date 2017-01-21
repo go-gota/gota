@@ -58,7 +58,7 @@ func (e *intElement) Set(value interface{}) {
 }
 
 func (e intElement) Copy() Element {
-	if e.nan {
+	if e.IsNA() {
 		return &intElement{0, true}
 	}
 	return &intElement{e.e, false}
@@ -83,7 +83,7 @@ func (e intElement) Val() ElementValue {
 }
 
 func (e intElement) String() string {
-	if e.nan {
+	if e.IsNA() {
 		return "NaN"
 	}
 	return fmt.Sprint(e.e)

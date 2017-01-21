@@ -46,7 +46,7 @@ func (e *floatElement) Set(value interface{}) {
 }
 
 func (e floatElement) Copy() Element {
-	if e.nan {
+	if e.IsNA() {
 		return &floatElement{0.0, true}
 	}
 	return &floatElement{e.e, false}
@@ -71,7 +71,7 @@ func (e floatElement) Val() ElementValue {
 }
 
 func (e floatElement) String() string {
-	if e.nan {
+	if e.IsNA() {
 		return "NaN"
 	}
 	return fmt.Sprintf("%f", e.e)

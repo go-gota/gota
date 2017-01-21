@@ -65,7 +65,7 @@ func (e *boolElement) Set(value interface{}) {
 }
 
 func (e boolElement) Copy() Element {
-	if e.nan {
+	if e.IsNA() {
 		return &boolElement{false, true}
 	}
 	return &boolElement{e.e, false}
@@ -90,7 +90,7 @@ func (e boolElement) Val() ElementValue {
 }
 
 func (e boolElement) String() string {
-	if e.nan {
+	if e.IsNA() {
 		return "NaN"
 	}
 	if e.e {
