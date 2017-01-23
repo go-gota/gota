@@ -140,25 +140,27 @@ func TestDataFrame_Subset(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Subset(test.indexes)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+
+	for i, tc := range table {
+		b := a.Subset(tc.indexes)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -255,25 +257,27 @@ func TestDataFrame_Select(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Select(test.indexes)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+
+	for i, tc := range table {
+		b := a.Select(tc.indexes)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -317,25 +321,26 @@ func TestDataFrame_Rename(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Rename(test.newname, test.oldname)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Rename(tc.newname, tc.oldname)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -390,25 +395,26 @@ func TestDataFrame_CBind(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.CBind(test.dfb)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.CBind(tc.dfb)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -448,25 +454,26 @@ func TestDataFrame_RBind(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.RBind(test.dfb)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.RBind(tc.dfb)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -528,25 +535,26 @@ func TestDataFrame_Mutate(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Mutate(test.s)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Mutate(tc.s)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -593,35 +601,37 @@ func TestDataFrame_Filter(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Filter(test.filters...)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Filter(tc.filters...)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
 
 func TestLoadRecords(t *testing.T) {
 	table := []struct {
-		b     DataFrame
+		df    DataFrame
 		expDf DataFrame
+		err   bool
 	}{
-		{
+		{ // Test: 0
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D"},
@@ -635,8 +645,9 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]float64{0, 0.5}, series.Float, "D"),
 			),
+			false,
 		},
-		{
+		{ // Test: 1
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D"},
@@ -653,8 +664,9 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.String, "C"),
 				series.New([]string{"0", "0.5"}, series.String, "D"),
 			),
+			false,
 		},
-		{
+		{ // Test: 2
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D"},
@@ -671,8 +683,9 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]string{"C", "true", "true"}, series.String, "X2"),
 				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
+			false,
 		},
-		{
+		{ // Test: 3
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D"},
@@ -693,8 +706,9 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.String, "C"),
 				series.New([]string{"0", "0.5"}, series.String, "D"),
 			),
+			false,
 		},
-		{
+		{ // Test: 4
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D"},
@@ -714,34 +728,97 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]string{"0", "0.5"}, series.Float, "D"),
 			),
+			false,
+		},
+		{ // Test: 5
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				HasHeader(true),
+				Names("MyA", "MyB", "MyC", "MyD"),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "MyA"),
+				series.New([]int{1, 2}, series.Int, "MyB"),
+				series.New([]bool{true, true}, series.Bool, "MyC"),
+				series.New([]string{"0", "0.5"}, series.Float, "MyD"),
+			),
+			false,
+		},
+		{ // Test: 6
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				HasHeader(false),
+				Names("MyA", "MyB", "MyC", "MyD"),
+			),
+			New(
+				series.New([]string{"A", "a", "b"}, series.String, "MyA"),
+				series.New([]string{"B", "1", "2"}, series.String, "MyB"),
+				series.New([]string{"C", "true", "true"}, series.String, "MyC"),
+				series.New([]string{"D", "0", "0.5"}, series.String, "MyD"),
+			),
+			false,
+		},
+		{ // Test: 7
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				HasHeader(false),
+				Names("MyA", "MyB", "MyC"),
+			),
+			DataFrame{},
+			true,
+		},
+		{ // Test: 8
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"b", "2", "true", "0.5"},
+				},
+				HasHeader(false),
+				Names("MyA", "MyB", "MyC", "MyD", "MyE"),
+			),
+			DataFrame{},
+			true,
 		},
 	}
-	for testnum, test := range table {
-		b := test.b
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+
+	for i, tc := range table {
+		if tc.err != (tc.df.Err != nil) {
+			t.Errorf("Test: %d\nError: %v", i, tc.df.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), tc.df.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), tc.df.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), tc.df.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), tc.df.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), tc.df.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), tc.df.Records())
 		}
 	}
 }
 
 func TestLoadMaps(t *testing.T) {
 	table := []struct {
-		b     DataFrame
+		df    DataFrame
 		expDf DataFrame
 	}{
-		{
+		{ // Test: 0
 			LoadMaps(
 				[]map[string]interface{}{
 					map[string]interface{}{
@@ -765,7 +842,7 @@ func TestLoadMaps(t *testing.T) {
 				series.New([]float64{0, 0.5}, series.Float, "D"),
 			),
 		},
-		{
+		{ // Test: 1
 			LoadMaps(
 				[]map[string]interface{}{
 					map[string]interface{}{
@@ -792,7 +869,7 @@ func TestLoadMaps(t *testing.T) {
 				series.New([]string{"0", "0.5"}, series.String, "D"),
 			),
 		},
-		{
+		{ // Test: 2
 			LoadMaps(
 				[]map[string]interface{}{
 					map[string]interface{}{
@@ -819,7 +896,7 @@ func TestLoadMaps(t *testing.T) {
 				series.New([]string{"D", "0", "0.5"}, series.String, "X3"),
 			),
 		},
-		{
+		{ // Test: 3
 			LoadMaps(
 				[]map[string]interface{}{
 					map[string]interface{}{
@@ -850,7 +927,7 @@ func TestLoadMaps(t *testing.T) {
 				series.New([]string{"0", "0.5"}, series.String, "D"),
 			),
 		},
-		{
+		{ // Test: 4
 			LoadMaps(
 				[]map[string]interface{}{
 					map[string]interface{}{
@@ -881,22 +958,22 @@ func TestLoadMaps(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := test.b
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+
+	for i, tc := range table {
+		if tc.df.Err != nil {
+			t.Errorf("Test: %d\nError: %v", i, tc.df.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), tc.df.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), tc.df.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), tc.df.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), tc.df.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), tc.df.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), tc.df.Records())
 		}
 	}
 }
@@ -953,22 +1030,23 @@ func TestReadJSON(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		c := ReadJSON(strings.NewReader(test.jsonStr))
-		if err := c.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		c := ReadJSON(strings.NewReader(tc.jsonStr))
+
+		if c.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, c.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), c.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), c.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), c.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), c.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), c.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), c.Records())
 		}
 	}
 }
@@ -1049,22 +1127,23 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		c := a.InnerJoin(b, test.keys...)
+	for i, tc := range table {
+		c := a.InnerJoin(b, tc.keys...)
+
 		if err := c.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), c.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), c.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), c.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), c.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), c.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), c.Records())
 		}
 	}
 }
@@ -1125,22 +1204,23 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		c := a.LeftJoin(b, test.keys...)
+	for i, tc := range table {
+		c := a.LeftJoin(b, tc.keys...)
+
 		if err := c.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), c.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), c.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), c.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), c.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), c.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), c.Records())
 		}
 	}
 }
@@ -1201,22 +1281,23 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		c := a.RightJoin(b, test.keys...)
+	for i, tc := range table {
+		c := a.RightJoin(b, tc.keys...)
+
 		if err := c.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), c.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), c.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), c.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), c.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), c.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), c.Records())
 		}
 	}
 }
@@ -1282,22 +1363,23 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		c := a.OuterJoin(b, test.keys...)
+	for i, tc := range table {
+		c := a.OuterJoin(b, tc.keys...)
+
 		if err := c.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), c.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), c.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), c.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), c.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), c.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), c.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), c.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), c.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), c.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), c.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), c.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), c.Records())
 		}
 	}
 }
@@ -1393,26 +1475,69 @@ func TestDataFrame_Maps(t *testing.T) {
 }
 
 func TestDataFrame_WriteCSV(t *testing.T) {
-	a := LoadRecords(
-		[][]string{
-			{"COL.1", "COL.2", "COL.3"},
-			{"NaN", "1", "3"},
-			{"b", "2", "2"},
-			{"c", "3", "1"},
-		},
-	)
-	buf := new(bytes.Buffer)
-	err := a.WriteCSV(buf)
-	if err != nil {
-		t.Errorf("Expected success, got error: %v", err)
-	}
-	expected := `COL.1,COL.2,COL.3
+	table := []struct {
+		df       DataFrame
+		options  []WriteOption
+		expected string
+	}{
+		{ // Test: 0
+			LoadRecords(
+				[][]string{
+					{"COL.1", "COL.2", "COL.3"},
+					{"NaN", "1", "3"},
+					{"b", "2", "2"},
+					{"c", "3", "1"},
+				},
+			),
+			nil,
+			`COL.1,COL.2,COL.3
 NaN,1,3
 b,2,2
 c,3,1
-`
-	if expected != buf.String() {
-		t.Errorf("\nexpected: %v\nreceived: %v", expected, buf.String())
+`,
+		},
+		{ // Test: 1
+			LoadRecords(
+				[][]string{
+					{"COL.1", "COL.2", "COL.3"},
+					{"NaN", "1", "3"},
+					{"b", "2", "2"},
+					{"c", "3", "1"},
+				},
+			),
+			nil,
+			`COL.1,COL.2,COL.3
+NaN,1,3
+b,2,2
+c,3,1
+`,
+		},
+		{ // Test: 2
+			LoadRecords(
+				[][]string{
+					{"COL.1", "COL.2", "COL.3"},
+					{"NaN", "1", "3"},
+					{"b", "2", "2"},
+					{"c", "3", "1"},
+				},
+			),
+			[]WriteOption{WriteHeader(false)},
+			`NaN,1,3
+b,2,2
+c,3,1
+`,
+		},
+	}
+
+	for i, tc := range table {
+		buf := new(bytes.Buffer)
+		err := tc.df.WriteCSV(buf, tc.options...)
+		if err != nil {
+			t.Errorf("Test: %d\nError: %v", i, err)
+		}
+		if tc.expected != buf.String() {
+			t.Errorf("Test: %d\nExpected: %v\nreceived: %v", i, tc.expected, buf.String())
+		}
 	}
 }
 
@@ -1621,23 +1746,24 @@ func TestDataFrame_Set(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
+	for i, tc := range table {
 		a := a.Copy()
-		b := a.Set(test.indexes, test.newvalues)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+		b := a.Set(tc.indexes, tc.newvalues)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -1777,25 +1903,26 @@ func TestDataFrame_Arrange(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Arrange(test.colnames...)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Arrange(tc.colnames...)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -1853,25 +1980,26 @@ func TestDataFrame_Capply(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Capply(test.fun)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Capply(tc.fun)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -1961,25 +2089,26 @@ func TestDataFrame_Rapply(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := a.Rapply(test.fun)
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := a.Rapply(tc.fun)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		//if err := checkAddrDf(a, b); err != nil {
 		//t.Error(err)
 		//}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -2017,22 +2146,23 @@ func TestLoadMatrix(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := LoadMatrix(mockMatrix{test.b})
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		b := LoadMatrix(mockMatrix{tc.b})
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Different values:\nA:%v\nB:%v", test.expDf.Records(), b.Records())
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
 		}
 	}
 }
@@ -2146,22 +2276,21 @@ func TestLoadStructs(t *testing.T) {
 			),
 		},
 	}
-	for testnum, test := range table {
-		b := test.b
-		if err := b.Err; err != nil {
-			t.Errorf("Test:%v\nError:%v", testnum, err)
+	for i, tc := range table {
+		if tc.b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, tc.b.Err)
 		}
 		// Check that the types are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+		if !reflect.DeepEqual(tc.expDf.Types(), tc.b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), tc.b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
-			t.Errorf("Different colnames:\nA:%v\nB:%v", test.expDf.Names(), b.Names())
+		if !reflect.DeepEqual(tc.expDf.Names(), tc.b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), tc.b.Names())
 		}
 		// Check that the values are the same between both DataFrames
-		if !reflect.DeepEqual(test.expDf.Records(), b.Records()) {
-			t.Errorf("Test: %v: Different values:\nA:%v\nB:%v", testnum, test.expDf, b)
+		if !reflect.DeepEqual(tc.expDf.Records(), tc.b.Records()) {
+			t.Errorf("Test: %d: Different values:\nA:%v\nB:%v", i, tc.expDf, tc.b)
 		}
 	}
 }

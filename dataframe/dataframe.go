@@ -236,7 +236,7 @@ func (df DataFrame) print(
 			notShownArr = append(notShownArr, notShowing[i:len(notShowing)])
 		}
 		for k, ns := range notShownArr {
-			notShown += fmt.Sprintf("%s", strings.Join(ns, ", "))
+			notShown += strings.Join(ns, ", ")
 			if k != len(notShownArr)-1 {
 				notShown += ","
 			}
@@ -708,7 +708,7 @@ func HasHeader(b bool) LoadOption {
 }
 
 // Names sets the names option for loadOptions.
-func Names(names []string) LoadOption {
+func Names(names ...string) LoadOption {
 	return func(c *loadOptions) {
 		c.names = names
 	}
