@@ -345,16 +345,14 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 		return df
 	}
 	// Check that colname exist on dataframe
-	var copy DataFrame
 	colnames := df.Names()
-	if idx := findInStringSlice(oldname, colnames); idx >= 0 {
-		copy = df.Copy()
-		copy.columns[idx].Name = newname
-	} else {
-		return DataFrame{
-			Err: fmt.Errorf("rename: can't find column name"),
-		}
+	idx := findInStringSlice(oldname, colnames)
+	if idx == -1 {
+		return DataFrame{Err: fmt.Errorf("rename: can't find column name")}
 	}
+
+	copy := df.Copy()
+	copy.columns[idx].Name = newname
 	return copy
 }
 
@@ -382,9 +380,10 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	expandedSeries := make([]series.Series, df.ncols)
 	for k, v := range df.Names() {
 		idx := findInStringSlice(v, dfb.Names())
-		if idx < 0 {
+		if idx == -1 {
 			return DataFrame{Err: fmt.Errorf("rbind: column names are not compatible")}
 		}
+
 		originalSeries := df.columns[k]
 		addedSeries := dfb.columns[idx]
 		newSeries := originalSeries.Concat(addedSeries)
@@ -402,19 +401,15 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	colname := s.Name
 	if s.Len() != df.nrows {
-		return DataFrame{
-			Err: fmt.Errorf("mutate: wrong dimensions"),
-		}
+		return DataFrame{Err: fmt.Errorf("mutate: wrong dimensions")}
 	}
 	df = df.Copy()
 	// Check that colname exist on dataframe
 	columns := df.columns
-	if idx := findInStringSlice(colname, df.Names()); idx >= 0 {
+	if idx := findInStringSlice(s.Name, df.Names()); idx != -1 {
 		columns[idx] = s
 	} else {
-		s.Name = colname
 		columns = append(columns, s)
 	}
 	nrows, ncols, err := checkColumnsDimensions(columns...)
@@ -503,9 +498,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 		return df
 	}
 	if order == nil || len(order) == 0 {
-		return DataFrame{
-			Err: fmt.Errorf("rename: no arguments"),
-		}
+		return DataFrame{Err: fmt.Errorf("rename: no arguments")}
 	}
 
 	// Check that all colnames exist before starting to sort
@@ -607,15 +600,11 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		}
 		row = f(row)
 		if row.Err != nil {
-			return DataFrame{
-				Err: fmt.Errorf("error applying function on row %d: %v", i, row.Err),
-			}
+			return DataFrame{Err: fmt.Errorf("error applying function on row %d: %v", i, row.Err)}
 		}
 
 		if rowlen != -1 && rowlen != row.Len() {
-			return DataFrame{
-				Err: fmt.Errorf("error applying function: rows have different lengths"),
-			}
+			return DataFrame{Err: fmt.Errorf("error applying function: rows have different lengths")}
 		}
 		rowlen = row.Len()
 
@@ -782,7 +771,8 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 	switch tpy.Kind() {
 	case reflect.Slice:
 		if tpy.Elem().Kind() != reflect.Struct {
-			return DataFrame{Err: fmt.Errorf("load: type %s (%s %s) is not supported, must be []struct", tpy.Name(), tpy.Elem().Kind(), tpy.Kind())}
+			return DataFrame{Err: fmt.Errorf(
+				"load: type %s (%s %s) is not supported, must be []struct", tpy.Name(), tpy.Elem().Kind(), tpy.Kind())}
 		}
 		if val.Len() == 0 {
 			return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from empty slice")}
@@ -806,9 +796,7 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 			}
 			tagOpts := strings.Split(fieldTags, ",")
 			if len(tagOpts) > 2 {
-				return DataFrame{
-					Err: fmt.Errorf("malformed struct tag on field %s: %s", fieldName, fieldTags),
-				}
+				return DataFrame{Err: fmt.Errorf("malformed struct tag on field %s: %s", fieldName, fieldTags)}
 			}
 			if len(tagOpts) > 0 {
 				if name := strings.TrimSpace(tagOpts[0]); name != "" {
@@ -862,18 +850,19 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 		}
 		return New(columns...)
 	}
-	return DataFrame{Err: fmt.Errorf("load: type %s (%s) is not supported, must be []struct", tpy.Name(), tpy.Kind())}
+	return DataFrame{Err: fmt.Errorf(
+		"load: type %s (%s) is not supported, must be []struct", tpy.Name(), tpy.Kind())}
 }
 
 func parseType(s string) (series.Type, error) {
-	switch {
-	case s == "float" || s == "float64" || s == "float32":
+	switch s {
+	case "float", "float64", "float32":
 		return series.Float, nil
-	case s == "int" || s == "int32" || s == "int16" || s == "int8":
+	case "int", "int64", "int32", "int16", "int8":
 		return series.Int, nil
-	case s == "string":
+	case "string":
 		return series.String, nil
-	case s == "bool":
+	case "bool":
 		return series.Bool, nil
 	}
 	return "", fmt.Errorf("type (%s) is not supported", s)
@@ -969,9 +958,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 // that every map on the array represents a row of observations.
 func LoadMaps(maps []map[string]interface{}, options ...LoadOption) DataFrame {
 	if len(maps) == 0 {
-		return DataFrame{
-			Err: fmt.Errorf("load maps: empty array"),
-		}
+		return DataFrame{Err: fmt.Errorf("load maps: empty array")}
 	}
 	inStrSlice := func(i string, s []string) bool {
 		for _, v := range s {
@@ -1129,13 +1116,12 @@ func (df DataFrame) Types() []series.Type {
 
 // SetNames changes the column names of a DataFrame to the ones passed as an
 // argument.
-func (df DataFrame) SetNames(colnames []string) error {
+func (df DataFrame) SetNames(colnames ...string) error {
 	if df.Err != nil {
 		return df.Err
 	}
 	if len(colnames) != df.ncols {
-		err := fmt.Errorf("setting names: wrong dimensions")
-		return err
+		return fmt.Errorf("setting names: wrong dimensions")
 	}
 	for k, s := range colnames {
 		df.columns[k].Name = s
@@ -1144,9 +1130,8 @@ func (df DataFrame) SetNames(colnames []string) error {
 }
 
 // Dims retrieves the dimensions of a DataFrame.
-func (df DataFrame) Dims() (r, c int) {
-	r, c = df.Nrow(), df.Ncol()
-	return
+func (df DataFrame) Dims() (int, int) {
+	return df.Nrow(), df.Ncol()
 }
 
 // Nrow returns the number of rows on a DataFrame.
@@ -1167,9 +1152,7 @@ func (df DataFrame) Col(colname string) series.Series {
 	// Check that colname exist on dataframe
 	idx := findInStringSlice(colname, df.Names())
 	if idx < 0 {
-		return series.Series{
-			Err: fmt.Errorf("unknown column name"),
-		}
+		return series.Series{Err: fmt.Errorf("unknown column name")}
 	}
 	return df.columns[idx].Copy()
 }
@@ -1180,18 +1163,18 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
-	errorArr := []string{}
 	var iKeysA []int
 	var iKeysB []int
+	var errorArr []string
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -1259,18 +1242,18 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
-	errorArr := []string{}
 	var iKeysA []int
 	var iKeysB []int
+	var errorArr []string
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -1357,18 +1340,18 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
-	errorArr := []string{}
 	var iKeysA []int
 	var iKeysB []int
+	var errorArr []string
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -1465,18 +1448,18 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
 	// Check that we have all given keys in both DataFrames
-	errorArr := []string{}
 	var iKeysA []int
 	var iKeysB []int
+	var errorArr []string
 	for _, key := range keys {
 		i := df.colIndex(key)
 		if i < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
 		j := b.colIndex(key)
 		if j < 0 {
-			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
+			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
 		iKeysB = append(iKeysB, j)
 	}
@@ -1691,7 +1674,7 @@ func fixColnames(colnames []string) {
 	counter := 0
 	for _, i := range missingnames {
 		proposedName := fmt.Sprintf("X%d", counter)
-		for findInStringSlice(proposedName, colnames) >= 0 {
+		for findInStringSlice(proposedName, colnames) != -1 {
 			counter++
 			proposedName = fmt.Sprintf("X%d", counter)
 		}
@@ -1715,7 +1698,7 @@ func fixColnames(colnames []string) {
 		counter := 0
 		for _, i := range idx {
 			proposedName := fmt.Sprintf("%s_%d", name, counter)
-			for findInStringSlice(proposedName, colnames) >= 0 {
+			for findInStringSlice(proposedName, colnames) != -1 {
 				counter++
 				proposedName = fmt.Sprintf("%s_%d", name, counter)
 			}
@@ -1755,7 +1738,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		s := indexes.(string)
 		i := findInStringSlice(s, colnames)
 		if i < 0 {
-			return nil, fmt.Errorf("can't select columns: column name \"%s\" not found", s)
+			return nil, fmt.Errorf("can't select columns: column name %q not found", s)
 		}
 		idx = append(idx, i)
 	case []string:
@@ -1763,7 +1746,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		for _, s := range xs {
 			i := findInStringSlice(s, colnames)
 			if i < 0 {
-				return nil, fmt.Errorf("can't select columns: column name \"%s\" not found", s)
+				return nil, fmt.Errorf("can't select columns: column name %q not found", s)
 			}
 			idx = append(idx, i)
 		}
