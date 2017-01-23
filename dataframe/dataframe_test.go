@@ -1055,13 +1055,14 @@ func TestDataFrame_SetNames(t *testing.T) {
 	a := New(
 		series.New([]string{"a", "b", "c"}, series.String, "COL.1"),
 		series.New([]int{1, 2, 3}, series.Int, "COL.2"),
-		series.New([]float64{3, 2, 1}, series.Float, "COL.3"))
-	n := []string{"wot", "tho", "tree"}
-	err := a.SetNames(n)
+		series.New([]float64{3, 2, 1}, series.Float, "COL.3"),
+	)
+
+	err := a.SetNames("wot", "tho", "tree")
 	if err != nil {
 		t.Error("Expected success, got error")
 	}
-	err = a.SetNames([]string{"yaaa"})
+	err = a.SetNames("yaaa")
 	if err == nil {
 		t.Error("Expected error, got success")
 	}
