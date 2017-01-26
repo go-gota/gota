@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/gonum/matrix/mat64"
-	"github.com/kniren/gota/series"
+	"github.com/isuruceanu/gota/series"
 )
 
 func checkAddr(addra, addrb []string) error {

@@ -462,7 +462,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	// Check that all colnames exist before starting to sort
 	for i := 0; i < len(order); i++ {
 		colname := order[i].Colname
-		if df.colIndex(colname) == -1 {
+		if df.ColIndex(colname) == -1 {
 			return DataFrame{Err: fmt.Errorf("colname %v doesn't exist", colname)}
 		}
 	}
@@ -485,7 +485,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	suborder := origIdx
 	for i := len(order) - 1; i >= 0; i-- {
 		colname := order[i].Colname
-		idx := df.colIndex(colname)
+		idx := df.ColIndex(colname)
 		nextSeries := df.columns[idx].Subset(suborder)
 		suborder = nextSeries.Order(order[i].Reverse)
 		swapOrigIdx(suborder)
@@ -514,35 +514,6 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	if df.Err != nil {
 		return df
-	}
-
-	detectType := func(types []series.Type) series.Type {
-		hasFloats := false
-		hasInts := false
-		hasBools := false
-		hasStrings := false
-		for _, t := range types {
-			switch t {
-			case series.Int:
-				hasInts = true
-			case series.Float:
-				hasFloats = true
-			case series.Bool:
-				hasBools = true
-			case series.String:
-				hasStrings = true
-			}
-		}
-		if hasStrings {
-			return series.String
-		} else if hasFloats {
-			return series.Float
-		} else if hasInts {
-			return series.Int
-		} else if hasBools {
-			return series.Bool
-		}
-		panic("type not supported")
 	}
 
 	// Detect row type prior to function application
@@ -902,12 +873,12 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.ColIndex(key)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
@@ -981,12 +952,12 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.ColIndex(key)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
@@ -1079,12 +1050,12 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.ColIndex(key)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
@@ -1187,12 +1158,12 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysA []int
 	var iKeysB []int
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.ColIndex(key)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on left DataFrame"))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.ColIndex(key)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprint("can't find key \"", key, "\" on right DataFrame"))
 		}
@@ -1335,9 +1306,9 @@ func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
 	return New(newCols...)
 }
 
-// colIndex returns the index of the column with name `s`. If it fails to find the
+// ColIndex returns the index of the column with name `s`. If it fails to find the
 // column it returns -1 instead.
-func (df DataFrame) colIndex(s string) int {
+func (df DataFrame) ColIndex(s string) int {
 	for k, v := range df.Names() {
 		if v == s {
 			return k
@@ -1598,4 +1569,33 @@ func (m matrix) At(i, j int) float64 {
 
 func (m matrix) T() mat64.Matrix {
 	return mat64.Transpose{Matrix: m}
+}
+
+func detectType(types []series.Type) series.Type {
+	hasFloats := false
+	hasInts := false
+	hasBools := false
+	hasStrings := false
+	for _, t := range types {
+		switch t {
+		case series.Int:
+			hasInts = true
+		case series.Float:
+			hasFloats = true
+		case series.Bool:
+			hasBools = true
+		case series.String:
+			hasStrings = true
+		}
+	}
+	if hasStrings {
+		return series.String
+	} else if hasFloats {
+		return series.Float
+	} else if hasInts {
+		return series.Int
+	} else if hasBools {
+		return series.Bool
+	}
+	panic("type not supported")
 }
