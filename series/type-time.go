@@ -69,9 +69,9 @@ func (e timeElement) String() string {
 
 func (e timeElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, createErr("can't convert NaN to int", "timeElement.Int()")
 	}
-	return 0, fmt.Errorf("can't convert Time to int")
+	return 0, createErr("can't convert Time to int", "timeElement.Int()")
 }
 
 func (e timeElement) Float() float64 {
@@ -80,9 +80,9 @@ func (e timeElement) Float() float64 {
 
 func (e timeElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
+		return false, createErr("can't convert NaN to bool", "timeElement.Bool()")
 	}
-	return false, fmt.Errorf("can't convert Time to bool")
+	return false, createErr("can't convert Time to bool", "timeElement.Bool()")
 }
 
 func (e timeElement) Time() (time.Time, error) {

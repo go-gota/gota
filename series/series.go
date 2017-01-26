@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -274,7 +276,7 @@ func (s Series) Concat(x Series) Series {
 		return s
 	}
 	if err := x.Err; err != nil {
-		s.Err = fmt.Errorf("concat error: argument has errors: %v", err)
+		s.Err = createErr("argument has errors: %s", "s.Concat()", err)
 		return s
 	}
 	y := s.Copy()
@@ -340,7 +342,7 @@ func (s Series) Split(percent float32) Series {
 		return s
 	}
 	if percent < 0 || percent > 1 {
-		return Series{Err: fmt.Errorf("split: percent must be a value between 0 and 1")}
+		return Series{Err: createErr("percent must be a value between 0 and 1", "s.Split()")}
 	}
 	splitAt := int(percent * float32(s.Len()))
 	ret := Series{Name: s.Name, t: s.t}
@@ -371,7 +373,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if err := newvalues.Err; err != nil {
-		s.Err = fmt.Errorf("set error: argument has errors: %v", err)
+		s.Err = createErr("argument has errors: %s", "s.Set()", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -380,12 +382,12 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.Err = fmt.Errorf("set error: dimensions mismatch")
+		s.Err = createErr("dimensions mismatch", "s.Set()")
 		return s
 	}
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.Err = fmt.Errorf("set error: index out of range")
+			s.Err = createErr("index out of range", "s.Set()")
 			return s
 		}
 		s.elements.Elem(i).Set(newvalues.elements.Elem(k))
@@ -435,7 +437,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		case LessEq:
 			ret = a.LessEq(b)
 		default:
-			return false, fmt.Errorf("unknown comparator: %v", c)
+			return false, createErr("unknown comparator: %s", "s.Compare()", c)
 		}
 		return ret, nil
 	}
@@ -483,7 +485,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	// Multiple element comparison
 	if s.Len() != comp.Len() {
 		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
+		s.Err = createErr("length mismatch", "s.Comapre()")
 		return s
 	}
 	for i := 0; i < s.Len(); i++ {
@@ -610,11 +612,17 @@ func (s Series) Len() int {
 
 // String implements the Stringer interface for Series
 func (s Series) String() string {
+	if s.Err != nil {
+		return s.Err.Error()
+	}
 	return fmt.Sprint(s.elements)
 }
 
 // Str prints some extra information about a given series
 func (s Series) Str() string {
+	if s.Err != nil {
+		return s.Err.Error()
+	}
 	var ret []string
 	// If name exists print name
 	if s.Name != "" {
@@ -663,7 +671,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	case []bool:
 		bools := indexes.([]bool)
 		if len(bools) != l {
-			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
+			return nil, createErr("index dimensions mismatch", "series.parseIndexes()")
 		}
 		for i, b := range bools {
 			if b {
@@ -672,11 +680,11 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		}
 	case Series:
 		s := indexes.(Series)
-		if err := s.Err; err != nil {
-			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
+		if s.Err != nil {
+			return nil, createErr("new values has errors: %s", "series.parseIndexes()", s.Err)
 		}
 		if s.HasNaN() {
-			return nil, fmt.Errorf("indexing error: indexes contain NaN")
+			return nil, createErr("indexes contain NaN", "series.parseIndexes()")
 		}
 		switch s.t {
 		case Int:
@@ -684,14 +692,14 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		case Bool:
 			bools, err := s.Bool()
 			if err != nil {
-				return nil, fmt.Errorf("indexing error: %v", err)
+				return nil, createErr("%s", "series.parseIndexes()", err)
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+			return nil, createErr("unknown indexing mode", "series.parseIndexes()")
 		}
 	default:
-		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		return nil, createErr("unknown indexing mode", "series.parseIndexes()")
 	}
 	return idx, nil
 }
@@ -732,3 +740,7 @@ type indexedElements []indexedElement
 func (e indexedElements) Len() int           { return len(e) }
 func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
 func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+
+func createErr(msg, cause string, a ...interface{}) error {
+	return errors.Wrap(fmt.Errorf(msg, a...), cause)
+}
