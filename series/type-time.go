@@ -2,7 +2,6 @@ package series
 
 import (
 	"fmt"
-	"math"
 	"time"
 )
 
@@ -69,20 +68,20 @@ func (e timeElement) String() string {
 
 func (e timeElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("can't convert NaN to int", "timeElement.Int()")
+		return 0, createErr("timeElement.Int()", "can't convert NaN to int")
 	}
-	return 0, createErr("can't convert Time to int", "timeElement.Int()")
+	return int(e.e.Unix()), nil
 }
 
 func (e timeElement) Float() float64 {
-	return math.NaN()
+	return float64(e.e.Unix())
 }
 
 func (e timeElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("can't convert NaN to bool", "timeElement.Bool()")
+		return false, createErr("timeElement.Bool()", "can't convert NaN to bool")
 	}
-	return false, createErr("can't convert Time to bool", "timeElement.Bool()")
+	return false, createErr("timeElement.Bool()", "can't convert Time to bool")
 }
 
 func (e timeElement) Time() (time.Time, error) {

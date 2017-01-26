@@ -276,7 +276,7 @@ func (s Series) Concat(x Series) Series {
 		return s
 	}
 	if err := x.Err; err != nil {
-		s.Err = createErr("argument has errors: %s", "s.Concat()", err)
+		s.Err = createErr("s.Concat()", "argument has errors: %v", err)
 		return s
 	}
 	y := s.Copy()
@@ -342,7 +342,7 @@ func (s Series) Split(percent float32) Series {
 		return s
 	}
 	if percent < 0 || percent > 1 {
-		return Series{Err: createErr("percent must be a value between 0 and 1", "s.Split()")}
+		return Series{Err: createErr("s.Split()", "percent must be a value between 0 and 1")}
 	}
 	splitAt := int(percent * float32(s.Len()))
 	ret := Series{Name: s.Name, t: s.t}
@@ -373,7 +373,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if err := newvalues.Err; err != nil {
-		s.Err = createErr("argument has errors: %s", "s.Set()", err)
+		s.Err = createErr("s.Set()", "argument has errors: %v", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -382,12 +382,12 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.Err = createErr("dimensions mismatch", "s.Set()")
+		s.Err = createErr("s.Set()", "dimensions mismatch")
 		return s
 	}
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.Err = createErr("index out of range", "s.Set()")
+			s.Err = createErr("s.Set()", "index out of range")
 			return s
 		}
 		s.elements.Elem(i).Set(newvalues.elements.Elem(k))
@@ -437,7 +437,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		case LessEq:
 			ret = a.LessEq(b)
 		default:
-			return false, createErr("unknown comparator: %s", "s.Compare()", c)
+			return false, createErr("s.Compare()", "unknown comparator: %s", c)
 		}
 		return ret, nil
 	}
@@ -485,7 +485,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	// Multiple element comparison
 	if s.Len() != comp.Len() {
 		s := s.Empty()
-		s.Err = createErr("length mismatch", "s.Comapre()")
+		s.Err = createErr("s.Comapre()", "length mismatch")
 		return s
 	}
 	for i := 0; i < s.Len(); i++ {
@@ -671,7 +671,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	case []bool:
 		bools := indexes.([]bool)
 		if len(bools) != l {
-			return nil, createErr("index dimensions mismatch", "series.parseIndexes()")
+			return nil, createErr("series.parseIndexes()", "index dimensions mismatch")
 		}
 		for i, b := range bools {
 			if b {
@@ -681,10 +681,10 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	case Series:
 		s := indexes.(Series)
 		if s.Err != nil {
-			return nil, createErr("new values has errors: %s", "series.parseIndexes()", s.Err)
+			return nil, createErr("series.parseIndexes()", "new values has errors: %v", s.Err)
 		}
 		if s.HasNaN() {
-			return nil, createErr("indexes contain NaN", "series.parseIndexes()")
+			return nil, createErr("series.parseIndexes()", "indexes contain NaN")
 		}
 		switch s.t {
 		case Int:
@@ -692,14 +692,14 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		case Bool:
 			bools, err := s.Bool()
 			if err != nil {
-				return nil, createErr("%s", "series.parseIndexes()", err)
+				return nil, createErr("series.parseIndexes()", "%v", err)
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, createErr("unknown indexing mode", "series.parseIndexes()")
+			return nil, createErr("series.parseIndexes()", "unknown indexing mode")
 		}
 	default:
-		return nil, createErr("unknown indexing mode", "series.parseIndexes()")
+		return nil, createErr("series.parseIndexes()", "unknown indexing mode")
 	}
 	return idx, nil
 }
@@ -741,6 +741,6 @@ func (e indexedElements) Len() int           { return len(e) }
 func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
 func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
-func createErr(msg, cause string, a ...interface{}) error {
+func createErr(cause, msg string, a ...interface{}) error {
 	return errors.Wrap(fmt.Errorf(msg, a...), cause)
 }

@@ -2332,10 +2332,10 @@ func TestDataFrame_Split(t *testing.T) {
 			DataFrame{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
 		},
 	}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.df.Split(tt.args.percent); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DataFrame.Split() = %v, want %v", got, tt.want)
+				t.Errorf("Test with index %v | DataFrame.Split() = %v, want %v", i, got, tt.want)
 			}
 		})
 	}

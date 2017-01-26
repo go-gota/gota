@@ -77,7 +77,7 @@ func (e stringElement) String() string {
 
 func (e stringElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("can't convert NaN to int", "stringElement.Int()")
+		return 0, createErr("stringElement.Int()", "can't convert NaN to int")
 	}
 	return strconv.Atoi(e.e)
 }
@@ -95,7 +95,7 @@ func (e stringElement) Float() float64 {
 
 func (e stringElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("can't convert NaN to bool", "stringElement.Bool()")
+		return false, createErr("stringElement.Bool()", "can't convert NaN to bool")
 	}
 	return strconv.ParseBool(e.e)
 }
@@ -103,7 +103,7 @@ func (e stringElement) Bool() (bool, error) {
 func (e stringElement) Time() (time.Time, error) {
 	t, err := time.Parse("01/02/2006", e.e)
 	if err != nil {
-		return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("%s", "stringElement.Time()", err)
+		return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("stringElement.Time()", "%v", err)
 	}
 	return t, nil
 }

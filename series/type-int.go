@@ -92,7 +92,7 @@ func (e intElement) String() string {
 
 func (e intElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("can't convert NaN to int", "intElement.Int()")
+		return 0, createErr("intElement.Int()", "can't convert NaN to int")
 	}
 	return int(e.e), nil
 }
@@ -106,7 +106,7 @@ func (e intElement) Float() float64 {
 
 func (e intElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("can't convert NaN to bool", "intElement.Bool()")
+		return false, createErr("intElement.Bool()", "can't convert NaN to bool")
 	}
 	switch e.e {
 	case 1:
@@ -114,11 +114,11 @@ func (e intElement) Bool() (bool, error) {
 	case 0:
 		return false, nil
 	}
-	return false, createErr("can't convert Int \"%v\" to bool", "intElement.Bool()", e.e)
+	return false, createErr("intElement.Bool()", "can't convert Int \"%v\" to bool", e.e)
 }
 
 func (e intElement) Time() (time.Time, error) {
-	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("can't convert int to time.Time", "intElement.Time()")
+	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("intElement.Time()", "can't convert int to time.Time")
 }
 
 func (e intElement) Addr() string {

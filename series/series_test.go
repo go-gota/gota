@@ -1325,10 +1325,10 @@ func TestSeries_Split(t *testing.T) {
 			Series{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
 		},
 	}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.s.Split(tt.args.percent); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Series.Split() = %v, want %v", got, tt.want)
+				t.Errorf("Test with index %v |Series.Split() = %v, want %v", i, got, tt.want)
 			}
 		})
 	}
@@ -1342,10 +1342,10 @@ func TestSeries_Empty(t *testing.T) {
 	}{
 		{"Series Empty", Series{Name: "test", t: String}, New([]int{}, String, "test")},
 	}
-	for _, tt := range tests {
+	for i, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.s.Empty(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Series.Empty() = %v, want %v", got, tt.want)
+				t.Errorf("Test with index %v |Series.Empty() = %v, want %v", i, got, tt.want)
 			}
 		})
 	}

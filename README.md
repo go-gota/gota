@@ -33,7 +33,7 @@ df := dataframe.New(
 	series.New([]string{"b", "a"}, series.String, "COL.1"),
 	series.New([]int{1, 2}, series.Int, "COL.2"),
 	series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
-    series.New([]time.Time{time.Now(), time.Now().Add(time.Minute), series.Time, "COL.4"})
+	series.New([]time.Time{time.Now(), time.Now().Add(time.Minute), series.Time, "COL.4"}),
 )
 ```
 
@@ -60,7 +60,7 @@ type User struct {
 	Name      string
 	Age       int
 	Accuracy  float64
-    CreatedAt time.Time
+	CreatedAt time.Time
     ignored  bool // ignored since unexported
 }
 users := []User{
