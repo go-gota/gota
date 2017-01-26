@@ -14,7 +14,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/Shixzie/gota/series"
+	"github.com/kniren/gota/series"
 	"github.com/pkg/errors"
 )
 
