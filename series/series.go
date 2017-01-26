@@ -226,7 +226,7 @@ func (s Series) Empty() Series {
 // Append adds new elements to the end of the Series. When using Append, the
 // Series is modified in place.
 func (s *Series) Append(values interface{}) {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return
 	}
 	news := New(values, s.t, s.Name)
@@ -245,7 +245,7 @@ func (s *Series) Append(values interface{}) {
 // Concat concatenates two series together. It will return a new Series with the
 // combined elements of both Series.
 func (s Series) Concat(x Series) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 	if err := x.Err; err != nil {
@@ -259,7 +259,7 @@ func (s Series) Concat(x Series) Series {
 
 // Subset returns a subset of the series based on the given Indexes.
 func (s Series) Subset(indexes Indexes) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -302,10 +302,39 @@ func (s Series) Subset(indexes Indexes) Series {
 	return ret
 }
 
+// Split splits s in two parts, the first part will be asigned to the
+// s this func was called on and the second part will be the returned
+// Series, percent must be a value between 0 and 1.
+func (s Series) Split(percent float32) Series {
+	if s.Err != nil {
+		return s
+	}
+	if percent < 0 || percent > 1 {
+		return Series{Err: fmt.Errorf("split: percent must be a value between 0 and 1")}
+	}
+	splitAt := int(percent * float32(s.Len()))
+	ret := Series{Name: s.Name, t: s.t}
+	switch s.t {
+	case String:
+		ret.elements = s.elements.(stringElements)[splitAt:]
+		s.elements = s.elements.(stringElements)[:splitAt]
+	case Int:
+		ret.elements = s.elements.(intElements)[splitAt:]
+		s.elements = s.elements.(intElements)[:splitAt]
+	case Float:
+		ret.elements = s.elements.(floatElements)[splitAt:]
+		s.elements = s.elements.(floatElements)[:splitAt]
+	case Bool:
+		ret.elements = s.elements.(boolElements)[splitAt:]
+		s.elements = s.elements.(boolElements)[:splitAt]
+	}
+	return ret
+}
+
 // Set sets the values on the indexes of a Series and returns the reference
 // for itself. The original Series is modified.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 	if err := newvalues.Err; err != nil {

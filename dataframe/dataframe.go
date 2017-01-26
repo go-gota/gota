@@ -294,6 +294,23 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	}
 }
 
+// Split splits df in two parts, the first part will be asigned to the
+// df this func was called on and the second part will be the returned
+// DataFrame, percent must be a value between 0 and 1.
+func (df DataFrame) Split(percent float32) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if percent < 0 || percent > 1 {
+		return DataFrame{Err: fmt.Errorf("split: percent must be a value between 0 and 1")}
+	}
+	newDf := DataFrame{columns: make([]series.Series, df.ncols)}
+	for i := 0; i < df.ncols; i++ {
+		newDf.columns[i] = df.columns[i].Split(percent)
+	}
+	return newDf
+}
+
 // SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported are:
 //
 //     int              // Matches the given index number

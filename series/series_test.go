@@ -1165,3 +1165,51 @@ func TestSeries_IsNaN(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_Split(t *testing.T) {
+	elems := stringElements{
+		stringElement{"test_elem", false},
+		stringElement{"test_elem_2", false},
+	}
+	type args struct {
+		percent float32
+	}
+	tests := []struct {
+		name string
+		s    Series
+		args args
+		want Series
+	}{
+		{
+			"Series Split",
+			Series{Name: "test", t: String, elements: elems},
+			args{0.5},
+			Series{Name: "test", t: String, elements: elems[1:]},
+		},
+		{
+			"Series Split s.Err != nil",
+			Series{Name: "test", Err: fmt.Errorf("some err")},
+			args{0.5},
+			Series{Name: "test", Err: fmt.Errorf("some err")},
+		},
+		{
+			"Series Split percent < 0",
+			Series{Name: "test"},
+			args{-0.1},
+			Series{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
+		},
+		{
+			"Series Split percent > 1",
+			Series{Name: "test"},
+			args{1.1},
+			Series{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.s.Split(tt.args.percent); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.Split() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
