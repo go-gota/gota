@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
+	"time"
 )
 
 type stringElement struct {
@@ -95,13 +95,11 @@ func (e stringElement) Bool() (bool, error) {
 	if e.IsNA() {
 		return false, fmt.Errorf("can't convert NaN to bool")
 	}
-	switch strings.ToLower(e.e) {
-	case "true", "t", "1":
-		return true, nil
-	case "false", "f", "0":
-		return false, nil
-	}
-	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
+	return strconv.ParseBool(e.e)
+}
+
+func (e stringElement) Time() (time.Time, error) {
+	return time.Parse("01/02/2001", e.e)
 }
 
 func (e stringElement) Addr() string {

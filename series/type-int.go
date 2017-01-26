@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 type intElement struct {
@@ -114,6 +115,10 @@ func (e intElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert Int \"%v\" to bool", e.e)
+}
+
+func (e intElement) Time() (time.Time, error) {
+	return time.Date(1, 1, 1, 0, 0, 0, 0, nil), fmt.Errorf("can't convert int to time.Time")
 }
 
 func (e intElement) Addr() string {

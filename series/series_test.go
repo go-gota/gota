@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
@@ -94,6 +95,18 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{true, false, true}),
 		},
 		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Minute * 2)}),
+			Eq,
+			time.Now(),
+			Bools([]bool{true, false}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Minute * 2)}),
+			Eq,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{true, true}),
+		},
+		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			Neq,
 			"B",
@@ -140,6 +153,18 @@ func TestSeries_Compare(t *testing.T) {
 			Neq,
 			[]bool{true, false, false},
 			Bools([]bool{false, true, false}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Minute * 2)}),
+			Neq,
+			time.Now(),
+			Bools([]bool{false, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Minute * 2)}),
+			Neq,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{false, false}),
 		},
 		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
@@ -190,6 +215,18 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{false, true, false}),
 		},
 		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * 240)}),
+			Greater,
+			time.Now(),
+			Bools([]bool{false, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			Greater,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{false, false}),
+		},
+		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			GreaterEq,
 			"B",
@@ -236,6 +273,18 @@ func TestSeries_Compare(t *testing.T) {
 			GreaterEq,
 			[]bool{true, false, false},
 			Bools([]bool{true, true, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * 240)}),
+			GreaterEq,
+			time.Now(),
+			Bools([]bool{true, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			GreaterEq,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{true, false}),
 		},
 		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
@@ -286,6 +335,18 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{false, false, false}),
 		},
 		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			Less,
+			time.Now(),
+			Bools([]bool{false, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			Less,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{false, true}),
+		},
+		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			LessEq,
 			"B",
@@ -334,6 +395,18 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{true, false, true}),
 		},
 		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * 240)}),
+			LessEq,
+			time.Now(),
+			Bools([]bool{true, false}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			LessEq,
+			[]time.Time{time.Now(), time.Now().Add(time.Minute * 2)},
+			Bools([]bool{true, true}),
+		},
+		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			In,
 			"B",
@@ -380,6 +453,18 @@ func TestSeries_Compare(t *testing.T) {
 			In,
 			[]bool{false, false, false},
 			Bools([]bool{false, false, true}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * 240)}),
+			In,
+			"01/25/2017",
+			Bools([]bool{false, false}),
+		},
+		{
+			Times([]time.Time{time.Now(), time.Now().Add(time.Hour * -240)}),
+			In,
+			[]string{"25/01/2017", "01/31/2017"},
+			Bools([]bool{false, false}),
 		},
 	}
 	for testnum, test := range table {
@@ -448,6 +533,36 @@ func TestSeries_Subset(t *testing.T) {
 			Strings([]string{"A", "B", "C", "K", "D"}),
 			Bools([]bool{true, false, false, true, true}),
 			"[A K D]",
+		},
+		{
+			Floats([]float64{5.2, 2.3, 1.8, 9.9, 0.1}),
+			[]int{4, 2, 1, 0, 3},
+			"[0.100000 1.800000 2.300000 5.200000 9.900000]",
+		},
+		{
+			Floats([]float64{5.2, 2.3, 1.8, 9.9, 0.1}),
+			int(4),
+			"[0.100000]",
+		},
+		{
+			Ints([]float64{5, 2, 1, 9, 0}),
+			[]int{4, 2, 1, 0, 3},
+			"[0 1 2 5 9]",
+		},
+		{
+			Ints([]float64{5, 2, 1, 9, 0}),
+			int(4),
+			"[0]",
+		},
+		{
+			Bools([]bool{true, false, false, false, false}),
+			[]int{4, 2, 1, 0, 3},
+			"[false false false true false]",
+		},
+		{
+			Bools([]bool{true, false, false, false, false}),
+			int(4),
+			"[false]",
 		},
 	}
 	for testnum, test := range table {
@@ -1054,6 +1169,11 @@ func TestSeries_Concat(t *testing.T) {
 			Bools([]string{"0", "0", "0"}),
 			[]string{"true", "true", "false", "false", "false", "false"},
 		},
+		{
+			Times([]time.Time{time.Now()}),
+			Times([]time.Time{time.Now().Add(time.Hour * -240)}),
+			[]string{time.Now().Format("01/02/2006"), time.Now().Add(time.Hour * -240).Format("01/02/2006")},
+		},
 	}
 	for testnum, test := range tests {
 		ab := test.a.Concat(test.b)
@@ -1210,6 +1330,52 @@ func TestSeries_Split(t *testing.T) {
 			if got := tt.s.Split(tt.args.percent); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Series.Split() = %v, want %v", got, tt.want)
 			}
+		})
+	}
+}
+
+func TestSeries_Empty(t *testing.T) {
+	tests := []struct {
+		name string
+		s    Series
+		want Series
+	}{
+		{"Series Empty", Series{Name: "test", t: String}, New([]int{}, String, "test")},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.s.Empty(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.Empty() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeries_Append(t *testing.T) {
+	i := New([]int{5, 6}, Int, "test")
+	f := New([]float64{5, 6}, Float, "test")
+	b := New([]bool{true, false}, Bool, "test")
+	s := New([]string{"a", "b"}, String, "test")
+	ti := New([]time.Time{time.Now()}, Time, "test")
+	e := Series{Err: fmt.Errorf("some err")}
+	type args struct {
+		values interface{}
+	}
+	tests := []struct {
+		name string
+		s    *Series
+		args args
+	}{
+		{"Append ints", &i, args{[]int{7, 8}}},
+		{"Append floats", &f, args{[]float64{7, 8}}},
+		{"Append bools", &b, args{[]bool{false, false}}},
+		{"Append strings", &s, args{[]string{"c", "d"}}},
+		{"Append times", &ti, args{[]time.Time{time.Now().Add(time.Minute * 2)}}},
+		{"Append s.Err != nil", &e, args{nil}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.s.Append(tt.args.values)
 		})
 	}
 }

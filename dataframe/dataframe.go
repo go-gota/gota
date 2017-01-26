@@ -11,6 +11,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/kniren/gota/series"
@@ -805,6 +806,9 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 			field := val.Index(0).Type().Field(j)
 			fieldName := field.Name
 			fieldType := field.Type.String()
+			if _, ok := val.Index(0).Elem().Field(j).Interface().(time.Time); ok {
+				fieldType = "time"
+			}
 
 			// Process struct tags
 			fieldTags := field.Tag.Get("dataframe")
@@ -881,6 +885,8 @@ func parseType(s string) (series.Type, error) {
 		return series.String, nil
 	case "bool":
 		return series.Bool, nil
+	case "time":
+		return series.Time, nil
 	}
 	return "", fmt.Errorf("type (%s) is not supported", s)
 }
