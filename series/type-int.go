@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 type intElement struct {
@@ -91,7 +92,7 @@ func (e intElement) String() string {
 
 func (e intElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, createErr("intElement.Int()", "can't convert NaN to int")
 	}
 	return int(e.e), nil
 }
@@ -105,7 +106,7 @@ func (e intElement) Float() float64 {
 
 func (e intElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
+		return false, createErr("intElement.Bool()", "can't convert NaN to bool")
 	}
 	switch e.e {
 	case 1:
@@ -113,7 +114,11 @@ func (e intElement) Bool() (bool, error) {
 	case 0:
 		return false, nil
 	}
-	return false, fmt.Errorf("can't convert Int \"%v\" to bool", e.e)
+	return false, createErr("intElement.Bool()", "can't convert Int \"%v\" to bool", e.e)
+}
+
+func (e intElement) Time() (time.Time, error) {
+	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("intElement.Time()", "can't convert int to time.Time")
 }
 
 func (e intElement) Addr() string {

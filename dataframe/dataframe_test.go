@@ -2,6 +2,7 @@ package dataframe
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strings"
 	"testing"
@@ -2293,5 +2294,49 @@ func TestLoadStructs(t *testing.T) {
 		if !reflect.DeepEqual(tc.expDf.Records(), tc.b.Records()) {
 			t.Errorf("Test: %d: Different values:\nA:%v\nB:%v", i, tc.expDf, tc.b)
 		}
+	}
+}
+
+func TestDataFrame_Split(t *testing.T) {
+	type args struct {
+		percent float32
+	}
+	tests := []struct {
+		name string
+		df   DataFrame
+		args args
+		want DataFrame
+	}{
+		{
+			"Dataframe Split",
+			New(series.New([]string{"test_elem", "test_elem_2", series.String, "test"})),
+			args{0.5},
+			New(series.New([]string{"test_elem_2", series.String, "test"})),
+		},
+		{
+			"Dataframe Split df.Err != nil",
+			DataFrame{Err: fmt.Errorf("some err")},
+			args{0.5},
+			DataFrame{Err: fmt.Errorf("some err")},
+		},
+		{
+			"Dataframe Split percent < 0",
+			DataFrame{},
+			args{-0.1},
+			DataFrame{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
+		},
+		{
+			"Dataframe Split percent > 1",
+			DataFrame{},
+			args{1.1},
+			DataFrame{Err: fmt.Errorf("split: percent must be a value between 0 and 1")},
+		},
+	}
+	for i, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.df.Split(tt.args.percent); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Test with index %v | DataFrame.Split() = %v, want %v", i, got, tt.want)
+			}
+		})
 	}
 }

@@ -3,7 +3,8 @@ package series
 import (
 	"fmt"
 	"math"
-	"strings"
+	"strconv"
+	"time"
 )
 
 type boolElement struct {
@@ -19,15 +20,12 @@ func (e *boolElement) Set(value interface{}) {
 			e.nan = true
 			return
 		}
-		switch strings.ToLower(value.(string)) {
-		case "true", "t", "1":
-			e.e = true
-		case "false", "f", "0":
-			e.e = false
-		default:
+		v, err := strconv.ParseBool(value.(string))
+		if err != nil {
 			e.nan = true
 			return
 		}
+		e.e = v
 	case int:
 		switch value.(int) {
 		case 1:
@@ -101,7 +99,7 @@ func (e boolElement) String() string {
 
 func (e boolElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, createErr("boolElement.Int()", "can't convert NaN to int")
 	}
 	if e.e == true {
 		return 1, nil
@@ -121,9 +119,13 @@ func (e boolElement) Float() float64 {
 
 func (e boolElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
+		return false, createErr("boolElement.Bool()", "can't convert NaN to bool")
 	}
 	return bool(e.e), nil
+}
+
+func (e boolElement) Time() (time.Time, error) {
+	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("boolElement.Time()", "can't convert bool to time.Time")
 }
 
 func (e boolElement) Addr() string {

@@ -253,3 +253,18 @@ func ExampleDataFrame_Arrange() {
 	)
 	fmt.Println(sorted)
 }
+
+func ExampleDataFrame_Split() {
+	df1 := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	df2 := df1.Split(0.5)
+	fmt.Println(df1)
+	fmt.Println(df2)
+}

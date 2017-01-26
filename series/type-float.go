@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 type floatElement struct {
@@ -79,14 +80,14 @@ func (e floatElement) String() string {
 
 func (e floatElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, createErr("floatElement.Int()", "can't convert NaN to int")
 	}
 	f := e.e
 	if math.IsInf(f, 1) || math.IsInf(f, -1) {
-		return 0, fmt.Errorf("can't convert Inf to int")
+		return 0, createErr("floatElement.Int()", "can't convert Inf to int")
 	}
 	if math.IsNaN(f) {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, createErr("floatElement.Int()", "can't convert NaN to int")
 	}
 	return int(f), nil
 }
@@ -100,7 +101,7 @@ func (e floatElement) Float() float64 {
 
 func (e floatElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
+		return false, createErr("floatElement.Bool()", "can't convert NaN to bool")
 	}
 	switch e.e {
 	case 1:
@@ -108,7 +109,11 @@ func (e floatElement) Bool() (bool, error) {
 	case 0:
 		return false, nil
 	}
-	return false, fmt.Errorf("can't convert Float \"%v\" to bool", e.e)
+	return false, createErr("floatElement.Bool()", "can't convert Float \"%v\" to bool", e.e)
+}
+
+func (e floatElement) Time() (time.Time, error) {
+	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("floatElement.Time()", "can't convert float to time.Time")
 }
 
 func (e floatElement) Addr() string {
