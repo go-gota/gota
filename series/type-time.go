@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// timeElement is the concrete implementation of the Element interface for
+// time.Time. If the stored time.Time is zero, it will be considered as a NaN
+// element.
 type timeElement struct {
 	e   time.Time
 	nan bool
@@ -42,10 +45,7 @@ func (e timeElement) Copy() Element {
 }
 
 func (e timeElement) IsNA() bool {
-	if e.nan {
-		return true
-	}
-	return false
+	return e.e.IsZero()
 }
 
 func (e timeElement) Type() Type {
@@ -85,6 +85,9 @@ func (e timeElement) Bool() (bool, error) {
 }
 
 func (e timeElement) Time() (time.Time, error) {
+	if e.IsNA() {
+		return time.Time{}, fmt.Errorf("timeElement.Time(): can't convert NaN to time.Time")
+	}
 	return e.e, nil
 }
 
