@@ -16,13 +16,13 @@ func (e *timeElement) Set(value interface{}) {
 	case string:
 		v := string(value.(string))
 		var err error
-		e.e, err = time.Parse("01/02/2006", v)
+		e.e, err = time.Parse(timeformat, v)
 		if err != nil {
-			e.e = time.Date(1, 1, 1, 0, 0, 0, 0, time.Local)
+			e.e = time.Time{}
 		}
 		return
 	case int, float64, bool:
-		e.e = time.Date(1, 1, 1, 0, 0, 0, 0, nil)
+		e.e = time.Time{}
 	case time.Time:
 		e.e = value.(time.Time)
 	case Element:
@@ -36,7 +36,7 @@ func (e *timeElement) Set(value interface{}) {
 
 func (e timeElement) Copy() Element {
 	if e.nan {
-		return &timeElement{time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), true}
+		return &timeElement{time.Time{}, true}
 	}
 	return &timeElement{e.e, false}
 }
@@ -49,7 +49,7 @@ func (e timeElement) IsNA() bool {
 }
 
 func (e timeElement) Type() Type {
-	return String
+	return Time
 }
 
 func (e timeElement) Val() ElementValue {
@@ -63,12 +63,12 @@ func (e timeElement) String() string {
 	if e.nan {
 		return "NaN"
 	}
-	return e.e.Format("01/02/2006")
+	return e.e.Format(timeformat)
 }
 
 func (e timeElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("timeElement.Int()", "can't convert NaN to int")
+		return 0, fmt.Errorf("timeElement.Int(): can't convert NaN to int")
 	}
 	return int(e.e.Unix()), nil
 }
@@ -79,9 +79,9 @@ func (e timeElement) Float() float64 {
 
 func (e timeElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("timeElement.Bool()", "can't convert NaN to bool")
+		return false, fmt.Errorf("timeElement.Bool(): can't convert NaN to bool")
 	}
-	return false, createErr("timeElement.Bool()", "can't convert Time to bool")
+	return false, fmt.Errorf("timeElement.Bool(): can't convert Time to bool")
 }
 
 func (e timeElement) Time() (time.Time, error) {

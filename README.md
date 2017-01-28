@@ -33,7 +33,7 @@ df := dataframe.New(
 	series.New([]string{"b", "a"}, series.String, "COL.1"),
 	series.New([]int{1, 2}, series.Int, "COL.2"),
 	series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
-	series.New([]time.Time{time.Now(), time.Now().Add(time.Minute), series.Time, "COL.4"}),
+	series.New([]time.Time{time.Now(), time.Now().Add(time.Minute)}, series.Time, "COL.4"),
 )
 ```
 
@@ -44,11 +44,11 @@ form `[][]string` and returns a new DataFrame from there:
 ```go
 df := dataframe.LoadRecords(
     [][]string{
-        []string{"A", "B", "C", "D", "E"},
-        []string{"a", "4", "5.1", "true", "05/18/2017"},
-        []string{"k", "5", "7.0", "true", "05/18/2017"},
-        []string{"k", "4", "6.0", "true", "05/18/2017"},
-        []string{"a", "2", "7.1", "false", "05/18/2017"},
+        []string{"A", "B", "C", "D"},
+        []string{"a", "4", "5.1", "true",},
+        []string{"k", "5", "7.0", "true",},
+        []string{"k", "4", "6.0", "true",},
+        []string{"a", "2", "7.1", "false"},
     },
 )
 ```

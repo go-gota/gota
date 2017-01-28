@@ -99,7 +99,7 @@ func (e boolElement) String() string {
 
 func (e boolElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("boolElement.Int()", "can't convert NaN to int")
+		return 0, fmt.Errorf("boolElement.Int() can't convert NaN to int")
 	}
 	if e.e == true {
 		return 1, nil
@@ -119,13 +119,13 @@ func (e boolElement) Float() float64 {
 
 func (e boolElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("boolElement.Bool()", "can't convert NaN to bool")
+		return false, fmt.Errorf("boolElement.Bool(): can't convert NaN to bool")
 	}
 	return bool(e.e), nil
 }
 
 func (e boolElement) Time() (time.Time, error) {
-	return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("boolElement.Time()", "can't convert bool to time.Time")
+	return time.Time{}, fmt.Errorf("boolElement.Time(): can't convert bool to time.Time")
 }
 
 func (e boolElement) Addr() string {

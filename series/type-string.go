@@ -33,7 +33,7 @@ func (e *stringElement) Set(value interface{}) {
 			e.e = "false"
 		}
 	case time.Time:
-		e.e = value.(time.Time).Format("01/02/2006")
+		e.e = value.(time.Time).Format(timeformat)
 	case Element:
 		e.e = value.(Element).String()
 	default:
@@ -77,7 +77,7 @@ func (e stringElement) String() string {
 
 func (e stringElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, createErr("stringElement.Int()", "can't convert NaN to int")
+		return 0, fmt.Errorf("stringElement.Int(): can't convert NaN to int")
 	}
 	return strconv.Atoi(e.e)
 }
@@ -95,15 +95,15 @@ func (e stringElement) Float() float64 {
 
 func (e stringElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, createErr("stringElement.Bool()", "can't convert NaN to bool")
+		return false, fmt.Errorf("stringElement.Bool(): can't convert NaN to bool")
 	}
 	return strconv.ParseBool(e.e)
 }
 
 func (e stringElement) Time() (time.Time, error) {
-	t, err := time.Parse("01/02/2006", e.e)
+	t, err := time.Parse(timeformat, e.e)
 	if err != nil {
-		return time.Date(1, 1, 1, 0, 0, 0, 0, time.Local), createErr("stringElement.Time()", "%v", err)
+		return time.Time{}, fmt.Errorf("stringElement.Time(): %v", err)
 	}
 	return t, nil
 }
