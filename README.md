@@ -33,6 +33,7 @@ df := dataframe.New(
 	series.New([]string{"b", "a"}, series.String, "COL.1"),
 	series.New([]int{1, 2}, series.Int, "COL.2"),
 	series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
+	series.New([]time.Time{time.Now(), time.Now().Add(time.Minute)}, series.Time, "COL.4"),
 )
 ```
 
@@ -56,15 +57,16 @@ Now you can also create DataFrames by loading an slice of arbitrary structs:
 
 ```go
 type User struct {
-	Name     string
-	Age      int
-	Accuracy float64
+	Name      string
+	Age       int
+	Accuracy  float64
+	CreatedAt time.Time
     ignored  bool // ignored since unexported
 }
 users := []User{
-	{"Aram", 17, 0.2, true},
-	{"Juan", 18, 0.8, true},
-	{"Ana", 22, 0.5, true},
+	{"Aram", 17, 0.2, true, time.Now()},
+	{"Juan", 18, 0.8, true, time.Now().Add(time.Hour * -240)},
+	{"Ana", 22, 0.5, true, time.Now().Add(time.Minute * 2)},
 }
 df := dataframe.LoadStructs(users)
 ```
@@ -348,6 +350,7 @@ Int
 Float
 String
 Bool
+time.Time
 ```
 
 For more information about the API, make sure to check:
