@@ -1818,10 +1818,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 }
 
 func findType(arr []string) series.Type {
-	hasFloats := false
-	hasInts := false
-	hasBools := false
-	hasStrings := false
+	var hasFloats, hasInts, hasBools, hasStrings, hasTimes bool
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
 			continue
@@ -1838,18 +1835,24 @@ func findType(arr []string) series.Type {
 			hasBools = true
 			continue
 		}
+		if _, err := time.Parse(timeformat, str); err == nil {
+			hasTimes = true
+			continue
+		}
 		hasStrings = true
 	}
-	if hasFloats && !hasBools && !hasStrings {
+	switch {
+	case hasFloats:
 		return series.Float
-	}
-	if hasInts && !hasFloats && !hasBools && !hasStrings {
+	case hasInts:
 		return series.Int
-	}
-	if !hasInts && !hasFloats && hasBools && !hasStrings {
+	case hasBools:
 		return series.Bool
+	case hasTimes:
+		return series.Time
+	default:
+		return series.String
 	}
-	return series.String
 }
 
 func transposeRecords(x [][]string) [][]string {
