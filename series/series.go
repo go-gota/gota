@@ -5,7 +5,12 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 )
+
+// note that this const is also declared on the dataframe pkg,
+// if changes happen, change the one on that pkg too.
+const timeformat = time.RFC3339
 
 // Series is a data structure designed for operating on arrays of elements that
 // should comply with a certain type structure. They are flexible enough that can
@@ -38,6 +43,7 @@ type Element interface {
 	Int() (int, error)
 	Float() float64
 	Bool() (bool, error)
+	Time() (time.Time, error)
 	Addr() string
 	Eq(Element) bool
 	Neq(Element) bool
@@ -71,6 +77,12 @@ type boolElements []boolElement
 func (e boolElements) Len() int           { return len(e) }
 func (e boolElements) Elem(i int) Element { return &e[i] }
 
+// timeElements is the concrete implementation of Elements for Time elements.
+type timeElements []timeElement
+
+func (e timeElements) Len() int           { return len(e) }
+func (e timeElements) Elem(i int) Element { return &e[i] }
+
 // ElementValue represents the value that can be used for marshaling or
 // unmarshaling Elements.
 type ElementValue interface{}
@@ -100,6 +112,7 @@ const (
 	Int         = "int"
 	Float       = "float"
 	Bool        = "bool"
+	Time        = "time"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -130,6 +143,8 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements = make(floatElements, n)
 		case Bool:
 			ret.elements = make(boolElements, n)
+		case Time:
+			ret.elements = make(timeElements, n)
 		default:
 			panic(fmt.Sprintf("unknown type %v", t))
 		}
@@ -165,6 +180,13 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []bool:
 		v := values.([]bool)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(v[i])
+		}
+	case []time.Time:
+		v := values.([]time.Time)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -218,6 +240,11 @@ func Bools(values interface{}) Series {
 	return New(values, Bool, "")
 }
 
+// Times is a constructor for a Time Series
+func Times(values interface{}) Series {
+	return New(values, Time, "")
+}
+
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	return New([]int{}, s.t, s.Name)
@@ -226,7 +253,7 @@ func (s Series) Empty() Series {
 // Append adds new elements to the end of the Series. When using Append, the
 // Series is modified in place.
 func (s *Series) Append(values interface{}) {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return
 	}
 	news := New(values, s.t, s.Name)
@@ -239,17 +266,19 @@ func (s *Series) Append(values interface{}) {
 		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
 	case Bool:
 		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
+	case Time:
+		s.elements = append(s.elements.(timeElements), news.elements.(timeElements)...)
 	}
 }
 
 // Concat concatenates two series together. It will return a new Series with the
 // combined elements of both Series.
 func (s Series) Concat(x Series) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 	if err := x.Err; err != nil {
-		s.Err = fmt.Errorf("concat error: argument has errors: %v", err)
+		s.Err = fmt.Errorf("s.Concat(): argument has errors: %v", err)
 		return s
 	}
 	y := s.Copy()
@@ -259,7 +288,7 @@ func (s Series) Concat(x Series) Series {
 
 // Subset returns a subset of the series based on the given Indexes.
 func (s Series) Subset(indexes Indexes) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil || indexes == nil {
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -296,6 +325,11 @@ func (s Series) Subset(indexes Indexes) Series {
 			elements[k] = s.elements.(boolElements)[i]
 		}
 		ret.elements = elements
+	case Time:
+		elements := make(timeElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(timeElements)[i]
+		}
 	default:
 		panic("unknown series type")
 	}
@@ -305,11 +339,11 @@ func (s Series) Subset(indexes Indexes) Series {
 // Set sets the values on the indexes of a Series and returns the reference
 // for itself. The original Series is modified.
 func (s Series) Set(indexes Indexes, newvalues Series) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil || indexes == nil {
 		return s
 	}
 	if err := newvalues.Err; err != nil {
-		s.Err = fmt.Errorf("set error: argument has errors: %v", err)
+		s.Err = fmt.Errorf("s.Set(): argument has errors: %v", err)
 		return s
 	}
 	idx, err := parseIndexes(s.Len(), indexes)
@@ -318,12 +352,12 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.Err = fmt.Errorf("set error: dimensions mismatch")
+		s.Err = fmt.Errorf("s.Set(): dimensions mismatch")
 		return s
 	}
 	for k, i := range idx {
 		if i < 0 || i >= s.Len() {
-			s.Err = fmt.Errorf("set error: index out of range")
+			s.Err = fmt.Errorf("s.Set(): index out of range")
 			return s
 		}
 		s.elements.Elem(i).Set(newvalues.elements.Elem(k))
@@ -354,7 +388,7 @@ func (s Series) IsNaN() []bool {
 // elements with are to be compared are first transformed to a Series of the same
 // type as the caller.
 func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 	compareElements := func(a, b Element, c Comparator) (bool, error) {
@@ -373,7 +407,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		case LessEq:
 			ret = a.LessEq(b)
 		default:
-			return false, fmt.Errorf("unknown comparator: %v", c)
+			return false, fmt.Errorf("s.Compare(): unknown comparator: %s", c)
 		}
 		return ret, nil
 	}
@@ -421,7 +455,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	// Multiple element comparison
 	if s.Len() != comp.Len() {
 		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
+		s.Err = fmt.Errorf("s.Comapre(): length mismatch")
 		return s
 	}
 	for i := 0; i < s.Len(); i++ {
@@ -456,6 +490,9 @@ func (s Series) Copy() Series {
 	case Int:
 		elements = make(intElements, s.Len())
 		copy(elements.(intElements), s.elements.(intElements))
+	case Time:
+		elements = make(timeElements, s.Len())
+		copy(elements.(timeElements), s.elements.(timeElements))
 	}
 	ret := Series{
 		Name:     name,
@@ -518,6 +555,21 @@ func (s Series) Bool() ([]bool, error) {
 	return ret, nil
 }
 
+// Time returns the elements of a Series as a []time.Time or an error if the
+// transformation is not possible.
+func (s Series) Time() ([]time.Time, error) {
+	ret := make([]time.Time, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		val, err := e.Time()
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = val
+	}
+	return ret, nil
+}
+
 // Type returns the type of a given series
 func (s Series) Type() Type {
 	return s.t
@@ -530,20 +582,26 @@ func (s Series) Len() int {
 
 // String implements the Stringer interface for Series
 func (s Series) String() string {
+	if s.Err != nil {
+		return s.Err.Error()
+	}
 	return fmt.Sprint(s.elements)
 }
 
 // Str prints some extra information about a given series
 func (s Series) Str() string {
+	if s.Err != nil {
+		return s.Err.Error()
+	}
 	var ret []string
 	// If name exists print name
 	if s.Name != "" {
 		ret = append(ret, "Name: "+s.Name)
 	}
-	ret = append(ret, "Type: "+fmt.Sprint(s.t))
-	ret = append(ret, "Length: "+fmt.Sprint(s.Len()))
+	ret = append(ret, fmt.Sprintf("Type: %v", s.t))
+	ret = append(ret, fmt.Sprintf("Length: %v", s.Len()))
 	if s.Len() != 0 {
-		ret = append(ret, "Values: "+fmt.Sprint(s))
+		ret = append(ret, fmt.Sprintf("Values: %s", s))
 	}
 	return strings.Join(ret, "\n")
 }
@@ -583,7 +641,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	case []bool:
 		bools := indexes.([]bool)
 		if len(bools) != l {
-			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
+			return nil, fmt.Errorf("series.parseIndexes(): index dimensions mismatch")
 		}
 		for i, b := range bools {
 			if b {
@@ -592,11 +650,11 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		}
 	case Series:
 		s := indexes.(Series)
-		if err := s.Err; err != nil {
-			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
+		if s.Err != nil {
+			return nil, fmt.Errorf("series.parseIndexes(): new values has errors: %v", s.Err)
 		}
 		if s.HasNaN() {
-			return nil, fmt.Errorf("indexing error: indexes contain NaN")
+			return nil, fmt.Errorf("series.parseIndexes(): indexes contain NaN")
 		}
 		switch s.t {
 		case Int:
@@ -604,14 +662,14 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		case Bool:
 			bools, err := s.Bool()
 			if err != nil {
-				return nil, fmt.Errorf("indexing error: %v", err)
+				return nil, fmt.Errorf("series.parseIndexes(): %v", err)
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+			return nil, fmt.Errorf("series.parseIndexes(): unknown indexing mode")
 		}
 	default:
-		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		return nil, fmt.Errorf("series.parseIndexes(): unknown indexing mode")
 	}
 	return idx, nil
 }
