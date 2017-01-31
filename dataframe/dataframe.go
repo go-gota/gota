@@ -11,10 +11,15 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"unicode/utf8"
 
 	"github.com/kniren/gota/series"
 )
+
+// note that this const is also declared on the series pkg,
+// if changes happen, change the one on that pkg too.
+const timeformat = time.RFC3339
 
 // DataFrame is a data structure designed for operating on table like data (Such
 // as Excel, CSV files, SQL table results...) where every column have to keep type
@@ -37,6 +42,7 @@ type DataFrame struct {
 
 // New is the generic DataFrame constructor
 func New(se ...series.Series) DataFrame {
+	// TODO: remove nil check
 	if se == nil || len(se) == 0 {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
@@ -255,6 +261,7 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+	// TODO: check for len(indexes) == 0
 	if newvalues.Err != nil {
 		return DataFrame{Err: fmt.Errorf("argument has errors: %v", newvalues.Err)}
 	}
@@ -278,6 +285,7 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+	// TODO: check for len(indexes) == 0
 	columns := make([]series.Series, df.ncols)
 	for i, column := range df.columns {
 		s := column.Subset(indexes)
@@ -311,6 +319,7 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+	// TODO: check for len(indexes) == 0
 	idx, err := parseSelectIndexes(df.ncols, indexes, df.Names())
 	if err != nil {
 		return DataFrame{Err: fmt.Errorf("can't select columns: %v", err)}
@@ -444,6 +453,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+	// TODO: check for len(filters) == 0
 	compResults := make([]series.Series, len(filters))
 	for i, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
@@ -497,7 +507,9 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+	// TODO: remove nil check
 	if order == nil || len(order) == 0 {
+		// TODO: fix "rename" on err msg
 		return DataFrame{Err: fmt.Errorf("rename: no arguments")}
 	}
 
@@ -559,7 +571,7 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	}
 
 	detectType := func(types []series.Type) series.Type {
-		var hasStrings, hasFloats, hasInts, hasBools bool
+		var hasStrings, hasFloats, hasInts, hasBools, hasTimes bool
 		for _, t := range types {
 			switch t {
 			case series.String:
@@ -570,6 +582,8 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 				hasInts = true
 			case series.Bool:
 				hasBools = true
+			case series.Time:
+				hasTimes = true
 			}
 		}
 		switch {
@@ -581,6 +595,8 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 			return series.Float
 		case hasInts:
 			return series.Int
+		case hasTimes:
+			return series.Time
 		default:
 			panic("type not supported")
 		}
@@ -751,6 +767,7 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 // will have preference over the former.
 func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 	if i == nil {
+		// TODO: fix "load" on err msg
 		return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from <nil> value")}
 	}
 
@@ -771,10 +788,12 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 	switch tpy.Kind() {
 	case reflect.Slice:
 		if tpy.Elem().Kind() != reflect.Struct {
+			// TODO: fix "load" on err msg
 			return DataFrame{Err: fmt.Errorf(
 				"load: type %s (%s %s) is not supported, must be []struct", tpy.Name(), tpy.Elem().Kind(), tpy.Kind())}
 		}
 		if val.Len() == 0 {
+			// TODO: fix "load" on err msg
 			return DataFrame{Err: fmt.Errorf("load: can't create DataFrame from empty slice")}
 		}
 
@@ -850,6 +869,7 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 		}
 		return New(columns...)
 	}
+	// TODO: fix "load" on err msg
 	return DataFrame{Err: fmt.Errorf(
 		"load: type %s (%s) is not supported, must be []struct", tpy.Name(), tpy.Kind())}
 }
@@ -864,6 +884,8 @@ func parseType(s string) (series.Type, error) {
 		return series.String, nil
 	case "bool":
 		return series.Bool, nil
+	case "time", "time.Time":
+		return series.Time, nil
 	}
 	return "", fmt.Errorf("type (%s) is not supported", s)
 }
@@ -1159,6 +1181,10 @@ func (df DataFrame) Col(colname string) series.Series {
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
+	// TODO: check for df.Err != nil
+	// TODO: check for b.Err != nil
+	// TODO: rename b to dfb to be consistent with
+	// the Rbind and Cbind funcs
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1238,6 +1264,10 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
+	// TODO: check for df.Err != nil
+	// TODO: check for b.Err != nil
+	// TODO: rename b to dfb to be consistent with
+	// the Rbind and Cbind funcs
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1336,6 +1366,10 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
+	// TODO: check for df.Err != nil
+	// TODO: check for b.Err != nil
+	// TODO: rename b to dfb to be consistent with
+	// the Rbind and Cbind funcs
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1444,6 +1478,10 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
+	// TODO: check for df.Err != nil
+	// TODO: check for b.Err != nil
+	// TODO: rename b to dfb to be consistent with
+	// the Rbind and Cbind funcs
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1573,6 +1611,10 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 
 // CrossJoin returns a DataFrame containing the cross join of two DataFrames.
 func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
+	// TODO: check for df.Err != nil
+	// TODO: check for b.Err != nil
+	// TODO: rename b to dfb to be consistent with
+	// the Cbind and Rbind funcs
 	aCols := df.columns
 	bCols := b.columns
 	// Initialize newCols
@@ -1780,7 +1822,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 }
 
 func findType(arr []string) series.Type {
-	var hasFloats, hasInts, hasBools, hasStrings bool
+	var hasFloats, hasInts, hasBools, hasStrings, hasTimes bool
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
 			continue
@@ -1797,6 +1839,10 @@ func findType(arr []string) series.Type {
 			hasBools = true
 			continue
 		}
+		if _, err := time.Parse(timeformat, str); err == nil {
+			hasTimes = true
+			continue
+		}
 		hasStrings = true
 	}
 	switch {
@@ -1804,6 +1850,8 @@ func findType(arr []string) series.Type {
 		return series.String
 	case hasBools:
 		return series.Bool
+	case hasTimes:
+		return series.Time
 	case hasFloats:
 		return series.Float
 	case hasInts:
