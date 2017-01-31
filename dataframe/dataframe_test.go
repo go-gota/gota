@@ -763,6 +763,7 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]float64{0, 0.5}, series.Float, "D"),
 			),
+			false,
 		},
 		{
 			LoadRecords(
@@ -778,6 +779,7 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]float64{0, 0.5}, series.Float, "D"),
 			),
+			false,
 		},
 		{
 			LoadRecords(
@@ -793,6 +795,7 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]float64{0.5, 1}, series.Float, "D"),
 			),
+			false,
 		},
 		{
 			LoadRecords(
@@ -808,6 +811,7 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]string{"trueee", "true"}, series.String, "C"),
 				series.New([]float64{0.5, 1}, series.Float, "D"),
 			),
+			false,
 		},
 		{
 			LoadRecords(
@@ -823,6 +827,7 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]string{"true", "trueee"}, series.String, "C"),
 				series.New([]float64{0.5, 1}, series.Float, "D"),
 			),
+			false,
 		},
 		{
 			LoadRecords(
@@ -838,6 +843,23 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]string{"0.5", "a"}, series.String, "D"),
 			),
+			false,
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0.5"},
+					{"1", "2", "0.5", "a"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]string{"true", "NaN"}, series.Bool, "C"),
+				series.New([]string{"0.5", "a"}, series.String, "D"),
+			),
+			false,
 		},
 	}
 
@@ -2081,10 +2103,10 @@ func TestDataFrame_Rapply(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
 			{"A", "B", "C", "D"},
-			{"1", "4", "5.1", "true"},
-			{"1", "4", "6.0", "true"},
-			{"2", "3", "6.0", "false"},
-			{"2", "2", "7.1", "false"},
+			{"1", "4", "5.1", "1"},
+			{"1", "4", "6.0", "1"},
+			{"2", "3", "6.0", "0"},
+			{"2", "2", "7.1", "0"},
 		},
 	)
 	mean := func(s series.Series) series.Series {

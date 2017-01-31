@@ -575,12 +575,12 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		switch {
 		case hasStrings:
 			return series.String
+		case hasBools:
+			return series.Bool
 		case hasFloats:
 			return series.Float
 		case hasInts:
 			return series.Int
-		case hasBools:
-			return series.Bool
 		default:
 			panic("type not supported")
 		}
@@ -1780,10 +1780,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 }
 
 func findType(arr []string) series.Type {
-	hasFloats := false
-	hasInts := false
-	hasBools := false
-	hasStrings := false
+	var hasFloats, hasInts, hasBools, hasStrings bool
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
 			continue
@@ -1802,16 +1799,18 @@ func findType(arr []string) series.Type {
 		}
 		hasStrings = true
 	}
-	if hasFloats && !hasBools && !hasStrings {
-		return series.Float
-	}
-	if hasInts && !hasFloats && !hasBools && !hasStrings {
-		return series.Int
-	}
-	if !hasInts && !hasFloats && hasBools && !hasStrings {
+	switch {
+	case hasStrings:
+		return series.String
+	case hasBools:
 		return series.Bool
+	case hasFloats:
+		return series.Float
+	case hasInts:
+		return series.Int
+	default:
+		panic("couldn't detect type")
 	}
-	return series.String
 }
 
 func transposeRecords(x [][]string) [][]string {
