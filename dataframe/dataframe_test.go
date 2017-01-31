@@ -749,6 +749,96 @@ func TestLoadRecords(t *testing.T) {
 			DataFrame{},
 			true,
 		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"1", "1", "true", "0"},
+					{"a", "2", "true", "0.5"},
+				},
+			),
+			New(
+				series.New([]string{"1", "a"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0, 0.5}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0"},
+					{"1", "2", "true", "0.5"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0, 0.5}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0.5"},
+					{"1", "2", "true", "1"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]float64{0.5, 1}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "trueee", "0.5"},
+					{"1", "2", "true", "1"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]string{"trueee", "true"}, series.String, "C"),
+				series.New([]float64{0.5, 1}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0.5"},
+					{"1", "2", "trueee", "1"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]string{"true", "trueee"}, series.String, "C"),
+				series.New([]float64{0.5, 1}, series.Float, "D"),
+			),
+		},
+		{
+			LoadRecords(
+				[][]string{
+					{"A", "B", "C", "D"},
+					{"a", "1", "true", "0.5"},
+					{"1", "2", "true", "a"},
+				},
+			),
+			New(
+				series.New([]string{"a", "1"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
+				series.New([]bool{true, true}, series.Bool, "C"),
+				series.New([]string{"0.5", "a"}, series.String, "D"),
+			),
+		},
 	}
 
 	for i, tc := range table {
