@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
-	"strings"
+	"time"
 )
 
 type stringElement struct {
@@ -32,6 +32,8 @@ func (e *stringElement) Set(value interface{}) {
 		} else {
 			e.e = "false"
 		}
+	case time.Time:
+		e.e = value.(time.Time).Format(timeformat)
 	case Element:
 		e.e = value.(Element).String()
 	default:
@@ -75,7 +77,7 @@ func (e stringElement) String() string {
 
 func (e stringElement) Int() (int, error) {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return 0, fmt.Errorf("stringElement.Int(): can't convert NaN to int")
 	}
 	return strconv.Atoi(e.e)
 }
@@ -93,15 +95,17 @@ func (e stringElement) Float() float64 {
 
 func (e stringElement) Bool() (bool, error) {
 	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
+		return false, fmt.Errorf("stringElement.Bool(): can't convert NaN to bool")
 	}
-	switch strings.ToLower(e.e) {
-	case "true", "t", "1":
-		return true, nil
-	case "false", "f", "0":
-		return false, nil
+	return strconv.ParseBool(e.e)
+}
+
+func (e stringElement) Time() (time.Time, error) {
+	t, err := time.Parse(timeformat, e.e)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("stringElement.Time(): %v", err)
 	}
-	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
+	return t, nil
 }
 
 func (e stringElement) Addr() string {
