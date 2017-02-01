@@ -38,14 +38,16 @@ func (d DataFrame) Group(cols ...string) GroupedDataFrame {
 
 func (g GroupedDataFrame) Summarize(f func(DataFrame) series.Series) DataFrame {
 
-	groupSubsets := g.parseInternal()
+	keyIndexes := g.parseInternal()
 
 	rowlen := -1
-	elements := make([][]series.Element, len(groupSubsets))
+	elements := make([][]series.Element, len(keyIndexes))
 	i := 0
 
-	for k, df := range groupSubsets {
-		row := f(df)
+	for k, indexes := range keyIndexes {
+
+		row := f(g.Subset(indexes))
+
 		keys := strings.Split(k, "$_$")
 
 		if len(keys) != len(g.groupedBy) {
@@ -82,7 +84,7 @@ func (g GroupedDataFrame) Summarize(f func(DataFrame) series.Series) DataFrame {
 	}
 
 	ncol := rowlen + len(g.groupedBy)
-	nrow := len(groupSubsets)
+	nrow := len(keyIndexes)
 	// Cast columns if necessary
 	columns := make([]series.Series, ncol)
 	for j := 0; j < ncol; j++ {
@@ -117,24 +119,22 @@ func (g GroupedDataFrame) Summarize(f func(DataFrame) series.Series) DataFrame {
 	return dfr.Arrange(orders...)
 }
 
-func (g GroupedDataFrame) parseInternal() map[string]DataFrame {
+func (g GroupedDataFrame) parseInternal() map[string][]int {
 
-	groupSO := make(map[string]DataFrame)
+	groupedOnly := g.Select(g.groupedBy)
 
-	for i := 0; i < g.nrows; i++ {
+	groupSO := make(map[string][]int)
+	key := make([]string, len(g.groupedBy))
+	for i := 0; i < groupedOnly.nrows; i++ {
+		row := groupedOnly.Subset(i)
 
-		row := g.Subset(i)
-		key := make([]string, len(g.groupedBy))
 		for idx, col := range g.groupedBy {
 			key[idx] = row.Col(col).Elem(0).String()
 		}
 		dkey := strings.Join(key, "$_$")
 
-		if _, ok := groupSO[dkey]; ok {
-			groupSO[dkey] = groupSO[dkey].RBind(row)
-		} else {
-			groupSO[dkey] = row
-		}
+		groupSO[dkey] = append(groupSO[dkey], i)
+
 	}
 	return groupSO
 }
