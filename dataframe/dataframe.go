@@ -591,12 +591,12 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 			return series.String
 		case hasBools:
 			return series.Bool
+		case hasTimes:
+			return series.Time
 		case hasFloats:
 			return series.Float
 		case hasInts:
 			return series.Int
-		case hasTimes:
-			return series.Time
 		default:
 			panic("type not supported")
 		}

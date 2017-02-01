@@ -75,9 +75,6 @@ func (e timeElement) Float() float64 {
 }
 
 func (e timeElement) Bool() (bool, error) {
-	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
-	}
 	return false, fmt.Errorf("can't convert Time to bool")
 }
 

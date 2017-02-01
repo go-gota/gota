@@ -111,7 +111,7 @@ func (e stringElement) Bool() (bool, error) {
 func (e stringElement) Time() (time.Time, error) {
 	t, err := time.Parse(timeformat, e.e)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("can't convert String to time.Time")
+		return time.Time{}, fmt.Errorf("can't convert to time.Time: %v", err)
 	}
 	return t, nil
 }
