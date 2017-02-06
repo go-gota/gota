@@ -1503,11 +1503,13 @@ func findType(arr []string) series.Type {
 		if str == "" || str == "NaN" {
 			continue
 		}
-		if _, err := strconv.Atoi(str); err == nil {
+		istr := strings.Replace(str, ",", "", -1)
+		if _, err := strconv.Atoi(istr); err == nil {
 			hasInts = true
 			continue
 		}
-		if _, err := strconv.ParseFloat(str, 64); err == nil {
+		astr := strings.Replace(str, ",", "", -1)
+		if _, err := strconv.ParseFloat(astr, 64); err == nil {
 			hasFloats = true
 			continue
 		}

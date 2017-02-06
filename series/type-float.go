@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"strings"
 )
 
 type floatElement struct {
@@ -18,7 +19,9 @@ func (e floatElement) Set(value interface{}) Element {
 			e.e = nil
 			return e
 		}
-		f, err := strconv.ParseFloat(value.(string), 64)
+		evalue := value.(string)
+		evalue = strings.Replace(evalue, ",", "", -1) // try to remove  thousands comma delimiter
+		f, err := strconv.ParseFloat(evalue, 64)
 		if err != nil {
 			e.e = nil
 			return e

@@ -922,6 +922,31 @@ Spain,2012-02-01,66,555.42,00241
 	}
 }
 
+func TestReadCSV_FloatWithThousandsDelimiter(t *testing.T) {
+	// Load the data from a CSV string and try to infer the type of the
+	// columns
+	csvStr := `
+Country,Date,Age,Amount,Id,Wage
+"United States",2012-02-01,50,112.1,01234,"1,234.23"
+"United States",2012-02-01,32,321.31,54320,"1,234.23"
+"United Kingdom",2012-02-01,17,18.2,12345,"1,234.23"
+"United States",2012-02-01,32,321.31,54320,"1,234,456"
+"United Kingdom",2012-02-01,NA,18.2,12345,"230"
+"United States",2012-02-01,32,321.31,54320,"-1,234.56"
+"United States",2012-02-01,32,321.31,54320,"234.4"
+Spain,2012-02-01,66,555.42,00241,"0.24"
+`
+	a := ReadCSV(strings.NewReader(csvStr))
+	if a.Err != nil {
+		t.Errorf("Expected success, got error: %v", a.Err)
+	}
+
+	wage := a.Col("Wage")
+	if wage.Type() != series.Float {
+		t.Errorf("Expected type Float, got %v", wage.Type())
+	}
+}
+
 func TestReadJSON(t *testing.T) {
 	table := []struct {
 		jsonStr string
