@@ -619,6 +619,9 @@ type loadOptions struct {
 
 	// Defines which valeus are going to be considered as NaN when parsing from string
 	nanValues []string
+
+	//csv delimeter
+	delimiter rune
 }
 
 // DefaultType set the defaultType option for loadOptions.
@@ -653,6 +656,13 @@ func NaNValues(nanValues []string) LoadOption {
 func WithTypes(coltypes map[string]series.Type) LoadOption {
 	return func(c *loadOptions) {
 		c.types = coltypes
+	}
+}
+
+// Use Delimiter other then ',', for example '\t'
+func Delimiter(b rune) LoadOption {
+	return func(c *loadOptions) {
+		c.delimiter = b
 	}
 }
 
@@ -779,6 +789,16 @@ func LoadMatrix(mat mat64.Matrix) DataFrame {
 // resulting records.
 func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 	csvReader := csv.NewReader(r)
+	cfg := loadOptions{
+		delimiter: ',',
+	}
+	for _, option := range options {
+		option(&cfg)
+	}
+	if cfg.delimiter != ',' {
+		csvReader.Comma = cfg.delimiter
+	}
+
 	records, err := csvReader.ReadAll()
 	if err != nil {
 		return DataFrame{Err: err}
