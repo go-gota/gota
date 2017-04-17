@@ -620,7 +620,7 @@ type loadOptions struct {
 	// Defines which valeus are going to be considered as NaN when parsing from string
 	nanValues []string
 
-	//csv delimeter
+	// Defines the csv delimiter
 	delimiter rune
 }
 
@@ -659,8 +659,8 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 	}
 }
 
-// Use Delimiter other then ',', for example '\t'
-func Delimiter(b rune) LoadOption {
+// WithDelimiter sets the csv delimiter other than ',', for example '\t'
+func WithDelimiter(b rune) LoadOption {
 	return func(c *loadOptions) {
 		c.delimiter = b
 	}
