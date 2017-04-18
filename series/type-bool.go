@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strings"
+	"time"
 )
 
 type boolElement struct {
@@ -72,6 +73,7 @@ func (e boolElement) Copy() Element {
 }
 
 func (e boolElement) IsNA() bool {
+	// TODO: just return e.nan
 	if e.nan {
 		return true
 	}
@@ -124,6 +126,10 @@ func (e boolElement) Bool() (bool, error) {
 		return false, fmt.Errorf("can't convert NaN to bool")
 	}
 	return bool(e.e), nil
+}
+
+func (e boolElement) Time() (time.Time, error) {
+	return time.Time{}, fmt.Errorf("can't convert Bool to time.Time")
 }
 
 func (e boolElement) Eq(elem Element) bool {

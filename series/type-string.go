@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type stringElement struct {
@@ -32,6 +33,8 @@ func (e *stringElement) Set(value interface{}) {
 		} else {
 			e.e = "false"
 		}
+	case time.Time:
+		e.e = value.(time.Time).Format(timeformat)
 	case Element:
 		e.e = value.(Element).String()
 	default:
@@ -49,6 +52,7 @@ func (e stringElement) Copy() Element {
 }
 
 func (e stringElement) IsNA() bool {
+	// TODO: just return e.nan
 	if e.nan {
 		return true
 	}
@@ -102,6 +106,14 @@ func (e stringElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
+}
+
+func (e stringElement) Time() (time.Time, error) {
+	t, err := time.Parse(timeformat, e.e)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("can't convert to time.Time: %v", err)
+	}
+	return t, nil
 }
 
 func (e stringElement) Eq(elem Element) bool {

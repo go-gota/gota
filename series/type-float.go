@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"strconv"
+	"time"
 )
 
 type floatElement struct {
@@ -109,6 +110,10 @@ func (e floatElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert Float \"%v\" to bool", e.e)
+}
+
+func (e floatElement) Time() (time.Time, error) {
+	return time.Time{}, fmt.Errorf("can't convert Float to time.Time")
 }
 
 func (e floatElement) Eq(elem Element) bool {
