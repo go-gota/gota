@@ -1590,3 +1590,16 @@ func (m matrix) At(i, j int) float64 {
 func (m matrix) T() mat64.Matrix {
 	return mat64.Transpose{Matrix: m}
 }
+
+/*this function will help to give arguments to df.subset() and df.select() functions
+like df.subset(Slice(1,10)) will bring 10 rows from the set
+*/
+
+func Slice(from int,to int)([]int){
+	answer:=[]int{}
+	if from<=0 {log("Please choose a higher Number")}
+	for i:=(from-1);i<=(to-1);i++{
+		answer=append(answer,i)
+	}
+	return answer
+}
