@@ -12,8 +12,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/claudiofahey/gota/series"
 	"github.com/gonum/matrix/mat64"
-	"github.com/kniren/gota/series"
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such
@@ -930,9 +930,27 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 		}
 	}
 
+	// Create map of the b dataframe's key.
+	type KeyType []series.Element
+	bMap := map[string][]int{}
+	for j := 0; j < b.nrows; j++ {
+		key := make(KeyType, len(keys))
+		for k := range keys {
+			key[k] = bCols[iKeysB[k]].Elem(j)
+		}
+		mapKey := fmt.Sprintf("%v", key)
+		bMap[mapKey] = append(bMap[mapKey], j)
+	}
+
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
-		for j := 0; j < b.nrows; j++ {
+		key := make(KeyType, len(keys))
+		for k := range keys {
+			key[k] = aCols[iKeysA[k]].Elem(i)
+		}
+		mapKey := fmt.Sprintf("%v", key)
+		js := bMap[mapKey]
+		for _, j := range js {
 			match := true
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
