@@ -339,6 +339,38 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	return df
 }
 
+// Deselect the given DataFrame columns
+func (df DataFrame) Deselect(indexes SelectIndexes) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	idx, err := parseSelectIndexes(df.ncols, indexes, df.Names())
+	if err != nil {
+		return DataFrame{Err: fmt.Errorf("can't select columns: %v", err)}
+	}
+	var columns []series.Series
+	for k, col := range df.columns {
+		if !inIntSlice(k, idx) {
+			columns = append(columns, col.Copy())
+		}
+	}
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	df = DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].Name = colname
+	}
+	return df
+}
+
 // Rename changes the name of one of the columns of a DataFrame
 func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	if df.Err != nil {
