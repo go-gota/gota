@@ -239,7 +239,7 @@ func TestDataFrame_Select(t *testing.T) {
 	}
 }
 
-func TestDataFrame_Deselect(t *testing.T) {
+func TestDataFrame_Drop(t *testing.T) {
 	a := New(
 		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
@@ -323,7 +323,7 @@ func TestDataFrame_Deselect(t *testing.T) {
 	}
 
 	for i, tc := range table {
-		b := a.Deselect(tc.indexes)
+		b := a.Drop(tc.indexes)
 
 		if b.Err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)
