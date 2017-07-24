@@ -339,8 +339,8 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	return df
 }
 
-// Deselect the given DataFrame columns
-func (df DataFrame) Deselect(indexes SelectIndexes) DataFrame {
+// Drop the given DataFrame columns
+func (df DataFrame) Drop(indexes SelectIndexes) DataFrame {
 	if df.Err != nil {
 		return df
 	}
