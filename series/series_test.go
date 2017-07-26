@@ -37,6 +37,14 @@ func checkTypes(s Series) error {
 	return nil
 }
 
+// enables comparisson of floating point values up to the number of digits specified
+func compareFloats(lvalue, rvalue float64, digits int) bool {
+	d := float64(digits)
+	lv := int(lvalue * d)
+	rv := int(rvalue * d)
+	return lv == rv
+}
+
 func TestSeries_Compare(t *testing.T) {
 	table := []struct {
 		series     Series
@@ -1157,6 +1165,146 @@ func TestSeries_IsNaN(t *testing.T) {
 		received := test.series.IsNaN()
 		expected := test.expected
 		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_StdDev(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			3.02765,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			1.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			0.5,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.StdDev()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Mean(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			5.5,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			2.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			0.75,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Mean()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Max(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected ElementValue
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			10,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			3.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			"D",
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			true,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Max()
+		expected := test.expected
+		if !(received.Val() == expected) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Min(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected ElementValue
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			1,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			1.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			"A",
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			false,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Min()
+		expected := test.expected
+		if !(received.Val() == expected) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,

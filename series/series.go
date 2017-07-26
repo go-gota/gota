@@ -5,6 +5,8 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"github.com/gonum/stat"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -582,3 +584,43 @@ type indexedElements []indexedElement
 func (e indexedElements) Len() int           { return len(e) }
 func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
 func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+
+// StdDev calculates the standard deviation of a series
+func (s Series) StdDev() float64 {
+	stdDev := stat.StdDev(s.Float(), nil)
+	return stdDev
+}
+
+// Mean calculates the average value of a series
+func (s Series) Mean() float64 {
+	stdDev := stat.Mean(s.Float(), nil)
+	return stdDev
+}
+
+// Max return the biggest element in the series
+func (s Series) Max() Element {
+	if len(s.elements) == 0 {
+		return nil
+	}
+	max := s.elements[0]
+	for _, elem := range s.elements {
+		if elem.Greater(max) {
+			max = elem
+		}
+	}
+	return max
+}
+
+// Min return the lowest element in the series
+func (s Series) Min() Element {
+	if len(s.elements) == 0 {
+		return nil
+	}
+	min := s.elements[0]
+	for _, elem := range s.elements {
+		if elem.Less(min) {
+			min = elem
+		}
+	}
+	return min
+}
