@@ -1598,6 +1598,9 @@ func (df DataFrame) Describe() DataFrame {
 		"mean",
 		"stddev",
 		"min",
+		"25%",
+		"50%",
+		"75%",
 		"max",
 	})
 	labels.Name = "column"
@@ -1610,6 +1613,9 @@ func (df DataFrame) Describe() DataFrame {
 			fmt.Sprintf("%.6f", col.Mean()),
 			fmt.Sprintf("%.6f", col.StdDev()),
 			col.Min().String(),
+			fmt.Sprintf("%.6f", col.Quantile(0.25)),
+			fmt.Sprintf("%.6f", col.Quantile(0.50)),
+			fmt.Sprintf("%.6f", col.Quantile(0.75)),
 			col.Max().String(),
 		})
 		newCol.Name = col.Name

@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 
+	"math"
+
 	"github.com/gonum/stat"
 )
 
@@ -623,4 +625,23 @@ func (s Series) Min() Element {
 		}
 	}
 	return min
+}
+
+// Quantile returns the sample of x such that x is greater than or
+// equal to the fraction p of samples.
+// Note: gonum/stat panics when called with strings
+func (s Series) Quantile(p float64) float64 {
+	if s.Type() == String {
+		return math.NaN()
+	}
+
+	original := s.Float()
+	orderIdx := s.Order(false)
+
+	ordered := make([]float64, len(original))
+	for idx, order := range orderIdx {
+		ordered[idx] = original[order]
+	}
+
+	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }

@@ -37,7 +37,8 @@ func checkTypes(s Series) error {
 	return nil
 }
 
-// enables comparisson of floating point values up to the number of digits specified
+// compareFloats compares floating point values up to the number of digits specified.
+// Returns true if both values are equal with the given precision
 func compareFloats(lvalue, rvalue float64, digits int) bool {
 	d := float64(digits)
 	lv := int(lvalue * d)
@@ -1305,6 +1306,46 @@ func TestSeries_Min(t *testing.T) {
 		received := test.series.Min()
 		expected := test.expected
 		if !(received.Val() == expected) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Quantile(t *testing.T) {
+	tests := []struct {
+		series   Series
+		p        float64
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			0.9,
+			9,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			0.5,
+			2.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			0.25,
+			math.NaN(),
+		},
+		{
+			Bools([]bool{false, false, false, true}),
+			0.75,
+			0.0,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Quantile(test.p)
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
