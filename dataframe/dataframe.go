@@ -1590,3 +1590,32 @@ func (m matrix) At(i, j int) float64 {
 func (m matrix) T() mat64.Matrix {
 	return mat64.Transpose{Matrix: m}
 }
+
+// Describe prints the summary statistics for each column of the dataframe
+func (df DataFrame) Describe() DataFrame {
+	labels := series.Strings([]string{
+		"count",
+		"mean",
+		"stddev",
+		"min",
+		"max",
+	})
+	labels.Name = "column"
+
+	ss := []series.Series{labels}
+
+	for _, col := range df.columns {
+		newCol := series.Strings([]string{
+			fmt.Sprintf("%d", col.Len()),
+			fmt.Sprintf("%.6f", col.Mean()),
+			fmt.Sprintf("%.6f", col.StdDev()),
+			col.Min().String(),
+			col.Max().String(),
+		})
+		newCol.Name = col.Name
+		ss = append(ss, newCol)
+	}
+
+	ddf := New(ss...)
+	return ddf
+}
