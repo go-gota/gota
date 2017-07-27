@@ -1868,7 +1868,6 @@ type Matrix interface {
 // Describe prints the summary statistics for each column of the dataframe
 func (df DataFrame) Describe() DataFrame {
 	labels := series.Strings([]string{
-		"count",
 		"mean",
 		"stddev",
 		"min",
@@ -1883,7 +1882,6 @@ func (df DataFrame) Describe() DataFrame {
 
 	for _, col := range df.columns {
 		newCol := series.Strings([]string{
-			fmt.Sprintf("%d", col.Len()),
 			fmt.Sprintf("%.6f", col.Mean()),
 			fmt.Sprintf("%.6f", col.StdDev()),
 			col.Min().String(),

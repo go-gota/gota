@@ -2394,7 +2394,6 @@ func TestDescribe(t *testing.T) {
 			LoadRecords(
 				[][]string{
 					[]string{"column", "A", "B", "C", "D"},
-					[]string{"count", "4", "4", "4", "4"},
 					[]string{"mean", "NaN", "3.25", "6.05", "0.5"},
 					[]string{"stddev", "NaN", "0.957427", "0.818535", "0.57735"},
 					[]string{"min", "a", "2", "5.1", "false"},
