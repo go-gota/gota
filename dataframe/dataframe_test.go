@@ -3,12 +3,24 @@ package dataframe
 import (
 	"bytes"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
+
+	"math"
 
 	"github.com/gonum/matrix/mat64"
 	"github.com/kniren/gota/series"
 )
+
+// compareFloats compares floating point values up to the number of digits specified.
+// Returns true if both values are equal with the given precision
+func compareFloats(lvalue, rvalue float64, digits int) bool {
+	d := math.Pow(10.0, float64(digits))
+	lv := int(lvalue * d)
+	rv := int(rvalue * d)
+	return lv == rv
+}
 
 func TestDataFrame_New(t *testing.T) {
 	series := []series.Series{
@@ -2361,6 +2373,67 @@ func TestLoadStructs(t *testing.T) {
 		// Check that the values are the same between both DataFrames
 		if !reflect.DeepEqual(tc.expDf.Records(), tc.b.Records()) {
 			t.Errorf("Test: %d: Different values:\nA:%v\nB:%v", i, tc.expDf, tc.b)
+		}
+	}
+}
+
+func TestDescribe(t *testing.T) {
+	table := []struct {
+		df       DataFrame
+		expected DataFrame
+	}{
+		{
+			LoadRecords(
+				[][]string{
+					[]string{"A", "B", "C", "D"},
+					[]string{"a", "4", "5.1", "true"},
+					[]string{"b", "4", "6.0", "true"},
+					[]string{"c", "3", "6.0", "false"},
+					[]string{"a", "2", "7.1", "false"},
+				}),
+			LoadRecords(
+				[][]string{
+					[]string{"column", "A", "B", "C", "D"},
+					[]string{"count", "4", "4", "4", "4"},
+					[]string{"mean", "NaN", "3.25", "6.05", "0.5"},
+					[]string{"stddev", "NaN", "0.957427", "0.818535", "0.57735"},
+					[]string{"min", "a", "2", "5.1", "false"},
+					[]string{"25%", "NaN", "2", "5.1", "0"},
+					[]string{"50%", "NaN", "3", "6.0", "0"},
+					[]string{"75%", "NaN", "4", "6.0", "1"},
+					[]string{"max", "c", "4", "7.1", "true"},
+				},
+				DetectTypes(false)),
+		},
+	}
+
+	for testnum, test := range table {
+		received := test.df.Describe()
+		expected := test.expected
+
+		equal := true
+		for i, col := range received.columns {
+			lcol := col.Records()
+			rcol := expected.columns[i].Records()
+			for j, value := range lcol {
+				lvalue, lerr := strconv.ParseFloat(value, 64)
+				rvalue, rerr := strconv.ParseFloat(rcol[j], 64)
+				if lerr != nil || rerr != nil {
+					equal = lvalue == rvalue
+				} else {
+					equal = compareFloats(lvalue, rvalue, 6)
+				}
+				if !equal {
+					break
+				}
+			}
+			if !equal {
+				break
+			}
+		}
+
+		if !equal {
+			t.Errorf("Test:%v\nExpected:\n%v\nReceived:\n%v\n", testnum, expected, received)
 		}
 	}
 }
