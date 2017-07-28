@@ -16,6 +16,9 @@ import (
 // compareFloats compares floating point values up to the number of digits specified.
 // Returns true if both values are equal with the given precision
 func compareFloats(lvalue, rvalue float64, digits int) bool {
+	if math.IsNaN(lvalue) || math.IsNaN(rvalue) {
+		return math.IsNaN(lvalue) && math.IsNaN(rvalue)
+	}
 	d := math.Pow(10.0, float64(digits))
 	lv := int(lvalue * d)
 	rv := int(rvalue * d)
@@ -2391,18 +2394,34 @@ func TestDescribe(t *testing.T) {
 					[]string{"c", "3", "6.0", "false"},
 					[]string{"a", "2", "7.1", "false"},
 				}),
-			LoadRecords(
-				[][]string{
-					[]string{"column", "A", "B", "C", "D"},
-					[]string{"mean", "NaN", "3.25", "6.05", "0.5"},
-					[]string{"stddev", "NaN", "0.957427", "0.818535", "0.57735"},
-					[]string{"min", "a", "2", "5.1", "false"},
-					[]string{"25%", "NaN", "2", "5.1", "0"},
-					[]string{"50%", "NaN", "3", "6.0", "0"},
-					[]string{"75%", "NaN", "4", "6.0", "1"},
-					[]string{"max", "c", "4", "7.1", "true"},
-				},
-				DetectTypes(false)),
+
+			New(
+				series.New(
+					[]string{"mean", "stddev", "min", "25%", "50%", "75%", "max"},
+					series.String,
+					"",
+				),
+				series.New(
+					[]string{"-", "-", "a", "-", "-", "-", "c"},
+					series.String,
+					"A",
+				),
+				series.New(
+					[]float64{3.25, 0.957427, 2.0, 2.0, 3.0, 4.0, 4.0},
+					series.Float,
+					"B",
+				),
+				series.New(
+					[]float64{6.05, 0.818535, 5.1, 5.1, 6.0, 6.0, 7.1},
+					series.Float,
+					"C",
+				),
+				series.New(
+					[]float64{0.5, 0.57735, 0.0, 0.0, 0.0, 1.0, 1.0},
+					series.Float,
+					"D",
+				),
+			),
 		},
 	}
 

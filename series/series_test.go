@@ -41,6 +41,9 @@ func checkTypes(s Series) error {
 // compareFloats compares floating point values up to the number of digits specified.
 // Returns true if both values are equal with the given precision
 func compareFloats(lvalue, rvalue float64, digits int) bool {
+	if math.IsNaN(lvalue) || math.IsNaN(rvalue) {
+		return math.IsNaN(lvalue) && math.IsNaN(rvalue)
+	}
 	d := math.Pow(10.0, float64(digits))
 	lv := int(lvalue * d)
 	rv := int(rvalue * d)
@@ -1196,6 +1199,10 @@ func TestSeries_StdDev(t *testing.T) {
 			Bools([]bool{true, true, false, true}),
 			0.5,
 		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
 	}
 
 	for testnum, test := range tests {
@@ -1231,6 +1238,10 @@ func TestSeries_Mean(t *testing.T) {
 			Bools([]bool{true, true, false, true}),
 			0.75,
 		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
 	}
 
 	for testnum, test := range tests {
@@ -1248,7 +1259,7 @@ func TestSeries_Mean(t *testing.T) {
 func TestSeries_Max(t *testing.T) {
 	tests := []struct {
 		series   Series
-		expected ElementValue
+		expected float64
 	}{
 		{
 			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
@@ -1260,18 +1271,22 @@ func TestSeries_Max(t *testing.T) {
 		},
 		{
 			Strings([]string{"A", "B", "C", "D"}),
-			"D",
+			math.NaN(),
 		},
 		{
 			Bools([]bool{true, true, false, true}),
-			true,
+			1.0,
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
 		},
 	}
 
 	for testnum, test := range tests {
 		received := test.series.Max()
 		expected := test.expected
-		if !(received.Val() == expected) {
+		if !compareFloats(received, expected, 6) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
@@ -1283,11 +1298,11 @@ func TestSeries_Max(t *testing.T) {
 func TestSeries_Min(t *testing.T) {
 	tests := []struct {
 		series   Series
-		expected ElementValue
+		expected float64
 	}{
 		{
 			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
-			1,
+			1.0,
 		},
 		{
 			Floats([]float64{1.0, 2.0, 3.0}),
@@ -1295,18 +1310,108 @@ func TestSeries_Min(t *testing.T) {
 		},
 		{
 			Strings([]string{"A", "B", "C", "D"}),
-			"A",
+			math.NaN(),
 		},
 		{
 			Bools([]bool{true, true, false, true}),
-			false,
+			0.0,
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
 		},
 	}
 
 	for testnum, test := range tests {
 		received := test.series.Min()
 		expected := test.expected
-		if !(received.Val() == expected) {
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_MaxStr(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected string
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			"",
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			"",
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			"D",
+		},
+		{
+			Strings([]string{"quick", "Brown", "fox", "Lazy", "dog"}),
+			"quick",
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			"",
+		},
+		{
+			Floats([]float64{}),
+			"",
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.MaxStr()
+		expected := test.expected
+		if received != expected {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_MinStr(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected string
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			"",
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			"",
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			"D",
+		},
+		{
+			Strings([]string{"quick", "Brown", "fox", "Lazy", "dog"}),
+			"Brown",
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			"",
+		},
+		{
+			Floats([]float64{}),
+			"",
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.MinStr()
+		expected := test.expected
+		if received != expected {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
@@ -1327,6 +1432,11 @@ func TestSeries_Quantile(t *testing.T) {
 			9,
 		},
 		{
+			Floats([]float64{3.141592, math.Sqrt(3), 2.718281, math.Sqrt(2)}),
+			0.8,
+			3.141592,
+		},
+		{
 			Floats([]float64{1.0, 2.0, 3.0}),
 			0.5,
 			2.0,
@@ -1340,6 +1450,11 @@ func TestSeries_Quantile(t *testing.T) {
 			Bools([]bool{false, false, false, true}),
 			0.75,
 			0.0,
+		},
+		{
+			Floats([]float64{}),
+			0.50,
+			math.NaN(),
 		},
 	}
 

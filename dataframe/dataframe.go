@@ -1881,16 +1881,39 @@ func (df DataFrame) Describe() DataFrame {
 	ss := []series.Series{labels}
 
 	for _, col := range df.columns {
-		newCol := series.Strings([]string{
-			fmt.Sprintf("%.6f", col.Mean()),
-			fmt.Sprintf("%.6f", col.StdDev()),
-			col.Min().String(),
-			fmt.Sprintf("%.6f", col.Quantile(0.25)),
-			fmt.Sprintf("%.6f", col.Quantile(0.50)),
-			fmt.Sprintf("%.6f", col.Quantile(0.75)),
-			col.Max().String(),
-		})
-		newCol.Name = col.Name
+		var newCol series.Series
+		switch col.Type() {
+		case series.String:
+			newCol = series.New([]string{
+				"-",
+				"-",
+				col.MinStr(),
+				"-",
+				"-",
+				"-",
+				col.MaxStr(),
+			},
+				col.Type(),
+				col.Name,
+			)
+		case series.Bool:
+			fallthrough
+		case series.Float:
+			fallthrough
+		case series.Int:
+			newCol = series.New([]float64{
+				col.Mean(),
+				col.StdDev(),
+				col.Min(),
+				col.Quantile(0.25),
+				col.Quantile(0.50),
+				col.Quantile(0.75),
+				col.Max(),
+			},
+				series.Float,
+				col.Name,
+			)
+		}
 		ss = append(ss, newCol)
 	}
 

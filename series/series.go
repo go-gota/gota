@@ -665,50 +665,78 @@ func (s Series) Mean() float64 {
 }
 
 // Max return the biggest element in the series
-func (s Series) Max() Element {
-	if s.elements.Len() == 0 {
-		return nil
+func (s Series) Max() float64 {
+	if s.elements.Len() == 0 || s.Type() == String {
+		return math.NaN()
 	}
+
 	max := s.elements.Elem(0)
-	for i := 0; i < s.elements.Len(); i++ {
+	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
 		if elem.Greater(max) {
 			max = elem
 		}
 	}
-	return max
+	return max.Float()
+}
+
+// MaxStr return the biggest element in a series of type String
+func (s Series) MaxStr() string {
+	if s.elements.Len() == 0 || s.Type() != String {
+		return ""
+	}
+
+	max := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Greater(max) {
+			max = elem
+		}
+	}
+	return max.String()
 }
 
 // Min return the lowest element in the series
-func (s Series) Min() Element {
-	if s.elements.Len() == 0 {
-		return nil
+func (s Series) Min() float64 {
+	if s.elements.Len() == 0 || s.Type() == String {
+		return math.NaN()
 	}
+
 	min := s.elements.Elem(0)
-	for i := 0; i < s.elements.Len(); i++ {
+	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
 		if elem.Less(min) {
 			min = elem
 		}
 	}
-	return min
+	return min.Float()
+}
+
+// MinStr return the lowest element in a series of type String
+func (s Series) MinStr() string {
+	if s.elements.Len() == 0 || s.Type() != String {
+		return ""
+	}
+
+	min := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Less(min) {
+			min = elem
+		}
+	}
+	return min.String()
 }
 
 // Quantile returns the sample of x such that x is greater than or
 // equal to the fraction p of samples.
 // Note: gonum/stat panics when called with strings
 func (s Series) Quantile(p float64) float64 {
-	if s.Type() == String {
-		math.NaN()
+	if s.Type() == String || s.Len() == 0 {
+		return math.NaN()
 	}
 
-	original := s.Float()
-	orderIdx := s.Order(false)
-
-	ordered := make([]float64, len(original))
-	for idx, order := range orderIdx {
-		ordered[idx] = original[order]
-	}
+	ordered := s.Subset(s.Order(false)).Float()
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }
