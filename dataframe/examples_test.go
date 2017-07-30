@@ -253,3 +253,16 @@ func ExampleDataFrame_Arrange() {
 	)
 	fmt.Println(sorted)
 }
+
+func ExampleDataFrame_Describe() {
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	fmt.Println(df.Describe())
+}

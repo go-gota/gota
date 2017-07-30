@@ -1896,3 +1896,59 @@ type Matrix interface {
 	Dims() (r, c int)
 	At(i, j int) float64
 }
+
+// Describe prints the summary statistics for each column of the dataframe
+func (df DataFrame) Describe() DataFrame {
+	labels := series.Strings([]string{
+		"mean",
+		"stddev",
+		"min",
+		"25%",
+		"50%",
+		"75%",
+		"max",
+	})
+	labels.Name = "column"
+
+	ss := []series.Series{labels}
+
+	for _, col := range df.columns {
+		var newCol series.Series
+		switch col.Type() {
+		case series.String:
+			newCol = series.New([]string{
+				"-",
+				"-",
+				col.MinStr(),
+				"-",
+				"-",
+				"-",
+				col.MaxStr(),
+			},
+				col.Type(),
+				col.Name,
+			)
+		case series.Bool:
+			fallthrough
+		case series.Float:
+			fallthrough
+		case series.Int:
+			newCol = series.New([]float64{
+				col.Mean(),
+				col.StdDev(),
+				col.Min(),
+				col.Quantile(0.25),
+				col.Quantile(0.50),
+				col.Quantile(0.75),
+				col.Max(),
+			},
+				series.Float,
+				col.Name,
+			)
+		}
+		ss = append(ss, newCol)
+	}
+
+	ddf := New(ss...)
+	return ddf
+}

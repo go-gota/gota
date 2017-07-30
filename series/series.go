@@ -5,6 +5,10 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+
+	"math"
+
+	"github.com/gonum/stat"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -647,3 +651,92 @@ type indexedElements []indexedElement
 func (e indexedElements) Len() int           { return len(e) }
 func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
 func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+
+// StdDev calculates the standard deviation of a series
+func (s Series) StdDev() float64 {
+	stdDev := stat.StdDev(s.Float(), nil)
+	return stdDev
+}
+
+// Mean calculates the average value of a series
+func (s Series) Mean() float64 {
+	stdDev := stat.Mean(s.Float(), nil)
+	return stdDev
+}
+
+// Max return the biggest element in the series
+func (s Series) Max() float64 {
+	if s.elements.Len() == 0 || s.Type() == String {
+		return math.NaN()
+	}
+
+	max := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Greater(max) {
+			max = elem
+		}
+	}
+	return max.Float()
+}
+
+// MaxStr return the biggest element in a series of type String
+func (s Series) MaxStr() string {
+	if s.elements.Len() == 0 || s.Type() != String {
+		return ""
+	}
+
+	max := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Greater(max) {
+			max = elem
+		}
+	}
+	return max.String()
+}
+
+// Min return the lowest element in the series
+func (s Series) Min() float64 {
+	if s.elements.Len() == 0 || s.Type() == String {
+		return math.NaN()
+	}
+
+	min := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Less(min) {
+			min = elem
+		}
+	}
+	return min.Float()
+}
+
+// MinStr return the lowest element in a series of type String
+func (s Series) MinStr() string {
+	if s.elements.Len() == 0 || s.Type() != String {
+		return ""
+	}
+
+	min := s.elements.Elem(0)
+	for i := 1; i < s.elements.Len(); i++ {
+		elem := s.elements.Elem(i)
+		if elem.Less(min) {
+			min = elem
+		}
+	}
+	return min.String()
+}
+
+// Quantile returns the sample of x such that x is greater than or
+// equal to the fraction p of samples.
+// Note: gonum/stat panics when called with strings
+func (s Series) Quantile(p float64) float64 {
+	if s.Type() == String || s.Len() == 0 {
+		return math.NaN()
+	}
+
+	ordered := s.Subset(s.Order(false)).Float()
+
+	return stat.Quantile(p, stat.Empirical, ordered, nil)
+}
