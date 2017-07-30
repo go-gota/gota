@@ -1392,7 +1392,7 @@ func TestSeries_MinStr(t *testing.T) {
 		},
 		{
 			Strings([]string{"A", "B", "C", "D"}),
-			"D",
+			"A",
 		},
 		{
 			Strings([]string{"quick", "Brown", "fox", "Lazy", "dog"}),
