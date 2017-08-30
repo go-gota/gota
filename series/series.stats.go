@@ -59,6 +59,12 @@ func (s Series) Sum() float64 {
 	return Sum(data)
 }
 
+func (s Series) Stats() (count int, min, max, sum, mean float64) {
+	data := getFloats(s, true)
+	count, min, max, sum, mean = Stats(data)
+	return
+}
+
 //Min finds the smalest Element in Series
 func Min(input Series) (min Element, err error) {
 	if input.Len() == 0 {

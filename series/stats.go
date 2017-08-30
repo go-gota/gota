@@ -144,3 +144,26 @@ func Sum(data []float64) float64 {
 	}
 	return sum
 }
+
+func Stats(data []float64) (count int, min, max, sum, mean float64) {
+	if len(data) < 1 {
+		return 0, 0., 0., 0., 0.
+	}
+	sum = 0.0
+	count = len(data)
+	min = data[0]
+	max = data[0]
+
+	for _, f := range data {
+		sum += f
+		if f < min {
+			min = f
+		}
+
+		if f > max {
+			max = f
+		}
+	}
+	mean = sum / float64(count)
+	return
+}

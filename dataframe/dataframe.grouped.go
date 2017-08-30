@@ -115,26 +115,25 @@ func (g GroupedDataFrame) Summarize(f func(DataFrame) series.Series) DataFrame {
 	dfr := New(columns...)
 
 	dfr.SetNames(names)
+	dfr = dfr.Arrange(orders...)
 
-	return dfr.Arrange(orders...)
+	return dfr
 }
 
 func (g GroupedDataFrame) parseInternal() map[string][]int {
-
 	groupedOnly := g.Select(g.groupedBy)
-
 	groupSO := make(map[string][]int)
 	key := make([]string, len(g.groupedBy))
-	for i := 0; i < groupedOnly.nrows; i++ {
-		row := groupedOnly.Subset(i)
 
-		for idx, col := range g.groupedBy {
-			key[idx] = row.Col(col).Elem(0).String()
+	records := groupedOnly.Records()
+	for i := 1; i < len(records); i++ {
+		for j := 0; j < len(records[i]); j++ {
+
+			key[j] = records[i][j]
 		}
 		dkey := strings.Join(key, "$_$")
-
-		groupSO[dkey] = append(groupSO[dkey], i)
-
+		groupSO[dkey] = append(groupSO[dkey], i-1)
 	}
+
 	return groupSO
 }
