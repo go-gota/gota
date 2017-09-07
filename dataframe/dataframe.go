@@ -528,7 +528,7 @@ func (df DataFrame) RapplySeries(name string, seriesType series.Type,
 		result[i] = r
 	}
 
-	return series.New(result, seriesType, name).Empty()
+	return series.New(result, seriesType, name)
 }
 
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
