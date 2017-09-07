@@ -507,6 +507,29 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	return New(columns...)
 }
 
+func (df DataFrame) RapplySeries(seriesType series.Type, f func(series.Series) interface{}) series.Series {
+	if df.Err != nil {
+		r := series.New(nil, seriesType, "error")
+		r.Err = df.Err
+		return r
+	}
+
+	// Detect row type prior to function application
+	types := df.Types()
+	rowType := detectType(types)
+	result := series.New(nil, seriesType, "")
+	for i := 0; i < df.nrows; i++ {
+		row := series.New(nil, rowType, "").Empty()
+		for _, col := range df.columns {
+			row.Append(col.Elem(i))
+		}
+		r := f(row)
+		result.Append(r)
+	}
+
+	return result
+}
+
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
 // the function the elements of each row are casted to a Series of a specific
 // type. In order of priority: String -> Float -> Int -> Bool. This casting also
