@@ -507,7 +507,8 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	return New(columns...)
 }
 
-func (df DataFrame) RapplySeries(seriesType series.Type, f func(series.Series) interface{}) series.Series {
+func (df DataFrame) RapplySeries(name string, seriesType series.Type,
+	f func(series.Series) interface{}) series.Series {
 	if df.Err != nil {
 		r := series.New(nil, seriesType, "error")
 		r.Err = df.Err
@@ -517,7 +518,7 @@ func (df DataFrame) RapplySeries(seriesType series.Type, f func(series.Series) i
 	// Detect row type prior to function application
 	types := df.Types()
 	rowType := detectType(types)
-	result := series.New(nil, seriesType, "")
+	result := series.New(nil, seriesType, name).Empty()
 	for i := 0; i < df.nrows; i++ {
 		row := series.New(nil, rowType, "").Empty()
 		for _, col := range df.columns {
