@@ -516,19 +516,19 @@ func (df DataFrame) RapplySeries(name string, seriesType series.Type,
 	}
 
 	// Detect row type prior to function application
-	types := df.Types()
-	rowType := detectType(types)
-	result := series.New(nil, seriesType, name).Empty()
+
+	result := make([]interface{}, df.nrows)
+
 	for i := 0; i < df.nrows; i++ {
-		row := series.New(nil, rowType, "").Empty()
+		row := series.New(nil, seriesType, "").Empty()
 		for _, col := range df.columns {
 			row.Append(col.Elem(i))
 		}
 		r := f(row)
-		result.Append(r)
+		result[i] = r
 	}
 
-	return result
+	return series.New(result, seriesType, name).Empty()
 }
 
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
