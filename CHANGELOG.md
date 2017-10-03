@@ -2,6 +2,18 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.9.0] - 2016-10-03
+### Added
+- Additional method to load arbitrary struct slices to DataFrames (Juan Álvarez)
+- New LoadOption Names to set initial column names (Sander van Harmelen).
+- Parser option for csv delimiter (Kyle Ellrott)
+- New Describe method for reporting summary statistics (Daniela Petruzalek)
+
+### Changed
+- Improve the performance of multiple operations.
+- Code cleanup for better consistency (Sander van Harmelen)
+- Renamed 'Deselect' function to 'Drop' (Ben Marshall)
+
 ## [0.8.0] - 2016-12-12
 ### Added
 - Series.Order method and tests.
