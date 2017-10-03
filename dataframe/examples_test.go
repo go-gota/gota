@@ -17,6 +17,21 @@ func ExampleNew() {
 	fmt.Println(df)
 }
 
+func ExampleLoadStructs() {
+	type User struct {
+		Name     string
+		Age      int
+		Accuracy float64
+	}
+	users := []User{
+		User{"Aram", 17, 0.2},
+		User{"Juan", 18, 0.8},
+		User{"Ana", 22, 0.5},
+	}
+	df := dataframe.LoadStructs(users)
+	fmt.Println(df)
+}
+
 func ExampleLoadRecords() {
 	df := dataframe.LoadRecords(
 		[][]string{
@@ -237,4 +252,17 @@ func ExampleDataFrame_Arrange() {
 		dataframe.RevSort("B"),
 	)
 	fmt.Println(sorted)
+}
+
+func ExampleDataFrame_Describe() {
+	df := dataframe.LoadRecords(
+		[][]string{
+			[]string{"A", "B", "C", "D"},
+			[]string{"a", "4", "5.1", "true"},
+			[]string{"b", "4", "6.0", "true"},
+			[]string{"c", "3", "6.0", "false"},
+			[]string{"a", "2", "7.1", "false"},
+		},
+	)
+	fmt.Println(df.Describe())
 }
