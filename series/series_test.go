@@ -1469,3 +1469,43 @@ func TestSeries_Quantile(t *testing.T) {
 		}
 	}
 }
+
+func TestSum(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			55,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			6.0,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			3.0,
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Sum()
+		expected := test.expected
+
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}

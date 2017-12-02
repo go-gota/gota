@@ -112,6 +112,12 @@ const (
 	Bool        = "bool"
 )
 
+// Supported Binary Arithmetic Operations
+const (
+	Add = iota
+	Subtract
+)
+
 // Indexes represent the elements that can be used for selecting a subset of
 // elements within a Series. Currently supported are:
 //
@@ -660,8 +666,8 @@ func (s Series) StdDev() float64 {
 
 // Mean calculates the average value of a series
 func (s Series) Mean() float64 {
-	stdDev := stat.Mean(s.Float(), nil)
-	return stdDev
+	mean := stat.Mean(s.Float(), nil)
+	return mean
 }
 
 // Max return the biggest element in the series
@@ -739,4 +745,187 @@ func (s Series) Quantile(p float64) float64 {
 	ordered := s.Subset(s.Order(false)).Float()
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
+}
+
+// Histogram generates a mapping representing a histogram with bins
+// equally spaced binwidth in size.
+// If we did not specify a value for binwidth, i.e. 0 or negative
+// value passed, we compute binwidth ourselves to give a hopefully
+// sane number of bins.
+func (s Series) Histogram(binwidth float64) map[float64]int {
+	if s.elements.Len() == 0 ||
+		s.Type() == String ||
+		s.Type() == Bool {
+		return nil
+	}
+	h := make(map[float64]int)
+	if binwidth == 0 || binwidth < 0 {
+		// For series with lengths less than 30 we use a different
+		// algorithm than for series longer than 30, mainly to avoid
+		// having too few bins in some cases.
+		if s.Len() < 30 {
+			binwidth = (s.Max() - s.Min()) / math.Sqrt(float64(s.Len()))
+		} else {
+			k := math.Cbrt(float64(s.Len()))
+			binwidth = 2 * (s.Quantile(0.75) - s.Quantile(0.25)) / k
+		}
+	}
+	bin := func(n float64) float64 {
+		return math.Floor(n - float64(int(n)%int(binwidth)))
+	}
+	for _, v := range s.Float() {
+		h[bin(v)]++
+	}
+	return h
+}
+
+// Median calculates the middle or median value, as opposed to
+// mean it is not susceptible to being affected by outliers.
+func (s Series) Median() float64 {
+	if s.elements.Len() == 0 ||
+		s.Type() == String ||
+		s.Type() == Bool {
+		return math.NaN()
+	}
+	ix := s.Order(false)
+	newElem := make([]Element, len(ix))
+
+	for newpos, oldpos := range ix {
+		newElem[newpos] = s.elements.Elem(oldpos)
+	}
+
+	// When length is odd, we just take length(list)/2
+	// value as the median.
+	if len(newElem)%2 != 0 {
+		return newElem[len(newElem)/2].Float()
+	}
+	// When length is even, we take middle two elements of
+	// list and the median is an average of the two of them.
+	return (newElem[(len(newElem)/2)-1].Float() +
+		newElem[len(newElem)/2].Float()) * 0.5
+}
+
+func sum(s []float64) float64 {
+	if len(s) > 1 {
+		return s[0] + sum(s[1:])
+	}
+	return s[0]
+}
+
+// Sum calculates sum of given series
+func (s Series) Sum() float64 {
+	if s.elements.Len() == 0 || s.Type() == String {
+		return math.NaN()
+	}
+	return sum(s.Float())
+}
+
+func applyFloat(s1, s2 Series, op int) interface{} {
+	delta := make([]float64, s1.Len())
+	for i := 0; i < s1.Len(); i++ {
+		left := s1.elements.Elem(i).Val().(float64)
+		right := s2.elements.Elem(i).Val().(float64)
+		if math.IsNaN(left) || math.IsNaN(right) {
+			delta[i] = math.NaN()
+			continue
+		}
+		if op == Add {
+			delta[i] = left + right
+		} else if op == Subtract {
+			delta[i] = left - right
+		} // Maybe other operations should be supported
+	}
+	return delta
+}
+
+func applyInt(s1, s2 Series, op int) interface{} {
+	delta := make([]int, s1.Len())
+	for i := 0; i < s1.Len(); i++ {
+		left := s1.elements.Elem(i).Val().(int)
+		right := s2.elements.Elem(i).Val().(int)
+		if op == Add {
+			delta[i] = left + right
+		} else if op == Subtract {
+			delta[i] = left - right
+		} // Maybe other operations should be supported
+	}
+	return delta
+}
+
+func elemWiseAdd(s1, s2 Series, t Type,
+	f func(a Series, b Series, op int) interface{}) Series {
+	return New(f(s1, s2, 0), t, "")
+}
+
+func elemWiseSub(s1, s2 Series, t Type,
+	f func(a Series, b Series, op int) interface{}) Series {
+	return New(f(s1, s2, 1), t, "")
+}
+
+// ElementWiseSubtract will piece-wise subtract elements
+// in s2 Series from elements in s.
+func (s Series) ElementWiseSubtract(s2 Series) Series {
+	if s.elements.Len() == 0 {
+		return s
+	}
+	if err := s.Err; err != nil {
+		return s
+	}
+	if s.Type() != s2.Type() {
+		return Series{}
+	}
+	if s.Len() != s2.Len() {
+		return s
+	}
+	switch s.t {
+	case Float:
+		return elemWiseSub(s, s2, Float, applyFloat)
+	case Int:
+		return elemWiseSub(s, s2, Int, applyInt)
+
+	default:
+		panic(fmt.Sprintf("subtraction operation not supported on %v type", s.t))
+	}
+}
+
+// ElementWiseAdd will piece-wise add elements
+// in s2 Series to elements in s.
+func (s Series) ElementWiseAdd(s2 Series) Series {
+	if s.elements.Len() == 0 {
+		return s
+	}
+	if err := s.Err; err != nil {
+		return s
+	}
+	if s.Type() != s2.Type() {
+		return Series{}
+	}
+	if s.Len() != s2.Len() {
+		return s
+	}
+	switch s.t {
+	case Float:
+		return elemWiseAdd(s, s2, Float, applyFloat)
+	case Int:
+		return elemWiseAdd(s, s2, Int, applyInt)
+	default:
+		panic(fmt.Sprintf("addition operation not supported on %v type", s.t))
+	}
+}
+
+// GeometricMean calculates the geometric mean of a series
+func (s Series) GeometricMean(weights []float64) float64 {
+	// length of weights and points vectors must be same
+	if s.Len() != len(weights) {
+		return math.NaN()
+	}
+	return stat.GeometricMean(s.Float(), weights)
+}
+
+// HarmonicMean calculates the harmonic mean of a series
+func (s Series) HarmonicMean(weights []float64) float64 {
+	if s.Len() != len(weights) {
+		return math.NaN()
+	}
+	return stat.HarmonicMean(s.Float(), weights)
 }

@@ -1,5 +1,5 @@
 // Package dataframe provides an implementation of data frames and methods to
-// subset, join, mutate, set, arrange, summarize, etc.
+// sub, join, mutate, set, arrange, summarize, etc.
 package dataframe
 
 import (
@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kniren/gota/series"
+	"github.com/szaydel/gota/series"
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such
@@ -250,7 +250,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will updated the values of a DataFrame for the rows selected via indexes.
+// Set will update the values of a DataFrame for all rows selected via indexes with data in newvalues.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -339,6 +339,13 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	return df
 }
 
+func sum(s []float64) float64 {
+	if len(s) > 1 {
+		return s[0] + sum(s[1:])
+	}
+	return s[0]
+}
+
 // Drop the given DataFrame columns
 func (df DataFrame) Drop(indexes SelectIndexes) DataFrame {
 	if df.Err != nil {
@@ -388,7 +395,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
-// CBind combines the columns of two DataFrames
+// CBind combines the columns of this dataframe and dfb dataframe.
 func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -400,8 +407,8 @@ func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	return New(cols...)
 }
 
-// RBind matches the column names of two DataFrames and returns the combination of
-// the rows of both of them.
+// RBind matches the column names of two DataFrames and returns
+// the combination of the rows of both of them.
 func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -514,7 +521,7 @@ type Order struct {
 	Reverse bool
 }
 
-// Sort return an ordering structure for regular column sorting sort.
+// Sort return an ordering structure for regular column sorting.
 func Sort(colname string) Order {
 	return Order{colname, false}
 }
@@ -524,7 +531,7 @@ func RevSort(colname string) Order {
 	return Order{colname, true}
 }
 
-// Arrange sort the rows of a DataFrame according to the given Order
+// Arrange sorts the rows of a DataFrame ordering by order.
 func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {
 		return df
@@ -761,7 +768,7 @@ func WithDelimiter(b rune) LoadOption {
 
 // LoadStructs creates a new DataFrame from arbitrary struct slices.
 //
-// LoadStructs will ignore unexported fields inside an struct. Note also that
+// LoadStructs will ignore unexported fields inside a struct. Note also that
 // unless otherwise specified the column names will correspond with the name of
 // the field.
 //
@@ -897,17 +904,23 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 }
 
 func parseType(s string) (series.Type, error) {
-	switch s {
-	case "float", "float64", "float32":
-		return series.Float, nil
-	case "int", "int64", "int32", "int16", "int8":
-		return series.Int, nil
-	case "string":
-		return series.String, nil
-	case "bool":
-		return series.Bool, nil
+	var types = map[string]series.Type{
+		"float32": series.Float,
+		"float64": series.Float,
+		"float":   series.Float,
+		"int8":    series.Int,
+		"int16":   series.Int,
+		"int32":   series.Int,
+		"int64":   series.Int,
+		"int":     series.Int,
+		"string":  series.String,
+		"bool":    series.Bool,
 	}
-	return "", fmt.Errorf("type (%s) is not supported", s)
+
+	if _, ok := types[s]; !ok {
+		return "", fmt.Errorf("type (%s) is not supported", s)
+	}
+	return types[s], nil
 }
 
 // LoadRecords creates a new DataFrame based on the given records.
