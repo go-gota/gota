@@ -82,7 +82,7 @@ func (e boolElements) Len() int           { return len(e) }
 func (e boolElements) Elem(i int) Element { return &e[i] }
 
 // ElementValue represents the value that can be used for marshaling or
-// unmarshaling Elements.
+// un-marshaling Elements.
 type ElementValue interface{}
 
 // Comparator is a convenience alias that can be used for a more type safe way of
