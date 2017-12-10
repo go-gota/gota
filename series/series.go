@@ -740,3 +740,77 @@ func (s Series) Quantile(p float64) float64 {
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }
+
+// MapFunc applies a *generic* function, which itself has a prototype of
+// function(interface{}) interface{} allowing for a fairly flexible MAP
+// implementation, intended for mapping the function over each element
+// in Series and returning a new Series object.
+// A type conversion is not supported in MapFunc, as such, expectation is
+// for function to return same type of data as the Series.
+func (s Series) MapFunc(f func(v interface{}) interface{}) Series {
+	switch s.Type() {
+	case Bool:
+		var nOk bool
+		var badIdx = make([]int, 0)
+		mappedValues := make([]bool, s.Len())
+		for i := 0; i < s.Len(); i++ {
+			value, err := s.elements.Elem(i).Bool()
+			if err != nil {
+				badIdx = append(badIdx, i)
+				nOk = true
+				res := f(false) // Default to false in error case
+				mappedValues[i] = res.(bool)
+			} else {
+				res := f(value)
+				mappedValues[i] = res.(bool)
+			}
+		}
+		newSeries := New(mappedValues, Bool, s.Name)
+		if nOk {
+			newSeries.Err = fmt.Errorf("type conversion errors with indexes %v", badIdx)
+		}
+		return newSeries
+	case Float:
+		mappedValues := make([]float64, s.Len())
+		for i := 0; i < s.Len(); i++ {
+			res := f(s.elements.Elem(i).Float())
+			mappedValues[i] = res.(float64)
+		}
+		newSeries := New(mappedValues, Float, s.Name)
+		return newSeries
+	case Int:
+		var nOk bool
+		var badIdx = make([]int, 0)
+
+		mappedValues := make([]int, s.Len())
+		for i := 0; i < s.Len(); i++ {
+			value, err := s.elements.Elem(i).Int()
+			if err != nil {
+				badIdx = append(badIdx, i)
+				nOk = true
+				res := f(0) // Default to false in error case
+				mappedValues[i] = res.(int)
+			} else {
+				res := f(value)
+				mappedValues[i] = res.(int)
+			}
+		}
+		newSeries := New(mappedValues, Int, s.Name)
+		if nOk {
+			newSeries.Err = fmt.Errorf("type conversion errors with indexes %v", badIdx)
+		}
+		return newSeries
+	case String:
+		mappedValues := make([]string, s.Len())
+		for i := 0; i < s.Len(); i++ {
+			res := f(s.elements.Elem(i).String())
+			mappedValues[i] = res.(string)
+		}
+		newSeries := New(mappedValues, String, s.Name)
+		return newSeries
+	default:
+		s.Err = fmt.Errorf("map error: unable to map function over elements of type: %s", s.Type())
+		return s
+	}
+
+}

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -1466,6 +1467,124 @@ func TestSeries_Quantile(t *testing.T) {
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
+		}
+	}
+}
+
+func TestSeries_MapFunc(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected Series
+	}{
+		{
+			Bools([]bool{false, true, false, false, true}),
+			Bools([]bool{false, true, false, false, true}),
+		},
+		{
+			Floats([]float64{1.5, -3.23, -0.337397, -0.380079, 1.60979, 34.}),
+			Floats([]float64{3, -6.46, -0.674794, -0.760158, 3.21958, 68.}),
+		},
+		{
+			Floats([]float64{math.Pi, math.Phi, math.SqrtE, math.Cbrt(64)}),
+			Floats([]float64{2 * math.Pi, 2 * math.Phi, 2 * math.SqrtE, 2 * math.Cbrt(64)}),
+		},
+		{
+			Strings([]string{"XyZApple", "XyZBanana", "XyZCitrus", "XyZDragonfruit"}),
+			Strings([]string{"Apple", "Banana", "Citrus", "Dragonfruit"}),
+		},
+		{
+			Strings([]string{"San Francisco", "XyZTokyo", "MoscowXyZ", "XyzSydney"}),
+			Strings([]string{"San Francisco", "Tokyo", "MoscowXyZ", "XyzSydney"}),
+		},
+		{
+			Ints([]int{23, 13, 101, -64, -3}),
+			Ints([]int{28, 18, 106, -59, 2}),
+		},
+		{
+			Ints([]string{"morning", "noon", "afternoon", "evening", "night"}),
+			Ints([]int{5, 5, 5, 5, 5}),
+		},
+	}
+	// double value (v)
+	float64Double := func(v interface{}) interface{} {
+		if v, ok := v.(float64); ok {
+			return v * 2.
+		}
+		return nil
+	}
+
+	// add constant (+5) to value (v)
+	intAddConst := func(v interface{}) interface{} {
+		if v, ok := v.(int); ok {
+			return v + 5
+		}
+		return nil
+	}
+
+	// trim (XyZ) prefix from string
+	stringTrimPrefix := func(v interface{}) interface{} {
+		if v, ok := v.(string); ok {
+			return strings.TrimPrefix(v, "XyZ")
+		}
+		return nil
+	}
+
+	// AND (&&) input value with true value, expecting:
+	// true && true ==> true
+	// true && false | false && true ==> false
+	boolValueAnd := func(v interface{}) interface{} {
+		if v, ok := v.(bool); ok {
+			return v && true
+		}
+		return false
+	}
+
+	for testnum, test := range tests {
+		switch test.series.Type() {
+		case Bool:
+			received := test.series.MapFunc(boolValueAnd)
+			expected := test.expected
+			for i := 0; i < received.Len(); i++ {
+				if !received.elements.Elem(i).Eq(expected.Elem(i)) {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		case Float:
+			received := test.series.MapFunc(float64Double)
+			expected := test.expected
+			for i := 0; i < received.Len(); i++ {
+				if !received.elements.Elem(i).Eq(expected.Elem(i)) {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		case Int:
+			received := test.series.MapFunc(intAddConst)
+			expected := test.expected
+			for i := 0; i < received.Len(); i++ {
+				if !received.elements.Elem(i).Eq(expected.Elem(i)) {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		case String:
+			received := test.series.MapFunc(stringTrimPrefix)
+			expected := test.expected
+			for i := 0; i < received.Len(); i++ {
+				if !received.elements.Elem(i).Eq(expected.Elem(i)) {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
 		}
 	}
 }
