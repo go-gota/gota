@@ -664,6 +664,32 @@ func (s Series) Mean() float64 {
 	return stdDev
 }
 
+// Median calculates the middle or median value, as opposed to
+// mean, and there is less susceptible to being affected by outliers.
+func (s Series) Median() float64 {
+	if s.elements.Len() == 0 ||
+		s.Type() == String ||
+		s.Type() == Bool {
+		return math.NaN()
+	}
+	ix := s.Order(false)
+	newElem := make([]Element, len(ix))
+
+	for newpos, oldpos := range ix {
+		newElem[newpos] = s.elements.Elem(oldpos)
+	}
+
+	// When length is odd, we just take length(list)/2
+	// value as the median.
+	if len(newElem)%2 != 0 {
+		return newElem[len(newElem)/2].Float()
+	}
+	// When length is even, we take middle two elements of
+	// list and the median is an average of the two of them.
+	return (newElem[(len(newElem)/2)-1].Float() +
+		newElem[len(newElem)/2].Float()) * 0.5
+}
+
 // Max return the biggest element in the series
 func (s Series) Max() float64 {
 	if s.elements.Len() == 0 || s.Type() == String {

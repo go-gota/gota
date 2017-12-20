@@ -1901,6 +1901,7 @@ type Matrix interface {
 func (df DataFrame) Describe() DataFrame {
 	labels := series.Strings([]string{
 		"mean",
+		"median",
 		"stddev",
 		"min",
 		"25%",
@@ -1919,6 +1920,7 @@ func (df DataFrame) Describe() DataFrame {
 			newCol = series.New([]string{
 				"-",
 				"-",
+				"-",
 				col.MinStr(),
 				"-",
 				"-",
@@ -1935,6 +1937,7 @@ func (df DataFrame) Describe() DataFrame {
 		case series.Int:
 			newCol = series.New([]float64{
 				col.Mean(),
+				col.Median(),
 				col.StdDev(),
 				col.Min(),
 				col.Quantile(0.25),
