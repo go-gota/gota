@@ -8,7 +8,7 @@ import (
 
 	"math"
 
-	"github.com/gonum/stat"
+	"gonum.org/v1/gonum/stat"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
