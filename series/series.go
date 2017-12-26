@@ -664,6 +664,76 @@ func (s Series) Mean() float64 {
 	return stdDev
 }
 
+// Mode calculates the most common value of a series.
+// It is the value (x) in the series where probability mass function
+// takes its maximum value.
+func (s Series) Mode() float64 {
+	if s.Len() == 0 {
+		return math.NaN()
+	}
+	// It is not really reasonable to attempt to obtain mode of a
+	// series of string elements.
+	if s.Type() == String {
+		return math.NaN()
+	}
+	if s.Type() == Bool {
+		var ts, fs = 0, 0
+		for i := 0; i < s.Len(); i++ {
+			v, err := s.elements.Elem(i).Bool()
+			if err != nil {
+				return math.NaN()
+			}
+			if v == true {
+				ts++
+			} else {
+				fs++
+			}
+		}
+		if ts > fs || ts == fs {
+			return 1 // return true if truth(s) == false(s)
+		}
+		return 0
+	}
+
+	var maxCount int
+	var maxValue float64
+	var count int
+
+	switch s.Type() {
+	case Int:
+		for i := 0; i < s.Len(); i++ {
+			count = 0
+			for j := 0; j < s.Len(); j++ {
+				if s.elements.Elem(j).Eq(s.elements.Elem(i)) {
+					count++
+				}
+			}
+			if count > maxCount {
+				maxCount = count
+				maxValue = s.elements.Elem(i).Float()
+			}
+		}
+	// Because mode is only meaningful with discrete values,
+	// we have to quantize floating point values into discrete
+	// buckets, which we do here with math.Floor.
+	case Float:
+		for i := 0; i < s.Len(); i++ {
+			count = 0
+			for j := 0; j < s.Len(); j++ {
+				if math.Floor(s.elements.Elem(i).Float()) ==
+					math.Floor(s.elements.Elem(j).Float()) {
+					count++
+				}
+			}
+			if count > maxCount {
+				maxCount = count
+				maxValue = math.Floor(s.elements.Elem(i).Float())
+			}
+		}
+	}
+	return maxValue
+}
+
 // Max return the biggest element in the series
 func (s Series) Max() float64 {
 	if s.elements.Len() == 0 || s.Type() == String {

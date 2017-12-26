@@ -1256,6 +1256,59 @@ func TestSeries_Mean(t *testing.T) {
 	}
 }
 
+func TestSeries_Mode(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 3, 3, 4, 5, 6, 7, 8, 9, 10}),
+			3,
+		},
+		// The following two cases are floored before values are compared,
+		// and result value is returned also floored, as such this value
+		// does not actually exist in the series.
+		{
+			Floats([]float64{1.0, 2.2, 3.0, 3.0, 2.22, 3.0, 3.0, 2.222, 2.2222}),
+			2.,
+		},
+		{
+			Floats([]float64{
+				5.3515, 11.6393, 1.29615, 3.69092, 6.12394, 0.509536,
+				6.01747, 3.47509, 6.93757, 2.59726,
+			}),
+			6.,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true, false, false, true, true}),
+			1,
+		},
+		{
+			Bools([]bool{true, true, true, true, false, false, false, false}),
+			1,
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Mode()
+		expected := test.expected
+		if !compareFloats(expected, received, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
 func TestSeries_Max(t *testing.T) {
 	tests := []struct {
 		series   Series
