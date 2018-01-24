@@ -41,6 +41,11 @@ func (s Series) Median() float64 {
 	return Median(data)
 }
 
+func (s Series) Outliers() []float64 {
+	data := getFloats(s, true)
+	return Outliers(data)
+}
+
 //GeometricMean computes geometric mean
 func (s Series) GeometricMean() float64 {
 	data := getFloats(s, true)

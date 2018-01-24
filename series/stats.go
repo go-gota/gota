@@ -99,6 +99,20 @@ func Quartile(data []float64) []float64 {
 	return []float64{q1, q2, q3}
 }
 
+func Outliers(data []float64) []float64 {
+	quartiles := Quartile(data)
+	iqr := 1.5 * (quartiles[2] - quartiles[0])
+	low := quartiles[0] - iqr
+	high := quartiles[2] + iqr
+	var r []float64
+	for _, v := range data {
+		if v < low || v > high {
+			r = append(r, v)
+		}
+	}
+	return r
+}
+
 //Median finds the number in slice
 func Median(data []float64) float64 {
 	l := len(data)

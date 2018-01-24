@@ -2,8 +2,39 @@ package series
 
 import (
 	"math"
+	"reflect"
 	"testing"
 )
+
+func TestStats_Outliers(t *testing.T) {
+	tests := []struct {
+		serie    Series
+		expected []float64
+	}{
+		{Floats([]float64{-7.0, 10, 9, 8, 9, 9, 10, 20.0}), []float64{-7, 20}},
+		{Floats([]float64{6.25, 10, 9, 8, 9, 9, 10, 11.0}), []float64{}},
+	}
+
+	for nr, test := range tests {
+		expected := test.expected
+		received := test.serie.Outliers()
+
+		if len(expected) != len(received) {
+			t.Errorf(
+				"Test:%v\nExpected len:\n%v\nReceived len:\n%v",
+				nr, len(expected), len(received),
+			)
+		}
+
+		if len(received) > 0 && !reflect.DeepEqual(expected, received) {
+
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				nr, expected, received,
+			)
+		}
+	}
+}
 
 func TestStats_Median(t *testing.T) {
 	tests := []struct {
