@@ -5,6 +5,7 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type intElement struct {
@@ -104,6 +105,13 @@ func (e intElement) Float() float64 {
 		return math.NaN()
 	}
 	return float64(*e.e)
+}
+func (e intElement) Time() (time.Time, error) {
+	if e.IsNA() {
+		return time.Now(), fmt.Errorf("can't convert NaN to time")
+	}
+
+	return time.Unix(0, int64(*e.e)), nil
 }
 
 func (e intElement) Bool() (bool, error) {

@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -31,6 +32,7 @@ type Element interface {
 	Int() (int, error)
 	Float() float64
 	Bool() (bool, error)
+	Time() (time.Time, error)
 	Addr() string
 	Eq(Element) bool
 	Neq(Element) bool
@@ -69,6 +71,7 @@ const (
 	Int         = "int"
 	Float       = "float"
 	Bool        = "bool"
+	Time        = "time"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -105,6 +108,8 @@ func New(values interface{}, t Type, name string) Series {
 				ret.elements[i] = floatElement{}
 			case Bool:
 				ret.elements[i] = boolElement{}
+			case Time:
+				ret.elements[i] = timeElement{}
 			default:
 				panic(fmt.Sprintf("unknown type %v", t))
 			}
@@ -143,6 +148,14 @@ func New(values interface{}, t Type, name string) Series {
 		for i := 0; i < l; i++ {
 			ret.elements[i] = ret.elements[i].Set(v[i])
 		}
+	case []time.Time:
+		v := values.([]time.Time)
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements[i] = ret.elements[i].Set(v[i])
+		}
+
 	case Series:
 		v := values.(Series)
 		l := v.Len()
@@ -188,6 +201,11 @@ func Floats(values interface{}) Series {
 // Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
+}
+
+// Times is a constructor for Time Series
+func Times(values interface{}) Series {
+	return New(values, Time, "")
 }
 
 // Empty returns an empty Series of the same type
@@ -294,6 +312,43 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		s.elements[i] = s.elements[i].Set(newvalues.elements[k])
 	}
 	return s
+}
+
+func (s Series) SetValue(indexes Indexes, val interface{}) Series {
+	var el Element
+	switch s.Type() {
+	case String:
+		el = stringElement{}
+	case Int:
+		el = intElement{}
+	case Float:
+		el = floatElement{}
+	case Bool:
+		el = boolElement{}
+	case Time:
+		el = timeElement{}
+	}
+	elVal := el.Set(val)
+
+	if err := s.Err; err != nil {
+		return s
+	}
+
+	idx, err := parseIndexes(s.Len(), indexes)
+	if err != nil {
+		s.Err = err
+		return s
+	}
+
+	for _, i := range idx {
+		if i < 0 || i >= s.Len() {
+			s.Err = fmt.Errorf("set error: index out of range")
+			return s
+		}
+		s.elements[i] = elVal
+	}
+	return s
+
 }
 
 // HasNaN checks whether the Series contain NaN elements.
@@ -456,6 +511,20 @@ func (s Series) Bool() ([]bool, error) {
 	ret := make([]bool, s.Len())
 	for i, e := range s.elements {
 		val, err := e.Bool()
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = val
+	}
+	return ret, nil
+}
+
+// Time returns the elements of the a Series as a []time.Time or an error if the
+// transition is not possible
+func (s Series) Time() ([]time.Time, error) {
+	ret := make([]time.Time, s.Len())
+	for i, e := range s.elements {
+		val, err := e.Time()
 		if err != nil {
 			return nil, err
 		}

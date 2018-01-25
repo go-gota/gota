@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"time"
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
@@ -804,6 +805,43 @@ func TestFloats(t *testing.T) {
 		{
 			Floats(Strings([]string{"1", "2", "3"})),
 			"[1.000000 2.000000 3.000000]",
+		},
+	}
+	for testnum, test := range table {
+		if err := test.series.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		expected := test.expected
+		received := fmt.Sprint(test.series)
+		if expected != received {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		if err := checkTypes(test.series); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+	}
+}
+
+func TestTimes(t *testing.T) {
+	now := time.Now()
+	table := []struct {
+		series   Series
+		expected string
+	}{
+		{
+			Times([]string{"2018-01-31 12:13:14", "2018/01/31 12:14:34", "A", "__"}),
+			"[2018-01-31 12:13:14 +0000 UTC 2018-01-31 12:14:34 +0000 UTC NaN NaN]",
+		},
+		{
+			Times([]float64{1351700038292387000}),
+			"[2012-10-31 18:13:58.292387072 +0200 EET]",
+		},
+		{
+			Times([]time.Time{now}),
+			fmt.Sprintf("[%s]", now.String()),
 		},
 	}
 	for testnum, test := range table {

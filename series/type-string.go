@@ -5,6 +5,9 @@ import (
 	"math"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/araddon/dateparse"
 )
 
 type stringElement struct {
@@ -103,6 +106,13 @@ func (e stringElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert String \"%v\" to bool", *e.e)
+}
+
+func (e stringElement) Time() (time.Time, error) {
+	if e.IsNA() {
+		return time.Now(), fmt.Errorf("can't convert NaN to time")
+	}
+	return dateparse.ParseAny(*e.e)
 }
 
 func (e stringElement) Addr() string {
