@@ -12,6 +12,8 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/araddon/dateparse"
+
 	"github.com/gonum/matrix/mat64"
 	"github.com/isuruceanu/gota/series"
 )
@@ -533,7 +535,7 @@ func (df DataFrame) RapplySeries(name string, seriesType series.Type,
 
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
 // the function the elements of each row are casted to a Series of a specific
-// type. In order of priority: String -> Float -> Int -> Bool. This casting also
+// type. In order of priority: String -> Time -> Float -> Int -> Bool. This casting also
 // takes place after the function application to equalize the type of the columns.
 func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	if df.Err != nil {
@@ -1522,7 +1524,9 @@ func findType(arr []string) series.Type {
 	hasFloats := false
 	hasInts := false
 	hasBools := false
+	hasTime := false
 	hasStrings := false
+
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
 			continue
@@ -1541,16 +1545,23 @@ func findType(arr []string) series.Type {
 			hasBools = true
 			continue
 		}
+		if _, e := dateparse.ParseAny(str); e == nil {
+			hasTime = true
+		}
 		hasStrings = true
 	}
-	if hasFloats && !hasBools && !hasStrings {
+	if hasFloats && !hasBools && !hasStrings && !hasTime {
 		return series.Float
 	}
-	if hasInts && !hasFloats && !hasBools && !hasStrings {
+	if hasInts && !hasFloats && !hasBools && !hasStrings && !hasTime {
 		return series.Int
 	}
-	if !hasInts && !hasFloats && hasBools && !hasStrings {
+	if !hasInts && !hasFloats && hasBools && !hasStrings && !hasTime {
 		return series.Bool
+	}
+
+	if !hasInts && !hasFloats && !hasBools && !hasStrings && hasTime {
+		return series.Time
 	}
 	return series.String
 }
@@ -1602,6 +1613,7 @@ func detectType(types []series.Type) series.Type {
 	hasInts := false
 	hasBools := false
 	hasStrings := false
+	hasTimes := false
 	for _, t := range types {
 		switch t {
 		case series.Int:
@@ -1610,12 +1622,16 @@ func detectType(types []series.Type) series.Type {
 			hasFloats = true
 		case series.Bool:
 			hasBools = true
+		case series.Time:
+			hasTimes = true
 		case series.String:
 			hasStrings = true
 		}
 	}
 	if hasStrings {
 		return series.String
+	} else if hasTimes {
+		return series.Time
 	} else if hasFloats {
 		return series.Float
 	} else if hasInts {
