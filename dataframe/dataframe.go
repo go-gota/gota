@@ -1547,6 +1547,7 @@ func findType(arr []string) series.Type {
 		}
 		if _, e := dateparse.ParseAny(str); e == nil {
 			hasTime = true
+			continue
 		}
 		hasStrings = true
 	}
