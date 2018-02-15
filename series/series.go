@@ -6,6 +6,8 @@ import (
 	"sort"
 	"strings"
 	"time"
+
+	"github.com/vmihailenco/msgpack"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -85,6 +87,26 @@ const (
 type Indexes interface{}
 
 // TODO:  New series values as an Alias (type Values interface{}) for better documentation
+
+// NewFromBytes unmarshal Series from MessagePack byte array
+func NewFromBytes(data []byte) Series {
+	var d struct {
+		Name     string
+		Type     Type
+		Elements []Element
+	}
+	var serie Series
+	err := msgpack.Unmarshal(data, &d)
+	if err != nil {
+		serie.Err = err
+		return serie
+	}
+
+	serie.Name = d.Name
+	serie.t = d.Type
+	serie.elements = d.Elements
+	return serie
+}
 
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
@@ -469,6 +491,21 @@ func (s Series) Copy() Series {
 		Err:      err,
 	}
 	return ret
+}
+
+// Bytes marshals to MessagePack
+func (s Series) Bytes() ([]byte, error) {
+	d := struct {
+		Name     string
+		Type     Type
+		Elements []Element
+	}{
+		Name:     s.Name,
+		Type:     s.t,
+		Elements: s.elements,
+	}
+
+	return msgpack.Marshal(&d)
 }
 
 // Records returns the elements of a Series as a []string
