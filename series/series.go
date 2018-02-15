@@ -93,7 +93,7 @@ func NewFromBytes(data []byte) Series {
 	var d struct {
 		Name     string
 		Type     Type
-		Elements []Element
+		Elements []string
 	}
 	var serie Series
 	err := msgpack.Unmarshal(data, &d)
@@ -102,10 +102,7 @@ func NewFromBytes(data []byte) Series {
 		return serie
 	}
 
-	serie.Name = d.Name
-	serie.t = d.Type
-	serie.elements = d.Elements
-	return serie
+	return New(d.Elements, d.Type, d.Name)
 }
 
 // New is the generic Series constructor
@@ -498,11 +495,11 @@ func (s Series) Bytes() ([]byte, error) {
 	d := struct {
 		Name     string
 		Type     Type
-		Elements []Element
+		Elements []string
 	}{
 		Name:     s.Name,
 		Type:     s.t,
-		Elements: s.elements,
+		Elements: s.Records(),
 	}
 
 	return msgpack.Marshal(&d)

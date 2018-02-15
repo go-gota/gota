@@ -958,6 +958,33 @@ func TestBools(t *testing.T) {
 	}
 }
 
+func TestMarshalUnmarshal(t *testing.T) {
+	serie := New([]string{"One", "two", "three"}, String, "SomeName")
+
+	bytes, err := serie.Bytes()
+	if err != nil {
+		t.Error(err)
+	}
+	fmt.Println(len(bytes))
+	unmSerie := NewFromBytes(bytes)
+	if unmSerie.Err != nil {
+		t.Error(unmSerie.Err)
+	}
+
+	if unmSerie.Name != serie.Name {
+		t.Errorf("Unmarshal serie name mismatched")
+	}
+
+	if unmSerie.t != serie.t {
+		t.Errorf("Unmarshal serie type mismatched")
+	}
+
+	if unmSerie.Len() != serie.Len() {
+		t.Errorf("Unmarshal serie Len mismatched")
+	}
+
+}
+
 func TestSeries_Copy(t *testing.T) {
 	tests := []Series{
 		Strings([]string{"1", "2", "3", "a", "b", "c"}),
