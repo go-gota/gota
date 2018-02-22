@@ -58,7 +58,7 @@ func (e floatElement) Copy() Element {
 }
 
 func (e floatElement) IsNA() bool {
-	if e.e == nil || math.IsNaN(*e.e) {
+	if e.e == nil || math.IsNaN(*e.e) || math.IsInf(*e.e, 1) || math.IsInf(*e.e, -1) {
 		return true
 	}
 	return false

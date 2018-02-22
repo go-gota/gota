@@ -381,6 +381,18 @@ func TestSeries_Compare(t *testing.T) {
 			[]bool{false, false, false},
 			Bools([]bool{false, false, true}),
 		},
+		{
+			Floats([]float64{23.2, math.NaN(), math.Inf(1), math.Inf(-1)}),
+			IsNotNaN,
+			Floats([]float64{23.2, 1, 1, 1}),
+			Bools([]bool{true, false, false, false}),
+		},
+		{
+			Floats([]float64{23.2, math.NaN(), math.Inf(1), math.Inf(-1)}),
+			IsNaN,
+			Floats([]float64{23.2, 1, 1, 1}),
+			Bools([]bool{false, true, true, true}),
+		},
 	}
 	for testnum, test := range table {
 		a := test.series

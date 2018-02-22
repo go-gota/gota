@@ -61,6 +61,8 @@ const (
 	Less                 = "<"  // Lesser than
 	LessEq               = "<=" // Lesser or equal than
 	In                   = "in" // Inside
+	IsNaN                = "is NaN"
+	IsNotNaN             = "is not NaN"
 )
 
 // Type is a convenience alias that can be used for a more type safe way of
@@ -411,6 +413,10 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 			ret = a.Less(b)
 		case LessEq:
 			ret = a.LessEq(b)
+		case IsNaN:
+			ret = a.IsNA()
+		case IsNotNaN:
+			ret = !a.IsNA()
 		default:
 			return false, fmt.Errorf("unknown comparator: %v", c)
 		}
