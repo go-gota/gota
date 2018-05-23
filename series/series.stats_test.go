@@ -44,13 +44,13 @@ func TestStats_Median(t *testing.T) {
 		{Ints([]int{4, 5, 6, 7, 8, 9, 120}), 7},
 		{Ints([]int{4, 5, 6, 7, 8, 1, 9, 120}), 6.5},
 		{Ints([]int{4, 5, 6, 7, 8, 1, 2, 9, 120}), 6},
+		{Floats([]float64{math.NaN(), math.NaN()}), math.NaN()},
 	}
 
 	for nr, test := range tests {
 		expected := test.expected
 		received := test.serie.Median()
-
-		if expected != received {
+		if expected != received && (math.IsNaN(expected) && !math.IsNaN(received)) {
 			t.Errorf(
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				nr, expected, received,

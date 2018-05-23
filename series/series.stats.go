@@ -1,6 +1,8 @@
 package series
 
-import "math"
+import (
+	"math"
+)
 
 // Variance the amount of population variation in the Series
 func (s Series) Variance() float64 {

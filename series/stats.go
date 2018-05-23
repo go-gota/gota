@@ -116,6 +116,14 @@ func Outliers(data []float64) []float64 {
 //Median finds the number in slice
 func Median(data []float64) float64 {
 	l := len(data)
+	if l == 0 {
+		return math.NaN()
+	}
+
+	if l == 1 {
+		return data[0]
+	}
+
 	cdata := make([]float64, l)
 	copy(cdata, data)
 	sort.Float64s(cdata)
