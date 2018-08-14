@@ -489,10 +489,11 @@ func (s Series) Copy() Series {
 		elements[i] = e.Copy()
 	}
 	ret := Series{
-		Name:     name,
-		t:        t,
-		elements: elements,
-		Err:      err,
+		Name:      name,
+		t:         t,
+		elements:  elements,
+		Err:       err,
+		OtherInfo: s.OtherInfo,
 	}
 	return ret
 }
