@@ -874,6 +874,21 @@ func (df DataFrame) Ncol() int {
 	return df.ncols
 }
 
+// ColFilter return series by OtherInfo
+func (df DataFrame) ColFilter(fn func(otherInfo interface{}) bool) series.Series {
+	if df.Err != nil {
+		return series.Series{Err: df.Err}
+	}
+	for _, c := range df.columns {
+		if fn(c.OtherInfo) {
+			return c.Copy()
+		}
+	}
+	return series.Series{
+		Err: fmt.Errorf("not found"),
+	}
+}
+
 // Col returns the Series with the given column name contained in the DataFrame.
 func (df DataFrame) Col(colname string) series.Series {
 	if df.Err != nil {
