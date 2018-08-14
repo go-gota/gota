@@ -16,10 +16,11 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string    // The name of the series
-	elements []Element // The values of the elements
-	t        Type      // The type of the series
-	Err      error     // If there are errors they are stored here
+	Name      string      // The name of the series
+	elements  []Element   // The values of the elements
+	t         Type        // The type of the series
+	Err       error       // If there are errors they are stored here
+	OtherInfo interface{} // OtherInfo for the serie
 }
 
 // Element is the interface that defines the types of methods to be present for
