@@ -616,6 +616,9 @@ type loadOptions struct {
 
 	// Defines which valeus are going to be considered as NaN when parsing from string
 	nanValues []string
+
+	// Define a func for trimming the header strings satisfying f(r) to be removed
+	trimHeader func(r rune) bool
 }
 
 // DefaultType set the defaultType option for loadOptions.
@@ -636,6 +639,13 @@ func DetectTypes(b bool) LoadOption {
 func HasHeader(b bool) LoadOption {
 	return func(c *loadOptions) {
 		c.hasHeader = b
+	}
+}
+
+// TrimHeaderString trim header string which satisfy f(c) function
+func TrimHeaderString(fn func(r rune) bool) LoadOption {
+	return func(c *loadOptions) {
+		c.trimHeader = fn
 	}
 }
 
@@ -679,6 +689,13 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	if cfg.hasHeader {
 		headers = records[0]
 		records = records[1:]
+
+		if cfg.trimHeader != nil {
+			for i := 0; i < len(headers); i++ {
+				headers[i] = strings.TrimFunc(headers[i], cfg.trimHeader)
+			}
+		}
+
 	} else {
 		fixColnames(headers)
 	}

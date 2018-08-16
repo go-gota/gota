@@ -6,6 +6,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/gonum/matrix/mat64"
 	"github.com/isuruceanu/gota/series"
@@ -618,6 +619,11 @@ func TestDataFrame_Filter(t *testing.T) {
 }
 
 func TestLoadRecords(t *testing.T) {
+
+	trimFn := func(r rune) bool {
+		return !unicode.IsLetter(r) && !unicode.IsNumber(r)
+	}
+
 	table := []struct {
 		b     DataFrame
 		expDf DataFrame
@@ -714,6 +720,21 @@ func TestLoadRecords(t *testing.T) {
 				series.New([]float64{1, 2}, series.Float, "B"),
 				series.New([]bool{true, true}, series.Bool, "C"),
 				series.New([]string{"0", "0.5"}, series.Float, "D"),
+			),
+		},
+		{
+			// Trimheaders
+			LoadRecords(
+				[][]string{
+					{"\ufeffA", "B"},
+					{"a", "1"},
+					{"b", "2"},
+				},
+				TrimHeaderString(trimFn),
+			),
+			New(
+				series.New([]string{"a", "b"}, series.String, "A"),
+				series.New([]int{1, 2}, series.Int, "B"),
 			),
 		},
 	}

@@ -3,6 +3,7 @@ package dataframe_test
 import (
 	"fmt"
 	"strings"
+	"testing"
 
 	"github.com/kniren/gota/dataframe"
 	"github.com/kniren/gota/series"
@@ -176,7 +177,7 @@ func ExampleDataFrame_Mutate() {
 	fmt.Println(mut2)
 }
 
-func ExampleDataFrame_InnerJoin() {
+func TestExampleDataFrame_InnerJoin(t *testing.T) {
 	df := dataframe.LoadRecords(
 		[][]string{
 			[]string{"A", "B", "C", "D"},
@@ -196,7 +197,7 @@ func ExampleDataFrame_InnerJoin() {
 		},
 	)
 	join := df.InnerJoin(df2, "D")
-	fmt.Println(join)
+	t.Error(join)
 }
 
 func ExampleDataFrame_Set() {
