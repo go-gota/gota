@@ -250,7 +250,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will updated the values of a DataFrame for the rows selected via indexes.
+// Set will update the values of a DataFrame for the rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
