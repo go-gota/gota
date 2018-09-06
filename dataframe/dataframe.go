@@ -1568,8 +1568,7 @@ func findType(arr []string) series.Type {
 			hasInts = true
 			continue
 		}
-		astr := strings.Replace(str, ",", "", -1)
-		if _, err := strconv.ParseFloat(astr, 64); err == nil {
+		if _, err := strconv.ParseFloat(istr, 64); err == nil {
 			hasFloats = true
 			continue
 		}

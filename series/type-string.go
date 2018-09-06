@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/araddon/dateparse"
 )
 
 type stringElement struct {
@@ -112,7 +110,7 @@ func (e stringElement) Time() (time.Time, error) {
 	if e.IsNA() {
 		return time.Now(), fmt.Errorf("can't convert NaN to time")
 	}
-	return dateparse.ParseAny(*e.e)
+	return ParseDateTime(*e.e)
 }
 
 func (e stringElement) Addr() string {

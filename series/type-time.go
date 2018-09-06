@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 	"time"
-
-	"github.com/araddon/dateparse"
 )
 
 type timeElement struct {
@@ -25,7 +23,7 @@ func (e timeElement) Set(value interface{}) Element {
 			e.e = nil
 			return e
 		}
-		val, err = dateparse.ParseAny(value.(string))
+		val, err = ParseDateTime(value.(string))
 		if err != nil {
 			e.e = nil
 			return e
