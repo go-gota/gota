@@ -12,8 +12,6 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/araddon/dateparse"
-
 	"github.com/gonum/matrix/mat64"
 	"github.com/isuruceanu/gota/series"
 )
@@ -1576,7 +1574,7 @@ func findType(arr []string) series.Type {
 			hasBools = true
 			continue
 		}
-		if _, e := dateparse.ParseAny(str); e == nil {
+		if _, e := series.ParseDateTime(str); e == nil {
 			hasTime = true
 			continue
 		}
