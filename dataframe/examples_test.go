@@ -197,7 +197,7 @@ func TestExampleDataFrame_InnerJoin(t *testing.T) {
 		},
 	)
 	join := df.InnerJoin(df2, "D")
-	t.Error(join)
+	fmt.Println(join)
 }
 
 func ExampleDataFrame_Set() {

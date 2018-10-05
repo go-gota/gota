@@ -602,6 +602,11 @@ type loadOptions struct {
 	// otherwise specified.
 	detectTypes bool
 
+	// If set, the type will be inference with the threshold rate.
+	// E.g. 90% threshold will denote if a column contains 90% of row as int and 10% string will set the type to Int
+	// Value [0..100]
+	detectTypeThreshold float64
+
 	// If set, the first row of the tabular structure will be used as column
 	// names.
 	hasHeader bool
@@ -630,6 +635,14 @@ func DefaultType(t series.Type) LoadOption {
 func DetectTypes(b bool) LoadOption {
 	return func(c *loadOptions) {
 		c.detectTypes = b
+	}
+}
+
+// DetectTypeThreshold set the detectTypeThreshold option for loadOptions.
+// value [0..100]
+func DetectTypeThreshold(rate float64) LoadOption {
+	return func(c *loadOptions) {
+		c.detectTypeThreshold = rate
 	}
 }
 
@@ -665,11 +678,12 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	// Load the options
 	cfg := loadOptions{
-		types:       make(map[string]series.Type),
-		detectTypes: true,
-		defaultType: series.String,
-		hasHeader:   true,
-		nanValues:   []string{"NA", "NaN", "<nil>"},
+		types:               make(map[string]series.Type),
+		detectTypes:         true,
+		detectTypeThreshold: 100,
+		defaultType:         series.String,
+		hasHeader:           true,
+		nanValues:           []string{"NA", "NaN", "<nil>"},
 	}
 	for _, option := range options {
 		option(&cfg)
@@ -713,7 +727,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		if !ok {
 			t = cfg.defaultType
 			if cfg.detectTypes {
-				t = findType(rawcol)
+				t = findType(rawcol, cfg.detectTypeThreshold)
 			}
 		}
 		types[i] = t
@@ -1550,12 +1564,15 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 	return idx, nil
 }
 
-func findType(arr []string) series.Type {
-	hasFloats := false
-	hasInts := false
-	hasBools := false
-	hasTime := false
-	hasStrings := false
+func findType(arr []string, threshold float64) series.Type {
+
+	counter := map[series.Type]int{
+		series.Float:  0,
+		series.Int:    0,
+		series.Bool:   0,
+		series.Time:   0,
+		series.String: 0,
+	}
 
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
@@ -1563,37 +1580,94 @@ func findType(arr []string) series.Type {
 		}
 		istr := strings.Replace(str, ",", "", -1)
 		if _, err := strconv.Atoi(istr); err == nil {
-			hasInts = true
+			counter[series.Int]++
 			continue
 		}
 		if _, err := strconv.ParseFloat(istr, 64); err == nil {
-			hasFloats = true
+			counter[series.Float]++
 			continue
 		}
 		if str == "true" || str == "false" {
-			hasBools = true
+			counter[series.Bool]++
 			continue
 		}
 		if _, e := series.ParseDateTime(str); e == nil {
-			hasTime = true
+			counter[series.Time]++
 			continue
 		}
-		hasStrings = true
-	}
-	if hasFloats && !hasBools && !hasStrings && !hasTime {
-		return series.Float
-	}
-	if hasInts && !hasFloats && !hasBools && !hasStrings && !hasTime {
-		return series.Int
-	}
-	if !hasInts && !hasFloats && hasBools && !hasStrings && !hasTime {
-		return series.Bool
+		counter[series.String]++
 	}
 
-	if !hasInts && !hasFloats && !hasBools && !hasStrings && hasTime {
-		return series.Time
+	// adjust if there are bools and ints , ints wiin all counts
+	if counter[series.Int] > 0 && counter[series.Bool] > 0 {
+		counter[series.Int] += counter[series.Bool]
+		counter[series.Bool] = 0
 	}
-	return series.String
+
+	// adjust if there ints and floats floats win taking all counts
+	if counter[series.Float] > 0 && counter[series.Int] > 0 {
+		counter[series.Float] += counter[series.Int]
+		counter[series.Int] = 0
+	}
+
+	return getWinningType(counter, threshold)
+}
+
+func getWinningType(counter map[series.Type]int, threshold float64) series.Type {
+
+	type score struct {
+		series.Type
+		ratio float64
+	}
+
+	hierarchy := map[series.Type]int{
+		series.Float:  2,
+		series.Int:    1,
+		series.Bool:   0,
+		series.Time:   3,
+		series.String: 4,
+	}
+
+	biggerThenThreshold := []score{}
+
+	if threshold > 100 {
+		threshold = 100.
+	}
+
+	if threshold < 0 {
+		threshold = 0
+	}
+
+	nonNanCount := 0
+	for _, val := range counter {
+		nonNanCount += val
+	}
+
+	for k, val := range counter {
+
+		if v := float64(val) * 100 / float64(nonNanCount); v >= threshold {
+			biggerThenThreshold = append(biggerThenThreshold, score{k, v})
+		}
+	}
+
+	maxEl := func(sl []score) series.Type {
+		if len(sl) == 0 {
+			return series.String
+		}
+		max := sl[0]
+		for i := 1; i < len(sl); i++ {
+			if sl[i].ratio > max.ratio {
+				max = sl[i]
+			} else if sl[i].ratio == max.ratio { // Check the Hierarchy
+				if hierarchy[sl[i].Type] > hierarchy[max.Type] {
+					max = sl[i]
+				}
+			}
+		}
+		return max.Type
+	}
+
+	return maxEl(biggerThenThreshold)
 }
 
 func transposeRecords(x [][]string) [][]string {

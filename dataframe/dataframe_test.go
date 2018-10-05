@@ -745,7 +745,7 @@ func TestLoadRecords(t *testing.T) {
 		}
 		// Check that the types are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Types(), b.Types()) {
-			t.Errorf("Different types:\nA:%v\nB:%v", test.expDf.Types(), b.Types())
+			t.Errorf("Different types:\ntestnum:%d\nA:%v\nB:%v", testnum, test.expDf.Types(), b.Types())
 		}
 		// Check that the colnames are the same between both DataFrames
 		if !reflect.DeepEqual(test.expDf.Names(), b.Names()) {
@@ -1946,6 +1946,28 @@ func TestDataFrame_String(t *testing.T) {
 	if expected != received {
 		t.Errorf("Different values:\nExpected: \n%v\nReceived: \n%v\n", expected, received)
 	}
+}
+
+func TestWinnerType(t *testing.T) {
+	tests := []struct {
+		counter   map[series.Type]int
+		threshold float64
+		expected  series.Type
+	}{
+		{counter: map[series.Type]int{series.Bool: 90, series.String: 10}, threshold: 85.0, expected: series.Bool},
+		{counter: map[series.Type]int{series.Bool: 10, series.Int: 80, series.String: 10}, threshold: 80, expected: series.Int},
+		{counter: map[series.Type]int{series.Bool: 10, series.Int: 80, series.String: 10}, threshold: 90, expected: series.String},
+		{counter: map[series.Type]int{series.Bool: 25, series.Int: 25, series.String: 25, series.Float: 25}, threshold: 20, expected: series.String},
+		{counter: map[series.Type]int{series.Bool: 25, series.Int: 25}, threshold: 50, expected: series.Int},
+	}
+
+	for idx, test := range tests {
+		actual := getWinningType(test.counter, test.threshold)
+		if actual != test.expected {
+			t.Errorf("%d: Expected[%v] Actual[%v", idx, test.expected, actual)
+		}
+	}
+
 }
 
 func TestDataFrame_Rapply(t *testing.T) {
