@@ -1241,3 +1241,17 @@ func TestSeries_IsNaN(t *testing.T) {
 		}
 	}
 }
+
+func TestParseDate(t *testing.T) {
+	data := []string{"26/01/1986", "01/08/1987", "12/10/1987", "30/11/1987", "17/09/1990", "14/09/1992",
+		"06/09/1993", "06/09/1993", "05/09/1994", "03/01/1995"}
+
+	for _, d := range data {
+		date, e := ParseDateTime(d)
+		if e != nil {
+			t.Error(e)
+		}
+
+		t.Error(date)
+	}
+}

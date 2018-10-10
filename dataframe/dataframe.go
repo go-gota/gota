@@ -716,7 +716,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	for i, colname := range headers {
 		rawcol := make([]string, len(records))
 		for j := 0; j < len(records); j++ {
-			rawcol[j] = records[j][i]
+			rawcol[j] = strings.TrimSpace(records[j][i])
 			if findInStringSlice(rawcol[j], cfg.nanValues) != -1 {
 				rawcol[j] = "NaN"
 			}
