@@ -94,9 +94,10 @@ type Indexes interface{}
 // NewFromBytes unmarshal Series from MessagePack byte array
 func NewFromBytes(data []byte) Series {
 	var d struct {
-		Name     string
-		Type     Type
-		Elements []string
+		Name      string
+		Type      Type
+		Elements  []string
+		OtherInfo interface{}
 	}
 	var serie Series
 	err := msgpack.Unmarshal(data, &d)
@@ -105,7 +106,14 @@ func NewFromBytes(data []byte) Series {
 		return serie
 	}
 
-	return New(d.Elements, d.Type, d.Name)
+	return NewWithOther(d.Elements, d.Type, d.Name, d.OtherInfo)
+}
+
+// NewWithOther is the genereic Series constructor with otherInfo
+func NewWithOther(values interface{}, t Type, name string, otherInfo interface{}) Series {
+	s := New(values, t, name)
+	s.OtherInfo = otherInfo
+	return s
 }
 
 // New is the generic Series constructor
@@ -234,9 +242,10 @@ func Times(values interface{}) Series {
 func (s Series) Empty() Series {
 	var elements []Element
 	return Series{
-		Name:     s.Name,
-		t:        s.t,
-		elements: elements,
+		Name:      s.Name,
+		t:         s.t,
+		elements:  elements,
+		OtherInfo: s.OtherInfo,
 	}
 }
 
@@ -246,7 +255,7 @@ func (s *Series) Append(values interface{}) {
 	if err := s.Err; err != nil {
 		return
 	}
-	news := New(values, s.t, s.Name)
+	news := NewWithOther(values, s.t, s.Name, s.OtherInfo)
 	s.elements = append(s.elements, news.elements...)
 }
 
@@ -279,7 +288,7 @@ func (s Series) Slice(start, end int) Series {
 
 	elements := s.elements[start:end]
 
-	return New(elements, s.t, s.Name)
+	return NewWithOther(elements, s.t, s.Name, s.OtherInfo)
 }
 
 // Subset returns a subset of the series based on the given Indexes.
@@ -301,9 +310,10 @@ func (s Series) Subset(indexes Indexes) Series {
 		elements[k] = s.elements[i].Copy()
 	}
 	return Series{
-		Name:     s.Name,
-		t:        s.t,
-		elements: elements,
+		Name:      s.Name,
+		t:         s.t,
+		elements:  elements,
+		OtherInfo: s.OtherInfo,
 	}
 }
 
@@ -501,13 +511,15 @@ func (s Series) Copy() Series {
 // Bytes marshals to MessagePack
 func (s Series) Bytes() ([]byte, error) {
 	d := struct {
-		Name     string
-		Type     Type
-		Elements []string
+		Name      string
+		Type      Type
+		Elements  []string
+		OtherInfo interface{}
 	}{
-		Name:     s.Name,
-		Type:     s.t,
-		Elements: s.Records(),
+		Name:      s.Name,
+		Type:      s.t,
+		Elements:  s.Records(),
+		OtherInfo: s.OtherInfo,
 	}
 
 	return msgpack.Marshal(&d)
