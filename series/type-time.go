@@ -105,6 +105,9 @@ func (e timeElement) String() string {
 }
 
 func (e timeElement) Time() (time.Time, error) {
+	if e.IsNA() {
+		return time.Time{}, fmt.Errorf("value is NaN")
+	}
 	return *e.e, nil
 }
 
