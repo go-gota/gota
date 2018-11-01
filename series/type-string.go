@@ -54,6 +54,10 @@ func (e stringElement) IsNA() bool {
 	if e.e == nil {
 		return true
 	}
+	nanvalue := []string{"NA", "NaN", "<nil>"}
+	if findInStringSlice(string(*e.e), nanvalue) != -1 {
+		return true
+	}
 	return false
 }
 
@@ -157,4 +161,13 @@ func (e stringElement) GreaterEq(elem Element) bool {
 		return false
 	}
 	return *e.e >= elem.String()
+}
+
+func findInStringSlice(str string, s []string) int {
+	for i, e := range s {
+		if e == str {
+			return i
+		}
+	}
+	return -1
 }

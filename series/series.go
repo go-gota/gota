@@ -249,6 +249,33 @@ func (s Series) Empty() Series {
 	}
 }
 
+// Combine combines two series equal size series. If element s[i] is not NA takes s[i] overwise b[i]
+func (s *Series) Combine(b Series) Series {
+	if len(s.elements) != len(b.elements) {
+		r := s.Empty()
+		r.Err = fmt.Errorf("series dimention mismatched")
+		return r
+	}
+
+	if s.Err != nil {
+		return *s
+	}
+
+	if b.Err != nil {
+		return b
+	}
+
+	r := s.Empty()
+	for i := 0; i < s.Len(); i++ {
+		if s.elements[i].IsNA() {
+			r.Append(b.elements[i])
+		} else {
+			r.Append(s.elements[i])
+		}
+	}
+	return r
+}
+
 // Append adds new elements to the end of the Series. When using Append, the
 // Series is modified in place.
 func (s *Series) Append(values interface{}) {
