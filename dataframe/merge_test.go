@@ -10,12 +10,12 @@ import (
 func TestOuterJoinMergeWithCombine(t *testing.T) {
 	result := LoadRecords(
 		[][]string{
-			[]string{"UID", "Gender", "HEXO", "Bonus"},
-			[]string{"1", "M", "17.0", "20.0"},
-			[]string{"2", "F", "18.0", "28.0"},
-			[]string{"3", "M", "16.2", "NA"},
-			[]string{"4", "F", "23.0", "NA"},
-			[]string{"5", "F", "NA", "18.0"},
+			[]string{"UID", "Gender", "HEXO", "Age", "WWH", "Bonus"},
+			[]string{"1", "M", "100.0", "18", "40", "25.0"},
+			[]string{"2", "F", "100.0", "20", "40", "25.0"},
+			[]string{"3", "M", "100.0", "21", "40", "25.0"},
+			[]string{"4", "F", "100.0", "22", "40", "NA"},
+			[]string{"5", "F", "NA", "15", "NA", "25.0"},
 		},
 	)
 
@@ -34,10 +34,11 @@ func TestOuterJoinMergeWithCombine(t *testing.T) {
 func TestRightJoinMergeWithCombine(t *testing.T) {
 	result := LoadRecords(
 		[][]string{
-			[]string{"UID", "Gender", "HEXO", "Bonus"},
-			[]string{"1", "M", "17.0", "20.0"},
-			[]string{"2", "F", "18.0", "28.0"},
-			[]string{"5", "F", "NA", "18.0"},
+			[]string{"UID", "Gender", "HEXO", "Age", "WWH", "Bonus"},
+			[]string{"1", "M", "100.0", "18", "40", "25.0"},
+			[]string{"2", "F", "100.0", "20", "40", "25.0"},
+			[]string{"3", "M", "100.0", "21", "40", "25.0"},
+			[]string{"5", "F", "NA", "15", "NA", "25.0"},
 		},
 	)
 
@@ -56,9 +57,10 @@ func TestRightJoinMergeWithCombine(t *testing.T) {
 func TestInnerJoinMergeWithCombine(t *testing.T) {
 	result := LoadRecords(
 		[][]string{
-			[]string{"UID", "Gender", "HEXO", "Bonus"},
-			[]string{"1", "M", "17.0", "20.0"},
-			[]string{"2", "F", "18.0", "28.0"},
+			[]string{"UID", "Gender", "HEXO", "Age", "WWH", "Bonus"},
+			[]string{"1", "M", "100.0", "18", "40", "25.0"},
+			[]string{"2", "F", "100.0", "20", "40", "25.0"},
+			[]string{"3", "M", "100.0", "21", "40", "25.0"},
 		},
 	)
 
@@ -78,11 +80,11 @@ func TestLeftMergeWithCombine(t *testing.T) {
 
 	result := LoadRecords(
 		[][]string{
-			[]string{"UID", "Gender", "HEXO", "Bonus"},
-			[]string{"1", "M", "17.0", "20.0"},
-			[]string{"2", "F", "18.0", "28.0"},
-			[]string{"3", "M", "16.2", "NA"},
-			[]string{"4", "F", "23.0", "NA"},
+			[]string{"UID", "Gender", "HEXO", "Age", "WWH", "Bonus"},
+			[]string{"1", "M", "100.0", "18", "40", "25.0"},
+			[]string{"2", "F", "100.0", "20", "40", "25.0"},
+			[]string{"3", "M", "100.0", "21", "40", "25.0"},
+			[]string{"4", "F", "100.0", "22", "40", "NA"},
 		},
 	)
 
@@ -91,6 +93,7 @@ func TestLeftMergeWithCombine(t *testing.T) {
 		t.Error(third.Err)
 	}
 
+	fmt.Println(third.String())
 	if third.String() != result.String() {
 		t.Error("Result dataset differs from expected")
 	}
@@ -103,20 +106,21 @@ var compareFn = func(a, b series.Series) bool {
 var (
 	first = LoadRecords(
 		[][]string{
-			[]string{"Gender", "HEXO", "UID"},
-			[]string{"M", "17.0", "1"},
-			[]string{"NA", "18.0", "2"},
-			[]string{"M", "16.2", "3"},
-			[]string{"F", "23.0", "4"},
+			[]string{"UID", "Gender", "HEXO", "Age", "WWH"},
+			[]string{"1", "M", "100.0", "18", "40"},
+			[]string{"2", "F", "100.0", "20", "40"},
+			[]string{"3", "M", "100.0", "21", "40"},
+			[]string{"4", "F", "100.0", "22", "40"},
 		},
 	)
 
 	second = LoadRecords(
 		[][]string{
-			[]string{"Gender", "Bonus", "UID"},
-			[]string{"NA", "20.0", "1"},
-			[]string{"F", "28.0", "2"},
-			[]string{"F", "18.0", "5"},
+			[]string{"UID", "Gender", "Age", "Bonus"},
+			[]string{"1", "M", "18", "25.0"},
+			[]string{"2", "F", "17", "25.0"},
+			[]string{"3", "M", "16", "25.0"},
+			[]string{"5", "F", "15", "25.0"},
 		},
 	)
 )

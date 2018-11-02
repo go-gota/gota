@@ -66,18 +66,9 @@ type tuple struct {
 
 type tupleArr []tuple
 
-func (t tupleArr) inA(i int) (int, bool) {
+func (t tupleArr) findTuple(val int, fn func(int, tuple) bool) (int, bool) {
 	for idx, v := range t {
-		if v.aIdx == i {
-			return idx, true
-		}
-	}
-	return -1, false
-}
-
-func (t tupleArr) inB(i int) (int, bool) {
-	for idx, v := range t {
-		if v.bIdx == i {
+		if fn(val, v) {
 			return idx, true
 		}
 	}
@@ -119,7 +110,7 @@ func (df DataFrame) outerJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inA(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInA); cf {
 				iCombinedCols[cIdx].rAIdx = len(newCols) - 1
 			}
 		}
@@ -129,7 +120,7 @@ func (df DataFrame) outerJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysB) {
 			iNotKeysB = append(iNotKeysB, i)
 			newCols = append(newCols, bCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inB(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInB); cf {
 				iCombinedCols[cIdx].rBIdx = len(newCols) - 1
 			}
 		}
@@ -252,7 +243,7 @@ func (df DataFrame) rightJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inA(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInA); cf {
 				iCombinedCols[cIdx].rAIdx = len(newCols) - 1
 			}
 		}
@@ -262,7 +253,7 @@ func (df DataFrame) rightJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysB) {
 			iNotKeysB = append(iNotKeysB, i)
 			newCols = append(newCols, bCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inB(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInB); cf {
 				iCombinedCols[cIdx].rBIdx = len(newCols) - 1
 			}
 		}
@@ -352,7 +343,7 @@ func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn func(l, r series
 			if !inIntSlice(i, iKeysA) {
 				for j := 0; j < b.ncols; j++ {
 					if !inIntSlice(j, iKeysB) {
-						if compareFn(aCols[i], bCols[j]) { // TODO: refator to received func which check it
+						if compareFn(aCols[i], bCols[j]) {
 							iCombinedCols = append(iCombinedCols, tuple{i, j, -1, -1})
 						}
 					}
@@ -366,7 +357,7 @@ func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inA(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInA); cf {
 				iCombinedCols[cIdx].rAIdx = len(newCols) - 1
 			}
 		}
@@ -376,7 +367,7 @@ func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn func(l, r series
 		if !inIntSlice(i, iKeysB) {
 			iNotKeysB = append(iNotKeysB, i)
 			newCols = append(newCols, bCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inB(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInB); cf {
 				iCombinedCols[cIdx].rBIdx = len(newCols) - 1
 			}
 		}
@@ -439,9 +430,8 @@ func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn func(l, r series.
 			if !inIntSlice(i, iKeysA) {
 				for j := 0; j < b.ncols; j++ {
 					if !inIntSlice(j, iKeysB) {
-						if compareFn(aCols[i], bCols[j]) { // TODO: refator to received func which check it
+						if compareFn(aCols[i], bCols[j]) {
 							iCombinedCols = append(iCombinedCols, tuple{i, j, -1, -1})
-							//newCols = append(newCols, aCols[i].Empty()) //TODO: as it is left join aCols nrow is fine here change for over types
 						}
 					}
 				}
@@ -454,7 +444,7 @@ func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn func(l, r series.
 		if !inIntSlice(i, iKeysA) {
 			iNotKeysA = append(iNotKeysA, i)
 			newCols = append(newCols, aCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inA(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInA); cf {
 				iCombinedCols[cIdx].rAIdx = len(newCols) - 1
 			}
 		}
@@ -464,7 +454,7 @@ func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn func(l, r series.
 		if !inIntSlice(i, iKeysB) {
 			iNotKeysB = append(iNotKeysB, i)
 			newCols = append(newCols, bCols[i].Empty())
-			if cIdx, cf := iCombinedCols.inB(i); cf {
+			if cIdx, cf := iCombinedCols.findTuple(i, findInB); cf {
 				iCombinedCols[cIdx].rBIdx = len(newCols) - 1
 			}
 		}
@@ -535,10 +525,18 @@ func combineColumns(iCombinedCols tupleArr, newCols []series.Series) []series.Se
 		cobCol := newCols[c.rAIdx].Combine(newCols[c.rBIdx])
 		if cobCol.Err == nil {
 			newCols[c.rAIdx] = cobCol
-			newCols = append(newCols[:c.rBIdx], newCols[c.rBIdx+1:]...)
 		}
 	}
-	return newCols
+	result := []series.Series{}
+
+	for idx, s := range newCols {
+		if _, ok := iCombinedCols.findTuple(idx, findInRB); ok {
+			continue
+		}
+		result = append(result, s)
+	}
+
+	return result
 }
 
 func checkDataframesForJoins(a, b DataFrame, keys ...string) ([]int, []int, []string) {
@@ -563,3 +561,17 @@ func checkDataframesForJoins(a, b DataFrame, keys ...string) ([]int, []int, []st
 	}
 	return iKeysA, iKeysB, errorArr
 }
+
+var (
+	findInA = func(val int, t tuple) bool {
+		return val == t.aIdx
+	}
+
+	findInB = func(val int, t tuple) bool {
+		return val == t.bIdx
+	}
+
+	findInRB = func(val int, t tuple) bool {
+		return val == t.rBIdx
+	}
+)
