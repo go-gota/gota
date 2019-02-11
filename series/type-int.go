@@ -133,18 +133,26 @@ func (e intElement) Addr() string {
 
 func (e intElement) Eq(elem Element) bool {
 	i, err := elem.Int()
-	if err != nil || e.IsNA() {
+	if err != nil{
+		return false
+	}
+
+	if e.IsNA() && elem.IsNA() {
+		return true
+	}
+
+	if e.IsNA() && !elem.IsNA() {
+		return false
+	}
+
+	if !e.IsNA() && elem.IsNA() {
 		return false
 	}
 	return *e.e == i
 }
 
 func (e intElement) Neq(elem Element) bool {
-	i, err := elem.Int()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return *e.e != i
+	return !e.Eq(elem)
 }
 
 func (e intElement) Less(elem Element) bool {

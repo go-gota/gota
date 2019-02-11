@@ -122,17 +122,23 @@ func (e stringElement) Addr() string {
 }
 
 func (e stringElement) Eq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
+
+	if e.IsNA() && elem.IsNA() {
+		return true
+	}
+
+	if e.IsNA() && !elem.IsNA() {
+		return false
+	}
+
+	if !e.IsNA() && elem.IsNA() {
 		return false
 	}
 	return *e.e == elem.String()
 }
 
 func (e stringElement) Neq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return *e.e != elem.String()
+	return !e.Eq(elem)
 }
 
 func (e stringElement) Less(elem Element) bool {

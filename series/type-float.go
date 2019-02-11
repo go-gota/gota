@@ -128,19 +128,23 @@ func (e floatElement) Addr() string {
 }
 
 func (e floatElement) Eq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
+	if e.IsNA() && elem.IsNA() {
+		return true
+	}
+
+	if e.IsNA() && !elem.IsNA() {
 		return false
 	}
-	return *e.e == f
+
+	if !e.IsNA() && elem.IsNA() {
+		return false
+	}
+
+	return *e.e == elem.Float()
 }
 
 func (e floatElement) Neq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return *e.e != f
+	return !e.Eq(elem)
 }
 
 func (e floatElement) Less(elem Element) bool {
