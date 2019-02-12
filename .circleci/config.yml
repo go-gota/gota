@@ -1,0 +1,73 @@
+version: 2
+
+defaults: &defaults
+  working_directory: /go/src/github.com/go-gota/gota
+
+golang: &golang
+  <<: *defaults
+  docker:
+    - image: golang:latest
+      environment:
+        REVIEWDOG_VERSION: "0.9.11"
+
+jobs:
+  dep:
+    <<: *golang
+    steps:
+      - checkout
+      - run:
+          name: Make lock copy
+          command: |
+            cp Gopkg.lock Gopkg.fix
+      - restore_cache:
+          keys:
+            - vendor-{{ checksum "Gopkg.fix" }}
+      - run:
+          name: Install dependencies
+          command: |
+            if [ ! -e vendor ]; then
+              make dep
+            fi
+      - save_cache:
+          key: vendor-{{ checksum "Gopkg.fix" }}
+          paths:
+            - vendor
+      - persist_to_workspace:
+          root: .
+          paths: '*'
+  lint:
+    <<: *golang
+    steps:
+      - checkout
+      - run: curl -fSL https://github.com/haya14busa/reviewdog/releases/download/$REVIEWDOG_VERSION/reviewdog_linux_amd64 -o reviewdog && chmod +x ./reviewdog
+      - run: go vet ./... 2>&1 | ./reviewdog -f=govet -reporter=github-pr-check
+  test:
+    <<: *golang
+    steps:
+      - attach_workspace:
+          at: /go/src/github.com/go-gota/gota
+      - run:
+          name: Test and collect coverages
+          command: |
+            echo "${MERCARI_ARTIFACT_CONTAINER_BUILDER_CREDENTIALS_JSON}" > ${GOOGLE_APPLICATION_CREDENTIALS}
+            make cover
+      - run:
+          name: Unit Tests
+          command: |
+            go test ./...
+  
+workflows:
+  version: 2
+  build-and-test:
+    jobs:
+      - dep:
+      - lint:
+          requires:
+            - dep
+          filters:
+            branches:
+              ignore: master
+      - test:
+          context: org-global
+          requires:
+            - dep

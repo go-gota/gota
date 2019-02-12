@@ -1,0 +1,8 @@
+coverage.txt
+.envrc
+vendor/
+bin/
+_tools/
+
+.idea/
+cmd/server/server
