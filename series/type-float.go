@@ -98,6 +98,13 @@ func (e floatElement) Float() float64 {
 	return float64(e.e)
 }
 
+func (e floatElement) Float32() float32 {
+	if e.IsNA() {
+		return math32.NaN()
+	}
+	return float32(e.e)
+}
+
 func (e floatElement) Bool() (bool, error) {
 	if e.IsNA() {
 		return false, fmt.Errorf("can't convert NaN to bool")

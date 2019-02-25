@@ -91,6 +91,17 @@ func (e stringElement) Float() float64 {
 	return f
 }
 
+func (e stringElement) Float32() float32 {
+	if e.IsNA() {
+		return math32.NaN()
+	}
+	f, err := strconv.ParseFloat(e.e, 32)
+	if err != nil {
+		return math32.NaN()
+	}
+	return float32(f)
+}
+
 func (e stringElement) Bool() (bool, error) {
 	if e.IsNA() {
 		return false, fmt.Errorf("can't convert NaN to bool")
