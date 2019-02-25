@@ -837,6 +837,102 @@ func TestFloats(t *testing.T) {
 	}
 }
 
+func TestFloat32s(t *testing.T) {
+	table := []struct {
+		series   Series
+		expected string
+	}{
+		{
+			Float32s([]string{"A", "B", "1", "2"}),
+			"[NaN NaN 1.000000 2.000000]",
+		},
+		{
+			Float32s([]string{"1"}),
+			"[1.000000]",
+		},
+		{
+			Float32s("2.1"),
+			"[2.100000]",
+		},
+		{
+			Float32s([]int{1, 2, 3}),
+			"[1.000000 2.000000 3.000000]",
+		},
+		{
+			Float32s([]int{2}),
+			"[2.000000]",
+		},
+		{
+			Float32s(-1),
+			"[-1.000000]",
+		},
+		{
+			Float32s([]float64{1.1, 2, 3}),
+			"[1.100000 2.000000 3.000000]",
+		},
+		{
+			Float32s([]float64{2}),
+			"[2.000000]",
+		},
+		{
+			Float32s(-1.0),
+			"[-1.000000]",
+		},
+		{
+			Float32s(math.NaN()),
+			"[NaN]",
+		},
+		{
+			Float32s(math.Inf(1)),
+			"[+Inf]",
+		},
+		{
+			Float32s(math.Inf(-1)),
+			"[-Inf]",
+		},
+		{
+			Float32s([]bool{true, true, false}),
+			"[1.000000 1.000000 0.000000]",
+		},
+		{
+			Float32s([]bool{false}),
+			"[0.000000]",
+		},
+		{
+			Float32s(true),
+			"[1.000000]",
+		},
+		{
+			Float32s([]int{}),
+			"[]",
+		},
+		{
+			Float32s(nil),
+			"[NaN]",
+		},
+		{
+			Float32s(Strings([]string{"1", "2", "3"})),
+			"[1.000000 2.000000 3.000000]",
+		},
+	}
+	for testnum, test := range table {
+		if err := test.series.Err; err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		expected := test.expected
+		received := fmt.Sprint(test.series)
+		if expected != received {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		if err := checkTypes(test.series); err != nil {
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+	}
+}
+
 func TestBools(t *testing.T) {
 	table := []struct {
 		series   Series
