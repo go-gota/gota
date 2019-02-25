@@ -50,7 +50,6 @@ type Element interface {
 	String() string
 	Int() (int, error)
 	Float() float64
-	Float32() float32
 	Bool() (bool, error)
 
 	// Information methods
@@ -75,12 +74,6 @@ type floatElements []floatElement
 
 func (e floatElements) Len() int           { return len(e) }
 func (e floatElements) Elem(i int) Element { return &e[i] }
-
-// float32Elements is the concrete implementation of Elements for Float32 elements.
-type float32Elements []float32Element
-
-func (e float32Elements) Len() int           { return len(e) }
-func (e float32Elements) Elem(i int) Element { return &e[i] }
 
 // boolElements is the concrete implementation of Elements for Bool elements.
 type boolElements []boolElement
@@ -113,11 +106,10 @@ type Type string
 
 // Supported Series Types
 const (
-	String  Type = "string"
-	Int     Type = "int"
-	Float   Type = "float"
-	Float32 Type = "float32"
-	Bool    Type = "bool"
+	String Type = "string"
+	Int    Type = "int"
+	Float  Type = "float"
+	Bool   Type = "bool"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -146,8 +138,6 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements = make(intElements, n)
 		case Float:
 			ret.elements = make(floatElements, n)
-		case Float32:
-			ret.elements = make(float32Elements, n)
 		case Bool:
 			ret.elements = make(boolElements, n)
 		default:
@@ -171,13 +161,6 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	case []float64:
 		v := values.([]float64)
-		l := len(v)
-		preAlloc(l)
-		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
-		}
-	case []float32:
-		v := values.([]float32)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -240,11 +223,6 @@ func Floats(values interface{}) Series {
 	return New(values, Float, "")
 }
 
-// Float32s is a constructor for a Float32 Series
-func Float32s(values interface{}) Series {
-	return New(values, Float32, "")
-}
-
 // Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
@@ -269,8 +247,6 @@ func (s *Series) Append(values interface{}) {
 		s.elements = append(s.elements.(intElements), news.elements.(intElements)...)
 	case Float:
 		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
-	case Float32:
-		s.elements = append(s.elements.(float32Elements), news.elements.(float32Elements)...)
 	case Bool:
 		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
 	}
@@ -322,12 +298,6 @@ func (s Series) Subset(indexes Indexes) Series {
 		elements := make(floatElements, len(idx))
 		for k, i := range idx {
 			elements[k] = s.elements.(floatElements)[i]
-		}
-		ret.elements = elements
-	case Float32:
-		elements := make(float32Elements, len(idx))
-		for k, i := range idx {
-			elements[k] = s.elements.(float32Elements)[i]
 		}
 		ret.elements = elements
 	case Bool:
@@ -490,9 +460,6 @@ func (s Series) Copy() Series {
 	case Float:
 		elements = make(floatElements, s.Len())
 		copy(elements.(floatElements), s.elements.(floatElements))
-	case Float32:
-		elements = make(float32Elements, s.Len())
-		copy(elements.(float32Elements), s.elements.(float32Elements))
 	case Bool:
 		elements = make(boolElements, s.Len())
 		copy(elements.(boolElements), s.elements.(boolElements))
