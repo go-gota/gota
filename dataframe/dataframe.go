@@ -1377,7 +1377,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysB {
+			for range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1481,7 +1481,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 			newCols[ii].Append(elem)
 			ii++
 		}
-		for _ = range iNotKeysA {
+		for range iNotKeysA {
 			newCols[ii].Append(nil)
 			ii++
 		}
@@ -1583,7 +1583,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysB {
+			for range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1609,7 +1609,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysA {
+			for range iNotKeysA {
 				newCols[ii].Append(nil)
 				ii++
 			}
