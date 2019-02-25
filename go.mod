@@ -1,5 +1,6 @@
 module github.com/go-gota/gota
 
+<<<<<<< HEAD
 require (
 	github.com/gonum/blas v0.0.0-20181208220705-f22b278b28ac // indirect
 	github.com/gonum/floats v0.0.0-20181209220543-c233463c7e82 // indirect
@@ -10,3 +11,6 @@ require (
 	github.com/kniren/gota v0.9.0
 	gonum.org/v1/gonum v0.0.0-20190221132855-8ea67971a689
 )
+=======
+require gonum.org/v1/gonum v0.0.0-20190221132855-8ea67971a689
+>>>>>>> 0f03e9d... fix requirements
