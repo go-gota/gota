@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/go-gota/gota/series"
+	series "github.com/go-gota/gota/series" // import "."
 )
 
 func generateInts(n int) (data []int) {
