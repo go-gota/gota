@@ -6,6 +6,67 @@ import (
 	"testing"
 )
 
+func TestStats_Percentile(t *testing.T) {
+	tests := []struct {
+		s           Series
+		percentile  float64
+		expected    float64
+		expectedErr error
+	}{
+		{Floats([]float64{43, 54, 56, 61, 62, 66}), 90, 66, nil},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 50, 5.0, nil},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 99.9, 10., nil},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 100.0, 10., nil},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 0.0, 1, ErrBounds},
+		{Floats([]float64{}), 99.9, 0, ErrEmptyInput},
+
+		{Floats([]float64{1, 2, 3, 4, 5}), 0.13, 1, nil},
+		{Floats([]float64{1, 2, 3, 4, 5}), 101.0, 0, ErrBounds},
+	}
+
+	for _, test := range tests {
+		m, err := test.s.Percentile(test.percentile)
+		if err != nil && test.expectedErr == nil {
+			t.Errorf("Excepted error is nil but got %v", err)
+		}
+
+		if test.expectedErr != nil && err == nil {
+			t.Errorf("Excepted error %v but got nil", test.expectedErr)
+		}
+
+		if err != nil && test.expectedErr != nil && err != test.expectedErr {
+			t.Errorf("Excepted error %v but got err %v", test.expectedErr, err)
+		}
+
+		if test.expectedErr == nil && err == nil {
+			if m != test.expected {
+				t.Errorf("Excepted values is %.1f but got %.1f", test.expected, m)
+			}
+		}
+	}
+}
+
+func TestStats_Percentiles(t *testing.T) {
+	tests := []struct {
+		s           Series
+		percentiles []float64
+		excepted    []float64
+	}{
+		{Floats([]float64{-7.0, 10, 9, 8, 9, 13, 16, 17, 21, 3, 34, 26, 38, 21, 11, 2, 3, 9, 10, 20.0}),
+			[]float64{37, 73}, []float64{9.0, 20.0}},
+	}
+
+	for nr, test := range tests {
+		r, _ := test.s.Percentiles(test.percentiles...)
+
+		if !reflect.DeepEqual(test.excepted, r) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				nr, test.excepted, r,
+			)
+		}
+	}
+}
 func TestStats_Outliers(t *testing.T) {
 	tests := []struct {
 		serie    Series

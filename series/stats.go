@@ -75,13 +75,77 @@ func CovariancePopulation(data1, data2 []float64) (float64, error) {
 	return ss / float64(l1), nil
 }
 
+// Percentiles finds the relative standing
+func Percentiles(data []float64, percentiles ...float64) ([]float64, error) {
+	if len(data) == 0 {
+		return []float64{}, ErrEmptyInput
+	}
+	cdata := sortedCopy(data)
+
+	result := make([]float64, len(percentiles))
+	for idx, p := range percentiles {
+		if p <= 0 || p > 100 {
+			return result, ErrBoundsVal(p)
+		}
+		pv, err := percentileNearestRank(cdata, p)
+		if err != nil {
+			return result, ErrBoundsVal(p)
+		}
+		result[idx] = pv
+
+	}
+	return result, nil
+}
+
+// Percentile finds the relative standing in a slice of floats
+func Percentile(data []float64, percent float64) (float64, error) {
+	if len(data) == 0 {
+		return math.NaN(), ErrEmptyInput
+	}
+
+	if percent <= 0 || percent > 100 {
+		return math.NaN(), ErrBounds
+	}
+
+	cdata := sortedCopy(data)
+	return percentileNearestRank(cdata, percent)
+}
+
+func percentile(sortedData []float64, percent float64) (float64, error) {
+	index := (percent / 100) * float64(len(sortedData))
+
+	if index == float64(int64(index)) { // if index is hole number
+		i := int(index)
+		return sortedData[i-1], nil
+	} else if index > 1 {
+		i := int(index)
+		p := Mean([]float64{sortedData[i-1], sortedData[i]})
+		return p, nil
+	}
+	return math.NaN(), ErrBounds
+}
+
+func percentileNearestRank(sortedData []float64, percent float64) (float64, error) {
+	l := len(sortedData)
+
+	if percent == 100.0 {
+		return sortedData[l-1], nil
+	}
+
+	or := int(math.Ceil(float64(l) * percent / 100))
+	if or == 0 {
+		return sortedData[0], nil
+	}
+
+	return sortedData[or-1], nil
+
+}
+
 //Quartile returns the three quartile points from the float64 slice
 func Quartile(data []float64) []float64 {
 
 	l := len(data)
-	cdata := make([]float64, l)
-	copy(cdata, data)
-	sort.Float64s(cdata)
+	cdata := sortedCopy(data)
 	var c1, c2 int
 
 	if l%2 == 0 {
@@ -124,9 +188,7 @@ func Median(data []float64) float64 {
 		return data[0]
 	}
 
-	cdata := make([]float64, l)
-	copy(cdata, data)
-	sort.Float64s(cdata)
+	cdata := sortedCopy(data)
 
 	l2 := int(l / 2)
 	var median float64
@@ -188,4 +250,11 @@ func Stats(data []float64) (count int, min, max, sum, mean float64) {
 	}
 	mean = sum / float64(count)
 	return
+}
+
+func sortedCopy(data []float64) []float64 {
+	c := make([]float64, len(data))
+	copy(c, data)
+	sort.Float64s(c)
+	return c
 }

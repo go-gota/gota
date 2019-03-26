@@ -37,6 +37,18 @@ func (s Series) Quartile() Series {
 	return Floats(quartiles)
 }
 
+// Percentile finds the relative standing in the Series of floats
+func (s Series) Percentile(percent float64) (float64, error) {
+	data := getFloats(s, true)
+	return Percentile(data, percent)
+}
+
+// Percentiles finds percentiles relative standings in the Series
+func (s Series) Percentiles(percentiles ...float64) ([]float64, error) {
+	data := getFloats(s, true)
+	return Percentiles(data, percentiles...)
+}
+
 //Median computes median value
 func (s Series) Median() float64 {
 	data := getFloats(s, true)
