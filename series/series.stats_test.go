@@ -25,7 +25,7 @@ func TestStats_Percentile(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		m, err := test.s.Percentile(test.percentile)
+		m, _, err := test.s.Percentile(test.percentile)
 		if err != nil && test.expectedErr == nil {
 			t.Errorf("Excepted error is nil but got %v", err)
 		}
@@ -48,21 +48,38 @@ func TestStats_Percentile(t *testing.T) {
 
 func TestStats_Percentiles(t *testing.T) {
 	tests := []struct {
-		s           Series
-		percentiles []float64
-		excepted    []float64
+		s               Series
+		percentiles     []float64
+		exceptedVal     []float64
+		expectedIndeses []int
 	}{
 		{Floats([]float64{-7.0, 10, 9, 8, 9, 13, 16, 17, 21, 3, 34, 26, 38, 21, 11, 2, 3, 9, 10, 20.0}),
-			[]float64{37, 73}, []float64{9.0, 20.0}},
+			[]float64{37, 73},
+			[]float64{9.0, 20.0},
+			[]int{7, 14},
+		},
+
+		{Floats([]float64{1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 4}),
+			[]float64{25, 50, 75},
+			[]float64{2, 2, 3},
+			[]int{5, 10, 15},
+		},
 	}
 
 	for nr, test := range tests {
-		r, _ := test.s.Percentiles(test.percentiles...)
+		r, i, _ := test.s.Percentiles(test.percentiles...)
 
-		if !reflect.DeepEqual(test.excepted, r) {
+		if !reflect.DeepEqual(test.exceptedVal, r) {
 			t.Errorf(
-				"Test:%v\nExpected:\n%v\nReceived:\n%v",
-				nr, test.excepted, r,
+				"Test values:%v\nExpected:\n%v\nReceived:\n%v",
+				nr, test.exceptedVal, r,
+			)
+		}
+
+		if !reflect.DeepEqual(test.expectedIndeses, i) {
+			t.Errorf(
+				"Test indeses:%v\nExpected:\n%v\nReceived:\n%v",
+				nr, test.expectedIndeses, i,
 			)
 		}
 	}

@@ -37,14 +37,14 @@ func (s Series) Quartile() Series {
 	return Floats(quartiles)
 }
 
-// Percentile finds the relative standing in the Series of floats
-func (s Series) Percentile(percent float64) (float64, error) {
+// Percentile finds the relative standing in the Series of floats, returns the percentile value and it index
+func (s Series) Percentile(percent float64) (float64, int, error) {
 	data := getFloats(s, true)
 	return Percentile(data, percent)
 }
 
-// Percentiles finds percentiles relative standings in the Series
-func (s Series) Percentiles(percentiles ...float64) ([]float64, error) {
+// Percentiles finds percentiles relative standings in the Series returns the percentile values and their indeses
+func (s Series) Percentiles(percentiles ...float64) ([]float64, []int, error) {
 	data := getFloats(s, true)
 	return Percentiles(data, percentiles...)
 }

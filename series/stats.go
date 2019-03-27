@@ -76,35 +76,37 @@ func CovariancePopulation(data1, data2 []float64) (float64, error) {
 }
 
 // Percentiles finds the relative standing
-func Percentiles(data []float64, percentiles ...float64) ([]float64, error) {
+func Percentiles(data []float64, percentiles ...float64) ([]float64, []int, error) {
 	if len(data) == 0 {
-		return []float64{}, ErrEmptyInput
+		return []float64{}, []int{}, ErrEmptyInput
 	}
 	cdata := sortedCopy(data)
 
-	result := make([]float64, len(percentiles))
+	resultVal := make([]float64, len(percentiles))
+	resultIndex := make([]int, len(percentiles))
 	for idx, p := range percentiles {
 		if p <= 0 || p > 100 {
-			return result, ErrBoundsVal(p)
+			return resultVal, resultIndex, ErrBoundsVal(p)
 		}
-		pv, err := percentileNearestRank(cdata, p)
+		pv, i, err := percentileNearestRank(cdata, p)
 		if err != nil {
-			return result, ErrBoundsVal(p)
+			return resultVal, resultIndex, ErrBoundsVal(p)
 		}
-		result[idx] = pv
+		resultVal[idx] = pv
+		resultIndex[idx] = i
 
 	}
-	return result, nil
+	return resultVal, resultIndex, nil
 }
 
 // Percentile finds the relative standing in a slice of floats
-func Percentile(data []float64, percent float64) (float64, error) {
+func Percentile(data []float64, percent float64) (float64, int, error) {
 	if len(data) == 0 {
-		return math.NaN(), ErrEmptyInput
+		return math.NaN(), 0, ErrEmptyInput
 	}
 
 	if percent <= 0 || percent > 100 {
-		return math.NaN(), ErrBounds
+		return math.NaN(), 0, ErrBounds
 	}
 
 	cdata := sortedCopy(data)
@@ -125,19 +127,19 @@ func percentile(sortedData []float64, percent float64) (float64, error) {
 	return math.NaN(), ErrBounds
 }
 
-func percentileNearestRank(sortedData []float64, percent float64) (float64, error) {
+func percentileNearestRank(sortedData []float64, percent float64) (float64, int, error) {
 	l := len(sortedData)
 
 	if percent == 100.0 {
-		return sortedData[l-1], nil
+		return sortedData[l-1], l - 1, nil
 	}
 
 	or := int(math.Ceil(float64(l) * percent / 100))
 	if or == 0 {
-		return sortedData[0], nil
+		return sortedData[0], 0, nil
 	}
 
-	return sortedData[or-1], nil
+	return sortedData[or-1], or - 1, nil
 
 }
 
