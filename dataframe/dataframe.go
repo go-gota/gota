@@ -706,6 +706,9 @@ type loadOptions struct {
 	// Defines the csv delimiter
 	delimiter rune
 
+	// Defines the comment delimiter
+	comment rune
+
 	// The types of specific columns can be specified via column name.
 	types map[string]series.Type
 }
@@ -758,6 +761,14 @@ func WithDelimiter(b rune) LoadOption {
 		c.delimiter = b
 	}
 }
+
+// WithComments sets the csv comment line detect to remove lines
+func WithComments(b rune) LoadOption {
+	return func(c *loadOptions) {
+		c.comment = b
+	}
+}
+
 
 // LoadStructs creates a new DataFrame from arbitrary struct slices.
 //
@@ -1078,6 +1089,9 @@ func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 	}
 	if cfg.delimiter != ',' {
 		csvReader.Comma = cfg.delimiter
+	}
+	if cfg.comment != 0 {
+		csvReader.Comment = cfg.comment
 	}
 
 	records, err := csvReader.ReadAll()
