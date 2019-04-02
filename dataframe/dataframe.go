@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/kniren/gota/series"
+	"github.com/go-gota/gota/series"
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such
@@ -962,10 +962,12 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 
 		t, ok := cfg.types[colname]
 		if !ok {
-			t = cfg.defaultType
-			if cfg.detectTypes {
-				t = findType(rawcol)
-			}
+		  t = cfg.defaultType
+		  if cfg.detectTypes {
+		    if l, err := findType(rawcol); err != nil {
+		      t = l
+		    }
+		  }
 		}
 		types[i] = t
 	}
@@ -1831,7 +1833,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 	return idx, nil
 }
 
-func findType(arr []string) series.Type {
+func findType(arr []string) (series.Type, error) {
 	var hasFloats, hasInts, hasBools, hasStrings bool
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
@@ -1853,15 +1855,15 @@ func findType(arr []string) series.Type {
 	}
 	switch {
 	case hasStrings:
-		return series.String
+	  return series.String, nil
 	case hasBools:
-		return series.Bool
+	  return series.Bool, nil
 	case hasFloats:
-		return series.Float
+	  return series.Float, nil
 	case hasInts:
-		return series.Int
+	  return series.Int, nil
 	default:
-		panic("couldn't detect type")
+	  return series.String, fmt.Errorf("couldn't detect type")
 	}
 }
 
