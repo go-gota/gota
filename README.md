@@ -260,8 +260,8 @@ mean := func(s series.Series) series.Series {
     }
     return series.Floats(sum / float64(len(floats)))
 }
-df.Capply(mean)
-df.Rapply(mean)
+df.Cbind(mean)
+df.Rbind(mean)
 ```
 
 #### Chaining operations
