@@ -8,7 +8,7 @@ import (
 
 	"math"
 
-	"gonum.org/v1/gonum/stat"
+	"github.com/gonum/stat"
 )
 
 // Series is a data structure designed for operating on arrays of elements that
@@ -92,12 +92,12 @@ type Comparator string
 // Supported Comparators
 const (
 	Eq        Comparator = "==" // Equal
-	Neq       Comparator = "!=" // Non equal
-	Greater   Comparator = ">"  // Greater than
-	GreaterEq Comparator = ">=" // Greater or equal than
-	Less      Comparator = "<"  // Lesser than
-	LessEq    Comparator = "<=" // Lesser or equal than
-	In        Comparator = "in" // Inside
+	Neq                  = "!=" // Non equal
+	Greater              = ">"  // Greater than
+	GreaterEq            = ">=" // Greater or equal than
+	Less                 = "<"  // Lesser than
+	LessEq               = "<=" // Lesser or equal than
+	In                   = "in" // Inside
 )
 
 // Type is a convenience alias that can be used for a more type safe way of
@@ -107,9 +107,9 @@ type Type string
 // Supported Series Types
 const (
 	String Type = "string"
-	Int    Type = "int"
-	Float  Type = "float"
-	Bool   Type = "bool"
+	Int         = "int"
+	Float       = "float"
+	Bool        = "bool"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
