@@ -250,7 +250,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will update the values of a DataFrame for the rows selected via indexes.
+// Set will update the values of a DataFrame for all rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -388,7 +388,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
-// CBind combines the columns of two DataFrames
+// CBind combines the columns of this DataFrame and dfb DataFrame.
 func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -400,8 +400,8 @@ func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	return New(cols...)
 }
 
-// RBind matches the column names of two DataFrames and returns the combination of
-// the rows of both of them.
+// RBind matches the column names of two DataFrames and returns combined
+// rows from both of them.
 func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -582,7 +582,7 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 }
 
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
-// the function the elements of each row are casted to a Series of a specific
+// the function the elements of each row are cast to a Series of a specific
 // type. In order of priority: String -> Float -> Int -> Bool. This casting also
 // takes place after the function application to equalize the type of the columns.
 func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
@@ -1903,6 +1903,7 @@ type Matrix interface {
 func (df DataFrame) Describe() DataFrame {
 	labels := series.Strings([]string{
 		"mean",
+		"median",
 		"stddev",
 		"min",
 		"25%",
@@ -1921,6 +1922,7 @@ func (df DataFrame) Describe() DataFrame {
 			newCol = series.New([]string{
 				"-",
 				"-",
+				"-",
 				col.MinStr(),
 				"-",
 				"-",
@@ -1937,6 +1939,7 @@ func (df DataFrame) Describe() DataFrame {
 		case series.Int:
 			newCol = series.New([]float64{
 				col.Mean(),
+				col.Median(),
 				col.StdDev(),
 				col.Min(),
 				col.Quantile(0.25),

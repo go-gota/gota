@@ -2501,27 +2501,27 @@ func TestDescribe(t *testing.T) {
 
 			New(
 				series.New(
-					[]string{"mean", "stddev", "min", "25%", "50%", "75%", "max"},
+					[]string{"mean", "median", "stddev", "min", "25%", "50%", "75%", "max"},
 					series.String,
 					"",
 				),
 				series.New(
-					[]string{"-", "-", "a", "-", "-", "-", "c"},
+					[]string{"-", "-", "-", "a", "-", "-", "-", "c"},
 					series.String,
 					"A",
 				),
 				series.New(
-					[]float64{3.25, 0.957427, 2.0, 2.0, 3.0, 4.0, 4.0},
+					[]float64{3.25, 3.5, 0.957427, 2.0, 2.0, 3.0, 4.0, 4.0},
 					series.Float,
 					"B",
 				),
 				series.New(
-					[]float64{6.05, 0.818535, 5.1, 5.1, 6.0, 6.0, 7.1},
+					[]float64{6.05, 6., 0.818535, 5.1, 5.1, 6.0, 6.0, 7.1},
 					series.Float,
 					"C",
 				),
 				series.New(
-					[]float64{0.5, 0.57735, 0.0, 0.0, 0.0, 1.0, 1.0},
+					[]float64{0.5, math.NaN(), 0.57735, 0.0, 0.0, 0.0, 1.0, 1.0},
 					series.Float,
 					"D",
 				),

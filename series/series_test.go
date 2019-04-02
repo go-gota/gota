@@ -1295,6 +1295,60 @@ func TestSeries_Max(t *testing.T) {
 	}
 }
 
+func TestSeries_Median(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			// Extreme observations should not factor in.
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000}),
+			7,
+		},
+		{
+			// Change in order should influence result.
+			Ints([]int{1, 2, 3, 10, 100, 1000, 10000, 4, 5, 6, 7, 8, 9}),
+			7,
+		},
+		{
+			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
+			}),
+			1.705775,
+		},
+		{
+			// Change in order should not influence result.
+			Floats([]float64{4.98964, -20.2006, 1.89977, 1.19854,
+				1.51178, -17.4687, -8.65952, 20.2755, 4.65567, 6.31649,
+			}),
+			1.705775,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			math.NaN(),
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Median()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
 func TestSeries_Min(t *testing.T) {
 	tests := []struct {
 		series   Series
