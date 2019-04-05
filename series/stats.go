@@ -105,8 +105,12 @@ func Percentile(data []float64, percent float64) (float64, int, error) {
 		return math.NaN(), 0, ErrEmptyInput
 	}
 
-	if percent <= 0 || percent > 100 {
+	if percent < 0 || percent > 100 {
 		return math.NaN(), 0, ErrBounds
+	}
+
+	if percent == 0 {
+		return data[0], 0, nil
 	}
 
 	cdata := sortedCopy(data)

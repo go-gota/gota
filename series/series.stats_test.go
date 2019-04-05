@@ -17,7 +17,8 @@ func TestStats_Percentile(t *testing.T) {
 		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 50, 5.0, nil},
 		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 99.9, 10., nil},
 		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 100.0, 10., nil},
-		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 0.0, 1, ErrBounds},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), 0.0, 1., nil},
+		{Floats([]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}), -1.0, 1, ErrBounds},
 		{Floats([]float64{}), 99.9, 0, ErrEmptyInput},
 
 		{Floats([]float64{1, 2, 3, 4, 5}), 0.13, 1, nil},
