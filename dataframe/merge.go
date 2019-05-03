@@ -7,13 +7,17 @@ import (
 	"github.com/isuruceanu/gota/series"
 )
 
+type combineFuncType func(a, b series.Series) bool
+type combineHeaderBuilderFuncType func(a, b series.Series) (string, interface{}, bool)
+
 // Merge struct definition
 type Merge struct {
-	a                DataFrame
-	b                DataFrame
-	keys             []string
-	combine          bool
-	combineCompareFn func(aSerie, bSerie series.Series) bool
+	a                     DataFrame
+	b                     DataFrame
+	keys                  []string
+	combine               bool
+	combineCompareFn      combineFuncType
+	combineResultHeaderFn combineHeaderBuilderFuncType
 }
 
 // Merge returns a Merge struct for containing ifo about merge
@@ -28,33 +32,38 @@ func (m Merge) WithCombine(fn func(aSerie, bSerie series.Series) bool) Merge {
 	return m
 }
 
+func (m Merge) WithResultHeader(fn func(a, b series.Series) (string, interface{}, bool)) Merge {
+	m.combineResultHeaderFn = fn
+	return m
+}
+
 func (m Merge) OuterJoin() DataFrame {
 	if m.combine {
-		return m.a.outerJoinWithCombine(m.b, m.combineCompareFn, m.keys...)
+		return m.a.outerJoinWithCombine(m.b, m.combineCompareFn, m.combineResultHeaderFn, m.keys...)
 	}
-	return m.a.outerJoinWithCombine(m.b, nil, m.keys...)
+	return m.a.outerJoinWithCombine(m.b, nil, nil, m.keys...)
 }
 
 func (m Merge) RightJoin() DataFrame {
 	if m.combine {
-		return m.a.rightJoinWithCombine(m.b, m.combineCompareFn, m.keys...)
+		return m.a.rightJoinWithCombine(m.b, m.combineCompareFn, m.combineResultHeaderFn, m.keys...)
 	}
-	return m.a.rightJoinWithCombine(m.b, nil, m.keys...)
+	return m.a.rightJoinWithCombine(m.b, nil, nil, m.keys...)
 }
 
 func (m Merge) InnerJoin() DataFrame {
 	if m.combine {
-		return m.a.innerJoinWithCombine(m.b, m.combineCompareFn, m.keys...)
+		return m.a.innerJoinWithCombine(m.b, m.combineCompareFn, m.combineResultHeaderFn, m.keys...)
 	}
 
-	return m.a.innerJoinWithCombine(m.b, nil, m.keys...)
+	return m.a.innerJoinWithCombine(m.b, nil, nil, m.keys...)
 }
 
 func (m Merge) LeftJoin() DataFrame {
 	if m.combine {
-		return m.a.leftJoinWithCombine(m.b, m.combineCompareFn, m.keys...)
+		return m.a.leftJoinWithCombine(m.b, m.combineCompareFn, m.combineResultHeaderFn, m.keys...)
 	}
-	return m.a.leftJoinWithCombine(m.b, nil, m.keys...)
+	return m.a.leftJoinWithCombine(m.b, nil, nil, m.keys...)
 }
 
 type tuple struct {
@@ -75,7 +84,11 @@ func (t tupleArr) findTuple(val int, fn func(int, tuple) bool) (int, bool) {
 	return -1, false
 }
 
-func (df DataFrame) outerJoinWithCombine(b DataFrame, compareFn func(l, r series.Series) bool, keys ...string) DataFrame {
+func (df DataFrame) outerJoinWithCombine(b DataFrame,
+	compareFn combineFuncType,
+	combineHeaderBuilder combineHeaderBuilderFuncType,
+	keys ...string) DataFrame {
+
 	iKeysA, iKeysB, errorArr := checkDataframesForJoins(df, b, keys...)
 	if len(errorArr) != 0 {
 		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
@@ -205,11 +218,14 @@ func (df DataFrame) outerJoinWithCombine(b DataFrame, compareFn func(l, r series
 			}
 		}
 	}
-	newCols = combineColumns(iCombinedCols, newCols)
+	newCols = combineColumns(iCombinedCols, newCols, combineHeaderBuilder)
 	return New(newCols...)
 }
 
-func (df DataFrame) rightJoinWithCombine(b DataFrame, compareFn func(l, r series.Series) bool, keys ...string) DataFrame {
+func (df DataFrame) rightJoinWithCombine(b DataFrame, compareFn combineFuncType,
+	combineHeaderBuilder combineHeaderBuilderFuncType,
+	keys ...string) DataFrame {
+
 	iKeysA, iKeysB, errorArr := checkDataframesForJoins(df, b, keys...)
 	if len(errorArr) != 0 {
 		return DataFrame{Err: fmt.Errorf(strings.Join(errorArr, "\n"))}
@@ -317,12 +333,15 @@ func (df DataFrame) rightJoinWithCombine(b DataFrame, compareFn func(l, r series
 			ii++
 		}
 	}
-	newCols = combineColumns(iCombinedCols, newCols)
+	newCols = combineColumns(iCombinedCols, newCols, combineHeaderBuilder)
 	return New(newCols...)
 }
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
-func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn func(l, r series.Series) bool, keys ...string) DataFrame {
+func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn combineFuncType,
+	combineHeaderBuilder combineHeaderBuilderFuncType,
+	keys ...string) DataFrame {
+
 	iKeysA, iKeysB, errorArr := checkDataframesForJoins(df, b, keys...)
 	if len(errorArr) != 0 {
 		return DataFrame{Err: fmt.Errorf("%v", strings.Join(errorArr, "\n"))}
@@ -403,11 +422,13 @@ func (df DataFrame) innerJoinWithCombine(b DataFrame, compareFn func(l, r series
 		}
 	}
 
-	newCols = combineColumns(iCombinedCols, newCols)
+	newCols = combineColumns(iCombinedCols, newCols, combineHeaderBuilder)
 	return New(newCols...)
 }
 
-func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn func(l, r series.Series) bool, keys ...string) DataFrame {
+func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn combineFuncType,
+	combineHeaderBuilder combineHeaderBuilderFuncType,
+	keys ...string) DataFrame {
 
 	iKeysA, iKeysB, errorArr := checkDataframesForJoins(df, b, keys...)
 
@@ -505,25 +526,37 @@ func (df DataFrame) leftJoinWithCombine(b DataFrame, compareFn func(l, r series.
 				ii++
 			}
 
-			for _ = range iNotKeysB {
+			for range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
 		}
 	}
 
-	newCols = combineColumns(iCombinedCols, newCols)
+	newCols = combineColumns(iCombinedCols, newCols, combineHeaderBuilder)
 
 	return New(newCols...)
 }
 
-func combineColumns(iCombinedCols tupleArr, newCols []series.Series) []series.Series {
+func combineColumns(iCombinedCols tupleArr, newCols []series.Series, headerBuilderFn combineHeaderBuilderFuncType) []series.Series {
 	for _, c := range iCombinedCols {
 		if c.rAIdx == -1 || c.rBIdx == -1 {
 			continue
 		}
+
+		fmt.Println("Debug c.rAIdx, c.rBIdx", c.rAIdx, c.rBIdx)
 		cobCol := newCols[c.rAIdx].Combine(newCols[c.rBIdx])
+
 		if cobCol.Err == nil {
+
+			if headerBuilderFn != nil {
+				name, otherInfo, ignore := headerBuilderFn(newCols[c.rAIdx], newCols[c.rBIdx])
+				if !ignore {
+					cobCol.Name = name
+					cobCol.OtherInfo = otherInfo
+				}
+			}
+
 			newCols[c.rAIdx] = cobCol
 		}
 	}

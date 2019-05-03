@@ -935,22 +935,22 @@ func (df DataFrame) Col(colname string) series.Series {
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
-	return df.innerJoinWithCombine(b, nil, keys...)
+	return df.innerJoinWithCombine(b, nil, nil, keys...)
 }
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
-	return df.leftJoinWithCombine(b, nil, keys...)
+	return df.leftJoinWithCombine(b, nil, nil, keys...)
 }
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
-	return df.rightJoinWithCombine(b, nil, keys...)
+	return df.rightJoinWithCombine(b, nil, nil, keys...)
 }
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
-	return df.outerJoinWithCombine(b, nil, keys...)
+	return df.outerJoinWithCombine(b, nil, nil, keys...)
 }
 
 // CrossJoin returns a DataFrame containing the cross join of two DataFrames.

@@ -99,6 +99,35 @@ func TestLeftMergeWithCombine(t *testing.T) {
 	}
 }
 
+func TestMergeWithCombineWithChangeHeader(t *testing.T) {
+	result := LoadRecords(
+		[][]string{
+			[]string{"UID", "OtherGenderName", "HEXO", "Age", "WWH", "Bonus"},
+			[]string{"1", "M", "100.0", "18", "40", "25.0"},
+			[]string{"2", "F", "100.0", "20", "40", "25.0"},
+			[]string{"3", "M", "100.0", "21", "40", "25.0"},
+			[]string{"4", "F", "100.0", "22", "40", "NA"},
+		},
+	)
+
+	headerFn := func(a, b series.Series) (string, interface{}, bool) {
+		if a.Name == "Gender" {
+			return "OtherGenderName", "some data here", false
+		}
+		return "", nil, true
+	}
+
+	third := first.Merge(second, "UID").WithCombine(compareFn).WithResultHeader(headerFn).LeftJoin()
+	if third.Err != nil {
+		t.Error(third.Err)
+	}
+
+	fmt.Println(third.String())
+	if third.String() != result.String() {
+		t.Error("Result dataset differs from expected")
+	}
+}
+
 var compareFn = func(a, b series.Series) bool {
 	return a.Name == b.Name
 }
