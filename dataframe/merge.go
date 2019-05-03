@@ -544,7 +544,6 @@ func combineColumns(iCombinedCols tupleArr, newCols []series.Series, headerBuild
 			continue
 		}
 
-		fmt.Println("Debug c.rAIdx, c.rBIdx", c.rAIdx, c.rBIdx)
 		cobCol := newCols[c.rAIdx].Combine(newCols[c.rBIdx])
 
 		if cobCol.Err == nil {
