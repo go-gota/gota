@@ -622,7 +622,13 @@ type loadOptions struct {
 
 	// Define a func for trimming the header strings satisfying f(r) to be removed
 	trimHeader func(r rune) bool
+
+	// Define a func for trimming the header strings satisfying f(r) to be removed
+	customTrimer CustomTrimer
 }
+
+// CustomTrimFn custom raw data trimer
+type CustomTrimer func(val string) string
 
 // DefaultType set the defaultType option for loadOptions.
 func DefaultType(t series.Type) LoadOption {
@@ -659,6 +665,14 @@ func TrimHeaderString(fn func(r rune) bool) LoadOption {
 		c.trimHeader = fn
 	}
 }
+
+// OnCustomParser set callback for parsing 
+func OnCustomTrimer(fn CustomTrimer) LoadOption {
+	return func(c *loadOptions) {
+		c.customTrimer = fn
+	}
+}
+
 
 // NaNValues set which values are to be parsed as NaN
 func NaNValues(nanValues []string) LoadOption {
@@ -717,6 +731,11 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		rawcol := make([]string, len(records))
 		for j := 0; j < len(records); j++ {
 			rawcol[j] = strings.TrimSpace(records[j][i])
+
+			if cfg.customTrimer != nil {
+				rawcol[j] = cfg.customTrimer(rawcol[j])
+			}
+
 			if findInStringSlice(rawcol[j], cfg.nanValues) != -1 {
 				rawcol[j] = "NaN"
 			}
