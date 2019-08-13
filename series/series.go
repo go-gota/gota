@@ -100,7 +100,11 @@ const (
 	Less      Comparator = "<"  // Lesser than
 	LessEq    Comparator = "<=" // Lesser or equal than
 	In        Comparator = "in" // Inside
+	CompFunc Comparator = "func" // user-defined comparison function
 )
+
+// compFunc defines a user-defined comparator function. Used internally for type assertions
+type compFunc = func(el Element) bool
 
 // Type is a convenience alias that can be used for a more type safe way of
 // reason and use Series types.
@@ -390,9 +394,25 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return ret, nil
 	}
 
-	comp := New(comparando, s.t, "")
 	bools := make([]bool, s.Len())
-	// In comparator comparation
+
+	// CompFunc comparator comparison
+	if comparator == CompFunc {
+		f, ok := comparando.(compFunc)
+		if !ok {
+			panic("comparando is not a comparison function of type func(el Element) bool")
+		}
+
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			bools[i] = f(e)
+		}
+
+		return Bools(bools)
+	}
+
+	comp := New(comparando, s.t, "")
+	// In comparator comparison
 	if comparator == In {
 		for i := 0; i < s.Len(); i++ {
 			e := s.elements.Elem(i)
