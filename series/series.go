@@ -93,14 +93,14 @@ type Comparator string
 
 // Supported Comparators
 const (
-	Eq        Comparator = "==" // Equal
-	Neq       Comparator = "!=" // Non equal
-	Greater   Comparator = ">"  // Greater than
-	GreaterEq Comparator = ">=" // Greater or equal than
-	Less      Comparator = "<"  // Lesser than
-	LessEq    Comparator = "<=" // Lesser or equal than
-	In        Comparator = "in" // Inside
-	CompFunc Comparator = "func" // user-defined comparison function
+	Eq        Comparator = "=="   // Equal
+	Neq       Comparator = "!="   // Non equal
+	Greater   Comparator = ">"    // Greater than
+	GreaterEq Comparator = ">="   // Greater or equal than
+	Less      Comparator = "<"    // Lesser than
+	LessEq    Comparator = "<="   // Lesser or equal than
+	In        Comparator = "in"   // Inside
+	CompFunc  Comparator = "func" // user-defined comparison function
 )
 
 // compFunc defines a user-defined comparator function. Used internally for type assertions

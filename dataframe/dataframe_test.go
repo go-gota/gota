@@ -635,7 +635,7 @@ func TestDataFrame_Mutate(t *testing.T) {
 	}
 }
 
-func TestDataFrame_Filter(t *testing.T) {
+func TestDataFrame_Filter_Or(t *testing.T) {
 	a := New(
 		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
@@ -679,6 +679,87 @@ func TestDataFrame_Filter(t *testing.T) {
 	}
 	for i, tc := range table {
 		b := a.Filter(tc.filters...)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
+		}
+		//if err := checkAddrDf(a, b); err != nil {
+		//t.Error(err)
+		//}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
+		}
+
+		b2 := a.FilterAggregation(Or, tc.filters...)
+
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(b.Types(), b2.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nB:%v\nB2:%v", i, b.Types(), b2.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(b.Names(), b2.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nB:%v\nB2:%v", i, b.Names(), b2.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(b.Records(), b2.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nB:%v\nB2:%v", i, b.Records(), b2.Records())
+		}
+	}
+}
+
+func TestDataFrame_Filter_And(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+	)
+	table := []struct {
+		filters []F
+		expDf   DataFrame
+	}{
+		{
+			[]F{{"COL.2", series.GreaterEq, 4}},
+			New(
+				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		// should not have any rows
+		{
+			[]F{
+				{"COL.2", series.Greater, 4},
+				{"COL.2", series.Eq, 1},
+			},
+			New(
+				series.New([]string{}, series.String, "COL.1"),
+				series.New([]int{}, series.Int, "COL.2"),
+				series.New([]float64{}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
+				{"COL.2", series.Less, 4},
+				{"COL.1", series.Eq, "b"},
+			},
+			New(
+				series.New([]string{"b"}, series.String, "COL.1"),
+				series.New([]int{1}, series.Int, "COL.2"),
+				series.New([]float64{3.0}, series.Float, "COL.3"),
+			),
+		},
+	}
+	for i, tc := range table {
+		b := a.FilterAggregation(And, tc.filters...)
 
 		if b.Err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)
