@@ -85,6 +85,8 @@ func (e boolElements) Elem(i int) Element { return &e[i] }
 // unmarshaling Elements.
 type ElementValue interface{}
 
+type MapFunction func(Element) Element
+
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
 type Comparator string
@@ -766,3 +768,19 @@ func (s Series) Quantile(p float64) float64 {
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }
+
+// Map applies a function matching MapFunction signature, which itself 
+// allowing for a fairly flexible MAP implementation, intended for mapping
+// the function over each element in Series and returning a new Series object.
+// Function must be compatible with the underlying type of data in the Series.
+// In other words it is expected that when working with a Float Series, that
+// the function passed in via argument `f` will not expect another type, but
+// instead expects to handle Element(s) of type Float.
+func (s Series) Map(f MapFunction) Series {
+		
+	mappedValues := make([]Element, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		value := f(s.elements.Elem(i))
+		mappedValues[i] = value
+	}
+	return New(mappedValues, s.Type(), s.Name)
