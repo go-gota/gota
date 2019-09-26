@@ -769,7 +769,6 @@ func WithComments(b rune) LoadOption {
 	}
 }
 
-
 // LoadStructs creates a new DataFrame from arbitrary struct slices.
 //
 // LoadStructs will ignore unexported fields inside an struct. Note also that
@@ -973,12 +972,12 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 
 		t, ok := cfg.types[colname]
 		if !ok {
-		  t = cfg.defaultType
-		  if cfg.detectTypes {
-		    if l, err := findType(rawcol); err != nil {
-		      t = l
-		    }
-		  }
+			t = cfg.defaultType
+			if cfg.detectTypes {
+				if l, err := findType(rawcol); err == nil {
+					t = l
+				}
+			}
 		}
 		types[i] = t
 	}
@@ -1867,17 +1866,20 @@ func findType(arr []string) (series.Type, error) {
 		}
 		hasStrings = true
 	}
+
+	fmt.Printf("float %t, int %t, bool %t, string %t\n", hasFloats, hasInts, hasBools, hasStrings)
+
 	switch {
 	case hasStrings:
-	  return series.String, nil
+		return series.String, nil
 	case hasBools:
-	  return series.Bool, nil
+		return series.Bool, nil
 	case hasFloats:
-	  return series.Float, nil
+		return series.Float, nil
 	case hasInts:
-	  return series.Int, nil
+		return series.Int, nil
 	default:
-	  return series.String, fmt.Errorf("couldn't detect type")
+		return series.String, fmt.Errorf("couldn't detect type")
 	}
 }
 
