@@ -777,7 +777,6 @@ func (s Series) Quantile(p float64) float64 {
 // the function passed in via argument `f` will not expect another type, but
 // instead expects to handle Element(s) of type Float.
 func (s Series) Map(f MapFunction) Series {
-
 	mappedValues := make([]Element, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		value := f(s.elements.Elem(i))
