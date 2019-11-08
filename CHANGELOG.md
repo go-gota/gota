@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.10.1] - 2019-11-08
+### Fixed
+- LoadRecords printing type debug information
+- Missing closing brackets in series.go
+- Fix gonum import path in dataframe_test
+
 ## [0.10.0] - 2019-11-08
 ### Changed
 - Merged dev branch changes from multiple collaborators (Sam Zaydel, Kyle
@@ -207,3 +213,4 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.8.0]:https://github.com/go-gota/gota/compare/v0.7.0...v0.8.0
 [0.9.0]:https://github.com/go-gota/gota/compare/v0.8.0...v0.9.0
 [0.10.0]:https://github.com/go-gota/gota/compare/v0.9.0...v0.10.0
+[0.10.1]:https://github.com/go-gota/gota/compare/v0.10.0...v0.10.1
