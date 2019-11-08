@@ -1907,7 +1907,7 @@ func inIntSlice(i int, is []int) bool {
 	return false
 }
 
-// Matrix is an interface which is compatible with the mat64.Matrix interface
+// Matrix is an interface which is compatible with gonum's mat.Matrix interface
 type Matrix interface {
 	Dims() (r, c int)
 	At(i, j int) float64

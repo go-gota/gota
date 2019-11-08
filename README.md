@@ -313,9 +313,9 @@ fmt.Println(flights)
 
 #### Interfacing with gonum
 
-A `gonum/mat64.Matrix` or any object that implements the `dataframe.Matrix`
+A `gonum/mat.Matrix` or any object that implements the `dataframe.Matrix`
 interface can be loaded as a `DataFrame` by using the `LoadMatrix()` method. If
-one wants to convert a `DataFrame` to a `mat64.Matrix` it is necessary to create
+one wants to convert a `DataFrame` to a `mat.Matrix` it is necessary to create
 the necessary structs and method implementations. Since a `DataFrame` already
 implements the `Dims() (r, c int)` method, only implementations for the `At` and
 `T` methods are necessary:

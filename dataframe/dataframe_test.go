@@ -10,7 +10,6 @@ import (
 	"math"
 
 	"github.com/go-gota/gota/series"
-	"github.com/gonum/matrix/mat64"
 )
 
 // compareFloats compares floating point values up to the number of digits specified.
@@ -2310,8 +2309,8 @@ func (m mockMatrix) At(i, j int) float64 {
 	return m.columns[j].Elem(i).Float()
 }
 
-func (m mockMatrix) T() mat64.Matrix {
-	return mat64.Transpose{Matrix: m}
+func (m mockMatrix) T() Matrix {
+	return m
 }
 
 func TestLoadMatrix(t *testing.T) {
