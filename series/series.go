@@ -769,7 +769,7 @@ func (s Series) Quantile(p float64) float64 {
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }
 
-// Map applies a function matching MapFunction signature, which itself 
+// Map applies a function matching MapFunction signature, which itself
 // allowing for a fairly flexible MAP implementation, intended for mapping
 // the function over each element in Series and returning a new Series object.
 // Function must be compatible with the underlying type of data in the Series.
@@ -777,10 +777,11 @@ func (s Series) Quantile(p float64) float64 {
 // the function passed in via argument `f` will not expect another type, but
 // instead expects to handle Element(s) of type Float.
 func (s Series) Map(f MapFunction) Series {
-		
+
 	mappedValues := make([]Element, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		value := f(s.elements.Elem(i))
 		mappedValues[i] = value
 	}
 	return New(mappedValues, s.Type(), s.Name)
+}

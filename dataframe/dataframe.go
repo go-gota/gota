@@ -1867,8 +1867,6 @@ func findType(arr []string) (series.Type, error) {
 		hasStrings = true
 	}
 
-	fmt.Printf("float %t, int %t, bool %t, string %t\n", hasFloats, hasInts, hasBools, hasStrings)
-
 	switch {
 	case hasStrings:
 		return series.String, nil
