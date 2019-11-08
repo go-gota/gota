@@ -5,6 +5,7 @@ import (
 	"math"
 	"reflect"
 	"testing"
+	"strings"
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
@@ -1295,6 +1296,60 @@ func TestSeries_Max(t *testing.T) {
 	}
 }
 
+func TestSeries_Median(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			// Extreme observations should not factor in.
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000}),
+			7,
+		},
+		{
+			// Change in order should influence result.
+			Ints([]int{1, 2, 3, 10, 100, 1000, 10000, 4, 5, 6, 7, 8, 9}),
+			7,
+		},
+		{
+			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
+			}),
+			1.705775,
+		},
+		{
+			// Change in order should not influence result.
+			Floats([]float64{4.98964, -20.2006, 1.89977, 1.19854,
+				1.51178, -17.4687, -8.65952, 20.2755, 4.65567, 6.31649,
+			}),
+			1.705775,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			math.NaN(),
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Median()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
 func TestSeries_Min(t *testing.T) {
 	tests := []struct {
 		series   Series
@@ -1466,6 +1521,144 @@ func TestSeries_Quantile(t *testing.T) {
 				"Test:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
+		}
+	}
+}
+
+
+func TestSeries_Map(t *testing.T) {
+		tests := []struct {
+		series   Series
+		expected Series
+	}{
+		{
+			Bools([]bool{false, true, false, false, true}),
+			Bools([]bool{false, true, false, false, true}),
+		},
+		{
+			Floats([]float64{1.5, -3.23, -0.337397, -0.380079, 1.60979, 34.}),
+			Floats([]float64{3, -6.46, -0.674794, -0.760158, 3.21958, 68.}),
+		},
+		{
+			Floats([]float64{math.Pi, math.Phi, math.SqrtE, math.Cbrt(64)}),
+			Floats([]float64{2 * math.Pi, 2 * math.Phi, 2 * math.SqrtE, 2 * math.Cbrt(64)}),
+		},
+		{
+			Strings([]string{"XyZApple", "XyZBanana", "XyZCitrus", "XyZDragonfruit"}),
+			Strings([]string{"Apple", "Banana", "Citrus", "Dragonfruit"}),
+		},
+		{
+			Strings([]string{"San Francisco", "XyZTokyo", "MoscowXyZ", "XyzSydney"}),
+			Strings([]string{"San Francisco", "Tokyo", "MoscowXyZ", "XyzSydney"}),
+		},
+		{
+			Ints([]int{23, 13, 101, -64, -3}),
+			Ints([]int{28, 18, 106, -59, 2}),
+		},
+		{
+			Ints([]string{"morning", "noon", "afternoon", "evening", "night"}),
+			Ints([]int{5, 5, 5, 5, 5}),
+		},
+	}
+
+	doubleFloat64 := func(e Element) Element {
+		var result Element
+		result = e.Copy()
+		result.Set(result.Float() * 2)		
+		return Element(result)
+	}
+
+	// and two booleans 
+	and := func(e Element) Element {
+		var result Element
+		result = e.Copy()
+		b, err := result.Bool()
+		if err != nil {
+			t.Errorf("%v", err)
+			return Element(nil)
+		}
+		result.Set(b && true)
+		return Element(result)
+	}
+
+	// add constant (+5) to value (v)
+	add5Int := func(e Element) Element {
+		var result Element
+		result = e.Copy()
+		i, err := result.Int()
+		if err != nil {
+			return Element(&intElement{
+				e: +5,
+				nan: false,
+			})
+		}
+		result.Set(i + 5)		
+		return Element(result)
+	}
+
+	// trim (XyZ) prefix from string
+	trimXyZPrefix := func(e Element) Element {
+		var result Element
+		result = e.Copy()
+		result.Set(strings.TrimPrefix(result.String(), "XyZ"))
+		return Element(result)
+	}
+
+		for testnum, test := range tests {
+		switch test.series.Type() {
+		case Bool:
+			expected := test.expected
+			received := test.series.Map(and)
+			for i := 0 ; i<expected.Len() ; i++ {
+				e, _ := expected.Elem(i).Bool()
+				r, _ := received.Elem(i).Bool()
+
+				if e != r {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+			
+		case Float:
+			expected := test.expected
+			received := test.series.Map(doubleFloat64)
+			for i := 0 ; i<expected.Len() ; i++ {
+				if !compareFloats(expected.Elem(i).Float(),
+				received.Elem(i).Float(), 6) {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		case Int:
+			expected := test.expected
+			received := test.series.Map(add5Int)
+			for i := 0 ; i<expected.Len() ; i++ {
+				e, _ := expected.Elem(i).Int()
+				r, _ := received.Elem(i).Int()
+				if e != r {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		case String:
+			expected := test.expected
+			received := test.series.Map(trimXyZPrefix)
+			for i :=0 ; i<expected.Len() ; i++ {
+				if strings.Compare(expected.Elem(i).String(),
+				received.Elem(i).String()) != 0 {
+					t.Errorf(
+						"Test:%v\nExpected:\n%v\nReceived:\n%v",
+						testnum, expected, received,
+					)
+				}
+			}
+		default:
 		}
 	}
 }

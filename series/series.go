@@ -85,6 +85,8 @@ func (e boolElements) Elem(i int) Element { return &e[i] }
 // unmarshaling Elements.
 type ElementValue interface{}
 
+type MapFunction func(Element) Element
+
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
 type Comparator string
@@ -664,6 +666,32 @@ func (s Series) Mean() float64 {
 	return stdDev
 }
 
+// Median calculates the middle or median value, as opposed to
+// mean, and there is less susceptible to being affected by outliers.
+func (s Series) Median() float64 {
+	if s.elements.Len() == 0 ||
+		s.Type() == String ||
+		s.Type() == Bool {
+		return math.NaN()
+	}
+	ix := s.Order(false)
+	newElem := make([]Element, len(ix))
+
+	for newpos, oldpos := range ix {
+		newElem[newpos] = s.elements.Elem(oldpos)
+	}
+
+	// When length is odd, we just take length(list)/2
+	// value as the median.
+	if len(newElem)%2 != 0 {
+		return newElem[len(newElem)/2].Float()
+	}
+	// When length is even, we take middle two elements of
+	// list and the median is an average of the two of them.
+	return (newElem[(len(newElem)/2)-1].Float() +
+		newElem[len(newElem)/2].Float()) * 0.5
+}
+
 // Max return the biggest element in the series
 func (s Series) Max() float64 {
 	if s.elements.Len() == 0 || s.Type() == String {
@@ -740,3 +768,19 @@ func (s Series) Quantile(p float64) float64 {
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
 }
+
+// Map applies a function matching MapFunction signature, which itself 
+// allowing for a fairly flexible MAP implementation, intended for mapping
+// the function over each element in Series and returning a new Series object.
+// Function must be compatible with the underlying type of data in the Series.
+// In other words it is expected that when working with a Float Series, that
+// the function passed in via argument `f` will not expect another type, but
+// instead expects to handle Element(s) of type Float.
+func (s Series) Map(f MapFunction) Series {
+		
+	mappedValues := make([]Element, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		value := f(s.elements.Elem(i))
+		mappedValues[i] = value
+	}
+	return New(mappedValues, s.Type(), s.Name)

@@ -250,7 +250,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will update the values of a DataFrame for the rows selected via indexes.
+// Set will update the values of a DataFrame for all rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -388,7 +388,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	return copy
 }
 
-// CBind combines the columns of two DataFrames
+// CBind combines the columns of this DataFrame and dfb DataFrame.
 func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -400,8 +400,8 @@ func (df DataFrame) CBind(dfb DataFrame) DataFrame {
 	return New(cols...)
 }
 
-// RBind matches the column names of two DataFrames and returns the combination of
-// the rows of both of them.
+// RBind matches the column names of two DataFrames and returns combined
+// rows from both of them.
 func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -582,7 +582,7 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 }
 
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
-// the function the elements of each row are casted to a Series of a specific
+// the function the elements of each row are cast to a Series of a specific
 // type. In order of priority: String -> Float -> Int -> Bool. This casting also
 // takes place after the function application to equalize the type of the columns.
 func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
@@ -706,6 +706,9 @@ type loadOptions struct {
 	// Defines the csv delimiter
 	delimiter rune
 
+	// Defines the comment delimiter
+	comment rune
+
 	// The types of specific columns can be specified via column name.
 	types map[string]series.Type
 }
@@ -756,6 +759,13 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 func WithDelimiter(b rune) LoadOption {
 	return func(c *loadOptions) {
 		c.delimiter = b
+	}
+}
+
+// WithComments sets the csv comment line detect to remove lines
+func WithComments(b rune) LoadOption {
+	return func(c *loadOptions) {
+		c.comment = b
 	}
 }
 
@@ -964,7 +974,9 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		if !ok {
 			t = cfg.defaultType
 			if cfg.detectTypes {
-				t = findType(rawcol)
+				if l, err := findType(rawcol); err == nil {
+					t = l
+				}
 			}
 		}
 		types[i] = t
@@ -1078,6 +1090,9 @@ func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 	}
 	if cfg.delimiter != ',' {
 		csvReader.Comma = cfg.delimiter
+	}
+	if cfg.comment != 0 {
+		csvReader.Comment = cfg.comment
 	}
 
 	records, err := csvReader.ReadAll()
@@ -1831,7 +1846,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 	return idx, nil
 }
 
-func findType(arr []string) series.Type {
+func findType(arr []string) (series.Type, error) {
 	var hasFloats, hasInts, hasBools, hasStrings bool
 	for _, str := range arr {
 		if str == "" || str == "NaN" {
@@ -1851,17 +1866,20 @@ func findType(arr []string) series.Type {
 		}
 		hasStrings = true
 	}
+
+	fmt.Printf("float %t, int %t, bool %t, string %t\n", hasFloats, hasInts, hasBools, hasStrings)
+
 	switch {
 	case hasStrings:
-		return series.String
+		return series.String, nil
 	case hasBools:
-		return series.Bool
+		return series.Bool, nil
 	case hasFloats:
-		return series.Float
+		return series.Float, nil
 	case hasInts:
-		return series.Int
+		return series.Int, nil
 	default:
-		panic("couldn't detect type")
+		return series.String, fmt.Errorf("couldn't detect type")
 	}
 }
 
@@ -1901,6 +1919,7 @@ type Matrix interface {
 func (df DataFrame) Describe() DataFrame {
 	labels := series.Strings([]string{
 		"mean",
+		"median",
 		"stddev",
 		"min",
 		"25%",
@@ -1919,6 +1938,7 @@ func (df DataFrame) Describe() DataFrame {
 			newCol = series.New([]string{
 				"-",
 				"-",
+				"-",
 				col.MinStr(),
 				"-",
 				"-",
@@ -1935,6 +1955,7 @@ func (df DataFrame) Describe() DataFrame {
 		case series.Int:
 			newCol = series.New([]float64{
 				col.Mean(),
+				col.Median(),
 				col.StdDev(),
 				col.Min(),
 				col.Quantile(0.25),
