@@ -322,15 +322,15 @@ implements the `Dims() (r, c int)` method, only implementations for the `At` and
 
 ```go
 type matrix struct {
-	DataFrame
+	dataframe.DataFrame
 }
 
 func (m matrix) At(i, j int) float64 {
-	return m.columns[j].Elem(i).Float()
+	return m.Elem(i, j).Float()
 }
 
-func (m matrix) T() mat64.Matrix {
-	return mat64.Transpose{Matrix: m}
+func (m matrix) T() mat.Matrix {
+	return mat.Transpose{m}
 }
 ```
 
