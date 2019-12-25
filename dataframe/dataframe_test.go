@@ -1430,6 +1430,79 @@ func TestReadJSON(t *testing.T) {
 	}
 }
 
+func TestReadHTML(t *testing.T) {
+	table := []struct {
+		htmlStr string
+		expDf   []DataFrame
+	}{
+		{
+			"",
+			[]DataFrame{},
+		},
+		{
+			`<html>
+			<body>
+			<table>
+			<tr><td>COL.1</td></tr>
+			<tr><td>100</td></tr>
+			</table>
+			</body>
+			</html>`,
+			[]DataFrame{
+				LoadRecords(
+					[][]string{
+						{"COL.1"},
+						{"100"},
+					}),
+			},
+		},
+		{
+			`<html>
+			<body>
+			<table>
+			<tr><td rowspan='2'>COL.1</td><td rowspan='2'>COL.2</td><td>COL.3</td></tr>
+			<tr><td>100</td></tr>
+			</table>
+			</body>
+			</html>`,
+			[]DataFrame{
+				LoadRecords(
+					[][]string{
+						{"COL.1", "COL.2", "COL.3"},
+						{"COL.1", "COL.2", "100"},
+					}),
+			},
+		},
+	}
+
+	for i, tc := range table {
+		cs := ReadHTML(strings.NewReader(tc.htmlStr))
+		if tc.htmlStr != "" && len(cs) == 0 {
+			t.Errorf("Test: %d, got zero dataframes: %#v", i, cs)
+		}
+		for j, c := range cs {
+			if len(cs) != len(tc.expDf) {
+				t.Errorf("Test: %d\n got len(%d), want len(%d)", i, len(cs), len(tc.expDf))
+			}
+			if c.Err != nil {
+				t.Errorf("Test: %d\nError:%v", i, c.Err)
+			}
+			// Check that the types are the same between both DataFrames
+			if !reflect.DeepEqual(tc.expDf[j].Types(), c.Types()) {
+				t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf[j].Types(), c.Types())
+			}
+			// Check that the colnames are the same between both DataFrames
+			if !reflect.DeepEqual(tc.expDf[j].Names(), c.Names()) {
+				t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf[j].Names(), c.Names())
+			}
+			// Check that the values are the same between both DataFrames
+			if !reflect.DeepEqual(tc.expDf[j].Records(), c.Records()) {
+				t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf[j].Records(), c.Records())
+			}
+		}
+	}
+}
+
 func TestDataFrame_SetNames(t *testing.T) {
 	a := New(
 		series.New([]string{"a", "b", "c"}, series.String, "COL.1"),
