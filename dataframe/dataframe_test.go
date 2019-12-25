@@ -645,7 +645,7 @@ func TestDataFrame_Filter(t *testing.T) {
 		expDf   DataFrame
 	}{
 		{
-			[]F{{"COL.2", series.GreaterEq, 4}},
+			[]F{{0, "COL.2", series.GreaterEq, 4}},
 			New(
 				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
@@ -654,8 +654,8 @@ func TestDataFrame_Filter(t *testing.T) {
 		},
 		{
 			[]F{
-				{"COL.2", series.Greater, 4},
-				{"COL.2", series.Eq, 1},
+				{0, "COL.2", series.Greater, 4},
+				{0, "COL.2", series.Eq, 1},
 			},
 			New(
 				series.New([]string{"b", "c"}, series.String, "COL.1"),
@@ -665,9 +665,21 @@ func TestDataFrame_Filter(t *testing.T) {
 		},
 		{
 			[]F{
-				{"COL.2", series.Greater, 4},
-				{"COL.2", series.Eq, 1},
-				{"COL.1", series.Eq, "d"},
+				{0, "COL.2", series.Greater, 4},
+				{0, "COL.2", series.Eq, 1},
+				{0, "COL.1", series.Eq, "d"},
+			},
+			New(
+				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{1, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
+				{1, "", series.Greater, 4},
+				{1, "", series.Eq, 1},
+				{0, "", series.Eq, "d"},
 			},
 			New(
 				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
