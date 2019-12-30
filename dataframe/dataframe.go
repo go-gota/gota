@@ -917,7 +917,7 @@ func parseType(s string) (series.Type, error) {
 	case "bool":
 		return series.Bool, nil
 	}
-	return "", fmt.Errorf("type (%s) is not supported", s)
+	return series.Nil, fmt.Errorf("type (%s) is not supported", s)
 }
 
 // LoadRecords creates a new DataFrame based on the given records.
@@ -1278,7 +1278,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
 				bElem := bCols[iKeysB[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
+				match = match && series.Eq.Op(aElem, bElem)
 			}
 			if match {
 				ii := 0
@@ -1358,7 +1358,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
 				bElem := bCols[iKeysB[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
+				match = match && series.Eq.Op(aElem, bElem)
 			}
 			if match {
 				matched = true
@@ -1458,7 +1458,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
 				bElem := bCols[iKeysB[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
+				match = match && series.Eq.Op(aElem, bElem)
 			}
 			if match {
 				matched = true
@@ -1564,7 +1564,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
 				bElem := bCols[iKeysB[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
+				match = match && series.Eq.Op(aElem, bElem)
 			}
 			if match {
 				matched = true
@@ -1611,7 +1611,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 			for k := range keys {
 				aElem := aCols[iKeysA[k]].Elem(i)
 				bElem := bCols[iKeysB[k]].Elem(j)
-				match = match && aElem.Eq(bElem)
+				match = match && series.Eq.Op(aElem, bElem)
 			}
 			if match {
 				matched = true

@@ -17,10 +17,10 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string   // The name of the series
-	elements Elements // The values of the elements
-	t        Type     // The type of the series
-	Err      error    // If there are errors they are stored here
+	Name     string       // The name of the series
+	elements Elements     // The values of the elements
+	t        reflect.Type // The type of the series
+	Err      error        // If there are errors they are stored here
 }
 
 // Elements is the interface that represents the array of elements contained on
@@ -36,25 +36,16 @@ type Element interface {
 	// Setter method
 	Set(interface{})
 
-	// Comparation methods
-	Eq(Element) bool
-	Neq(Element) bool
-	Less(Element) bool
-	LessEq(Element) bool
-	Greater(Element) bool
-	GreaterEq(Element) bool
-
 	// Accessor/conversion methods
 	Copy() Element     // FIXME: Returning interface is a recipe for pain
 	Val() ElementValue // FIXME: Returning interface is a recipe for pain
+	Value() reflect.Value
+	ConvertTo(ty reflect.Type) reflect.Value
 	String() string
-	Int() (int, error)
-	Float() float64
-	Bool() (bool, error)
 
 	// Information methods
 	IsNA() bool
-	Type() Type
+	Type() reflect.Type
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -89,29 +80,29 @@ type MapFunction func(Element) Element
 
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
-type Comparator string
+type CompareMode int
 
-// Supported Comparators
 const (
-	Eq        Comparator = "==" // Equal
-	Neq       Comparator = "!=" // Non equal
-	Greater   Comparator = ">"  // Greater than
-	GreaterEq Comparator = ">=" // Greater or equal than
-	Less      Comparator = "<"  // Lesser than
-	LessEq    Comparator = "<=" // Lesser or equal than
-	In        Comparator = "in" // Inside
+	defaultCompareMode = iota
+	OneToMany
 )
+
+type Comparator struct {
+	Mode CompareMode
+	Op   func(a Element, b interface{}) bool
+}
 
 // Type is a convenience alias that can be used for a more type safe way of
 // reason and use Series types.
-type Type string
+type Type reflect.Type
 
 // Supported Series Types
-const (
-	String Type = "string"
-	Int    Type = "int"
-	Float  Type = "float"
-	Bool   Type = "bool"
+var (
+	Nil    Type = reflect.TypeOf(nil)
+	String Type = reflect.TypeOf("")
+	Int    Type = reflect.TypeOf(0)
+	Float  Type = reflect.TypeOf(0.0)
+	Bool   Type = reflect.TypeOf(false)
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -365,52 +356,23 @@ func (s Series) IsNaN() []bool {
 // Compare compares the values of a Series with other elements. To do so, the
 // elements with are to be compared are first transformed to a Series of the same
 // type as the caller.
-func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
+func (s Series) Compare(op Comparator, comparando interface{}) Series {
 	if err := s.Err; err != nil {
 		return s
 	}
-	compareElements := func(a, b Element, c Comparator) (bool, error) {
+	compareElements := func(a, b Element, op Comparator) (bool, error) {
+
 		var ret bool
-		switch c {
-		case Eq:
-			ret = a.Eq(b)
-		case Neq:
-			ret = a.Neq(b)
-		case Greater:
-			ret = a.Greater(b)
-		case GreaterEq:
-			ret = a.GreaterEq(b)
-		case Less:
-			ret = a.Less(b)
-		case LessEq:
-			ret = a.LessEq(b)
-		default:
-			return false, fmt.Errorf("unknown comparator: %v", c)
-		}
+		ret = op.Op(a, b)
 		return ret, nil
 	}
 
 	comp := New(comparando, s.t, "")
 	bools := make([]bool, s.Len())
 	// In comparator comparation
-	if comparator == In {
+	if op.Mode == OneToMany {
 		for i := 0; i < s.Len(); i++ {
-			e := s.elements.Elem(i)
-			b := false
-			for j := 0; j < comp.Len(); j++ {
-				m := comp.elements.Elem(j)
-				c, err := compareElements(e, m, Eq)
-				if err != nil {
-					s = s.Empty()
-					s.Err = err
-					return s
-				}
-				if c {
-					b = true
-					break
-				}
-			}
-			bools[i] = b
+			bools[i] = op.Op(s.elements.Elem(i), comp)
 		}
 		return Bools(bools)
 	}
@@ -419,7 +381,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	if comp.Len() == 1 {
 		for i := 0; i < s.Len(); i++ {
 			e := s.elements.Elem(i)
-			c, err := compareElements(e, comp.elements.Elem(0), comparator)
+			c, err := compareElements(e, comp.elements.Elem(0), op)
 			if err != nil {
 				s = s.Empty()
 				s.Err = err
@@ -438,7 +400,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	}
 	for i := 0; i < s.Len(); i++ {
 		e := s.elements.Elem(i)
-		c, err := compareElements(e, comp.elements.Elem(i), comparator)
+		c, err := compareElements(e, comp.elements.Elem(i), op)
 		if err != nil {
 			s = s.Empty()
 			s.Err = err
@@ -495,7 +457,7 @@ func (s Series) Float() []float64 {
 	ret := make([]float64, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		e := s.elements.Elem(i)
-		ret[i] = e.Float()
+		ret[i] = e.ConvertTo(Float).Float()
 	}
 	return ret
 }
@@ -506,11 +468,7 @@ func (s Series) Int() ([]int, error) {
 	ret := make([]int, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		e := s.elements.Elem(i)
-		val, err := e.Int()
-		if err != nil {
-			return nil, err
-		}
-		ret[i] = val
+		ret[i] = int(e.Value().Int())
 	}
 	return ret, nil
 }
@@ -521,11 +479,7 @@ func (s Series) Bool() ([]bool, error) {
 	ret := make([]bool, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		e := s.elements.Elem(i)
-		val, err := e.Bool()
-		if err != nil {
-			return nil, err
-		}
-		ret[i] = val
+		ret[i] = e.Value().Bool()
 	}
 	return ret, nil
 }
@@ -651,7 +605,7 @@ type indexedElement struct {
 type indexedElements []indexedElement
 
 func (e indexedElements) Len() int           { return len(e) }
-func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
+func (e indexedElements) Less(i, j int) bool { return opLess(e[i].element, e[j].element) }
 func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
 // StdDev calculates the standard deviation of a series
@@ -684,12 +638,12 @@ func (s Series) Median() float64 {
 	// When length is odd, we just take length(list)/2
 	// value as the median.
 	if len(newElem)%2 != 0 {
-		return newElem[len(newElem)/2].Float()
+		return newElem[len(newElem)/2].ConvertTo(Float).Float()
 	}
 	// When length is even, we take middle two elements of
 	// list and the median is an average of the two of them.
-	return (newElem[(len(newElem)/2)-1].Float() +
-		newElem[len(newElem)/2].Float()) * 0.5
+	return (newElem[(len(newElem)/2)-1].ConvertTo(Float).Float() +
+		newElem[len(newElem)/2].ConvertTo(Float).Float()) * 0.5
 }
 
 // Max return the biggest element in the series
@@ -701,11 +655,11 @@ func (s Series) Max() float64 {
 	max := s.elements.Elem(0)
 	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
-		if elem.Greater(max) {
+		if opGreater(elem, max) {
 			max = elem
 		}
 	}
-	return max.Float()
+	return max.ConvertTo(Float).Float()
 }
 
 // MaxStr return the biggest element in a series of type String
@@ -717,11 +671,11 @@ func (s Series) MaxStr() string {
 	max := s.elements.Elem(0)
 	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
-		if elem.Greater(max) {
+		if opGreater(elem, max) {
 			max = elem
 		}
 	}
-	return max.String()
+	return max.Value().String()
 }
 
 // Min return the lowest element in the series
@@ -733,11 +687,11 @@ func (s Series) Min() float64 {
 	min := s.elements.Elem(0)
 	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
-		if elem.Less(min) {
+		if opLess(elem, min) {
 			min = elem
 		}
 	}
-	return min.Float()
+	return min.ConvertTo(Float).Float()
 }
 
 // MinStr return the lowest element in a series of type String
@@ -749,11 +703,11 @@ func (s Series) MinStr() string {
 	min := s.elements.Elem(0)
 	for i := 1; i < s.elements.Len(); i++ {
 		elem := s.elements.Elem(i)
-		if elem.Less(min) {
+		if opLess(elem, min) {
 			min = elem
 		}
 	}
-	return min.String()
+	return min.Value().String()
 }
 
 // Quantile returns the sample of x such that x is greater than or

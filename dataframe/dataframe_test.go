@@ -2203,15 +2203,15 @@ func TestDataFrame_String(t *testing.T) {
 		},
 	)
 	received := a.String()
-	expected := `[4x3] DataFrame
+	expected := "[4x3] DataFrame\n" +
+		"\n" +
+		"    A     C         D     \n" +
+		" 0: 1     5.100000  true  \n" +
+		" 1: NaN   6.000000  true  \n" +
+		" 2: 2     6.000000  false \n" +
+		" 3: 2     7.100000  false \n" +
+		"    <int> <float64> <bool>\n"
 
-    A     C        D     
- 0: 1     5.100000 true  
- 1: NaN   6.000000 true  
- 2: 2     6.000000 false 
- 3: 2     7.100000 false 
-    <int> <float>  <bool>
-`
 	if expected != received {
 		t.Errorf("Different values:\nExpected: \n%v\nReceived: \n%v\n", expected, received)
 	}
@@ -2306,7 +2306,7 @@ type mockMatrix struct {
 }
 
 func (m mockMatrix) At(i, j int) float64 {
-	return m.columns[j].Elem(i).Float()
+	return m.columns[j].Elem(i).ConvertTo(series.Float).Float()
 }
 
 func (m mockMatrix) T() Matrix {

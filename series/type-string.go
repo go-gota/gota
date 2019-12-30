@@ -3,8 +3,8 @@ package series
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
-	"strings"
 )
 
 type stringElement struct {
@@ -55,8 +55,8 @@ func (e stringElement) IsNA() bool {
 	return false
 }
 
-func (e stringElement) Type() Type {
-	return String
+func (e stringElement) Type() reflect.Type {
+	return reflect.TypeOf(e.e)
 }
 
 func (e stringElement) Val() ElementValue {
@@ -73,75 +73,45 @@ func (e stringElement) String() string {
 	return string(e.e)
 }
 
-func (e stringElement) Int() (int, error) {
-	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
-	}
-	return strconv.Atoi(e.e)
+func (e stringElement) Value() reflect.Value {
+	return reflect.ValueOf(e.e)
 }
 
-func (e stringElement) Float() float64 {
-	if e.IsNA() {
-		return math.NaN()
+func (e stringElement) ConvertTo(ty reflect.Type) reflect.Value {
+	switch ty {
+	case Bool:
+		if e.IsNA() {
+			return reflect.ValueOf(fmt.Errorf("can't convert NaN to bool"))
+		}
+		switch e.e {
+		case "false", "f", "0":
+			return reflect.ValueOf(false)
+		case "trye", "t", "1":
+			return reflect.ValueOf(true)
+		default:
+			return reflect.ValueOf(fmt.Errorf("can't convert String \"%v\" to bool", e.e))
+		}
+	case Float:
+		if e.IsNA() {
+			return reflect.ValueOf(math.NaN())
+		}
+		f, err := strconv.ParseFloat(e.e, 64)
+		if err != nil {
+			return reflect.ValueOf(math.NaN())
+		}
+		return reflect.ValueOf(f)
+	case Int:
+		if e.IsNA() {
+			return reflect.ValueOf(math.NaN())
+		}
+		i, err := strconv.Atoi(e.e)
+		if err != nil {
+			return reflect.ValueOf(fmt.Errorf("can't convert String \"%v\" to int", e.e))
+		}
+		return reflect.ValueOf(int(i))
+	case String:
+		return reflect.ValueOf(e.String())
+	default:
+		return reflect.ValueOf(fmt.Errorf("unsupported type: %s", ty.String()))
 	}
-	f, err := strconv.ParseFloat(e.e, 64)
-	if err != nil {
-		return math.NaN()
-	}
-	return f
-}
-
-func (e stringElement) Bool() (bool, error) {
-	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
-	}
-	switch strings.ToLower(e.e) {
-	case "true", "t", "1":
-		return true, nil
-	case "false", "f", "0":
-		return false, nil
-	}
-	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
-}
-
-func (e stringElement) Eq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e == elem.String()
-}
-
-func (e stringElement) Neq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e != elem.String()
-}
-
-func (e stringElement) Less(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e < elem.String()
-}
-
-func (e stringElement) LessEq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e <= elem.String()
-}
-
-func (e stringElement) Greater(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e > elem.String()
-}
-
-func (e stringElement) GreaterEq(elem Element) bool {
-	if e.IsNA() || elem.IsNA() {
-		return false
-	}
-	return e.e >= elem.String()
 }

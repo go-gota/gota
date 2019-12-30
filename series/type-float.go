@@ -3,6 +3,7 @@ package series
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strconv"
 )
 
@@ -37,7 +38,12 @@ func (e *floatElement) Set(value interface{}) {
 			e.e = 0
 		}
 	case Element:
-		e.e = value.(Element).Float()
+		v := value.(Element).ConvertTo(Float)
+		if v.Type() != Float {
+			e.nan = true
+		} else {
+			e.e = v.Float()
+		}
 	default:
 		e.nan = true
 		return
@@ -59,8 +65,8 @@ func (e floatElement) IsNA() bool {
 	return false
 }
 
-func (e floatElement) Type() Type {
-	return Float
+func (e floatElement) Type() reflect.Type {
+	return reflect.TypeOf(e.e)
 }
 
 func (e floatElement) Val() ElementValue {
@@ -77,84 +83,39 @@ func (e floatElement) String() string {
 	return fmt.Sprintf("%f", e.e)
 }
 
-func (e floatElement) Int() (int, error) {
+func (e floatElement) Value() reflect.Value {
+	return reflect.ValueOf(e.e)
+}
+
+func (e floatElement) ConvertTo(ty reflect.Type) reflect.Value {
 	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
+		return reflect.ValueOf(fmt.Errorf("can't convert NaN to %v", ty))
 	}
-	f := e.e
-	if math.IsInf(f, 1) || math.IsInf(f, -1) {
-		return 0, fmt.Errorf("can't convert Inf to int")
-	}
-	if math.IsNaN(f) {
-		return 0, fmt.Errorf("can't convert NaN to int")
-	}
-	return int(f), nil
-}
 
-func (e floatElement) Float() float64 {
-	if e.IsNA() {
-		return math.NaN()
+	switch ty {
+	case Int:
+		f := e.e
+		if math.IsInf(f, 1) || math.IsInf(f, -1) {
+			return reflect.ValueOf(fmt.Errorf("can't convert Inf to int"))
+		}
+		if math.IsNaN(f) {
+			return reflect.ValueOf(fmt.Errorf("can't convert NaN to int"))
+		}
+		return reflect.ValueOf(int(f))
+	case Bool:
+		switch e.e {
+		case 0:
+			return reflect.ValueOf(false)
+		case 1:
+			return reflect.ValueOf(true)
+		default:
+			return reflect.ValueOf(fmt.Errorf("can't convert Float \"%v\" to bool", e.e))
+		}
+	case Float:
+		return reflect.ValueOf(float64(e.e))
+	case String:
+		return reflect.ValueOf(e.String())
+	default:
+		return reflect.ValueOf(fmt.Errorf("unsupported type: %s", ty.String()))
 	}
-	return float64(e.e)
-}
-
-func (e floatElement) Bool() (bool, error) {
-	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
-	}
-	switch e.e {
-	case 1:
-		return true, nil
-	case 0:
-		return false, nil
-	}
-	return false, fmt.Errorf("can't convert Float \"%v\" to bool", e.e)
-}
-
-func (e floatElement) Eq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e == f
-}
-
-func (e floatElement) Neq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e != f
-}
-
-func (e floatElement) Less(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e < f
-}
-
-func (e floatElement) LessEq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e <= f
-}
-
-func (e floatElement) Greater(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e > f
-}
-
-func (e floatElement) GreaterEq(elem Element) bool {
-	f := elem.Float()
-	if e.IsNA() || math.IsNaN(f) {
-		return false
-	}
-	return e.e >= f
 }

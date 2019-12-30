@@ -3,6 +3,7 @@ package series
 import (
 	"fmt"
 	"math"
+	"reflect"
 	"strings"
 )
 
@@ -51,12 +52,16 @@ func (e *boolElement) Set(value interface{}) {
 	case bool:
 		e.e = value.(bool)
 	case Element:
-		b, err := value.(Element).Bool()
-		if err != nil {
-			e.nan = true
-			return
+		if value.(Element).Value().Type().Kind() == reflect.Bool {
+			e.e = value.(Element).Value().Bool()
+		} else {
+			v := value.(Element).ConvertTo(Bool)
+			if v.Type() != Bool {
+				e.nan = true
+			} else {
+				e.e = v.Bool()
+			}
 		}
-		e.e = b
 	default:
 		e.nan = true
 		return
@@ -78,8 +83,8 @@ func (e boolElement) IsNA() bool {
 	return false
 }
 
-func (e boolElement) Type() Type {
-	return Bool
+func (e boolElement) Type() reflect.Type {
+	return reflect.TypeOf(e.e)
 }
 
 func (e boolElement) Val() ElementValue {
@@ -99,77 +104,36 @@ func (e boolElement) String() string {
 	return "false"
 }
 
-func (e boolElement) Int() (int, error) {
-	if e.IsNA() {
-		return 0, fmt.Errorf("can't convert NaN to int")
-	}
-	if e.e == true {
-		return 1, nil
-	}
-	return 0, nil
+func (e boolElement) Value() reflect.Value {
+	return reflect.ValueOf(e.e)
 }
 
-func (e boolElement) Float() float64 {
-	if e.IsNA() {
-		return math.NaN()
+func (e boolElement) ConvertTo(ty reflect.Type) reflect.Value {
+	switch ty {
+	case Bool:
+		if e.IsNA() {
+			return reflect.ValueOf(fmt.Errorf("can't convert NaN to bool"))
+		}
+		return reflect.ValueOf(e.e)
+	case Int:
+		if e.IsNA() {
+			return reflect.ValueOf(fmt.Errorf("can't convert NaN to int"))
+		}
+		if e.e == true {
+			return reflect.ValueOf(1)
+		}
+		return reflect.ValueOf(0)
+	case Float:
+		if e.IsNA() {
+			return reflect.ValueOf(math.NaN())
+		}
+		if e.e {
+			return reflect.ValueOf(1.0)
+		}
+		return reflect.ValueOf(0.0)
+	case String:
+		return reflect.ValueOf(e.String())
+	default:
+		return reflect.ValueOf(fmt.Errorf("unsupported type: %s", ty.String()))
 	}
-	if e.e {
-		return 1.0
-	}
-	return 0.0
-}
-
-func (e boolElement) Bool() (bool, error) {
-	if e.IsNA() {
-		return false, fmt.Errorf("can't convert NaN to bool")
-	}
-	return bool(e.e), nil
-}
-
-func (e boolElement) Eq(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return e.e == b
-}
-
-func (e boolElement) Neq(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return e.e != b
-}
-
-func (e boolElement) Less(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return !e.e && b
-}
-
-func (e boolElement) LessEq(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return !e.e || b
-}
-
-func (e boolElement) Greater(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return e.e && !b
-}
-
-func (e boolElement) GreaterEq(elem Element) bool {
-	b, err := elem.Bool()
-	if err != nil || e.IsNA() {
-		return false
-	}
-	return e.e || !b
 }
