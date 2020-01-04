@@ -427,6 +427,32 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// TODO after series append has been modified
+// Append will add new dataframe to an existing DataFrame at a given position.
+// func (df DataFrame) Append(pos int, dfb DataFrame) DataFrame {
+// 	if df.Err != nil {
+// 		return df
+// 	}
+// 	if dfb.Err != nil {
+// 		return dfb
+// 	}
+// 	if newvalues.Err != nil {
+// 		return DataFrame{Err: fmt.Errorf("argument has errors: %v", newvalues.Err)}
+// 	}
+// 	if df.ncols != newvalues.ncols {
+// 		return DataFrame{Err: fmt.Errorf("different number of columns")}
+// 	}
+// 	columns := make([]series.Series, df.ncols)
+// 	for i, s := range df.columns {
+// 		columns[i] = s.Set(indexes, newvalues.columns[i])
+// 		if columns[i].Err != nil {
+// 			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Err)}
+// 			return df
+// 		}
+// 	}
+// 	return df
+// }
+
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
 func (df DataFrame) Mutate(s series.Series) DataFrame {
