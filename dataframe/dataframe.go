@@ -429,53 +429,31 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
-// Concat concatenates rows of two DataFrames like RBind, but also including
-// unmatched columns.
-func (df DataFrame) Concat(dfb DataFrame) DataFrame {
-	if df.Err != nil {
-		return df
-	}
-	if dfb.Err != nil {
-		return dfb
-	}
-
-	uniques := make(map[string]struct{})
-	cols := []string{}
-	for _, t := range []DataFrame{df, dfb} {
-		for _, u := range t.Names() {
-			if _, ok := uniques[u]; !ok {
-				uniques[u] = struct{}{}
-				cols = append(cols, u)
-			}
-		}
-	}
-
-	expandedSeries := make([]series.Series, len(cols))
-	for k, v := range cols {
-		aidx := findInStringSlice(v, df.Names())
-		bidx := findInStringSlice(v, dfb.Names())
-
-		// aidx and bidx must not be -1 at the same time.
-		var a, b series.Series
-		if aidx != -1 {
-			a = df.columns[aidx]
-		} else {
-			bb := dfb.columns[bidx]
-			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name)
-		}
-		if bidx != -1 {
-			b = dfb.columns[bidx]
-		} else {
-			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name)
-		}
-		newSeries := a.Concat(b)
-		if err := newSeries.Err; err != nil {
-			return DataFrame{Err: fmt.Errorf("concat: %v", err)}
-		}
-		expandedSeries[k] = newSeries
-	}
-	return New(expandedSeries...)
-}
+// TODO after series append has been modified
+// Append will add new dataframe to an existing DataFrame at a given position.
+// func (df DataFrame) Append(pos int, dfb DataFrame) DataFrame {
+// 	if df.Err != nil {
+// 		return df
+// 	}
+// 	if dfb.Err != nil {
+// 		return dfb
+// 	}
+// 	if newvalues.Err != nil {
+// 		return DataFrame{Err: fmt.Errorf("argument has errors: %v", newvalues.Err)}
+// 	}
+// 	if df.ncols != newvalues.ncols {
+// 		return DataFrame{Err: fmt.Errorf("different number of columns")}
+// 	}
+// 	columns := make([]series.Series, df.ncols)
+// 	for i, s := range df.columns {
+// 		columns[i] = s.Set(indexes, newvalues.columns[i])
+// 		if columns[i].Err != nil {
+// 			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Err)}
+// 			return df
+// 		}
+// 	}
+// 	return df
+// }
 
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
@@ -1198,7 +1176,7 @@ func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 // resulting records.
 func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	var m []map[string]interface{}
-	d:=json.NewDecoder(r)
+	d := json.NewDecoder(r)
 	d.UseNumber()
 	err := d.Decode(&m)
 	if err != nil {

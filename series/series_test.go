@@ -1731,3 +1731,59 @@ func TestSeries_Map(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_Insert(t *testing.T) {
+
+	tests := []struct {
+		desc     string
+		series   Series
+		value    interface{}
+		pos      int
+		expected string
+	}{
+		{
+			"TestSeries_Insert:0: SeriesString.Insert([]String) & pos=end of Series",
+			Strings([]string{"1", "2", "3", "a", "b", "c"}),
+			[]string{"1", "2", "3", "a", "b", "c"},
+			6,
+			"[1 2 3 a b c 1 2 3 a b c]",
+		},
+		{
+			"TestSeries_Insert:1: SeriesString.Insert([]String) & pos=2 of Series i.e. after 2 elements of Series",
+			Strings([]string{"1", "2", "3", "a", "b", "c"}),
+			[]string{"1", "2", "3", "a", "b", "c"},
+			2,
+			"[1 2 1 2 3 a b c 3 a b c]",
+		},
+		{
+			"TestSeries_Insert:2: SeriesInt.Insert([]Int) & pos=3 of Series i.e. after 3 elements of Series",
+			Ints([]int{1, 2, 3, 6, 7}),
+			[]int{4, 5},
+			3,
+			"[1 2 3 4 5 6 7]",
+		},
+		// {
+		// 	"!!! test pos > len "
+		// },
+		// {
+		// 	"!!! test pos == -1 "
+		// }
+	}
+
+	for testnum, test := range tests {
+		test.series.Insert(test.value, test.pos)
+
+		if fmt.Sprint(test.series) != test.expected {
+			t.Errorf("Test:%v failed. %v \n actual=%v", testnum, test.desc, test.series)
+		}
+		// if err := b.Err; err != nil {
+		// 	t.Errorf("Test:%v\nError:%v", testnum, err)
+		// }
+		// if err := checkTypes(b); err != nil {
+		// 	t.Errorf("Test:%v\nError:%v", testnum, err)
+		// }
+		//if err := checkAddr(a.Addr(), b.Addr()); err != nil {
+		//t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.Addr(), b.Addr())
+		//}
+	}
+}
