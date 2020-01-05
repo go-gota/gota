@@ -429,31 +429,33 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
-// TODO after series append has been modified
-// Append will add new dataframe to an existing DataFrame at a given position.
-// func (df DataFrame) Append(pos int, dfb DataFrame) DataFrame {
-// 	if df.Err != nil {
-// 		return df
-// 	}
-// 	if dfb.Err != nil {
-// 		return dfb
-// 	}
-// 	if newvalues.Err != nil {
-// 		return DataFrame{Err: fmt.Errorf("argument has errors: %v", newvalues.Err)}
-// 	}
-// 	if df.ncols != newvalues.ncols {
-// 		return DataFrame{Err: fmt.Errorf("different number of columns")}
-// 	}
-// 	columns := make([]series.Series, df.ncols)
-// 	for i, s := range df.columns {
-// 		columns[i] = s.Set(indexes, newvalues.columns[i])
-// 		if columns[i].Err != nil {
-// 			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Err)}
-// 			return df
-// 		}
-// 	}
-// 	return df
-// }
+// Insert will add new dataframe to an existing DataFrame at a given position.
+func (df DataFrame) Insert(dfb DataFrame, pos int) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if dfb.Err != nil {
+		return dfb
+	}
+	expandedSeries := make([]series.Series, df.ncols)
+	for k, v := range df.Names() {
+		idx := findInStringSlice(v, dfb.Names())
+		if idx == -1 {
+			return DataFrame{Err: fmt.Errorf("insert: column names are not compatible")}
+		}
+
+		originalSeries := df.columns[k]
+		addedSeries := dfb.columns[idx]
+
+		originalSeries.Insert(addedSeries, pos)
+		if err := originalSeries.Err; err != nil {
+			return DataFrame{Err: fmt.Errorf("insert: %v", err)}
+		}
+
+		expandedSeries[k] = originalSeries
+	}
+	return New(expandedSeries...)
+}
 
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.

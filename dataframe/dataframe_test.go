@@ -2,6 +2,7 @@ package dataframe
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -2832,6 +2833,79 @@ func TestDescribe(t *testing.T) {
 
 		if !equal {
 			t.Errorf("Test:%v\nExpected:\n%v\nReceived:\n%v\n", testnum, expected, received)
+		}
+	}
+}
+
+func TestDataFrame_Insert(t *testing.T) {
+	tests := []struct {
+		desc     string
+		df       DataFrame
+		value    DataFrame
+		pos      int
+		expected string
+	}{
+		{
+			"TestDataFrame_Insert:0: DataframeString.Insert(DataframeString) & pos=end of Series",
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"1", "5.1", "true"},
+					{"NaN", "6.0", "true"},
+					{"2", "6.0", "false"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"2", "7.1", "false"},
+				},
+			),
+			-1,
+			`[4x3] DataFrame
+
+    A     C        D     
+ 0: 1     5.100000 true  
+ 1: NaN   6.000000 true  
+ 2: 2     6.000000 false 
+ 3: 2     7.100000 false 
+    <int> <float>  <bool>
+`,
+		},
+		{
+			"TestDataFrame_Insert:1: DataFrameString.Insert(DataFrameString) & pos=0",
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"1", "5.1", "true"},
+					{"NaN", "6.0", "true"},
+					{"2", "6.0", "false"},
+				},
+			),
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"2", "7.1", "false"},
+				},
+			),
+			0,
+			`[4x3] DataFrame
+
+    A     C        D     
+ 0: 2     7.100000 false 
+ 1: 1     5.100000 true  
+ 2: NaN   6.000000 true  
+ 3: 2     6.000000 false 
+    <int> <float>  <bool>
+`,
+		},
+	}
+
+	for testnum, test := range tests {
+		actual := test.df.Insert(test.value, test.pos)
+
+		if fmt.Sprint(actual) != test.expected && fmt.Sprint(actual.Err) != test.expected {
+			t.Errorf("Test:%v failed. %v \n expected=\n%v \n actualValue=\n%v \n actualError=\n%v", testnum, test.desc, test.expected, actual, actual.Err)
 		}
 	}
 }
