@@ -1692,28 +1692,34 @@ func TestSeries_Insert(t *testing.T) {
 			3,
 			"[1 2 3 4 5 6 7]",
 		},
-		// {
-		// 	"!!! test pos > len "
-		// },
-		// {
-		// 	"!!! test pos == -1 "
-		// }
+		{
+			"TestSeries_Insert:3: SeriesFloat.Insert([]Float) & pos=3 of Series i.e. after 3 elements of Series",
+			Floats([]float64{1.0, 2.0, 3.0, 6.0, 7.0}),
+			[]float64{4, 5},
+			3,
+			"[1.000000 2.000000 3.000000 4.000000 5.000000 6.000000 7.000000]",
+		},
+		{
+			"TestSeries_Insert:4: SeriesBool.Insert([]Bool) & pos=-1",
+			Bools([]bool{true, true}),
+			[]bool{false, false},
+			-1,
+			"[true true false false]",
+		},
+		{
+			"TestSeries_Insert_ERROR:5: SeriesBool.Insert([]Bool) & pos > length of series",
+			Bools([]bool{true, true}),
+			[]bool{false, false},
+			3,
+			"pos (=3) cannot be greater than length of the series (=2)",
+		},
 	}
 
 	for testnum, test := range tests {
 		test.series.Insert(test.value, test.pos)
 
-		if fmt.Sprint(test.series) != test.expected {
-			t.Errorf("Test:%v failed. %v \n actual=%v", testnum, test.desc, test.series)
+		if fmt.Sprint(test.series) != test.expected && fmt.Sprint(test.series.Err) != test.expected {
+			t.Errorf("Test:%v failed. %v \n expected=%v \t actualValue=%v \t actualError=%v", testnum, test.desc, test.expected, test.series, test.series.Err)
 		}
-		// if err := b.Err; err != nil {
-		// 	t.Errorf("Test:%v\nError:%v", testnum, err)
-		// }
-		// if err := checkTypes(b); err != nil {
-		// 	t.Errorf("Test:%v\nError:%v", testnum, err)
-		// }
-		//if err := checkAddr(a.Addr(), b.Addr()); err != nil {
-		//t.Errorf("Test:%v\nError:%v\nA:%v\nB:%v", testnum, err, a.Addr(), b.Addr())
-		//}
 	}
 }

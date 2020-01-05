@@ -255,50 +255,38 @@ func (s *Series) Append(values interface{}) {
 }
 
 // Insert adds new elements to the nth position of the Series provided by 'pos' parameter
-// pos = 2 implies:
+// e.g. pos = 2 implies:
 // 1. Insert after 2 elements of Series
 // 2. Or 0th and 1st elements of the Series stay as is
-// When using Append, the Series is modified in place.
-func (s *Series) Insert(values interface{}, pos int) *Series {
+// When using Insert, the Series is modified in place.
+func (s *Series) Insert(values interface{}, pos int) {
 	if pos > s.elements.Len() {
 		s.Err = fmt.Errorf("pos (=%v) cannot be greater than length of the series (=%v)", pos, s.elements.Len())
-		return s
+		return
 	}
 	if pos == -1 {
 		pos = s.elements.Len()
 	}
 
 	if err := s.Err; err != nil {
-		return s
+		return
 	}
 	news := New(values, s.t, s.Name)
 
 	switch s.t {
 	case String:
-		s.elements = append(append(s.elements.(stringElements)[:pos], news.elements.(stringElements)...), s.elements.(stringElements)[pos:]...)
+		// the following won't work in some cases:
+		// 		s.elements = append(append(s.elements.(stringElements)[:pos], news.elements.(stringElements)...), s.elements.(stringElements)[pos:]...)
+		// it may cause mutation of s.elements during inner append resulting in undesired output
+		s.elements = append(s.elements.(stringElements)[:pos], append(news.elements.(stringElements), s.elements.(stringElements)[pos:]...)...)
 	case Int:
-		// the following won't work:
-		// 		part1 := s.elements.(intElements)[:pos]
-		// 		part2 := s.elements.(intElements)[pos:]
-		// hence, createing part1 and part2 as two new series elements
-		//
-		part1 := make(intElements, pos)
-		for i := 0; i < pos; i++ {
-			part1[i] = s.elements.(intElements)[i]
-		}
-		part2 := make(intElements, s.elements.Len()-pos)
-		j := 0
-		for i := pos; i < s.elements.Len(); i++ {
-			part2[j] = s.elements.(intElements)[i]
-			j++
-		}
-		s.elements = append(append(part1, news.elements.(intElements)...), part2...)
+		s.elements = append(s.elements.(intElements)[:pos], append(news.elements.(intElements), s.elements.(intElements)[pos:]...)...)
 	case Float:
-		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
+		s.elements = append(s.elements.(floatElements)[:pos], append(news.elements.(floatElements), s.elements.(floatElements)[pos:]...)...)
 	case Bool:
-		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
+		s.elements = append(s.elements.(boolElements)[:pos], append(news.elements.(boolElements), s.elements.(boolElements)[pos:]...)...)
 	}
-	return s
+	return
 }
 
 // Concat concatenates two series together. It will return a new Series with the
