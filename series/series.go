@@ -254,6 +254,41 @@ func (s *Series) Append(values interface{}) {
 	}
 }
 
+// Insert adds new elements to the nth position of the Series provided by 'pos' parameter
+// e.g. pos = 2 implies:
+// 1. Insert after 2 elements of Series
+// 2. Or 0th and 1st elements of the Series stay as is
+// When using Insert, the Series is modified in place.
+func (s *Series) Insert(values interface{}, pos int) {
+	if pos > s.elements.Len() {
+		s.Err = fmt.Errorf("pos (=%v) cannot be greater than length of the series (=%v)", pos, s.elements.Len())
+		return
+	}
+	if pos == -1 {
+		pos = s.elements.Len()
+	}
+
+	if err := s.Err; err != nil {
+		return
+	}
+	news := New(values, s.t, s.Name)
+
+	switch s.t {
+	case String:
+		// the following won't work in some cases:
+		// 		s.elements = append(append(s.elements.(stringElements)[:pos], news.elements.(stringElements)...), s.elements.(stringElements)[pos:]...)
+		// it may cause mutation of s.elements during inner append resulting in undesired output
+		s.elements = append(s.elements.(stringElements)[:pos], append(news.elements.(stringElements), s.elements.(stringElements)[pos:]...)...)
+	case Int:
+		s.elements = append(s.elements.(intElements)[:pos], append(news.elements.(intElements), s.elements.(intElements)[pos:]...)...)
+	case Float:
+		s.elements = append(s.elements.(floatElements)[:pos], append(news.elements.(floatElements), s.elements.(floatElements)[pos:]...)...)
+	case Bool:
+		s.elements = append(s.elements.(boolElements)[:pos], append(news.elements.(boolElements), s.elements.(boolElements)[pos:]...)...)
+	}
+	return
+}
+
 // Concat concatenates two series together. It will return a new Series with the
 // combined elements of both Series.
 func (s Series) Concat(x Series) Series {
