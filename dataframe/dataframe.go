@@ -1717,7 +1717,7 @@ func (df DataFrame) Elem(r, c int) series.Element {
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(colnames []string) {
-	// Find duplicated colnames
+	// Find duplicated and missing colnames
 	dupnamesidx := make(map[string][]int)
 	var missingnames []int
 	for i := 0; i < len(colnames); i++ {
@@ -1726,16 +1726,17 @@ func fixColnames(colnames []string) {
 			missingnames = append(missingnames, i)
 			continue
 		}
-		for j := 0; j < len(colnames); j++ {
-			b := colnames[j]
-			if i != j && a == b {
-				temp := dupnamesidx[a]
-				if !inIntSlice(i, temp) {
-					dupnamesidx[a] = append(temp, i)
-				}
-			}
+		// for now, dupnamesidx contains the indices of *all* the columns
+		// the columns with unique locations will be removed after this loop
+		dupnamesidx[a] = append(dupnamesidx[a], i)
+	}
+	// NOTE: deleting a map key in a range is legal and correct in Go.
+	for k, places := range dupnamesidx {
+		if len(places) < 2 {
+			delete(dupnamesidx, k)
 		}
 	}
+	// Now: dupnameidx contains only keys that appeared more than once
 
 	// Autofill missing column names
 	counter := 0
