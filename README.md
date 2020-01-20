@@ -313,24 +313,24 @@ fmt.Println(flights)
 
 #### Interfacing with gonum
 
-A `gonum/mat64.Matrix` or any object that implements the `dataframe.Matrix`
+A `gonum/mat.Matrix` or any object that implements the `dataframe.Matrix`
 interface can be loaded as a `DataFrame` by using the `LoadMatrix()` method. If
-one wants to convert a `DataFrame` to a `mat64.Matrix` it is necessary to create
+one wants to convert a `DataFrame` to a `mat.Matrix` it is necessary to create
 the necessary structs and method implementations. Since a `DataFrame` already
 implements the `Dims() (r, c int)` method, only implementations for the `At` and
 `T` methods are necessary:
 
 ```go
 type matrix struct {
-	DataFrame
+	dataframe.DataFrame
 }
 
 func (m matrix) At(i, j int) float64 {
-	return m.columns[j].Elem(i).Float()
+	return m.Elem(i, j).Float()
 }
 
-func (m matrix) T() mat64.Matrix {
-	return mat64.Transpose{Matrix: m}
+func (m matrix) T() mat.Matrix {
+	return mat.Transpose{m}
 }
 ```
 
@@ -372,6 +372,6 @@ implied. See the License for the specific language governing
 permissions and limitations under the License.
 
 [1]: https://github.com/gonum
-[2]: https://github.com/kniren/gota
-[3]: https://godoc.org/github.com/kniren/gota/dataframe
-[4]: https://godoc.org/github.com/kniren/gota/series
+[2]: https://github.com/go-gota/gota
+[3]: https://godoc.org/github.com/go-gota/gota/dataframe
+[4]: https://godoc.org/github.com/go-gota/gota/series

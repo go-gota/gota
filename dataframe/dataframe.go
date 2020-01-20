@@ -427,6 +427,54 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// Concat concatenates rows of two DataFrames like RBind, but also including
+// unmatched columns.
+func (df DataFrame) Concat(dfb DataFrame) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if dfb.Err != nil {
+		return dfb
+	}
+
+	uniques := make(map[string]struct{})
+	cols := []string{}
+	for _, t := range []DataFrame{df, dfb} {
+		for _, u := range t.Names() {
+			if _, ok := uniques[u]; !ok {
+				uniques[u] = struct{}{}
+				cols = append(cols, u)
+			}
+		}
+	}
+
+	expandedSeries := make([]series.Series, len(cols))
+	for k, v := range cols {
+		aidx := findInStringSlice(v, df.Names())
+		bidx := findInStringSlice(v, dfb.Names())
+
+		// aidx and bidx must not be -1 at the same time.
+		var a, b series.Series
+		if aidx != -1 {
+			a = df.columns[aidx]
+		} else {
+			bb := dfb.columns[bidx]
+			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name)
+		}
+		if bidx != -1 {
+			b = dfb.columns[bidx]
+		} else {
+			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name)
+		}
+		newSeries := a.Concat(b)
+		if err := newSeries.Err; err != nil {
+			return DataFrame{Err: fmt.Errorf("concat: %v", err)}
+		}
+		expandedSeries[k] = newSeries
+	}
+	return New(expandedSeries...)
+}
+
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
 func (df DataFrame) Mutate(s series.Series) DataFrame {
@@ -1717,7 +1765,7 @@ func (df DataFrame) Elem(r, c int) series.Element {
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(colnames []string) {
-	// Find duplicated colnames
+	// Find duplicated and missing colnames
 	dupnamesidx := make(map[string][]int)
 	var missingnames []int
 	for i := 0; i < len(colnames); i++ {
@@ -1726,16 +1774,17 @@ func fixColnames(colnames []string) {
 			missingnames = append(missingnames, i)
 			continue
 		}
-		for j := 0; j < len(colnames); j++ {
-			b := colnames[j]
-			if i != j && a == b {
-				temp := dupnamesidx[a]
-				if !inIntSlice(i, temp) {
-					dupnamesidx[a] = append(temp, i)
-				}
-			}
+		// for now, dupnamesidx contains the indices of *all* the columns
+		// the columns with unique locations will be removed after this loop
+		dupnamesidx[a] = append(dupnamesidx[a], i)
+	}
+	// NOTE: deleting a map key in a range is legal and correct in Go.
+	for k, places := range dupnamesidx {
+		if len(places) < 2 {
+			delete(dupnamesidx, k)
 		}
 	}
+	// Now: dupnameidx contains only keys that appeared more than once
 
 	// Autofill missing column names
 	counter := 0
@@ -1867,8 +1916,6 @@ func findType(arr []string) (series.Type, error) {
 		hasStrings = true
 	}
 
-	fmt.Printf("float %t, int %t, bool %t, string %t\n", hasFloats, hasInts, hasBools, hasStrings)
-
 	switch {
 	case hasStrings:
 		return series.String, nil
@@ -1909,7 +1956,7 @@ func inIntSlice(i int, is []int) bool {
 	return false
 }
 
-// Matrix is an interface which is compatible with the mat64.Matrix interface
+// Matrix is an interface which is compatible with gonum's mat.Matrix interface
 type Matrix interface {
 	Dims() (r, c int)
 	At(i, j int) float64
