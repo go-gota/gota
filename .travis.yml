@@ -1,0 +1,3 @@
+language: go
+go: master
+script: go test -v ./dataframe ./series
