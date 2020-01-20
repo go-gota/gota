@@ -250,7 +250,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will update the values of a DataFrame for all rows selected via indexes.
+// Set will update the values of a DataFrame for the rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -521,9 +521,37 @@ type F struct {
 // whereas if we chain Filter calls, every filter will act as an AND operation
 // with regards to the rest.
 func (df DataFrame) Filter(filters ...F) DataFrame {
+	return df.FilterAggregation(Or, filters...)
+}
+
+// Aggregation defines the filter aggregation
+type Aggregation int
+
+func (a Aggregation) String() string {
+	switch a {
+	case Or:
+		return "or"
+	case And:
+		return "and"
+	}
+	return fmt.Sprintf("unknown aggragation %d", a)
+}
+
+const (
+	// Or aggregates filters with logical or
+	Or Aggregation = iota
+	// And aggregates filters with logical and
+	And
+)
+
+// FilterAggregation will filter the rows of a DataFrame based on the given filters. All
+// filters on the argument of a Filter call are aggregated depending on the supplied
+// aggregation.
+func (df DataFrame) FilterAggregation(agg Aggregation, filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+
 	compResults := make([]series.Series, len(filters))
 	for i, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
@@ -536,10 +564,11 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 		}
 		compResults[i] = res
 	}
-	// Join compResults via "OR"
+
 	if len(compResults) == 0 {
 		return df.Copy()
 	}
+
 	res, err := compResults[0].Bool()
 	if err != nil {
 		return DataFrame{Err: fmt.Errorf("filter: %v", err)}
@@ -550,7 +579,14 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
 		for j := 0; j < len(res); j++ {
-			res[j] = res[j] || nextRes[j]
+			switch agg {
+			case Or:
+				res[j] = res[j] || nextRes[j]
+			case And:
+				res[j] = res[j] && nextRes[j]
+			default:
+				panic(agg)
+			}
 		}
 	}
 	return df.Subset(res)
