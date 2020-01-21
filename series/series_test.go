@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"math"
 	"reflect"
-	"strings"
 	"testing"
+	"strings"
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
@@ -1595,8 +1595,9 @@ func TestSeries_Quantile(t *testing.T) {
 	}
 }
 
+
 func TestSeries_Map(t *testing.T) {
-	tests := []struct {
+		tests := []struct {
 		series   Series
 		expected Series
 	}{
@@ -1633,11 +1634,11 @@ func TestSeries_Map(t *testing.T) {
 	doubleFloat64 := func(e Element) Element {
 		var result Element
 		result = e.Copy()
-		result.Set(result.Float() * 2)
+		result.Set(result.Float() * 2)		
 		return Element(result)
 	}
 
-	// and two booleans
+	// and two booleans 
 	and := func(e Element) Element {
 		var result Element
 		result = e.Copy()
@@ -1657,11 +1658,11 @@ func TestSeries_Map(t *testing.T) {
 		i, err := result.Int()
 		if err != nil {
 			return Element(&intElement{
-				e:   +5,
+				e: +5,
 				nan: false,
 			})
 		}
-		result.Set(i + 5)
+		result.Set(i + 5)		
 		return Element(result)
 	}
 
@@ -1673,12 +1674,12 @@ func TestSeries_Map(t *testing.T) {
 		return Element(result)
 	}
 
-	for testnum, test := range tests {
+		for testnum, test := range tests {
 		switch test.series.Type() {
 		case Bool:
 			expected := test.expected
 			received := test.series.Map(and)
-			for i := 0; i < expected.Len(); i++ {
+			for i := 0 ; i<expected.Len() ; i++ {
 				e, _ := expected.Elem(i).Bool()
 				r, _ := received.Elem(i).Bool()
 
@@ -1689,13 +1690,13 @@ func TestSeries_Map(t *testing.T) {
 					)
 				}
 			}
-
+			
 		case Float:
 			expected := test.expected
 			received := test.series.Map(doubleFloat64)
-			for i := 0; i < expected.Len(); i++ {
+			for i := 0 ; i<expected.Len() ; i++ {
 				if !compareFloats(expected.Elem(i).Float(),
-					received.Elem(i).Float(), 6) {
+				received.Elem(i).Float(), 6) {
 					t.Errorf(
 						"Test:%v\nExpected:\n%v\nReceived:\n%v",
 						testnum, expected, received,
@@ -1705,7 +1706,7 @@ func TestSeries_Map(t *testing.T) {
 		case Int:
 			expected := test.expected
 			received := test.series.Map(add5Int)
-			for i := 0; i < expected.Len(); i++ {
+			for i := 0 ; i<expected.Len() ; i++ {
 				e, _ := expected.Elem(i).Int()
 				r, _ := received.Elem(i).Int()
 				if e != r {
@@ -1718,9 +1719,9 @@ func TestSeries_Map(t *testing.T) {
 		case String:
 			expected := test.expected
 			received := test.series.Map(trimXyZPrefix)
-			for i := 0; i < expected.Len(); i++ {
+			for i :=0 ; i<expected.Len() ; i++ {
 				if strings.Compare(expected.Elem(i).String(),
-					received.Elem(i).String()) != 0 {
+				received.Elem(i).String()) != 0 {
 					t.Errorf(
 						"Test:%v\nExpected:\n%v\nReceived:\n%v",
 						testnum, expected, received,

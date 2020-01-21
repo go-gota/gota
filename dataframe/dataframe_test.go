@@ -2,7 +2,6 @@ package dataframe
 
 import (
 	"bytes"
-	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -2843,7 +2842,7 @@ func TestDataFrame_Insert(t *testing.T) {
 		df       DataFrame
 		value    DataFrame
 		pos      int
-		expected string
+		expected DataFrame
 	}{
 		{
 			"TestDataFrame_Insert:0: DataframeString.Insert(DataframeString) & pos=end of Series",
@@ -2862,15 +2861,15 @@ func TestDataFrame_Insert(t *testing.T) {
 				},
 			),
 			-1,
-			`[4x3] DataFrame
-
-    A     C        D     
- 0: 1     5.100000 true  
- 1: NaN   6.000000 true  
- 2: 2     6.000000 false 
- 3: 2     7.100000 false 
-    <int> <float>  <bool>
-`,
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"1", "5.1", "true"},
+					{"NaN", "6.0", "true"},
+					{"2", "6.0", "false"},
+					{"2", "7.1", "false"},
+				},
+			),
 		},
 		{
 			"TestDataFrame_Insert:1: DataFrameString.Insert(DataFrameString) & pos=0",
@@ -2889,23 +2888,35 @@ func TestDataFrame_Insert(t *testing.T) {
 				},
 			),
 			0,
-			`[4x3] DataFrame
-
-    A     C        D     
- 0: 2     7.100000 false 
- 1: 1     5.100000 true  
- 2: NaN   6.000000 true  
- 3: 2     6.000000 false 
-    <int> <float>  <bool>
-`,
+			LoadRecords(
+				[][]string{
+					{"A", "C", "D"},
+					{"2", "7.1", "false"},
+					{"1", "5.1", "true"},
+					{"NaN", "6.0", "true"},
+					{"2", "6.0", "false"},
+				},
+			),
 		},
 	}
 
-	for testnum, test := range tests {
+	for i, test := range tests {
 		actual := test.df.Insert(test.value, test.pos)
 
-		if fmt.Sprint(actual) != test.expected && fmt.Sprint(actual.Err) != test.expected {
-			t.Errorf("Test:%v failed. %v \n expected=\n%v \n actualValue=\n%v \n actualError=\n%v", testnum, test.desc, test.expected, actual, actual.Err)
+		if test.df.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, test.df.Err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(test.expected.Types(), actual.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nexpected:%v\nactual:%v", i, test.expected.Types(), actual.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(test.expected.Names(), actual.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nexpected:%v\nactual:%v", i, test.expected.Names(), actual.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(test.expected.Records(), actual.Records()) {
+			t.Errorf("Test: %d: Different values:\nexpected:%v\nactual:%v", i, test.expected, actual)
 		}
 	}
 }
