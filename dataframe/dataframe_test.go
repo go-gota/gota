@@ -1191,13 +1191,13 @@ func TestReadJSON(t *testing.T) {
 		expDf   DataFrame
 	}{
 		{
-			`[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`,
+			`[{"COL.1":null,"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":20180428}]`,
 			LoadRecords(
 				[][]string{
 					{"COL.1", "COL.2", "COL.3"},
 					{"NaN", "1", "3"},
 					{"5", "2", "2"},
-					{"6", "3", "1"},
+					{"6", "3", "20180428"},
 				},
 				DetectTypes(false),
 				DefaultType(series.Int),
