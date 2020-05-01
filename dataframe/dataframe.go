@@ -513,6 +513,7 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 
 // F is the filtering structure
 type F struct {
+	Colidx     int
 	Colname    string
 	Comparator series.Comparator
 	Comparando interface{}
@@ -556,9 +557,14 @@ func (df DataFrame) FilterAggregation(agg Aggregation, filters ...F) DataFrame {
 
 	compResults := make([]series.Series, len(filters))
 	for i, f := range filters {
-		idx := findInStringSlice(f.Colname, df.Names())
-		if idx < 0 {
-			return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
+		var idx int
+		if f.Colname == "" {
+			idx = f.Colidx
+		} else {
+			idx = findInStringSlice(f.Colname, df.Names())
+			if idx < 0 {
+				return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
+			}
 		}
 		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
 		if err := res.Err; err != nil {
