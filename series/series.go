@@ -834,6 +834,11 @@ func (s Series) Mutate(mutator Mutator, mutatando interface{}) Series {
 	if err := s.Err; err != nil {
 		return s
 	}
+
+	if s.Len() == 0 {
+		return s
+	}
+
 	mutateElements := func(a, b Element, c Mutator) (interface{}, error) {
 		var ret interface{}
 		var err error

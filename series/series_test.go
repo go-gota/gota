@@ -1932,6 +1932,18 @@ func TestSeries_Mutate(t *testing.T) {
 			[]bool{true, false, false},
 			Bools([]bool{}),
 		},
+		{
+			Bools([]bool{}),
+			Divide,
+			"true",
+			Bools([]bool{}),
+		},
+		{
+			Bools([]bool{}),
+			Divide,
+			[]bool{true, false, false},
+			Bools([]bool{}),
+		},
 	}
 	for testnum, test := range table {
 		a := test.series
