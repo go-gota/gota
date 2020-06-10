@@ -880,15 +880,15 @@ func (s Series) Mutate(mutator Mutator, mutatando interface{}) Series {
 		case float64:
 			return Floats(result)
 		default:
-			//TODO how this is handled
+			//TODO improve how this is handled
 			return s
 		}
 	}
 
-	// Multiple element comparison
+	// Multiple element mutation
 	if s.Len() != mut.Len() {
 		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
+		s.Err = fmt.Errorf("can't mutate: length mismatch")
 		return s
 	}
 	for i := 0; i < s.Len(); i++ {
