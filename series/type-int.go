@@ -163,3 +163,35 @@ func (e intElement) GreaterEq(elem Element) bool {
 	}
 	return e.e >= i
 }
+
+func (e intElement) Add(elem Element) (interface{}, error) {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
+		return false, err
+	}
+	return e.e + (i), nil
+}
+
+func (e intElement) Substract(elem Element) (interface{}, error) {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
+		return false, err
+	}
+	return e.e - (i), nil
+}
+
+func (e intElement) Multiply(elem Element) (interface{}, error) {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
+		return false, err
+	}
+	return e.e * (i), nil
+}
+
+func (e intElement) Divide(elem Element) (interface{}, error) {
+	i, err := elem.Int()
+	if err != nil || e.IsNA() {
+		return false, err
+	}
+	return e.e / (i), nil
+}

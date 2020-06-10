@@ -145,3 +145,19 @@ func (e stringElement) GreaterEq(elem Element) bool {
 	}
 	return e.e >= elem.String()
 }
+
+func (e stringElement) Add(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e stringElement) Substract(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e stringElement) Multiply(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e stringElement) Divide(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}

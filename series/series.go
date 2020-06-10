@@ -1,6 +1,7 @@
 package series
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -55,6 +56,12 @@ type Element interface {
 	// Information methods
 	IsNA() bool
 	Type() Type
+
+	// Mutation methods
+	Add(Element) (interface{}, error)
+	Substract(Element) (interface{}, error)
+	Multiply(Element) (interface{}, error)
+	Divide(Element) (interface{}, error)
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -803,4 +810,106 @@ func (s Series) Map(f MapFunction) Series {
 		mappedValues[i] = value
 	}
 	return New(mappedValues, s.Type(), s.Name)
+}
+
+// Mutator is a convenience alias that can be used for a more type safe way of
+// reason and use mutators.
+type Mutator string
+
+// Supported Mutators
+const (
+	Add       Mutator = "+" // Add
+	Substract Mutator = "-" // Substract
+	Multiply  Mutator = "*" // Multiply
+	Divide    Mutator = "/" // Divide
+)
+
+//ErrOperationNotSupported is returned when an operation is not supported (e.g. multiply boolean)
+var ErrOperationNotSupported = errors.New("Operation not supported")
+
+// Mutate mutated the values of a Series with other elements. To do so, the
+// elements with are to be mutated are first transformed to a Series of the same
+// type as the caller.
+func (s Series) Mutate(mutator Mutator, mutatando interface{}) Series {
+	if err := s.Err; err != nil {
+		return s
+	}
+	mutateElements := func(a, b Element, c Mutator) (interface{}, error) {
+		var ret interface{}
+		var err error
+		switch c {
+		case Add:
+			ret, err = a.Add(b)
+		case Substract:
+			ret, err = a.Substract(b)
+		case Multiply:
+			ret, err = a.Multiply(b)
+		case Divide:
+			ret, err = a.Divide(b)
+		default:
+			return ret, fmt.Errorf("unknown mutator: %v", c)
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		return ret, nil
+	}
+
+	result := make([]interface{}, s.Len())
+	mut := New(mutatando, s.t, "")
+
+	// Single element mutation
+	if mut.Len() == 1 {
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			c, err := mutateElements(e, mut.elements.Elem(0), mutator)
+			if err != nil {
+				s = s.Empty()
+				s.Err = err
+				return s
+			}
+			result[i] = c
+		}
+
+		//return right type of Series
+		switch result[0].(type) {
+		case int:
+			return Ints(result)
+		case float64:
+			return Floats(result)
+		default:
+			//TODO how this is handled
+			return s
+		}
+	}
+
+	// Multiple element comparison
+	if s.Len() != mut.Len() {
+		s := s.Empty()
+		s.Err = fmt.Errorf("can't compare: length mismatch")
+		return s
+	}
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		c, err := mutateElements(e, mut.elements.Elem(i), mutator)
+		if err != nil {
+			s = s.Empty()
+			s.Err = err
+			return s
+		}
+		result[i] = c
+	}
+
+	//return right type of Series
+	switch result[0].(type) {
+	case int:
+		return Ints(result)
+	case float64:
+		return Floats(result)
+	default:
+		//TODO how this is handled
+		return s
+	}
 }

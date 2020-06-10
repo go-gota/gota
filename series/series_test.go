@@ -1,6 +1,7 @@
 package series
 
 import (
+	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -1728,6 +1729,232 @@ func TestSeries_Map(t *testing.T) {
 				}
 			}
 		default:
+		}
+	}
+}
+
+func TestSeries_Mutate(t *testing.T) {
+	table := []struct {
+		series    Series
+		mutator   Mutator
+		mutatando interface{}
+		expected  Series
+	}{
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Add,
+			"B",
+			Strings([]string{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Add,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Strings([]string{}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Add,
+			"2",
+			Ints([]int{2, 4, 3, 7, 11}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Add,
+			[]int{0, 2, 0, 5, 10},
+			Ints([]int{0, 4, 1, 10, 19}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Add,
+			"2",
+			Floats([]float64{2.1, 4, 3, 7, 11}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Add,
+			[]float64{0.1, 2, 0, 5, 10},
+			Floats([]float64{0.2, 4, 1, 10, 19}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Add,
+			"true",
+			Bools([]bool{}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Add,
+			[]bool{true, false, false},
+			Bools([]bool{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Substract,
+			"B",
+			Strings([]string{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Substract,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Strings([]string{}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Substract,
+			"2",
+			Ints([]int{-2, 0, -1, 3, 7}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Substract,
+			[]int{0, 2, 0, 5, 10},
+			Ints([]int{0, 0, 1, 0, -1}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Substract,
+			"2",
+			Floats([]float64{-1.9, 0, -1, 3, 7}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Substract,
+			[]float64{0.1, 2, 0, 5, 10},
+			Floats([]float64{0, 0, 1, 0, -1}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Substract,
+			"true",
+			Bools([]bool{}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Substract,
+			[]bool{true, false, false},
+			Bools([]bool{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Multiply,
+			"B",
+			Strings([]string{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Multiply,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Strings([]string{}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Multiply,
+			"2",
+			Ints([]int{0, 4, 2, 10, 18}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Multiply,
+			[]int{0, 2, 0, 5, 10},
+			Ints([]int{0, 4, 0, 25, 90}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Multiply,
+			"2",
+			Floats([]float64{0.2, 4, 2, 10, 18}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Multiply,
+			[]float64{0.1, 2, 0, 5, 10},
+			Floats([]float64{0.01, 4, 0, 25, 90}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Multiply,
+			"true",
+			Bools([]bool{}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Multiply,
+			[]bool{true, false, false},
+			Bools([]bool{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Divide,
+			"B",
+			Strings([]string{}),
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Divide,
+			[]string{"B", "B", "C", "D", "A", "A"},
+			Strings([]string{}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Divide,
+			"2",
+			Ints([]int{0, 1, 0, 2, 4}),
+		},
+		{
+			Ints([]int{0, 2, 1, 5, 9}),
+			Divide,
+			[]int{1, 2, 1, 5, 9},
+			Ints([]int{0, 1, 1, 1, 1}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Divide,
+			"2",
+			Floats([]float64{0.05, 1, 0.5, 2.5, 4.5}),
+		},
+		{
+			Floats([]float64{0.1, 2, 1, 5, 9}),
+			Divide,
+			[]float64{0.1, 2, 1, 5, 10},
+			Floats([]float64{1, 1, 1, 1, 0.9}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Divide,
+			"true",
+			Bools([]bool{}),
+		},
+		{
+			Bools([]bool{true, true, false}),
+			Divide,
+			[]bool{true, false, false},
+			Bools([]bool{}),
+		},
+	}
+	for testnum, test := range table {
+		a := test.series
+		b := a.Mutate(test.mutator, test.mutatando)
+		if err := b.Err; err != nil {
+			if errors.Is(err, ErrOperationNotSupported) {
+				continue
+			}
+			t.Errorf("Test:%v\nError:%v", testnum, err)
+		}
+		expected := test.expected.Records()
+		received := b.Records()
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+		if err := checkTypes(b); err != nil {
+			t.Errorf(
+				"Test:%v\nError:%v",
+				testnum, err,
+			)
 		}
 	}
 }

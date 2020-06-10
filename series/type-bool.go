@@ -173,3 +173,19 @@ func (e boolElement) GreaterEq(elem Element) bool {
 	}
 	return e.e || !b
 }
+
+func (e boolElement) Add(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e boolElement) Substract(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e boolElement) Multiply(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}
+
+func (e boolElement) Divide(elem Element) (interface{}, error) {
+	return nil, ErrOperationNotSupported
+}

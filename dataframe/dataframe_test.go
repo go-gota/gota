@@ -849,7 +849,7 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		expDf   DataFrame
 	}{
 		{
-			[]F{{"COL.2", series.GreaterEq, 4}},
+			[]F{{Colname: "COL.2", Comparator: series.GreaterEq, Comparando: 4}},
 			New(
 				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
@@ -859,8 +859,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		// should not have any rows
 		{
 			[]F{
-				{"COL.2", series.Greater, 4},
-				{"COL.2", series.Eq, 1},
+				{Colname: "COL.2", Comparator: series.Greater, Comparando: 4},
+				{Colname: "COL.2", Comparator: series.Eq, Comparando: 1},
 			},
 			New(
 				series.New([]string{}, series.String, "COL.1"),
@@ -870,8 +870,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		},
 		{
 			[]F{
-				{"COL.2", series.Less, 4},
-				{"COL.1", series.Eq, "b"},
+				{Colname: "COL.2", Comparator: series.Less, Comparando: 4},
+				{Colname: "COL.1", Comparator: series.Eq, Comparando: "b"},
 			},
 			New(
 				series.New([]string{"b"}, series.String, "COL.1"),

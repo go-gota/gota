@@ -158,3 +158,35 @@ func (e floatElement) GreaterEq(elem Element) bool {
 	}
 	return e.e >= f
 }
+
+func (e floatElement) Add(elem Element) (interface{}, error) {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
+		return false, fmt.Errorf("operation not supported")
+	}
+	return e.e + (f), nil
+}
+
+func (e floatElement) Substract(elem Element) (interface{}, error) {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
+		return false, fmt.Errorf("operation not supported")
+	}
+	return e.e - (f), nil
+}
+
+func (e floatElement) Multiply(elem Element) (interface{}, error) {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
+		return false, fmt.Errorf("operation not supported")
+	}
+	return e.e * (f), nil
+}
+
+func (e floatElement) Divide(elem Element) (interface{}, error) {
+	f := elem.Float()
+	if e.IsNA() || math.IsNaN(f) {
+		return false, fmt.Errorf("operation not supported")
+	}
+	return e.e / (f), nil
+}
