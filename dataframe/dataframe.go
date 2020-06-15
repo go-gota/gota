@@ -429,6 +429,54 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// Concat concatenates rows of two DataFrames like RBind, but also including
+// unmatched columns.
+func (df DataFrame) Concat(dfb DataFrame) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if dfb.Err != nil {
+		return dfb
+	}
+
+	uniques := make(map[string]struct{})
+	cols := []string{}
+	for _, t := range []DataFrame{df, dfb} {
+		for _, u := range t.Names() {
+			if _, ok := uniques[u]; !ok {
+				uniques[u] = struct{}{}
+				cols = append(cols, u)
+			}
+		}
+	}
+
+	expandedSeries := make([]series.Series, len(cols))
+	for k, v := range cols {
+		aidx := findInStringSlice(v, df.Names())
+		bidx := findInStringSlice(v, dfb.Names())
+
+		// aidx and bidx must not be -1 at the same time.
+		var a, b series.Series
+		if aidx != -1 {
+			a = df.columns[aidx]
+		} else {
+			bb := dfb.columns[bidx]
+			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name)
+		}
+		if bidx != -1 {
+			b = dfb.columns[bidx]
+		} else {
+			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name)
+		}
+		newSeries := a.Concat(b)
+		if err := newSeries.Err; err != nil {
+			return DataFrame{Err: fmt.Errorf("concat: %v", err)}
+		}
+		expandedSeries[k] = newSeries
+	}
+	return New(expandedSeries...)
+}
+
 // Insert will add new dataframe to an existing DataFrame at a given position.
 func (df DataFrame) Insert(dfb DataFrame, pos int) DataFrame {
 	if df.Err != nil {
