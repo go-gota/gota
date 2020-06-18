@@ -2,6 +2,7 @@ package series
 
 import (
 	"fmt"
+	"github.com/go-gota/gota/errors"
 	"reflect"
 	"sort"
 	"strings"
@@ -330,7 +331,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 		return s
 	}
 	if len(idx) != newvalues.Len() {
-		s.Err = fmt.Errorf("set error: dimensions mismatch")
+		s.Err = errors.ErrDimensionsDiffers
 		return s
 	}
 	for k, i := range idx {
@@ -433,7 +434,7 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	// Multiple element comparison
 	if s.Len() != comp.Len() {
 		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
+		s.Err = errors.ErrDimensionsDiffers
 		return s
 	}
 	for i := 0; i < s.Len(); i++ {
@@ -609,10 +610,10 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 			}
 			return parseIndexes(l, bools)
 		default:
-			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+			return nil, errors.ErrUnknownIndexingMode
 		}
 	default:
-		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		return nil, errors.ErrUnknownIndexingMode
 	}
 	return idx, nil
 }
