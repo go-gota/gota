@@ -13,6 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"github.com/go-gota/gota/errors"
 	"github.com/go-gota/gota/series"
 )
 
@@ -38,7 +39,7 @@ type DataFrame struct {
 // New is the generic DataFrame constructor
 func New(se ...series.Series) DataFrame {
 	if se == nil || len(se) == 0 {
-		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
+		return DataFrame{Err: errors.ErrEmptyDataFrame}
 	}
 
 	columns := make([]series.Series, len(se))
@@ -80,7 +81,7 @@ func checkColumnsDimensions(se ...series.Series) (nrows, ncols int, err error) {
 			nrows = s.Len()
 		}
 		if nrows != s.Len() {
-			err = fmt.Errorf("arguments have different dimensions")
+			err = errors.ErrDimensionsDiffers
 			return
 		}
 	}
@@ -380,7 +381,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	colnames := df.Names()
 	idx := findInStringSlice(oldname, colnames)
 	if idx == -1 {
-		return DataFrame{Err: fmt.Errorf("rename: can't find column name")}
+		return DataFrame{Err: errors.ErrUnknownColumn}
 	}
 
 	copy := df.Copy()
@@ -480,7 +481,7 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 	for i, f := range filters {
 		idx := findInStringSlice(f.Colname, df.Names())
 		if idx < 0 {
-			return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
+			return DataFrame{Err: errors.ErrUnknownColumn}
 		}
 		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
 		if err := res.Err; err != nil {
@@ -530,7 +531,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 		return df
 	}
 	if order == nil || len(order) == 0 {
-		return DataFrame{Err: fmt.Errorf("rename: no arguments")}
+		return DataFrame{Err: errors.ErrNoArgs}
 	}
 
 	// Check that all colnames exist before starting to sort
@@ -636,7 +637,7 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 		}
 
 		if rowlen != -1 && rowlen != row.Len() {
-			return DataFrame{Err: fmt.Errorf("error applying function: rows have different lengths")}
+			return DataFrame{Err: errors.ErrDimensionsDiffers}
 		}
 		rowlen = row.Len()
 
@@ -936,16 +937,16 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	}
 
 	if len(records) == 0 {
-		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
+		return DataFrame{Err: errors.ErrEmptyDataFrame}
 	}
 	if cfg.hasHeader && len(records) <= 1 {
-		return DataFrame{Err: fmt.Errorf("load records: empty DataFrame")}
+		return DataFrame{Err: errors.ErrEmptyDataFrame}
 	}
 	if cfg.names != nil && len(cfg.names) != len(records[0]) {
 		if len(cfg.names) > len(records[0]) {
-			return DataFrame{Err: fmt.Errorf("load records: too many column names")}
+			return DataFrame{Err: errors.ErrTooManyCols}
 		}
-		return DataFrame{Err: fmt.Errorf("load records: not enough column names")}
+		return DataFrame{Err: errors.ErrTooFewCols}
 	}
 
 	// Extract headers
@@ -1187,8 +1188,10 @@ func (df DataFrame) SetNames(colnames ...string) error {
 	if df.Err != nil {
 		return df.Err
 	}
-	if len(colnames) != df.ncols {
-		return fmt.Errorf("setting names: wrong dimensions")
+	if len(colnames) < df.ncols {
+		return errors.ErrTooManyCols
+	} else if len(colnames) > df.ncols {
+		return errors.ErrTooFewCols
 	}
 	for k, s := range colnames {
 		df.columns[k].Name = s
@@ -1219,7 +1222,7 @@ func (df DataFrame) Col(colname string) series.Series {
 	// Check that colname exist on dataframe
 	idx := findInStringSlice(colname, df.Names())
 	if idx < 0 {
-		return series.Series{Err: fmt.Errorf("unknown column name")}
+		return series.Series{Err: errors.ErrUnknownColumn}
 	}
 	return df.columns[idx].Copy()
 }
@@ -1227,7 +1230,7 @@ func (df DataFrame) Col(colname string) series.Series {
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
+		return DataFrame{Err: errors.ErrJoinKeysAreNotSpecified}
 	}
 	// Check that we have all given keys in both DataFrames
 	var iKeysA []int
@@ -1306,7 +1309,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
+		return DataFrame{Err: errors.ErrJoinKeysAreNotSpecified}
 	}
 	// Check that we have all given keys in both DataFrames
 	var iKeysA []int
@@ -1404,7 +1407,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
+		return DataFrame{Err: errors.ErrJoinKeysAreNotSpecified}
 	}
 	// Check that we have all given keys in both DataFrames
 	var iKeysA []int
@@ -1512,7 +1515,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
+		return DataFrame{Err: errors.ErrJoinKeysAreNotSpecified}
 	}
 	// Check that we have all given keys in both DataFrames
 	var iKeysA []int
@@ -1838,10 +1841,10 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 			xs := indexes.(series.Series).Records()
 			return parseSelectIndexes(l, xs, colnames)
 		default:
-			return nil, fmt.Errorf("indexing error: unknown indexing mode")
+			return nil, errors.ErrUnknownIndexingMode
 		}
 	default:
-		return nil, fmt.Errorf("indexing error: unknown indexing mode")
+		return nil, errors.ErrUnknownIndexingMode
 	}
 	return idx, nil
 }
