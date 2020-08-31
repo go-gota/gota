@@ -2,6 +2,7 @@ package dataframe
 
 import (
 	"bytes"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -68,6 +69,29 @@ func TestDataFrame_Copy(t *testing.T) {
 	}
 }
 
+func TestAddConstant(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+	)
+	b := a.AddConstant(20, "f")
+
+	colF := b.Col("f")
+	if colF.Err != nil {
+		t.Errorf("Test: AddConstant %v", colF.Err.Error())
+	} else if len(b.columns) != 4 {
+		t.Errorf("Test: AddConstant %v", "column not added to dataframe")
+	} else if colF.Type() != "int" {
+		t.Errorf("Test: AddConstant %v", "wrong column type")
+	} else if colF.Len() != a.Nrow() {
+		t.Errorf("Test: AddConstant %v", "serise lenght not matching")
+	} else if a, _ := colF.Elem(rand.Intn(a.Nrow())).Int(); a != 20 {
+		// As column type check has passed return will be integer
+		// so, we are only checking for the value and error is ignored
+		t.Errorf("Test: AddConstant %v", "values not same for all elements.")
+	}
+}
 func TestDataFrame_Subset(t *testing.T) {
 	a := New(
 		series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),

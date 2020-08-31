@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"reflect"
 	"sort"
 	"strconv"
@@ -1970,4 +1971,31 @@ func (df DataFrame) Describe() DataFrame {
 
 	ddf := New(ss...)
 	return ddf
+}
+
+// AddConstant returns new dataframe with new column
+// having constant value with given column name
+func (df DataFrame) AddConstant(value interface{}, colName string) DataFrame {
+
+	var typeOfSeries series.Type
+	switch value.(type) {
+	case int:
+		typeOfSeries = series.Int
+	case float64:
+		typeOfSeries = series.Float
+	case string:
+		typeOfSeries = series.String
+	case bool:
+		typeOfSeries = series.Bool
+	default:
+		log.Fatalln("Unsupported series type")
+	}
+
+	constSlice := make([]interface{}, df.Nrow())
+	for i := range constSlice {
+		constSlice[i] = value
+	}
+
+	constSeries := series.New(constSlice, typeOfSeries, colName)
+	return df.Mutate(constSeries)
 }
