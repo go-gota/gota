@@ -17,10 +17,11 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string   // The name of the series
-	elements Elements // The values of the elements
-	t        Type     // The type of the series
-	Err      error    // If there are errors they are stored here
+	Name            string   // The name of the series
+	elements        Elements // The values of the elements
+	t               Type     // The type of the series
+	Err             error    // If there are errors they are stored here
+	IsNaNToBeIgnore bool     // If NaN values to be ignore for Aggregate functions. Like Mean()
 }
 
 // Elements is the interface that represents the array of elements contained on
@@ -124,11 +125,12 @@ const (
 //     Series [Bool]  // Same as []bool
 type Indexes interface{}
 
-// New is the generic Series constructor
-func New(values interface{}, t Type, name string) Series {
+// NewSeries is the generic Series constructor
+func NewSeries(values interface{}, t Type, name string, isNaNToBeIgnore bool) Series {
 	ret := Series{
-		Name: name,
-		t:    t,
+		Name:            name,
+		t:               t,
+		IsNaNToBeIgnore: isNaNToBeIgnore,
 	}
 
 	// Pre-allocate elements
@@ -210,6 +212,11 @@ func New(values interface{}, t Type, name string) Series {
 	return ret
 }
 
+// New is the generic Series constructor
+func New(values interface{}, t Type, name string) Series {
+	return NewSeries(values, t, name, false)
+}
+
 // Strings is a constructor for a String Series
 func Strings(values interface{}) Series {
 	return New(values, String, "")
@@ -228,6 +235,11 @@ func Floats(values interface{}) Series {
 // Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
+}
+
+// NewFloats is a constructor for a Float Series
+func NewFloats(values interface{}) Series {
+	return NewSeries(values, Float, "", true)
 }
 
 // Empty returns an empty Series of the same type
@@ -492,10 +504,12 @@ func (s Series) Records() []string {
 // be converted to float64 or contains a NaN returns the float representation of
 // NaN.
 func (s Series) Float() []float64 {
-	ret := make([]float64, s.Len())
+	ret := make([]float64, 0)
 	for i := 0; i < s.Len(); i++ {
 		e := s.elements.Elem(i)
-		ret[i] = e.Float()
+		if !(s.IsNaNToBeIgnore && e.IsNA() && (s.Type() == Float || s.Type() == Int)) {
+			ret = append(ret, e.Float())
+		}
 	}
 	return ret
 }
