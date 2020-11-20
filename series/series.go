@@ -662,8 +662,8 @@ func (s Series) StdDev() float64 {
 
 // Mean calculates the average value of a series
 func (s Series) Mean() float64 {
-	stdDev := stat.Mean(s.Float(), nil)
-	return stdDev
+	mean := stat.Mean(s.Float(), nil)
+	return mean
 }
 
 // Median calculates the middle or median value, as opposed to
