@@ -1008,13 +1008,13 @@ func TestLoadMaps(t *testing.T) {
 		{ // Test: 0
 			LoadMaps(
 				[]map[string]interface{}{
-					map[string]interface{}{
+					{
 						"A": "a",
 						"B": 1,
 						"C": true,
 						"D": 0,
 					},
-					map[string]interface{}{
+					{
 						"A": "b",
 						"B": 2,
 						"C": true,
@@ -1032,13 +1032,13 @@ func TestLoadMaps(t *testing.T) {
 		{ // Test: 1
 			LoadMaps(
 				[]map[string]interface{}{
-					map[string]interface{}{
+					{
 						"A": "a",
 						"B": 1,
 						"C": true,
 						"D": 0,
 					},
-					map[string]interface{}{
+					{
 						"A": "b",
 						"B": 2,
 						"C": true,
@@ -1059,13 +1059,13 @@ func TestLoadMaps(t *testing.T) {
 		{ // Test: 2
 			LoadMaps(
 				[]map[string]interface{}{
-					map[string]interface{}{
+					{
 						"A": "a",
 						"B": 1,
 						"C": true,
 						"D": 0,
 					},
-					map[string]interface{}{
+					{
 						"A": "b",
 						"B": 2,
 						"C": true,
@@ -1086,13 +1086,13 @@ func TestLoadMaps(t *testing.T) {
 		{ // Test: 3
 			LoadMaps(
 				[]map[string]interface{}{
-					map[string]interface{}{
+					{
 						"A": "a",
 						"B": 1,
 						"C": true,
 						"D": 0,
 					},
-					map[string]interface{}{
+					{
 						"A": "b",
 						"B": 2,
 						"C": true,
@@ -1117,13 +1117,13 @@ func TestLoadMaps(t *testing.T) {
 		{ // Test: 4
 			LoadMaps(
 				[]map[string]interface{}{
-					map[string]interface{}{
+					{
 						"A": "a",
 						"B": 1,
 						"C": true,
 						"D": 0,
 					},
-					map[string]interface{}{
+					{
 						"A": "b",
 						"B": 2,
 						"C": true,
@@ -1641,17 +1641,17 @@ func TestDataFrame_Maps(t *testing.T) {
 	)
 	m := a.Maps()
 	expected := []map[string]interface{}{
-		map[string]interface{}{
+		{
 			"COL.1": "a",
 			"COL.2": nil,
 			"COL.3": nil,
 		},
-		map[string]interface{}{
+		{
 			"COL.1": "b",
 			"COL.2": 2,
 			"COL.3": nil,
 		},
-		map[string]interface{}{
+		{
 			"COL.1": "c",
 			"COL.2": 3,
 			"COL.3": 3,
@@ -2491,11 +2491,11 @@ func TestDescribe(t *testing.T) {
 		{
 			LoadRecords(
 				[][]string{
-					[]string{"A", "B", "C", "D"},
-					[]string{"a", "4", "5.1", "true"},
-					[]string{"b", "4", "6.0", "true"},
-					[]string{"c", "3", "6.0", "false"},
-					[]string{"a", "2", "7.1", "false"},
+					{"A", "B", "C", "D"},
+					{"a", "4", "5.1", "true"},
+					{"b", "4", "6.0", "true"},
+					{"c", "3", "6.0", "false"},
+					{"a", "2", "7.1", "false"},
 				}),
 
 			New(

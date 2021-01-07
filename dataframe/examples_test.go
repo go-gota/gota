@@ -24,9 +24,9 @@ func ExampleLoadStructs() {
 		Accuracy float64
 	}
 	users := []User{
-		User{"Aram", 17, 0.2},
-		User{"Juan", 18, 0.8},
-		User{"Ana", 22, 0.5},
+		{"Aram", 17, 0.2},
+		{"Juan", 18, 0.8},
+		{"Ana", 22, 0.5},
 	}
 	df := dataframe.LoadStructs(users)
 	fmt.Println(df)
@@ -35,11 +35,11 @@ func ExampleLoadStructs() {
 func ExampleLoadRecords() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	fmt.Println(df)
@@ -48,11 +48,11 @@ func ExampleLoadRecords() {
 func ExampleLoadRecords_options() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 		dataframe.DetectTypes(false),
 		dataframe.DefaultType(series.Float),
@@ -67,13 +67,13 @@ func ExampleLoadRecords_options() {
 func ExampleLoadMaps() {
 	df := dataframe.LoadMaps(
 		[]map[string]interface{}{
-			map[string]interface{}{
+			{
 				"A": "a",
 				"B": 1,
 				"C": true,
 				"D": 0,
 			},
-			map[string]interface{}{
+			{
 				"A": "b",
 				"B": 2,
 				"C": true,
@@ -109,11 +109,11 @@ func ExampleReadJSON() {
 func ExampleDataFrame_Subset() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	sub := df.Subset([]int{0, 2})
@@ -123,11 +123,11 @@ func ExampleDataFrame_Subset() {
 func ExampleDataFrame_Select() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	sel1 := df.Select([]int{0, 2})
@@ -139,11 +139,11 @@ func ExampleDataFrame_Select() {
 func ExampleDataFrame_Filter() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	fil := df.Filter(
@@ -172,11 +172,11 @@ func ExampleDataFrame_Filter() {
 func ExampleDataFrame_Mutate() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	// Change column C with a new one
@@ -194,20 +194,20 @@ func ExampleDataFrame_Mutate() {
 func ExampleDataFrame_InnerJoin() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	df2 := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "F", "D"},
-			[]string{"1", "1", "true"},
-			[]string{"4", "2", "false"},
-			[]string{"2", "8", "false"},
-			[]string{"5", "9", "false"},
+			{"A", "F", "D"},
+			{"1", "1", "true"},
+			{"4", "2", "false"},
+			{"2", "8", "false"},
+			{"5", "9", "false"},
 		},
 	)
 	join := df.InnerJoin(df2, "D")
@@ -217,20 +217,20 @@ func ExampleDataFrame_InnerJoin() {
 func ExampleDataFrame_Set() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"k", "5", "7.0", "true"},
-			[]string{"k", "4", "6.0", "true"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"k", "5", "7.0", "true"},
+			{"k", "4", "6.0", "true"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	df2 := df.Set(
 		series.Ints([]int{0, 2}),
 		dataframe.LoadRecords(
 			[][]string{
-				[]string{"A", "B", "C", "D"},
-				[]string{"b", "4", "6.0", "true"},
-				[]string{"c", "3", "6.0", "false"},
+				{"A", "B", "C", "D"},
+				{"b", "4", "6.0", "true"},
+				{"c", "3", "6.0", "false"},
 			},
 		),
 	)
@@ -240,11 +240,11 @@ func ExampleDataFrame_Set() {
 func ExampleDataFrame_Arrange() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"b", "4", "6.0", "true"},
-			[]string{"c", "3", "6.0", "false"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"b", "4", "6.0", "true"},
+			{"c", "3", "6.0", "false"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	sorted := df.Arrange(
@@ -257,11 +257,11 @@ func ExampleDataFrame_Arrange() {
 func ExampleDataFrame_Describe() {
 	df := dataframe.LoadRecords(
 		[][]string{
-			[]string{"A", "B", "C", "D"},
-			[]string{"a", "4", "5.1", "true"},
-			[]string{"b", "4", "6.0", "true"},
-			[]string{"c", "3", "6.0", "false"},
-			[]string{"a", "2", "7.1", "false"},
+			{"A", "B", "C", "D"},
+			{"a", "4", "5.1", "true"},
+			{"b", "4", "6.0", "true"},
+			{"c", "3", "6.0", "false"},
+			{"a", "2", "7.1", "false"},
 		},
 	)
 	fmt.Println(df.Describe())
