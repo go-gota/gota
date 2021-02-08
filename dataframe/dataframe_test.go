@@ -2,6 +2,7 @@ package dataframe
 
 import (
 	"bytes"
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
@@ -2556,5 +2557,54 @@ func TestDescribe(t *testing.T) {
 		if !equal {
 			t.Errorf("Test:%v\nExpected:\n%v\nReceived:\n%v\n", testnum, expected, received)
 		}
+	}
+}
+
+const MIN = 0.000001
+
+func IsEqual(f1, f2 float64) bool {
+	if f1 > f2 {
+		return math.Dim(f1, f2) < MIN
+	} else {
+		return math.Dim(f2, f1) < MIN
+	}
+}
+func TestDataFrame_GroupBy(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key1"),
+		series.New([]int{1, 2, 1, 2, 2}, series.Int, "key2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "values"),
+	)
+	groups := a.GroupBy("key1", "key2")
+	resultMap := make(map[string]float32, 3)
+	var g interface{}
+	g = 2
+	resultMap[fmt.Sprintf("%s_%s", "a", g)] = 4 + 3.2
+	g = 1
+	resultMap[fmt.Sprintf("%s_%s", "b", g)] = 3 + 5.3
+	g = 2
+	resultMap[fmt.Sprintf("%s_%s", "b", g)] = 1.2
+
+	for k, values := range groups {
+		curV := 0.0
+		for _, vMap := range values.Maps() {
+			curV += vMap["values"].(float64)
+		}
+		targetV, ok := resultMap[k]
+		if !ok {
+			t.Errorf("GroupBy: %s not found", k)
+			return
+		}
+		if !IsEqual(float64(targetV), curV) {
+			t.Errorf("GroupBy: expect %f , but got %f", targetV, curV)
+		}
+	}
+
+	b := New(
+		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key3"),
+	)
+	groups = b.GroupBy("key1", "key2")
+	if _, ok := groups[KEY_ERROR]; !ok {
+		t.Errorf("GroupBy: COLUMNS NOT FOUND")
 	}
 }

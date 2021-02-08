@@ -371,6 +371,39 @@ func (df DataFrame) Drop(indexes SelectIndexes) DataFrame {
 	return df
 }
 
+const KEY_ERROR = "KEY_ERROR"
+
+// GroupBy: Group dataframe by columns
+func (df DataFrame) GroupBy(colnames ...string) map[string]DataFrame {
+	if len(colnames) <= 0 {
+		return nil
+	}
+	groupDataFrame := make(map[string]DataFrame)
+	groupSeries := make(map[string][]map[string]interface{})
+	// Check that colname exist on dataframe
+	for _, c := range colnames {
+		if idx := findInStringSlice(c, df.Names()); idx == -1 {
+			groupDataFrame[KEY_ERROR] = DataFrame{Err: fmt.Errorf("GroupBy: can't find column name: %s", c)}
+			return groupDataFrame
+		}
+	}
+
+	for _, s := range df.Maps() {
+		// Gen Key for per Series
+		key := s[colnames[0]]
+		for _, c := range colnames[1:] {
+			key = fmt.Sprintf("%s_%s", key, s[c])
+		}
+		groupSeries[key.(string)] = append(groupSeries[key.(string)], s)
+	}
+
+	for k, cMaps := range groupSeries {
+		groupDataFrame[k] = LoadMaps(cMaps)
+	}
+
+	return groupDataFrame
+}
+
 // Rename changes the name of one of the columns of a DataFrame
 func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	if df.Err != nil {
