@@ -2577,15 +2577,11 @@ func TestDataFrame_GroupBy(t *testing.T) {
 	)
 	groups := a.GroupBy("key1", "key2")
 	resultMap := make(map[string]float32, 3)
-	var g interface{}
-	g = 2
-	resultMap[fmt.Sprintf("%s_%s", "a", g)] = 4 + 3.2
-	g = 1
-	resultMap[fmt.Sprintf("%s_%s", "b", g)] = 3 + 5.3
-	g = 2
-	resultMap[fmt.Sprintf("%s_%s", "b", g)] = 1.2
+	resultMap[fmt.Sprintf("%s_%d", "a", 2)] = 4 + 3.2
+	resultMap[fmt.Sprintf("%s_%d", "b", 1)] = 3 + 5.3
+	resultMap[fmt.Sprintf("%s_%d", "b", 2)] = 1.2
 
-	for k, values := range groups {
+	for k, values := range groups.groups {
 		curV := 0.0
 		for _, vMap := range values.Maps() {
 			curV += vMap["values"].(float64)
@@ -2604,7 +2600,28 @@ func TestDataFrame_GroupBy(t *testing.T) {
 		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key3"),
 	)
 	groups = b.GroupBy("key1", "key2")
-	if _, ok := groups[KEY_ERROR]; !ok {
+	if groups.Err == nil {
 		t.Errorf("GroupBy: COLUMNS NOT FOUND")
+	}
+}
+
+func TestDataFrame_Aggregation(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key1"),
+		series.New([]int{1, 2, 1, 2, 2}, series.Int, "key2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "values"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "values2"),
+	)
+	groups := a.GroupBy("key1", "key2")
+	df := groups.Aggregation([]AggregationType{Aggregation_MAX, Aggregation_MIN}, []string{"values", "values2"})
+	resultMap := make(map[string]float32, 3)
+	resultMap[fmt.Sprintf("%s_%d", "a", 2)] = 4
+	resultMap[fmt.Sprintf("%s_%d", "b", 1)] = 5.3
+	resultMap[fmt.Sprintf("%s_%d", "b", 2)] = 1.2
+	for _, m := range df.Maps() {
+		key := fmt.Sprintf("%s_%d", m["key1"], m["key2"])
+		if !IsEqual(m["values_MAX"].(float64), float64(resultMap[key])) {
+			t.Errorf("Aggregation: expect %f , but got %f", float64(resultMap[key]), m["values"].(float64))
+		}
 	}
 }
