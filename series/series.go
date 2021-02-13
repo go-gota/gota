@@ -785,3 +785,17 @@ func (s Series) Map(f MapFunction) Series {
 	}
 	return New(mappedValues, s.Type(), s.Name)
 }
+
+// Sum calculates the sum value of a series
+func (s Series) Sum() float64 {
+	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {
+		return math.NaN()
+	}
+	sFloat := s.Float()
+	sum := sFloat[0]
+	for i := 1; i < len(sFloat); i++ {
+		elem := sFloat[i]
+		sum += elem
+	}
+	return sum
+}

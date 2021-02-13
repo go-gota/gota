@@ -428,6 +428,8 @@ const (
 	Aggregation_MEAN   AggregationType = 2
 	Aggregation_MEDIAN AggregationType = 3
 	Aggregation_STD    AggregationType = 4
+	Aggregation_SUM    AggregationType = 5
+	Aggregation_COUNT  AggregationType = 6
 )
 
 func (aggregation AggregationType) String() string {
@@ -442,6 +444,10 @@ func (aggregation AggregationType) String() string {
 		return "MEDIAN"
 	case Aggregation_STD:
 		return "STD"
+	case Aggregation_SUM:
+		return "SUM"
+	case Aggregation_COUNT:
+		return "COUNT"
 	default:
 		return "UNKNOWN"
 	}
@@ -490,8 +496,12 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 				value = curSeries.Min()
 			case Aggregation_STD:
 				value = curSeries.StdDev()
+			case Aggregation_SUM:
+				value = curSeries.Sum()
+			case Aggregation_COUNT:
+				value = float64(curSeries.Len())
 			default:
-				return DataFrame{Err: fmt.Errorf("Aggregation: this method %d not found", typs[i])}
+				return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
 
 			}
 			curMap[fmt.Sprintf("%s_%s", c, typs[i])] = value
