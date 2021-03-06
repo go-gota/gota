@@ -849,7 +849,7 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		expDf   DataFrame
 	}{
 		{
-			[]F{{0, "COL.2", series.GreaterEq, 4}},
+			[]F{{Colname: "COL.2", Comparator: series.GreaterEq, Comparando: 4}},
 			New(
 				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
@@ -857,7 +857,7 @@ func TestDataFrame_Filter_And(t *testing.T) {
 			),
 		},
 		{
-			[]F{{1, "", series.GreaterEq, 4}},
+			[]F{{Colidx: 1, Comparator: series.GreaterEq, Comparando: 4}},
 			New(
 				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
@@ -867,8 +867,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		// should not have any rows
 		{
 			[]F{
-				{0, "COL.2", series.Greater, 4},
-				{0, "COL.2", series.Eq, 1},
+				{Colname: "COL.2", Comparator: series.Greater, Comparando: 4},
+				{Colname: "COL.2", Comparator: series.Eq, Comparando: 1},
 			},
 			New(
 				series.New([]string{}, series.String, "COL.1"),
@@ -878,8 +878,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		},
 		{
 			[]F{
-				{1, "", series.Greater, 4},
-				{1, "", series.Eq, 1},
+				{Colidx: 1, Comparator: series.Greater, Comparando: 4},
+				{Colidx: 1, Comparator: series.Eq, Comparando: 1},
 			},
 			New(
 				series.New([]string{}, series.String, "COL.1"),
@@ -889,8 +889,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		},
 		{
 			[]F{
-				{0, "COL.2", series.Less, 4},
-				{0, "COL.1", series.Eq, "b"},
+				{Colname: "COL.2", Comparator: series.Less, Comparando: 4},
+				{Colname: "COL.1", Comparator: series.Eq, Comparando: "b"},
 			},
 			New(
 				series.New([]string{"b"}, series.String, "COL.1"),
@@ -900,8 +900,8 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		},
 		{
 			[]F{
-				{1, "", series.Less, 4},
-				{0, "", series.Eq, "b"},
+				{Colidx: 1, Comparator: series.Less, Comparando: 4},
+				{Colidx: 0, Comparator: series.Eq, Comparando: "b"},
 			},
 			New(
 				series.New([]string{"b"}, series.String, "COL.1"),
