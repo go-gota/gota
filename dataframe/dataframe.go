@@ -1443,8 +1443,21 @@ func (df DataFrame) Col(colname string) series.Series {
 	return df.columns[idx].Copy()
 }
 
+// MergeBy permits to merge (join) two dataframes using different column name
+type MergeBy struct {
+	Left, Right string
+}
+
+// JoinColumn is an utility function that permits to create a MergeBy of a column with the same name
+func JoinColumn(key string) MergeBy {
+	return MergeBy{
+		Left:  key,
+		Right: key,
+	}
+}
+
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
-func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) InnerJoin(b DataFrame, keys ...MergeBy) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1453,12 +1466,12 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysB []int
 	var errorArr []string
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.colIndex(key.Left)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.colIndex(key.Right)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
@@ -1523,7 +1536,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
-func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) LeftJoin(b DataFrame, keys ...MergeBy) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1532,12 +1545,12 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysB []int
 	var errorArr []string
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.colIndex(key.Left)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.colIndex(key.Right)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
@@ -1621,7 +1634,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
-func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) RightJoin(b DataFrame, keys ...MergeBy) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1630,12 +1643,12 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysB []int
 	var errorArr []string
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.colIndex(key.Left)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.colIndex(key.Right)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}
@@ -1729,7 +1742,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 }
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
-func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
+func (df DataFrame) OuterJoin(b DataFrame, keys ...MergeBy) DataFrame {
 	if len(keys) == 0 {
 		return DataFrame{Err: fmt.Errorf("join keys not specified")}
 	}
@@ -1738,12 +1751,12 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	var iKeysB []int
 	var errorArr []string
 	for _, key := range keys {
-		i := df.colIndex(key)
+		i := df.colIndex(key.Left)
 		if i < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on left DataFrame", key))
 		}
 		iKeysA = append(iKeysA, i)
-		j := b.colIndex(key)
+		j := b.colIndex(key.Right)
 		if j < 0 {
 			errorArr = append(errorArr, fmt.Sprintf("can't find key %q on right DataFrame", key))
 		}

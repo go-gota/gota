@@ -210,7 +210,7 @@ func ExampleDataFrame_InnerJoin() {
 			[]string{"5", "9", "false"},
 		},
 	)
-	join := df.InnerJoin(df2, "D")
+	join := df.InnerJoin(df2, dataframe.JoinColumn("D"))
 	fmt.Println(join)
 }
 

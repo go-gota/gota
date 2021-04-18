@@ -1544,50 +1544,59 @@ func TestDataFrame_InnerJoin(t *testing.T) {
 	)
 	b := LoadRecords(
 		[][]string{
-			{"A", "F", "D"},
-			{"1", "1", "true"},
-			{"4", "2", "false"},
-			{"2", "8", "false"},
-			{"5", "9", "false"},
+			{"A", "F", "D", "E"},
+			{"1", "1", "true", "a"},
+			{"4", "2", "false", "b"},
+			{"2", "8", "false", "c"},
+			{"5", "9", "false", "d"},
 		},
 	)
 	table := []struct {
-		keys  []string
+		keys  []MergeBy
 		expDf DataFrame
 	}{
 		{
-			[]string{"A", "D"},
+			[]MergeBy{JoinColumn("A"), JoinColumn("D")},
 			LoadRecords(
 				[][]string{
-					{"A", "D", "B", "C", "F"},
-					{"1", "true", "a", "5.1", "1"},
+					{"A", "D", "B", "C", "F", "E"},
+					{"1", "true", "a", "5.1", "1", "a"},
 				},
 			),
 		},
 		{
-			[]string{"A"},
+			[]MergeBy{JoinColumn("A")},
 			LoadRecords(
 				[][]string{
-					{"A", "B", "C", "D_0", "F", "D_1"},
-					{"1", "a", "5.1", "true", "1", "true"},
-					{"2", "b", "6.0", "true", "8", "false"},
-					{"1", "d", "7.1", "false", "1", "true"},
+					{"A", "B", "C", "D_0", "F", "D_1", "E"},
+					{"1", "a", "5.1", "true", "1", "true", "a"},
+					{"2", "b", "6.0", "true", "8", "false", "c"},
+					{"1", "d", "7.1", "false", "1", "true", "a"},
 				},
 			),
 		},
 		{
-			[]string{"D"},
+			[]MergeBy{JoinColumn("D")},
 			LoadRecords(
 				[][]string{
-					{"D", "A_0", "B", "C", "A_1", "F"},
-					{"true", "1", "a", "5.1", "1", "1"},
-					{"true", "2", "b", "6.0", "1", "1"},
-					{"false", "3", "c", "6.0", "4", "2"},
-					{"false", "3", "c", "6.0", "2", "8"},
-					{"false", "3", "c", "6.0", "5", "9"},
-					{"false", "1", "d", "7.1", "4", "2"},
-					{"false", "1", "d", "7.1", "2", "8"},
-					{"false", "1", "d", "7.1", "5", "9"},
+					{"D", "A_0", "B", "C", "A_1", "F", "E"},
+					{"true", "1", "a", "5.1", "1", "1", "a"},
+					{"true", "2", "b", "6.0", "1", "1", "a"},
+					{"false", "3", "c", "6.0", "4", "2", "b"},
+					{"false", "3", "c", "6.0", "2", "8", "c"},
+					{"false", "3", "c", "6.0", "5", "9", "d"},
+					{"false", "1", "d", "7.1", "4", "2", "b"},
+					{"false", "1", "d", "7.1", "2", "8", "c"},
+					{"false", "1", "d", "7.1", "5", "9", "d"},
+				},
+			),
+		},
+		{
+			[]MergeBy{MergeBy{Left: "B", Right: "E"}, JoinColumn("A"), JoinColumn("D")},
+			LoadRecords(
+				[][]string{
+					{"B", "A", "D", "C", "F"},
+					{"a", "1", "true", "5.1", "1"},
 				},
 			),
 		},
@@ -1637,11 +1646,11 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 		DefaultType(series.Float),
 	)
 	table := []struct {
-		keys  []string
+		keys  []MergeBy
 		expDf DataFrame
 	}{
 		{
-			[]string{"A", "D"},
+			[]MergeBy{JoinColumn("A"), JoinColumn("D")},
 			LoadRecords(
 				[][]string{
 					{"A", "D", "B", "C", "F"},
@@ -1655,7 +1664,7 @@ func TestDataFrame_LeftJoin(t *testing.T) {
 			),
 		},
 		{
-			[]string{"A"},
+			[]MergeBy{JoinColumn("A")},
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D_0", "F", "D_1"},
@@ -1714,11 +1723,11 @@ func TestDataFrame_RightJoin(t *testing.T) {
 		DefaultType(series.Float),
 	)
 	table := []struct {
-		keys  []string
+		keys  []MergeBy
 		expDf DataFrame
 	}{
 		{
-			[]string{"A", "D"},
+			[]MergeBy{JoinColumn("A"), JoinColumn("D")},
 			LoadRecords(
 				[][]string{
 					{"A", "D", "F", "B", "C"},
@@ -1732,7 +1741,7 @@ func TestDataFrame_RightJoin(t *testing.T) {
 			),
 		},
 		{
-			[]string{"A"},
+			[]MergeBy{JoinColumn("A")},
 			LoadRecords(
 				[][]string{
 					{"A", "F", "D_0", "B", "C", "D_1"},
@@ -1791,11 +1800,11 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 		DefaultType(series.Float),
 	)
 	table := []struct {
-		keys  []string
+		keys  []MergeBy
 		expDf DataFrame
 	}{
 		{
-			[]string{"A", "D"},
+			[]MergeBy{JoinColumn("A"), JoinColumn("D")},
 			LoadRecords(
 				[][]string{
 					{"A", "D", "B", "C", "F"},
@@ -1812,7 +1821,7 @@ func TestDataFrame_OuterJoin(t *testing.T) {
 			),
 		},
 		{
-			[]string{"A"},
+			[]MergeBy{JoinColumn("A")},
 			LoadRecords(
 				[][]string{
 					{"A", "B", "C", "D_0", "F", "D_1"},
