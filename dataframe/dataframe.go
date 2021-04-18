@@ -1198,7 +1198,7 @@ func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 // resulting records.
 func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	var m []map[string]interface{}
-	d:=json.NewDecoder(r)
+	d := json.NewDecoder(r)
 	d.UseNumber()
 	err := d.Decode(&m)
 	if err != nil {
