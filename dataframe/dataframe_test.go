@@ -856,6 +856,14 @@ func TestDataFrame_Filter_And(t *testing.T) {
 				series.New([]float64{5.3, 3.2, 1.2}, series.Float, "COL.3"),
 			),
 		},
+		{
+			[]F{{Colidx: 1, Comparator: series.GreaterEq, Comparando: 4}},
+			New(
+				series.New([]string{"b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{5.3, 3.2, 1.2}, series.Float, "COL.3"),
+			),
+		},
 		// should not have any rows
 		{
 			[]F{
@@ -870,8 +878,30 @@ func TestDataFrame_Filter_And(t *testing.T) {
 		},
 		{
 			[]F{
+				{Colidx: 1, Comparator: series.Greater, Comparando: 4},
+				{Colidx: 1, Comparator: series.Eq, Comparando: 1},
+			},
+			New(
+				series.New([]string{}, series.String, "COL.1"),
+				series.New([]int{}, series.Int, "COL.2"),
+				series.New([]float64{}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
 				{Colname: "COL.2", Comparator: series.Less, Comparando: 4},
 				{Colname: "COL.1", Comparator: series.Eq, Comparando: "b"},
+			},
+			New(
+				series.New([]string{"b"}, series.String, "COL.1"),
+				series.New([]int{1}, series.Int, "COL.2"),
+				series.New([]float64{3.0}, series.Float, "COL.3"),
+			),
+		},
+		{
+			[]F{
+				{Colidx: 1, Comparator: series.Less, Comparando: 4},
+				{Colidx: 0, Comparator: series.Eq, Comparando: "b"},
 			},
 			New(
 				series.New([]string{"b"}, series.String, "COL.1"),
