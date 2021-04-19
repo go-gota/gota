@@ -1302,6 +1302,10 @@ func TestSeries_Mean(t *testing.T) {
 			2.0,
 		},
 		{
+			NewFloats([]float64{1.0, 2.0, 3.0, math.NaN()}),
+			2.0,
+		},
+		{
 			Strings([]string{"A", "B", "C", "D"}),
 			math.NaN(),
 		},
