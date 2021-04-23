@@ -421,6 +421,76 @@ func TestSeries_Compare(t *testing.T) {
 	}
 }
 
+func TestSeries_Compare_CompFunc(t *testing.T) {
+	table := []struct {
+		series     Series
+		comparator Comparator
+		comparando interface{}
+		expected   Series
+		panic      bool
+	}{
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			CompFunc,
+			func(el Element) bool {
+				if el.Type() == String {
+					if val, ok := el.Val().(string); ok {
+						return strings.HasPrefix(val, "B")
+					}
+					return false
+				}
+				return false
+			},
+			Bools([]bool{false, true, false, true, false, true}),
+			false,
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			CompFunc,
+			func(el Element) {},
+			Bools([]bool{false, false, false, false, false}),
+			true,
+		},
+	}
+	for testnum, test := range table {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// recovered
+					if !test.panic {
+						t.Errorf("did not expected panic but was '%v'", r)
+					}
+				} else {
+					// nothing to recover from
+					if test.panic {
+						t.Errorf("exptected panic but did not panic")
+					}
+				}
+			}()
+
+			a := test.series
+			b := a.Compare(test.comparator, test.comparando)
+			if err := b.Err; err != nil {
+				t.Errorf("Test:%v\nError:%v", testnum, err)
+			}
+			expected := test.expected.Records()
+			received := b.Records()
+			if !reflect.DeepEqual(expected, received) {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+			if err := checkTypes(b); err != nil {
+				t.Errorf(
+					"Test:%v\nError:%v",
+					testnum, err,
+				)
+			}
+		}()
+	}
+}
+
 func TestSeries_Subset(t *testing.T) {
 	table := []struct {
 		series   Series

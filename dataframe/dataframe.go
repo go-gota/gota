@@ -14,6 +14,8 @@ import (
 	"unicode/utf8"
 
 	"github.com/go-gota/gota/series"
+	"golang.org/x/net/html"
+	"golang.org/x/net/html/atom"
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such
@@ -250,7 +252,7 @@ func (df DataFrame) print(
 // Subsetting, mutating and transforming DataFrame methods
 // =======================================================
 
-// Set will update the values of a DataFrame for all rows selected via indexes.
+// Set will update the values of a DataFrame for the rows selected via indexes.
 func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	if df.Err != nil {
 		return df
@@ -569,6 +571,54 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 	return New(expandedSeries...)
 }
 
+// Concat concatenates rows of two DataFrames like RBind, but also including
+// unmatched columns.
+func (df DataFrame) Concat(dfb DataFrame) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if dfb.Err != nil {
+		return dfb
+	}
+
+	uniques := make(map[string]struct{})
+	cols := []string{}
+	for _, t := range []DataFrame{df, dfb} {
+		for _, u := range t.Names() {
+			if _, ok := uniques[u]; !ok {
+				uniques[u] = struct{}{}
+				cols = append(cols, u)
+			}
+		}
+	}
+
+	expandedSeries := make([]series.Series, len(cols))
+	for k, v := range cols {
+		aidx := findInStringSlice(v, df.Names())
+		bidx := findInStringSlice(v, dfb.Names())
+
+		// aidx and bidx must not be -1 at the same time.
+		var a, b series.Series
+		if aidx != -1 {
+			a = df.columns[aidx]
+		} else {
+			bb := dfb.columns[bidx]
+			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name)
+		}
+		if bidx != -1 {
+			b = dfb.columns[bidx]
+		} else {
+			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name)
+		}
+		newSeries := a.Concat(b)
+		if err := newSeries.Err; err != nil {
+			return DataFrame{Err: fmt.Errorf("concat: %v", err)}
+		}
+		expandedSeries[k] = newSeries
+	}
+	return New(expandedSeries...)
+}
+
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
 func (df DataFrame) Mutate(s series.Series) DataFrame {
@@ -605,6 +655,7 @@ func (df DataFrame) Mutate(s series.Series) DataFrame {
 
 // F is the filtering structure
 type F struct {
+	Colidx     int
 	Colname    string
 	Comparator series.Comparator
 	Comparando interface{}
@@ -615,14 +666,47 @@ type F struct {
 // whereas if we chain Filter calls, every filter will act as an AND operation
 // with regards to the rest.
 func (df DataFrame) Filter(filters ...F) DataFrame {
+	return df.FilterAggregation(Or, filters...)
+}
+
+// Aggregation defines the filter aggregation
+type Aggregation int
+
+func (a Aggregation) String() string {
+	switch a {
+	case Or:
+		return "or"
+	case And:
+		return "and"
+	}
+	return fmt.Sprintf("unknown aggragation %d", a)
+}
+
+const (
+	// Or aggregates filters with logical or
+	Or Aggregation = iota
+	// And aggregates filters with logical and
+	And
+)
+
+// FilterAggregation will filter the rows of a DataFrame based on the given filters. All
+// filters on the argument of a Filter call are aggregated depending on the supplied
+// aggregation.
+func (df DataFrame) FilterAggregation(agg Aggregation, filters ...F) DataFrame {
 	if df.Err != nil {
 		return df
 	}
+
 	compResults := make([]series.Series, len(filters))
 	for i, f := range filters {
-		idx := findInStringSlice(f.Colname, df.Names())
-		if idx < 0 {
-			return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
+		var idx int
+		if f.Colname == "" {
+			idx = f.Colidx
+		} else {
+			idx = findInStringSlice(f.Colname, df.Names())
+			if idx < 0 {
+				return DataFrame{Err: fmt.Errorf("filter: can't find column name")}
+			}
 		}
 		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
 		if err := res.Err; err != nil {
@@ -630,10 +714,11 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 		}
 		compResults[i] = res
 	}
-	// Join compResults via "OR"
+
 	if len(compResults) == 0 {
 		return df.Copy()
 	}
+
 	res, err := compResults[0].Bool()
 	if err != nil {
 		return DataFrame{Err: fmt.Errorf("filter: %v", err)}
@@ -644,7 +729,14 @@ func (df DataFrame) Filter(filters ...F) DataFrame {
 			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
 		for j := 0; j < len(res); j++ {
-			res[j] = res[j] || nextRes[j]
+			switch agg {
+			case Or:
+				res[j] = res[j] || nextRes[j]
+			case And:
+				res[j] = res[j] && nextRes[j]
+			default:
+				panic(agg)
+			}
 		}
 	}
 	return df.Subset(res)
@@ -1248,7 +1340,9 @@ func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 // resulting records.
 func ReadJSON(r io.Reader, options ...LoadOption) DataFrame {
 	var m []map[string]interface{}
-	err := json.NewDecoder(r).Decode(&m)
+	d := json.NewDecoder(r)
+	d.UseNumber()
+	err := d.Decode(&m)
 	if err != nil {
 		return DataFrame{Err: err}
 	}
@@ -1300,6 +1394,131 @@ func (df DataFrame) WriteJSON(w io.Writer) error {
 		return df.Err
 	}
 	return json.NewEncoder(w).Encode(df.Maps())
+}
+
+// Internal state for implementing ReadHTML
+type remainder struct {
+	index int
+	text  string
+	nrows int
+}
+
+func readRows(trs []*html.Node) [][]string {
+	rems := []remainder{}
+	rows := [][]string{}
+	for _, tr := range trs {
+		xrems := []remainder{}
+		row := []string{}
+		index := 0
+		text := ""
+		for j, td := 0, tr.FirstChild; td != nil; j, td = j+1, td.NextSibling {
+			if td.Type == html.ElementNode && td.DataAtom == atom.Td {
+
+				for len(rems) > 0 {
+					v := rems[0]
+					if v.index > index {
+						break
+					}
+					v, rems = rems[0], rems[1:]
+					row = append(row, v.text)
+					if v.nrows > 1 {
+						xrems = append(xrems, remainder{v.index, v.text, v.nrows - 1})
+					}
+					index++
+				}
+
+				rowspan, colspan := 1, 1
+				for _, attr := range td.Attr {
+					switch attr.Key {
+					case "rowspan":
+						if k, err := strconv.Atoi(attr.Val); err == nil {
+							rowspan = k
+						}
+					case "colspan":
+						if k, err := strconv.Atoi(attr.Val); err == nil {
+							colspan = k
+						}
+					}
+				}
+				for c := td.FirstChild; c != nil; c = c.NextSibling {
+					if c.Type == html.TextNode {
+						text = strings.TrimSpace(c.Data)
+					}
+				}
+
+				for k := 0; k < colspan; k++ {
+					row = append(row, text)
+					if rowspan > 1 {
+						xrems = append(xrems, remainder{index, text, rowspan - 1})
+					}
+					index++
+				}
+			}
+		}
+		for j := 0; j < len(rems); j++ {
+			v := rems[j]
+			row = append(row, v.text)
+			if v.nrows > 1 {
+				xrems = append(xrems, remainder{v.index, v.text, v.nrows - 1})
+			}
+		}
+		rows = append(rows, row)
+		rems = xrems
+	}
+	for len(rems) > 0 {
+		xrems := []remainder{}
+		row := []string{}
+		for i := 0; i < len(rems); i++ {
+			v := rems[i]
+			row = append(row, v.text)
+			if v.nrows > 1 {
+				xrems = append(xrems, remainder{v.index, v.text, v.nrows - 1})
+			}
+		}
+		rows = append(rows, row)
+		rems = xrems
+	}
+	return rows
+}
+
+func ReadHTML(r io.Reader, options ...LoadOption) []DataFrame {
+	var err error
+	var dfs []DataFrame
+	var doc *html.Node
+	var f func(*html.Node)
+
+	doc, err = html.Parse(r)
+	if err != nil {
+		return []DataFrame{DataFrame{Err: err}}
+	}
+
+	f = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.DataAtom == atom.Table {
+			trs := []*html.Node{}
+			for c := n.FirstChild; c != nil; c = c.NextSibling {
+				if c.Type == html.ElementNode && c.DataAtom == atom.Tbody {
+					for cc := c.FirstChild; cc != nil; cc = cc.NextSibling {
+						if cc.Type == html.ElementNode && (cc.DataAtom == atom.Th || cc.DataAtom == atom.Tr) {
+							trs = append(trs, cc)
+						}
+					}
+				}
+			}
+
+			df := LoadRecords(readRows(trs), options...)
+			if df.Err == nil {
+				dfs = append(dfs, df)
+			}
+			return
+		}
+
+		for c := n.FirstChild; c != nil; c = c.NextSibling {
+			f(c)
+		}
+	}
+
+	f(doc)
+	return dfs
 }
 
 // Getters/Setters for DataFrame fields
@@ -1859,7 +2078,7 @@ func (df DataFrame) Elem(r, c int) series.Element {
 // fixColnames assigns a name to the missing column names and makes it so that the
 // column names are unique.
 func fixColnames(colnames []string) {
-	// Find duplicated colnames
+	// Find duplicated and missing colnames
 	dupnamesidx := make(map[string][]int)
 	var missingnames []int
 	for i := 0; i < len(colnames); i++ {
@@ -1868,16 +2087,17 @@ func fixColnames(colnames []string) {
 			missingnames = append(missingnames, i)
 			continue
 		}
-		for j := 0; j < len(colnames); j++ {
-			b := colnames[j]
-			if i != j && a == b {
-				temp := dupnamesidx[a]
-				if !inIntSlice(i, temp) {
-					dupnamesidx[a] = append(temp, i)
-				}
-			}
+		// for now, dupnamesidx contains the indices of *all* the columns
+		// the columns with unique locations will be removed after this loop
+		dupnamesidx[a] = append(dupnamesidx[a], i)
+	}
+	// NOTE: deleting a map key in a range is legal and correct in Go.
+	for k, places := range dupnamesidx {
+		if len(places) < 2 {
+			delete(dupnamesidx, k)
 		}
 	}
+	// Now: dupnameidx contains only keys that appeared more than once
 
 	// Autofill missing column names
 	counter := 0
