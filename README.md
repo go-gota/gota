@@ -248,6 +248,15 @@ fil := df.Filter(
 
 This example filters rows based on whether they have a cell value starting with `"aa"` in column `"A"`.
 
+#### GroupBy && Aggregation
+
+GroupBy && Aggregation
+
+```go
+groups := df.GroupBy("key1", "key2") // Group by column "key1", and column "key2" 
+aggre := groups.Aggregation([]AggregationType{Aggregation_MAX, Aggregation_MIN}, []string{"values", "values2"}) // Maximum value in column "values",  Minimum value in column "values2"
+```
+
 #### Arrange
 
 With Arrange a DataFrame can be sorted by the given column names:

@@ -1731,3 +1731,50 @@ func TestSeries_Map(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_Sum(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			// Extreme observations should not factor in.
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000}),
+			11155,
+		},
+		{
+			// Change in order should influence result.
+			Ints([]int{1, 2, 3, 10, 100, 1000, 10000, 4, 5, 6, 7, 8, 9}),
+			11155,
+		},
+		{
+			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
+			}),
+			-5.481429999999998,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			math.NaN(),
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Sum()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
