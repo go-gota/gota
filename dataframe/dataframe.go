@@ -37,7 +37,7 @@ type DataFrame struct {
 
 // New is the generic DataFrame constructor
 func New(se ...series.Series) DataFrame {
-	if se == nil || len(se) == 0 {
+	if len(se) == 0 {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
 
@@ -233,7 +233,7 @@ func (df DataFrame) print(
 			}
 		}
 		if i < len(notShowing) {
-			notShownArr = append(notShownArr, notShowing[i:len(notShowing)])
+			notShownArr = append(notShownArr, notShowing[i:])
 		}
 		for k, ns := range notShownArr {
 			notShown += strings.Join(ns, ", ")
@@ -529,7 +529,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	if order == nil || len(order) == 0 {
+	if len(order) == 0 {
 		return DataFrame{Err: fmt.Errorf("rename: no arguments")}
 	}
 
@@ -1392,7 +1392,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysB {
+			for range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1496,7 +1496,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 			newCols[ii].Append(elem)
 			ii++
 		}
-		for _ = range iNotKeysA {
+		for range iNotKeysA {
 			newCols[ii].Append(nil)
 			ii++
 		}
@@ -1598,7 +1598,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysB {
+			for range iNotKeysB {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1624,7 +1624,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 				newCols[ii].Append(elem)
 				ii++
 			}
-			for _ = range iNotKeysA {
+			for range iNotKeysA {
 				newCols[ii].Append(nil)
 				ii++
 			}
@@ -1786,13 +1786,13 @@ func findInStringSlice(str string, s []string) int {
 
 func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
 	var idx []int
-	switch indexes.(type) {
+	switch idt := indexes.(type) {
 	case []int:
-		idx = indexes.([]int)
+		idx = idt
 	case int:
-		idx = []int{indexes.(int)}
+		idx = []int{idt}
 	case []bool:
-		bools := indexes.([]bool)
+		bools := idt
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
