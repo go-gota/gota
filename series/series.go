@@ -887,4 +887,6 @@ func(s Series) FillNaNBackward() {
 	}
 }
 
-
+func(s Series) Rolling(window int, minPeriods int) Rolling {
+	return NewRollingSeries(window, minPeriods, s)
+}
