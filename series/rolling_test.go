@@ -32,7 +32,7 @@ func TestSeries_Rolling(t *testing.T) {
 			3,
 			2,
 			Strings([]string{NaN, "20210618", "20210618", "20200912", "20200912"}),
-			Strings([]string{NaN, "20200909", "20200909", "20200912", "20200910"}),
+			Strings([]string{NaN, "20200909", "20200909", "20200909", "20200910"}),
 		},
 		{
 			Ints([]string{"23", "13", "101", "-64", "-3"}),
@@ -49,7 +49,7 @@ func TestSeries_Rolling(t *testing.T) {
 		received := b.Records()
 		if !reflect.DeepEqual(expected, received) {
 			t.Errorf(
-				"Test-0:%v\nExpected:\n%v\nReceived:\n%v",
+				"Test-Max:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
 		}
@@ -59,7 +59,7 @@ func TestSeries_Rolling(t *testing.T) {
 		received = b.Records()
 		if !reflect.DeepEqual(expected, received) {
 			t.Errorf(
-				"Test-1:%v\nExpected:\n%v\nReceived:\n%v",
+				"Test-Min:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
 		}

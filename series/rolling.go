@@ -38,7 +38,12 @@ func (s rollingSeries) Max() Series {
 		eles[i] = s.Elem(0).NA()
 	}
 	for i := s.minPeriods-1; i < s.Len(); i++ {
-		eles[i] = findMax(i + 1 - s.minPeriods, s.window, s.Series).Copy()
+		start := i - s.window + 1
+		if start < 0 {
+			start = 0
+		}
+		end := i
+		eles[i] = findMax(start, end, s.Series).Copy()
 	}
 	newS := New(eles, s.Type(), "")
 	return newS
@@ -54,7 +59,12 @@ func (s rollingSeries) Min() Series {
 		eles[i] = s.Elem(0).NA()
 	}
 	for i := s.minPeriods-1; i < s.Len(); i++ {
-		eles[i] = findMin(i + 1 - s.minPeriods, s.window, s.Series).Copy()
+		start := i - s.window + 1
+		if start < 0 {
+			start = 0
+		}
+		end := i
+		eles[i] = findMin(start, end, s.Series).Copy()
 	}
 	newS := New(eles, s.Type(), "")
 	return newS
@@ -77,9 +87,9 @@ func (s rollingSeries) StdDev() Series {
 	return s.Series
 }
 
-func findMax(startIndex, window int, s Series) Element {
-	max := s.Elem(startIndex)
-	for i := startIndex + 1; i < startIndex + window && i < s.Len(); i++ {
+func findMax(start, end int, s Series) Element {
+	max := s.Elem(start)
+	for i := start + 1; i <= end; i++ {
 		elem := s.Elem(i)
 		if elem.Greater(max) {
 			max = elem
@@ -87,10 +97,9 @@ func findMax(startIndex, window int, s Series) Element {
 	}
 	return max
 }
-
-func findMin(startIndex, window int, s Series) Element {
-	min := s.Elem(startIndex)
-	for i := startIndex + 1; i < startIndex + window && i < s.Len(); i++ {
+func findMin(start, end int, s Series) Element {
+	min := s.Elem(start)
+	for i := start + 1; i <= end; i++ {
 		elem := s.Elem(i)
 		if elem.Less(min) {
 			min = elem
