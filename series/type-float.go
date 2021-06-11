@@ -13,36 +13,34 @@ type floatElement struct {
 
 func (e *floatElement) Set(value interface{}) {
 	e.nan = false
-	switch value.(type) {
+	switch vt := value.(type) {
 	case string:
-		if value.(string) == "NaN" {
+		if vt == "NaN" {
 			e.nan = true
 			return
 		}
-		f, err := strconv.ParseFloat(value.(string), 64)
+		f, err := strconv.ParseFloat(vt, 64)
 		if err != nil {
 			e.nan = true
 			return
 		}
 		e.e = f
 	case int:
-		e.e = float64(value.(int))
+		e.e = float64(vt)
 	case float64:
-		e.e = float64(value.(float64))
+		e.e = float64(vt)
 	case bool:
-		b := value.(bool)
+		b := vt
 		if b {
 			e.e = 1
 		} else {
 			e.e = 0
 		}
 	case Element:
-		e.e = value.(Element).Float()
+		e.e = vt.Float()
 	default:
 		e.nan = true
-		return
 	}
-	return
 }
 
 func (e floatElement) Copy() Element {
@@ -50,6 +48,10 @@ func (e floatElement) Copy() Element {
 		return &floatElement{0.0, true}
 	}
 	return &floatElement{e.e, false}
+}
+
+func (e floatElement) NA() Element {
+	return &floatElement{0.0, true}
 }
 
 func (e floatElement) IsNA() bool {

@@ -8,6 +8,7 @@ import (
 
 	"math"
 
+	"gonum.org/v1/gonum/floats"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -55,6 +56,8 @@ type Element interface {
 	// Information methods
 	IsNA() bool
 	Type() Type
+
+	NA() Element
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -114,6 +117,8 @@ const (
 	Bool   Type = "bool"
 )
 
+const NaN = "NaN"
+
 // Indexes represent the elements that can be used for selecting a subset of
 // elements within a Series. Currently supported are:
 //
@@ -153,37 +158,37 @@ func New(values interface{}, t Type, name string) Series {
 		return ret
 	}
 
-	switch values.(type) {
+	switch vt := values.(type) {
 	case []string:
-		v := values.([]string)
+		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []float64:
-		v := values.([]float64)
+		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []int:
-		v := values.([]int)
+		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []bool:
-		v := values.([]bool)
+		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case Series:
-		v := values.(Series)
+		v := vt
 		l := v.Len()
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -576,13 +581,13 @@ func (s Series) Elem(i int) Element {
 // out of bounds checks is performed.
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
-	switch indexes.(type) {
+	switch vt := indexes.(type) {
 	case []int:
-		idx = indexes.([]int)
+		idx = vt
 	case int:
-		idx = []int{indexes.(int)}
+		idx = []int{vt}
 	case []bool:
-		bools := indexes.([]bool)
+		bools := vt
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
@@ -592,7 +597,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 			}
 		}
 	case Series:
-		s := indexes.(Series)
+		s := vt
 		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
@@ -785,3 +790,101 @@ func (s Series) Map(f MapFunction) Series {
 	}
 	return New(mappedValues, s.Type(), s.Name)
 }
+
+//Shift series by desired number of periods and returning a new Series object.
+func (s Series) Shift(periods int, newName string) Series {
+	if s.Len() == 0 {
+		return s.Empty()
+	}
+	if periods == 0 {
+		return s.Copy()
+	}
+	shiftElements := make([]Element, s.Len())
+	if periods < 0 {
+		for i := 0; i - periods < s.Len(); i++ {
+			shiftElements[i] = s.Elem(i - periods).Copy()
+		}
+		for i := s.Len() + periods; i < s.Len(); i++ {
+			shiftElements[i] = s.Elem(0).NA()
+		}	
+	} else if periods > 0 {
+		for i := 0; i < periods; i++ {
+			shiftElements[i] = s.Elem(0).NA()
+		}
+		for i := 0 ; i + periods < s.Len(); i++ {
+			shiftElements[i + periods] = s.Elem(i).Copy()
+		}
+	}
+	return New(shiftElements, s.Type(), newName)
+}
+// CumProd finds the cumulative product of the first i elements in s and returning a new Series object.
+func(s Series) CumProd() Series {
+	dst := make([]float64, s.Len())
+	floats.CumProd(dst, s.Float())
+	return New(dst,s.Type(), "")
+}
+
+// Prod returns the product of the elements of the Series. Returns 1 if len(s) = 0.
+func(s Series) Prod() float64 {
+	return floats.Prod(s.Float())
+}
+
+// AddConst adds the scalar c to all of the values in Series and returning a new Series object.
+func(s Series) AddConst(c float64) Series {
+	dst := s.Float()
+	floats.AddConst(c, dst)
+	return New(dst,s.Type(), "")
+}
+
+// AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
+func(s Series) MulConst(c float64) Series {
+	sm := s.Map(func(e Element) Element {
+		result := e.Copy()
+		f := result.Float()
+		result.Set(f * c)		
+		return Element(result)
+	})
+	return sm
+}
+
+// FillNaN Fill NaN values using the specified value.
+func(s Series) FillNaN(value ElementValue) {
+	for i := 0; i < s.Len(); i++ {
+		ele := s.Elem(i)
+		if ele.IsNA() {
+			ele.Set(value)
+		}
+	}
+}
+
+// FillNaNForward Fill NaN values using the last non-NaN value
+func(s Series) FillNaNForward() {
+	var lastNotNaNValue ElementValue = nil
+	for i := 0; i < s.Len(); i++ {
+		ele := s.Elem(i)
+		if !ele.IsNA() {
+			lastNotNaNValue = ele.Val()
+		} else {
+			if lastNotNaNValue != nil {
+				ele.Set(lastNotNaNValue)
+			}
+		}
+	}
+}
+
+// FillNaNBackward Fill NaN values using the next non-NaN value
+func(s Series) FillNaNBackward() {
+	var lastNotNaNValue ElementValue = nil
+	for i := s.Len() - 1 ; i >= 0; i-- {
+		ele := s.Elem(i)
+		if !ele.IsNA() {
+			lastNotNaNValue = ele.Val()
+		} else {
+			if lastNotNaNValue != nil {
+				ele.Set(lastNotNaNValue)
+			}
+		}
+	}
+}
+
+

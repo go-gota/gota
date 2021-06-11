@@ -13,22 +13,22 @@ type intElement struct {
 
 func (e *intElement) Set(value interface{}) {
 	e.nan = false
-	switch value.(type) {
+	switch vt := value.(type) {
 	case string:
-		if value.(string) == "NaN" {
+		if vt == "NaN" {
 			e.nan = true
 			return
 		}
-		i, err := strconv.Atoi(value.(string))
+		i, err := strconv.Atoi(vt)
 		if err != nil {
 			e.nan = true
 			return
 		}
 		e.e = i
 	case int:
-		e.e = int(value.(int))
+		e.e = int(vt)
 	case float64:
-		f := value.(float64)
+		f := vt
 		if math.IsNaN(f) ||
 			math.IsInf(f, 0) ||
 			math.IsInf(f, 1) {
@@ -37,14 +37,14 @@ func (e *intElement) Set(value interface{}) {
 		}
 		e.e = int(f)
 	case bool:
-		b := value.(bool)
+		b := vt
 		if b {
 			e.e = 1
 		} else {
 			e.e = 0
 		}
 	case Element:
-		v, err := value.(Element).Int()
+		v, err := vt.Int()
 		if err != nil {
 			e.nan = true
 			return
@@ -52,9 +52,7 @@ func (e *intElement) Set(value interface{}) {
 		e.e = v
 	default:
 		e.nan = true
-		return
 	}
-	return
 }
 
 func (e intElement) Copy() Element {
@@ -64,11 +62,12 @@ func (e intElement) Copy() Element {
 	return &intElement{e.e, false}
 }
 
+func (e intElement) NA() Element {
+	return &intElement{0, true}
+}
+
 func (e intElement) IsNA() bool {
-	if e.nan {
-		return true
-	}
-	return false
+	return e.nan
 }
 
 func (e intElement) Type() Type {

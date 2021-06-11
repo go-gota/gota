@@ -13,13 +13,13 @@ type boolElement struct {
 
 func (e *boolElement) Set(value interface{}) {
 	e.nan = false
-	switch value.(type) {
+	switch vt := value.(type) {
 	case string:
-		if value.(string) == "NaN" {
+		if vt == "NaN" {
 			e.nan = true
 			return
 		}
-		switch strings.ToLower(value.(string)) {
+		switch strings.ToLower(vt) {
 		case "true", "t", "1":
 			e.e = true
 		case "false", "f", "0":
@@ -29,7 +29,7 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case int:
-		switch value.(int) {
+		switch vt {
 		case 1:
 			e.e = true
 		case 0:
@@ -39,7 +39,7 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case float64:
-		switch value.(float64) {
+		switch vt {
 		case 1:
 			e.e = true
 		case 0:
@@ -49,9 +49,9 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case bool:
-		e.e = value.(bool)
+		e.e = vt
 	case Element:
-		b, err := value.(Element).Bool()
+		b, err := vt.Bool()
 		if err != nil {
 			e.nan = true
 			return
@@ -59,9 +59,7 @@ func (e *boolElement) Set(value interface{}) {
 		e.e = b
 	default:
 		e.nan = true
-		return
 	}
-	return
 }
 
 func (e boolElement) Copy() Element {
@@ -71,11 +69,12 @@ func (e boolElement) Copy() Element {
 	return &boolElement{e.e, false}
 }
 
+func (e boolElement) NA() Element {
+	return &boolElement{false, true}
+}
+
 func (e boolElement) IsNA() bool {
-	if e.nan {
-		return true
-	}
-	return false
+	return e.nan
 }
 
 func (e boolElement) Type() Type {
@@ -103,7 +102,7 @@ func (e boolElement) Int() (int, error) {
 	if e.IsNA() {
 		return 0, fmt.Errorf("can't convert NaN to int")
 	}
-	if e.e == true {
+	if e.e {
 		return 1, nil
 	}
 	return 0, nil
@@ -173,3 +172,4 @@ func (e boolElement) GreaterEq(elem Element) bool {
 	}
 	return e.e || !b
 }
+
