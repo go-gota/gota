@@ -88,7 +88,7 @@ func (e boolElements) Elem(i int) Element { return &e[i] }
 // unmarshaling Elements.
 type ElementValue interface{}
 
-type MapFunction func(Element) Element
+type MapFunction func(Element, int) Element
 
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
@@ -212,6 +212,40 @@ func New(values interface{}, t Type, name string) Series {
 		}
 	}
 
+	return ret
+}
+
+func NewDefault(defaultValue interface{}, t Type, name string, len int) Series {
+	ret := Series{
+		Name: name,
+		t:    t,
+	}
+
+	// Pre-allocate elements
+	preAlloc := func(n int) {
+		switch t {
+		case String:
+			ret.elements = make(stringElements, n)
+		case Int:
+			ret.elements = make(intElements, n)
+		case Float:
+			ret.elements = make(floatElements, n)
+		case Bool:
+			ret.elements = make(boolElements, n)
+		default:
+			panic(fmt.Sprintf("unknown type %v", t))
+		}
+	}
+
+	if defaultValue == nil {
+		preAlloc(1)
+		ret.elements.Elem(0).Set(nil)
+		return ret
+	}
+	preAlloc(len)
+	for i := 0; i < len; i++ {
+		ret.elements.Elem(i).Set(defaultValue)
+	}
 	return ret
 }
 
@@ -363,6 +397,15 @@ func (s Series) IsNaN() []bool {
 	ret := make([]bool, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		ret[i] = s.elements.Elem(i).IsNA()
+	}
+	return ret
+}
+
+// IsNaN returns an array that identifies which of the elements are not NaN.
+func (s Series) IsNotNaN() []bool {
+	ret := make([]bool, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		ret[i] = !s.elements.Elem(i).IsNA()
 	}
 	return ret
 }
@@ -785,7 +828,7 @@ func (s Series) Map(f MapFunction) Series {
 
 	mappedValues := make([]Element, s.Len())
 	for i := 0; i < s.Len(); i++ {
-		value := f(s.elements.Elem(i))
+		value := f(s.elements.Elem(i), i)
 		mappedValues[i] = value
 	}
 	return New(mappedValues, s.Type(), s.Name)
@@ -838,7 +881,7 @@ func(s Series) AddConst(c float64) Series {
 
 // AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) MulConst(c float64) Series {
-	sm := s.Map(func(e Element) Element {
+	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
 		result.Set(f * c)		
@@ -847,14 +890,47 @@ func(s Series) MulConst(c float64) Series {
 	return sm
 }
 
+// DivConst Div the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) DivConst(c float64) Series {
-	sm := s.Map(func(e Element) Element {
+	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
 		result.Set(f / c)		
 		return Element(result)
 	})
 	return sm
+}
+
+func(s Series) Add(c Series) Series {
+	sf := s.Float()
+	cf := c.Float()
+	dst := make([]float64, s.Len())
+	floats.AddTo(dst, sf, cf)
+	return New(dst, Float, "")
+}
+
+func(s Series) Sub(c Series) Series {
+	sf := s.Float()
+	cf := c.Float()
+	dst := make([]float64, s.Len())
+	floats.SubTo(dst, sf, cf)
+	return New(dst, Float, "")
+}
+
+func(s Series) Mul(c Series) Series {
+	sf := s.Float()
+	cf := c.Float()
+	dst := make([]float64, s.Len())
+	floats.MulTo(dst, sf, cf)
+	return New(dst, Float, "")
+}
+
+func(s Series) Div(c Series) Series {
+	sf := s.Float()
+	cf := c.Float()
+	dst := make([]float64, s.Len())
+	floats.DivTo(dst, sf, cf)
+	return New(dst, Float, "")
 }
 
 

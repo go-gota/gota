@@ -1562,14 +1562,14 @@ func TestSeries_Map(t *testing.T) {
 		},
 	}
 
-	doubleFloat64 := func(e Element) Element {
+	doubleFloat64 := func(e Element, index int) Element {
 		result := e.Copy()
 		result.Set(result.Float() * 2)		
 		return Element(result)
 	}
 
 	// and two booleans 
-	and := func(e Element) Element {
+	and := func(e Element, index int) Element {
 		result := e.Copy()
 		b, err := result.Bool()
 		if err != nil {
@@ -1581,7 +1581,7 @@ func TestSeries_Map(t *testing.T) {
 	}
 
 	// add constant (+5) to value (v)
-	add5Int := func(e Element) Element {
+	add5Int := func(e Element, index int) Element {
 		result := e.Copy()
 		i, err := result.Int()
 		if err != nil {
