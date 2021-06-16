@@ -847,6 +847,17 @@ func(s Series) MulConst(c float64) Series {
 	return sm
 }
 
+func(s Series) DivConst(c float64) Series {
+	sm := s.Map(func(e Element) Element {
+		result := e.Copy()
+		f := result.Float()
+		result.Set(f / c)		
+		return Element(result)
+	})
+	return sm
+}
+
+
 // FillNaN Fill NaN values using the specified value.
 func(s Series) FillNaN(value ElementValue) {
 	for i := 0; i < s.Len(); i++ {

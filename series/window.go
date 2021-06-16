@@ -1,6 +1,7 @@
 package series
 
 import (
+	"math"
 	"sort"
 
 	"gonum.org/v1/gonum/stat"
@@ -84,13 +85,21 @@ func (ew elementsWindow) Quantile(p float64) float64 {
 }
 
 func (ew elementsWindow) Median() float64 {
-	fs := make([]Element, len(ew.eles))
-	for i := 0; i < len(ew.eles); i++ {
-		fs[i] = ew.eles[i].Copy()
+	if len(ew.eles) == 0 ||
+		ew.eles[0].Type() == String ||
+		ew.eles[0].Type() == Bool {
+		return math.NaN()
 	}
-	ns := New(fs, ew.eles[0].Type(),"")
-	median := ns.Median()
-	return median
+
+	fs := make([]float64, len(ew.floats))
+	copy(fs, ew.floats)
+	sort.Float64s(fs)
+
+	if len(ew.floats) %2 != 0 {
+		return fs[len(ew.floats)/2]
+	}
+	return (ew.floats[(len(ew.floats)/2)-1] +
+		ew.floats[len(ew.floats)/2]) * 0.5
 }
 
 func (ew elementsWindow) StdDev() float64 {
