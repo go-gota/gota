@@ -1595,7 +1595,7 @@ func TestSeries_Map(t *testing.T) {
 	}
 
 	// trim (XyZ) prefix from string
-	trimXyZPrefix := func(e Element) Element {
+	trimXyZPrefix := func(e Element, index int) Element {
 		result := e.Copy()
 		result.Set(strings.TrimPrefix(result.String(), "XyZ"))
 		return Element(result)
