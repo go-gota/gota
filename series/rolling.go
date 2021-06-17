@@ -1,9 +1,10 @@
 package series
 
 import (
+	"fmt"
 	"math"
 
-	"github.com/go-gota/gota/util"	
+	"github.com/go-gota/gota/util"
 	"gonum.org/v1/gonum/floats"
 )
 
@@ -52,7 +53,7 @@ func (s rollingSeries) Max() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), "")
+	newS := New(eles, s.Type(), fmt.Sprintf("%s-Max(w: %d)", s.Name, s.window))
 	return newS
 }
 
@@ -73,7 +74,7 @@ func (s rollingSeries) Min() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), "")
+	newS := New(eles, s.Type(), fmt.Sprintf("%s-Min(w: %d)", s.Name, s.window))
 	return newS
 }
 
@@ -105,7 +106,8 @@ func (s rollingSeries) Mean() Series {
 	floats.SubTo(eles[s.window - 1 : ], sum2, sum1)
 	floats.Add(eles[s.window - 1 : ], sf1)
 	floats.Div(eles[s.window - 1 : ], windows)
-	newS := New(eles, Float, "")
+	newS := New(eles, Float, 
+		fmt.Sprintf("%s-Mean(w: %d, p:%d)", s.Name, s.window, s.minPeriods))
 	return newS
 }
 
@@ -126,7 +128,8 @@ func (s rollingSeries) Quantile(p float64) Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), "")
+	newS := New(eles, s.Type(), 
+	fmt.Sprintf("%s-Quantile(w: %d, p:%f)", s.Name, s.window, p))
 	return newS
 }
 
@@ -147,7 +150,8 @@ func (s rollingSeries) Median() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), "")
+	newS := New(eles, s.Type(), 
+	fmt.Sprintf("%s-Median(w: %d)", s.Name, s.window))
 	return newS
 }
 
@@ -168,7 +172,8 @@ func (s rollingSeries) StdDev() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, Float, "")
+	newS := New(eles, Float,
+		fmt.Sprintf("%s-StdDev(w: %d)", s.Name, s.window))
 	return newS
 }
 
