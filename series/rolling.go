@@ -53,7 +53,7 @@ func (s rollingSeries) Max() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), fmt.Sprintf("%s-Max(w: %d)", s.Name, s.window))
+	newS := New(eles, s.Type(), fmt.Sprintf("%s_RMax[w:%d]", s.Name, s.window))
 	return newS
 }
 
@@ -74,7 +74,7 @@ func (s rollingSeries) Min() Series {
 		eles[index] = ele 
 		index++
 	}
-	newS := New(eles, s.Type(), fmt.Sprintf("%s-Min(w: %d)", s.Name, s.window))
+	newS := New(eles, s.Type(), fmt.Sprintf("%s_RMin[w:%d]", s.Name, s.window))
 	return newS
 }
 
@@ -107,7 +107,7 @@ func (s rollingSeries) Mean() Series {
 	floats.Add(eles[s.window - 1 : ], sf1)
 	floats.Div(eles[s.window - 1 : ], windows)
 	newS := New(eles, Float, 
-		fmt.Sprintf("%s-Mean(w: %d, p:%d)", s.Name, s.window, s.minPeriods))
+		fmt.Sprintf("%s_RMean[w:%d, p:%d]", s.Name, s.window, s.minPeriods))
 	return newS
 }
 
@@ -129,7 +129,7 @@ func (s rollingSeries) Quantile(p float64) Series {
 		index++
 	}
 	newS := New(eles, s.Type(), 
-	fmt.Sprintf("%s-Quantile(w: %d, p:%f)", s.Name, s.window, p))
+	fmt.Sprintf("%s_RQuantile[w:%d, p:%f]", s.Name, s.window, p))
 	return newS
 }
 
@@ -151,7 +151,7 @@ func (s rollingSeries) Median() Series {
 		index++
 	}
 	newS := New(eles, s.Type(), 
-	fmt.Sprintf("%s-Median(w: %d)", s.Name, s.window))
+	fmt.Sprintf("%s_RMedian[w:%d]", s.Name, s.window))
 	return newS
 }
 
@@ -173,7 +173,7 @@ func (s rollingSeries) StdDev() Series {
 		index++
 	}
 	newS := New(eles, Float,
-		fmt.Sprintf("%s-StdDev(w: %d)", s.Name, s.window))
+		fmt.Sprintf("%s_RStdDev[w:%d]", s.Name, s.window))
 	return newS
 }
 

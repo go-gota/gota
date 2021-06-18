@@ -835,7 +835,7 @@ func (s Series) Map(f MapFunction) Series {
 }
 
 //Shift series by desired number of periods and returning a new Series object.
-func (s Series) Shift(periods int, newName string) Series {
+func (s Series) Shift(periods int) Series {
 	if s.Len() == 0 {
 		return s.Empty()
 	}
@@ -858,13 +858,13 @@ func (s Series) Shift(periods int, newName string) Series {
 			shiftElements[i + periods] = s.Elem(i).Copy()
 		}
 	}
-	return New(shiftElements, s.Type(), newName)
+	return New(shiftElements, s.Type(), fmt.Sprintf("%s_Shift_%d", s.Name, periods))
 }
 // CumProd finds the cumulative product of the first i elements in s and returning a new Series object.
 func(s Series) CumProd() Series {
 	dst := make([]float64, s.Len())
 	floats.CumProd(dst, s.Float())
-	return New(dst,s.Type(), "")
+	return New(dst,s.Type(), fmt.Sprintf("%s_CumProd", s.Name))
 }
 
 // Prod returns the product of the elements of the Series. Returns 1 if len(s) = 0.
@@ -876,11 +876,12 @@ func(s Series) Prod() float64 {
 func(s Series) AddConst(c float64) Series {
 	dst := s.Float()
 	floats.AddConst(c, dst)
-	return New(dst,s.Type(), "")
+	return New(dst,s.Type(), fmt.Sprintf("(%s + %v)", s.Name, c))
 }
 
 // AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) MulConst(c float64) Series {
+	s.Name = fmt.Sprintf("(%s * %v)", s.Name, c)
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
@@ -892,6 +893,7 @@ func(s Series) MulConst(c float64) Series {
 
 // DivConst Div the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) DivConst(c float64) Series {
+	s.Name = fmt.Sprintf("(%s / %v)", s.Name, c)
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
@@ -906,7 +908,7 @@ func(s Series) Add(c Series) Series {
 	cf := c.Float()
 	dst := make([]float64, s.Len())
 	floats.AddTo(dst, sf, cf)
-	return New(dst, Float, "")
+	return New(dst, Float, fmt.Sprintf("(%s + %s)", s.Name, c.Name))
 }
 
 func(s Series) Sub(c Series) Series {
@@ -914,7 +916,7 @@ func(s Series) Sub(c Series) Series {
 	cf := c.Float()
 	dst := make([]float64, s.Len())
 	floats.SubTo(dst, sf, cf)
-	return New(dst, Float, "")
+	return New(dst, Float, fmt.Sprintf("(%s - %s)", s.Name, c.Name))
 }
 
 func(s Series) Mul(c Series) Series {
@@ -922,7 +924,7 @@ func(s Series) Mul(c Series) Series {
 	cf := c.Float()
 	dst := make([]float64, s.Len())
 	floats.MulTo(dst, sf, cf)
-	return New(dst, Float, "")
+	return New(dst, Float, fmt.Sprintf("(%s * %s)", s.Name, c.Name))
 }
 
 func(s Series) Div(c Series) Series {
@@ -930,7 +932,18 @@ func(s Series) Div(c Series) Series {
 	cf := c.Float()
 	dst := make([]float64, s.Len())
 	floats.DivTo(dst, sf, cf)
-	return New(dst, Float, "")
+	return New(dst, Float, fmt.Sprintf("(%s / %s)", s.Name, c.Name))
+}
+
+func(s Series) Abs() Series {
+	s.Name = fmt.Sprintf("Abs(%s)", s.Name)
+	sm := s.Map(func(e Element, index int) Element {
+		result := e.Copy()
+		f := result.Float()
+		result.Set(math.Abs(f))		
+		return Element(result)
+	})
+	return sm
 }
 
 

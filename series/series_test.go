@@ -1715,7 +1715,7 @@ func TestSeries_Shift(t *testing.T) {
 
 	for testnum, test := range tests {
 		expected := test.expected.Records()
-		b := test.series.Shift(test.shift, "")
+		b := test.series.Shift(test.shift)
 		received := b.Records()
 		if !reflect.DeepEqual(expected, received) {
 			t.Errorf(
