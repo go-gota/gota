@@ -581,6 +581,34 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	return New(columns...)
 }
 
+func detectType(types []series.Type) series.Type {
+	var hasStrings, hasFloats, hasInts, hasBools bool
+	for _, t := range types {
+		switch t {
+		case series.String:
+			hasStrings = true
+		case series.Float:
+			hasFloats = true
+		case series.Int:
+			hasInts = true
+		case series.Bool:
+			hasBools = true
+		}
+	}
+	switch {
+	case hasStrings:
+		return series.String
+	case hasBools:
+		return series.Bool
+	case hasFloats:
+		return series.Float
+	case hasInts:
+		return series.Int
+	default:
+		panic("type not supported")
+	}
+}
+
 // Rapply applies the given function to the rows of a DataFrame. Prior to applying
 // the function the elements of each row are cast to a Series of a specific
 // type. In order of priority: String -> Float -> Int -> Bool. This casting also
@@ -588,34 +616,6 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	if df.Err != nil {
 		return df
-	}
-
-	detectType := func(types []series.Type) series.Type {
-		var hasStrings, hasFloats, hasInts, hasBools bool
-		for _, t := range types {
-			switch t {
-			case series.String:
-				hasStrings = true
-			case series.Float:
-				hasFloats = true
-			case series.Int:
-				hasInts = true
-			case series.Bool:
-				hasBools = true
-			}
-		}
-		switch {
-		case hasStrings:
-			return series.String
-		case hasBools:
-			return series.Bool
-		case hasFloats:
-			return series.Float
-		case hasInts:
-			return series.Int
-		default:
-			panic("type not supported")
-		}
 	}
 
 	// Detect row type prior to function application
@@ -1971,3 +1971,210 @@ func (df DataFrame) Describe() DataFrame {
 	ddf := New(ss...)
 	return ddf
 }
+
+// Binary vector operators
+
+// Applies `op` using elements from `lcolnm` and `rcolnm` as left and right operands,
+// and stores the output in a new column `newcolnm`.
+func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...string) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	if len(operandcols) == 0 {
+		df.Err = fmt.Errorf("must supply at least one operand column name")
+		return df
+	}
+	cols := make([]series.Series, len(operandcols))
+	types := make([]series.Type, len(operandcols))
+	for i, colnm := range operandcols {
+		cols[i] = df.Col(colnm)
+		types[i] = cols[i].Type()
+	}
+	nrows := cols[0].Len()
+	ncols := len(cols)
+
+	// confirm colTypes are all numeric
+	resultType := detectType(types) // float if there are any floats, int otherwise
+	if resultType == series.String || resultType == series.Bool {
+		df.Err = fmt.Errorf("cannot perform arithmetic with column of type %s", resultType)
+		return df
+	}
+
+	switch resultType {
+	case series.Int:
+		results := make([]int, nrows)
+		for ridx := 0; ridx < nrows; ridx++ {
+			operands := make([]int, ncols)
+			for cidx, column := range cols {
+				operand, err := column.Elem(ridx).Int()
+				if err != nil {
+					df.Err = fmt.Errorf("unable to convert element %d of column %s to int: %w", ridx, operandcols[cidx], err)
+					return df
+				}
+				operands[ridx] = operand
+			}
+			results[ridx] = intOp(op, operands)
+		}
+		df = df.Mutate(
+			series.New(results, resultType, resultcolnm),
+		)
+	case series.Float:
+		results := make([]float64, nrows)
+		for ridx := 0; ridx < nrows; ridx++ {
+			operands := make([]float64, ncols)
+			for _, column := range cols {
+				operand := column.Elem(ridx).Float()
+				operands[ridx] = operand
+			}
+			results[ridx] = floatOp(op, operands)
+		}
+		df = df.Mutate(
+			series.New(results, resultType, resultcolnm),
+		)
+	default:
+		df.Err = fmt.Errorf("series type %s is not a type on which we can perform arithmetic", resultType)
+	}
+
+	return df
+}
+
+func floatOp(op interface{}, operands []float64) float64 {
+	var acc float64 // accumulator for n-ary operators
+	if len(operands) == 0 {
+		return 0
+	}
+
+	switch op := op.(type) { // takes care of support for things in `math`
+	case unaryFloatFunc:
+		return op(operands[0])
+	case binaryFloatFunc:
+		return op(operands[0], operands[1])
+	case trinaryFloatFunc:
+		return op(operands[0], operands[1], operands[2])
+
+	// for the most basic operations, support variadic operands
+	case string:
+		switch op {
+		case "+":
+			// add all operands
+			for _, operand := range operands {
+				acc += operand
+			}
+		case "-":
+			// with only one operand, return its negative.
+			// with more, subtract the rest from the first.
+			if len(operands) == 1 {
+				return -operands[0]
+			}
+			acc = operands[0]
+			for i := 1; i < len(operands); i++ {
+				acc = acc - operands[i]
+			}
+		case "*":
+			// the product of all operands
+			acc = 1
+			for _, operand := range operands {
+				acc = acc * operand
+			}
+		case "/":
+			// With only one operand, reciprocal
+			// With more operands, divides by each denominator
+			// Divide by zero returns +Inf (as per usual with float64)
+			if len(operands) == 1 {
+				return 1 / operands[0]
+			}
+			acc = operands[0]
+			for i := 1; i < len(operands); i++ {
+				acc = acc / operands[i]
+			}
+		default:
+			panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
+		}
+	}
+
+	return acc
+}
+
+// placeholders for infinity
+// TODO prefer to handle errors with integer ops
+const MaxUint = ^uint(0)
+const MaxInt = int(MaxUint >> 1)
+
+func intOp(op interface{}, operands []int) int {
+	var acc int // accumulator for n-ary operators
+	if len(operands) == 0 {
+		return 0
+	}
+
+	switch op := op.(type) { // users can specify functions for `op`, or a string
+	case unaryIntFunc:
+		return op(operands[0])
+	case binaryIntFunc:
+		return op(operands[0], operands[1])
+	case trinaryIntFunc:
+		return op(operands[0], operands[1], operands[2])
+	case string:
+		switch op {
+		case "+":
+			// add all operands
+			for _, operand := range operands {
+				acc += operand
+			}
+		case "-":
+			// with only one operand, return its negative.
+			// with more, subtract the rest from the first.
+			if len(operands) == 1 {
+				return -operands[0]
+			}
+			acc = operands[0]
+			for i := 1; i < len(operands); i++ {
+				acc = acc - operands[i]
+			}
+		case "*":
+			// the product of all operands
+			acc = 1
+			for _, operand := range operands {
+				acc = acc * operand
+			}
+		case "/":
+			// With only one operand, int reciprocal (0 or 1 or "infinity")
+			// With more, divides by each denominator
+			// Divide by zero returns `MaxInt` (poor-man's infinity)
+			if len(operands) == 1 { // reciprocal case
+				if operands[0] == 0 { // reciprocal of zero
+					return MaxInt // poor man's infinity
+				}
+				return 1 / operands[0] // 0 or 1 for int division
+			}
+			// normal division case
+			acc = operands[0]
+			for i := 1; i < len(operands); i++ {
+				if operands[i] == 0 {
+					return MaxInt // poor man's infinity
+				}
+				acc = acc / operands[i]
+			}
+		case "%":
+			// remainder after division of first two operands only
+			if len(operands) < 2 { // one argument, just return it
+				return operands[0]
+			}
+			if operands[1] == 0 { // integer division by zero - just return a big number
+				return MaxInt // poor man's infinity
+			}
+			return operands[0] % operands[1]
+		default:
+			panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
+		}
+	}
+
+	return acc
+}
+
+type unaryFloatFunc func(float64) float64
+type binaryFloatFunc func(float64, float64) float64
+type trinaryFloatFunc func(float64, float64, float64) float64
+
+type unaryIntFunc func(int) int
+type binaryIntFunc func(int, int) int
+type trinaryIntFunc func(int, int, int) int
