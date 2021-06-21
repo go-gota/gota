@@ -1,6 +1,7 @@
 package series
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"sort"
@@ -186,6 +187,12 @@ func New(values interface{}, t Type, name string) Series {
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
+		}
+	case []Element:
+		l := len(vt)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			ret.elements.Elem(i).Set(vt[i])
 		}
 	case Series:
 		v := vt
@@ -989,4 +996,41 @@ func(s Series) FillNaNBackward() {
 
 func(s Series) Rolling(window int, minPeriods int) Rolling {
 	return NewRollingSeries(window, minPeriods, s)
+}
+
+
+func Operation(operate func(index int, eles ...Element) interface{}, seriess ...Series) (Series, error) {
+	if len(seriess) == 0 {
+		return Series{}, errors.New("seriess num must > 0")
+	}
+	sl := seriess[0].Len()
+	maxLen := sl
+	for i := 1; i < len(seriess); i++ {
+		slen := seriess[i].Len()
+		if sl != slen && slen != 1 {
+			return Series{}, errors.New("seriess length must be 1 or same")
+		}
+		if slen > maxLen {
+			maxLen = slen
+		}
+	}
+
+	eles := make([]Element, maxLen)
+	baseEle := seriess[0].Elem(0)
+	for i := 0; i < maxLen; i++ {
+		operateParam := make([]Element, len(seriess))
+		for j := 0; j < len(seriess); j++ {
+			if seriess[j].Len() == 1 {
+				operateParam[j] = seriess[j].Elem(0)
+			} else {
+				operateParam[j] = seriess[j].Elem(i)
+			}
+		}
+		res := operate(i, operateParam...)
+		e := baseEle.NA()
+		e.Set(res)
+		eles[i] = e
+	}
+	result := New(eles, seriess[0].t,"")
+	return result, nil
 }
