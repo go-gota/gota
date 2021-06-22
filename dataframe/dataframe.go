@@ -98,7 +98,7 @@ func (df DataFrame) Copy() DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
-	return df.print(true, true, true, true, 10, 70, "DataFrame")
+	return df.print(true, false, true, true, 10, 70, "DataFrame")
 }
 
 func (df DataFrame) print(
@@ -2011,7 +2011,7 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 					df.Err = fmt.Errorf("unable to convert element %d of column %s to int: %w", ridx, operandcols[cidx], err)
 					return df
 				}
-				operands[ridx] = operand
+				operands[cidx] = operand
 			}
 			results[ridx] = intOp(op, operands)
 		}
@@ -2022,9 +2022,9 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 		results := make([]float64, nrows)
 		for ridx := 0; ridx < nrows; ridx++ {
 			operands := make([]float64, ncols)
-			for _, column := range cols {
+			for cidx, column := range cols {
 				operand := column.Elem(ridx).Float()
-				operands[ridx] = operand
+				operands[cidx] = operand
 			}
 			results[ridx] = floatOp(op, operands)
 		}
@@ -2039,57 +2039,57 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 }
 
 func floatOp(op interface{}, operands []float64) float64 {
-	var acc float64 // accumulator for n-ary operators
+	fmt.Println("In floatOp") // DEBUG
+	var acc float64           // accumulator for n-ary operators
 	if len(operands) == 0 {
 		return 0
 	}
 
 	switch op := op.(type) { // takes care of support for things in `math`
-	case unaryFloatFunc:
+	case func(float64) float64:
 		return op(operands[0])
-	case binaryFloatFunc:
+	case func(float64, float64) float64:
 		return op(operands[0], operands[1])
-	case trinaryFloatFunc:
+	case func(float64, float64, float64) float64:
 		return op(operands[0], operands[1], operands[2])
 
+	}
 	// for the most basic operations, support variadic operands
-	case string:
-		switch op {
-		case "+":
-			// add all operands
-			for _, operand := range operands {
-				acc += operand
-			}
-		case "-":
-			// with only one operand, return its negative.
-			// with more, subtract the rest from the first.
-			if len(operands) == 1 {
-				return -operands[0]
-			}
-			acc = operands[0]
-			for i := 1; i < len(operands); i++ {
-				acc = acc - operands[i]
-			}
-		case "*":
-			// the product of all operands
-			acc = 1
-			for _, operand := range operands {
-				acc = acc * operand
-			}
-		case "/":
-			// With only one operand, reciprocal
-			// With more operands, divides by each denominator
-			// Divide by zero returns +Inf (as per usual with float64)
-			if len(operands) == 1 {
-				return 1 / operands[0]
-			}
-			acc = operands[0]
-			for i := 1; i < len(operands); i++ {
-				acc = acc / operands[i]
-			}
-		default:
-			panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
+	switch op {
+	case "+":
+		// add all operands
+		for _, operand := range operands {
+			acc += operand
 		}
+	case "-":
+		// with only one operand, return its negative.
+		// with more, subtract the rest from the first.
+		if len(operands) == 1 {
+			return -operands[0]
+		}
+		acc = operands[0]
+		for i := 1; i < len(operands); i++ {
+			acc = acc - operands[i]
+		}
+	case "*":
+		// the product of all operands
+		acc = 1
+		for _, operand := range operands {
+			acc = acc * operand
+		}
+	case "/":
+		// With only one operand, reciprocal
+		// With more operands, divides by each denominator
+		// Divide by zero returns +Inf (as per usual with float64)
+		if len(operands) == 1 {
+			return 1 / operands[0]
+		}
+		acc = operands[0]
+		for i := 1; i < len(operands); i++ {
+			acc = acc / operands[i]
+		}
+	default:
+		panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
 	}
 
 	return acc
@@ -2107,74 +2107,66 @@ func intOp(op interface{}, operands []int) int {
 	}
 
 	switch op := op.(type) { // users can specify functions for `op`, or a string
-	case unaryIntFunc:
+	case func(int) int:
 		return op(operands[0])
-	case binaryIntFunc:
+	case func(int, int) int:
 		return op(operands[0], operands[1])
-	case trinaryIntFunc:
+	case func(int, int, int) int:
 		return op(operands[0], operands[1], operands[2])
-	case string:
-		switch op {
-		case "+":
-			// add all operands
-			for _, operand := range operands {
-				acc += operand
-			}
-		case "-":
-			// with only one operand, return its negative.
-			// with more, subtract the rest from the first.
-			if len(operands) == 1 {
-				return -operands[0]
-			}
-			acc = operands[0]
-			for i := 1; i < len(operands); i++ {
-				acc = acc - operands[i]
-			}
-		case "*":
-			// the product of all operands
-			acc = 1
-			for _, operand := range operands {
-				acc = acc * operand
-			}
-		case "/":
-			// With only one operand, int reciprocal (0 or 1 or "infinity")
-			// With more, divides by each denominator
-			// Divide by zero returns `MaxInt` (poor-man's infinity)
-			if len(operands) == 1 { // reciprocal case
-				if operands[0] == 0 { // reciprocal of zero
-					return MaxInt // poor man's infinity
-				}
-				return 1 / operands[0] // 0 or 1 for int division
-			}
-			// normal division case
-			acc = operands[0]
-			for i := 1; i < len(operands); i++ {
-				if operands[i] == 0 {
-					return MaxInt // poor man's infinity
-				}
-				acc = acc / operands[i]
-			}
-		case "%":
-			// remainder after division of first two operands only
-			if len(operands) < 2 { // one argument, just return it
-				return operands[0]
-			}
-			if operands[1] == 0 { // integer division by zero - just return a big number
+	}
+
+	switch op {
+	case "+":
+		// add all operands
+		for _, operand := range operands {
+			acc += operand
+		}
+	case "-":
+		// with only one operand, return its negative.
+		// with more, subtract the rest from the first.
+		if len(operands) == 1 {
+			return -operands[0]
+		}
+		acc = operands[0]
+		for i := 1; i < len(operands); i++ {
+			acc = acc - operands[i]
+		}
+	case "*":
+		// the product of all operands
+		acc = 1
+		for _, operand := range operands {
+			acc = acc * operand
+		}
+	case "/":
+		// With only one operand, int reciprocal (0 or 1 or "infinity")
+		// With more, divides by each denominator
+		// Divide by zero returns `MaxInt` (poor-man's infinity)
+		if len(operands) == 1 { // reciprocal case
+			if operands[0] == 0 { // reciprocal of zero
 				return MaxInt // poor man's infinity
 			}
-			return operands[0] % operands[1]
-		default:
-			panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
+			return 1 / operands[0] // 0 or 1 for int division
 		}
+		// normal division case
+		acc = operands[0]
+		for i := 1; i < len(operands); i++ {
+			if operands[i] == 0 {
+				return MaxInt // poor man's infinity
+			}
+			acc = acc / operands[i]
+		}
+	case "%":
+		// remainder after division of first two operands only
+		if len(operands) < 2 { // one argument, just return it
+			return operands[0]
+		}
+		if operands[1] == 0 { // integer division by zero - just return a big number
+			return MaxInt // poor man's infinity
+		}
+		return operands[0] % operands[1]
+	default:
+		panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
 	}
 
 	return acc
 }
-
-type unaryFloatFunc func(float64) float64
-type binaryFloatFunc func(float64, float64) float64
-type trinaryFloatFunc func(float64, float64, float64) float64
-
-type unaryIntFunc func(int) int
-type binaryIntFunc func(int, int) int
-type trinaryIntFunc func(int, int, int) int
