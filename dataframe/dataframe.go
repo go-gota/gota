@@ -1972,7 +1972,7 @@ func (df DataFrame) Describe() DataFrame {
 	return ddf
 }
 
-// Binary vector operators
+// Vector operators on arbitrary numeric columns
 
 // Applies `op` using elements from `lcolnm` and `rcolnm` as left and right operands,
 // and stores the output in a new column `newcolnm`.
@@ -2039,8 +2039,7 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 }
 
 func floatOp(op interface{}, operands []float64) float64 {
-	fmt.Println("In floatOp") // DEBUG
-	var acc float64           // accumulator for n-ary operators
+	var acc float64 // accumulator for n-ary operators
 	if len(operands) == 0 {
 		return 0
 	}
