@@ -1993,8 +1993,16 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 	nrows := cols[0].Len()
 	ncols := len(cols)
 
+	// detect result column type (as well as pre-op coercion target)
+	// If `op` is a float func, need to coerce ints to floats
+	var resultType series.Type
+	switch op.(type) {
+	case func(float64) float64, func(float64, float64) float64, func(float64, float64, float64) float64:
+		resultType = series.Float
+	default:
+		resultType = detectType(types) // float if there are any floats, int otherwise
+	}
 	// confirm colTypes are all numeric
-	resultType := detectType(types) // float if there are any floats, int otherwise
 	if resultType == series.String || resultType == series.Bool {
 		df.Err = fmt.Errorf("cannot perform arithmetic with column of type %s", resultType)
 		return df
@@ -2008,12 +2016,18 @@ func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...stri
 			for cidx, column := range cols {
 				operand, err := column.Elem(ridx).Int()
 				if err != nil {
+					// it's possible this error just can't happen anymore at this point
 					df.Err = fmt.Errorf("unable to convert element %d of column %s to int: %w", ridx, operandcols[cidx], err)
 					return df
 				}
 				operands[cidx] = operand
 			}
-			results[ridx] = intOp(op, operands)
+			result, err := intOp(op, operands)
+			if err != nil {
+				df.Err = fmt.Errorf("error while performing integer op: %w", err)
+				return df
+			}
+			results[ridx] = result
 		}
 		df = df.Mutate(
 			series.New(results, resultType, resultcolnm),
@@ -2099,19 +2113,19 @@ func floatOp(op interface{}, operands []float64) float64 {
 const MaxUint = ^uint(0)
 const MaxInt = int(MaxUint >> 1)
 
-func intOp(op interface{}, operands []int) int {
+func intOp(op interface{}, operands []int) (int, error) {
 	var acc int // accumulator for n-ary operators
 	if len(operands) == 0 {
-		return 0
+		return 0, nil
 	}
 
 	switch op := op.(type) { // users can specify functions for `op`, or a string
 	case func(int) int:
-		return op(operands[0])
+		return op(operands[0]), nil
 	case func(int, int) int:
-		return op(operands[0], operands[1])
+		return op(operands[0], operands[1]), nil
 	case func(int, int, int) int:
-		return op(operands[0], operands[1], operands[2])
+		return op(operands[0], operands[1], operands[2]), nil
 	}
 
 	switch op {
@@ -2124,7 +2138,7 @@ func intOp(op interface{}, operands []int) int {
 		// with only one operand, return its negative.
 		// with more, subtract the rest from the first.
 		if len(operands) == 1 {
-			return -operands[0]
+			return -operands[0], nil
 		}
 		acc = operands[0]
 		for i := 1; i < len(operands); i++ {
@@ -2137,35 +2151,35 @@ func intOp(op interface{}, operands []int) int {
 			acc = acc * operand
 		}
 	case "/":
-		// With only one operand, int reciprocal (0 or 1 or "infinity")
+		// With only one operand, int reciprocal (0 or 1)
 		// With more, divides by each denominator
-		// Divide by zero returns `MaxInt` (poor-man's infinity)
+		// Divide by zero errors
 		if len(operands) == 1 { // reciprocal case
 			if operands[0] == 0 { // reciprocal of zero
-				return MaxInt // poor man's infinity
+				return 0, fmt.Errorf("integer divide by zero")
 			}
-			return 1 / operands[0] // 0 or 1 for int division
+			return 1 / operands[0], nil // 0 or 1 for int division
 		}
 		// normal division case
 		acc = operands[0]
 		for i := 1; i < len(operands); i++ {
 			if operands[i] == 0 {
-				return MaxInt // poor man's infinity
+				return 0, fmt.Errorf("integer divide by zero")
 			}
 			acc = acc / operands[i]
 		}
 	case "%":
 		// remainder after division of first two operands only
 		if len(operands) < 2 { // one argument, just return it
-			return operands[0]
+			return operands[0], nil
 		}
-		if operands[1] == 0 { // integer division by zero - just return a big number
-			return MaxInt // poor man's infinity
+		if operands[1] == 0 {
+			return 0, fmt.Errorf("integer divide by zero")
 		}
-		return operands[0] % operands[1]
+		return operands[0] % operands[1], nil
 	default:
-		panic(fmt.Sprintf("Unknown arithmetic operator: %s", op))
+		return 0, fmt.Errorf("unknown arithmetic operator: %s", op)
 	}
 
-	return acc
+	return acc, nil
 }

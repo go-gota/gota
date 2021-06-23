@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"testing"
 
 	"github.com/go-gota/gota/series"
@@ -252,6 +253,36 @@ func TestMath(t *testing.T) {
 
 }
 
+func TestErrors(t *testing.T) {
+	expectError("at least one operand", func(df DataFrame) DataFrame {
+		return df.Math("Empty operands", "+")
+	}, t)
+
+	expectError("cannot perform arithmetic with column of type string", func(df DataFrame) DataFrame {
+		return df.Math("Non-numeric type", "+", "Strings")
+	}, t)
+
+	expectError("unknown arithmetic operator", func(df DataFrame) DataFrame {
+		return df.Math("unknown operator", "!", "Primes")
+	}, t)
+
+	expectError("integer divide by zero", func(df DataFrame) DataFrame {
+		return df.Math("Divide by zero", "/", "Primes", "Naturals0")
+	}, t)
+
+	// reciprocal
+	expectError("integer divide by zero", func(df DataFrame) DataFrame {
+		return df.Math("Divide by zero", "/", "Naturals0")
+	}, t)
+
+	// modulo 0
+	expectError("integer divide by zero", func(df DataFrame) DataFrame {
+		return df.Math("Divide by zero", "%", "Primes", "Naturals0")
+	}, t)
+
+	// catch panic on unknown op
+}
+
 // Test helpers
 
 type testTable []struct {
@@ -277,5 +308,18 @@ func runTestTable(table testTable, input DataFrame, t *testing.T) {
 		if !reflect.DeepEqual(test.expected.Records(), observed.Records()) {
 			t.Fatalf("Test: %d\nDifferent values:\nExpected:%v\nObserved:%v", tidx, test.expected.Records(), observed.Records())
 		}
+	}
+}
+
+func expectError(message string, fut func(DataFrame) DataFrame, t *testing.T) {
+	df := New(
+		series.New([]string{"e", "Pi", "Phi", "Sqrt2", "Ln2"}, series.String, "Strings"),
+		series.New([]float64{2.718, 3.142, 1.618, 1.414, 0.693}, series.Float, "Floats"),
+		series.New([]int{1, 3, 5, 7, 11}, series.Int, "Primes"),
+		series.New([]int{0, 1, 2, 3, 4}, series.Int, "Naturals0"),
+	)
+	df = fut(df)
+	if !strings.Contains(df.Err.Error(), message) {
+		t.Fatalf("expected error to contain '%s', but got %v", message, df.Err)
 	}
 }
