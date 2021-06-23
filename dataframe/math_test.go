@@ -1,7 +1,6 @@
 package dataframe
 
 import (
-	"fmt"
 	"math"
 	"reflect"
 	"strings"
@@ -248,8 +247,6 @@ func TestMath(t *testing.T) {
 	}
 
 	runTestTable(table, input, t)
-
-	fmt.Println(input) // DEBUG does it have all columns?
 
 }
 
