@@ -250,7 +250,7 @@ func TestMath(t *testing.T) {
 
 }
 
-func TestErrors(t *testing.T) {
+func TestMathErrors(t *testing.T) {
 	expectError("at least one operand", func(df DataFrame) DataFrame {
 		return df.Math("Empty operands", "+")
 	}, t)
