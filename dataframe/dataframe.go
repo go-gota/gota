@@ -1972,6 +1972,37 @@ func (df DataFrame) Describe() DataFrame {
 	return ddf
 }
 
+// TODO tests
+// Finds a specific element like `Elem`, but using a column and value to get the row,
+// and a column within that row to pinpoint an element. If multiple rows match the
+// `column` x `keyInColumn` coordinate, a value is only returned for the first match.
+// If no match is found or columns don't exist, `ok` is set to false.
+func (df DataFrame) FindElem(colname string, keyInColumn interface{}, columnInRow string) (value series.Element, ok bool) {
+	// find column index for given `columnInRow` coordinate
+	cidx := findInStringSlice(columnInRow, df.Names())
+	if cidx < 0 {
+		return value, false
+	}
+	// find row index for given `colname` and `keyInColumn` coordinates
+	c1idx := findInStringSlice(colname, df.Names())
+	if c1idx < 0 {
+		return value, false
+	}
+	s := df.columns[c1idx]
+	ridx := -1
+	for i := 0; i < s.Len(); i++ {
+		if s.Val(i) == keyInColumn {
+			ridx = i
+			break
+		}
+	}
+	if ridx < 0 {
+		return value, false
+	}
+
+	return df.Elem(ridx, cidx), true
+}
+
 // Vector operators on arbitrary numeric columns
 
 // Applies `op` using elements from `lcolnm` and `rcolnm` as left and right operands,
@@ -2107,11 +2138,6 @@ func floatOp(op interface{}, operands []float64) float64 {
 
 	return acc
 }
-
-// placeholders for infinity
-// TODO prefer to handle errors with integer ops
-const MaxUint = ^uint(0)
-const MaxInt = int(MaxUint >> 1)
 
 func intOp(op interface{}, operands []int) (int, error) {
 	var acc int // accumulator for n-ary operators
