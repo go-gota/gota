@@ -1,3 +1,13 @@
 language: go
 go: master
-script: go test -v ./dataframe ./series
+before_script:
+  - echo 'Checking code quality issues.'
+  - go vet ./...
+  - echo 'Checking that gofmt was used.'
+  - diff -u <(echo -n) <(gofmt -d .)
+  - echo 'Checking tidiness of go mod.'
+  - go mod tidy
+  - test -z "$(git status --porcelain)"
+script:
+  - echo 'Running tests.'
+  - go test -v ./...
