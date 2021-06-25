@@ -1972,11 +1972,11 @@ func (df DataFrame) Describe() DataFrame {
 	return ddf
 }
 
-// TODO tests
-// Finds a specific element like `Elem`, but using a column and value to get the row,
+// Finds a specific element (like `dataframe.Elem`), but using a column and value to get the row,
 // and a column within that row to pinpoint an element. If multiple rows match the
 // `column` x `keyInColumn` coordinate, a value is only returned for the first match.
 // If no match is found or columns don't exist, `ok` is set to false.
+// Note that this function is slow for many rows. In the future this will be corrected by indexing.
 func (df DataFrame) FindElem(colname string, keyInColumn interface{}, columnInRow string) (value series.Element, ok bool) {
 	// find column index for given `columnInRow` coordinate
 	cidx := findInStringSlice(columnInRow, df.Names())
@@ -2003,10 +2003,12 @@ func (df DataFrame) FindElem(colname string, keyInColumn interface{}, columnInRo
 	return df.Elem(ridx, cidx), true
 }
 
-// Vector operators on arbitrary numeric columns
-
-// Applies `op` using elements from `lcolnm` and `rcolnm` as left and right operands,
-// and stores the output in a new column `newcolnm`.
+// Element-wise arithmetic vector operations on `int` and `float64` values.
+// Applies `op` to the columns specified in operandcols, and stores the result
+// in a new column named `resultcolnm`.
+// `op` may be a string representing an arithmetic operator ("+", "-", "*", "/". also "%" on ints)
+// or a unary, binary, or trinary function on `int` or `float`.
+// Automatically coerces `int` to `float64` if necessary.
 func (df DataFrame) Math(resultcolnm string, op interface{}, operandcols ...string) DataFrame {
 	if df.Err != nil {
 		return df
