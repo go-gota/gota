@@ -12,6 +12,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Combining filters with AND
 - User-defined filters
 - Concatination of Dataframes
+- Math for vector operations on multiple columns
+- FindElem for content-based location of an element
 
 ### Changed
 - Make fixColnames faster
