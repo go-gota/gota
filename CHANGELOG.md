@@ -2,6 +2,26 @@
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [0.11.0] - 2021-04-25
+### Added
+- Rolling window Mean and StdDev
+- GroupBy and Aggregate
+- Numeric column index
+- Read HTML tables
+- extra checks for TravisCI
+- Combining filters with AND
+- User-defined filters
+- Concatination of Dataframes
+
+### Changed
+- Make fixColnames faster
+- Use Go 1.16
+- Update dependencies
+
+### Fixed
+- Linter issues
+- Failing tests
+
 ## [0.10.1] - 2019-11-08
 ### Fixed
 - LoadRecords printing type debug information
