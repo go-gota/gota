@@ -414,8 +414,14 @@ func (df DataFrame) GroupBy(colnames ...string) *Groups {
 		groupSeries[key] = append(groupSeries[key], s)
 	}
 
+	// Save column types
+	colTypes := map[string]series.Type{}
+	for _, c := range df.columns {
+		colTypes[c.Name] = c.Type()
+	}
+
 	for k, cMaps := range groupSeries {
-		groupDataFrame[k] = LoadMaps(cMaps)
+		groupDataFrame[k] = LoadMaps(cMaps, WithTypes(colTypes))
 	}
 	groups := &Groups{groups: groupDataFrame, colnames: colnames}
 	return groups
@@ -511,7 +517,23 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 		dfMaps = append(dfMaps, curMap)
 
 	}
-	gps.aggregation = LoadMaps(dfMaps)
+
+	// Save column types
+	colTypes := map[string]series.Type{}
+	for k := range dfMaps[0] {
+		switch dfMaps[0][k].(type) {
+		case string:
+			colTypes[k] = series.String
+		case int, int16, int32, int64:
+			colTypes[k] = series.Int
+		case float32, float64:
+			colTypes[k] = series.Float
+		default:
+			continue
+		}
+	}
+
+	gps.aggregation = LoadMaps(dfMaps, WithTypes(colTypes))
 	return gps.aggregation
 }
 
