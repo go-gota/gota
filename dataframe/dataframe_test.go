@@ -2932,3 +2932,19 @@ func TestDataFrame_Aggregation(t *testing.T) {
 		}
 	}
 }
+
+func TestGroups_GetGroups(t *testing.T) {
+	a := New(
+		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key1"),
+		series.New([]int{1, 2, 1, 2, 2}, series.Int, "key2"),
+		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "values"),
+	)
+	groups := a.GroupBy("key1", "key2").GetGroups()
+	groupNames := []string{}
+	for name := range groups {
+		groupNames = append(groupNames, name)
+	}
+	if len(groupNames) != 3 {
+		t.Fatalf("Expected to get 3 groups, got %d", len(groupNames))
+	}
+}
