@@ -11,11 +11,14 @@ type floatElement struct {
 	nan bool
 }
 
+// force floatElement struct to implement Element interface
+var _ Element = (*floatElement)(nil)
+
 func (e *floatElement) Set(value interface{}) {
 	e.nan = false
-	switch value.(type) {
+	switch val := value.(type) {
 	case string:
-		if value.(string) == "NaN" {
+		if val == "NaN" {
 			e.nan = true
 			return
 		}
@@ -26,23 +29,22 @@ func (e *floatElement) Set(value interface{}) {
 		}
 		e.e = f
 	case int:
-		e.e = float64(value.(int))
+		e.e = float64(val)
 	case float64:
-		e.e = float64(value.(float64))
+		e.e = float64(val)
 	case bool:
-		b := value.(bool)
+		b := val
 		if b {
 			e.e = 1
 		} else {
 			e.e = 0
 		}
 	case Element:
-		e.e = value.(Element).Float()
+		e.e = val.Float()
 	default:
 		e.nan = true
 		return
 	}
-	return
 }
 
 func (e floatElement) Copy() Element {

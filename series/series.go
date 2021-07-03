@@ -157,37 +157,32 @@ func New(values interface{}, t Type, name string) Series {
 		return ret
 	}
 
-	switch values.(type) {
+	switch v := values.(type) {
 	case []string:
-		v := values.([]string)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []float64:
-		v := values.([]float64)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []int:
-		v := values.([]int)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []bool:
-		v := values.([]bool)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case Series:
-		v := values.(Series)
 		l := v.Len()
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -596,13 +591,13 @@ func (s Series) Elem(i int) Element {
 // out of bounds checks is performed.
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
-	switch indexes.(type) {
+	switch idxs := indexes.(type) {
 	case []int:
-		idx = indexes.([]int)
+		idx = idxs
 	case int:
-		idx = []int{indexes.(int)}
+		idx = []int{idxs}
 	case []bool:
-		bools := indexes.([]bool)
+		bools := idxs
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
@@ -612,7 +607,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 			}
 		}
 	case Series:
-		s := indexes.(Series)
+		s := idxs
 		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}

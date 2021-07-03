@@ -1631,16 +1631,14 @@ func TestSeries_Map(t *testing.T) {
 	}
 
 	doubleFloat64 := func(e Element) Element {
-		var result Element
-		result = e.Copy()
+		result := e.Copy()
 		result.Set(result.Float() * 2)
 		return Element(result)
 	}
 
 	// and two booleans
 	and := func(e Element) Element {
-		var result Element
-		result = e.Copy()
+		result := e.Copy()
 		b, err := result.Bool()
 		if err != nil {
 			t.Errorf("%v", err)
@@ -1652,8 +1650,7 @@ func TestSeries_Map(t *testing.T) {
 
 	// add constant (+5) to value (v)
 	add5Int := func(e Element) Element {
-		var result Element
-		result = e.Copy()
+		result := e.Copy()
 		i, err := result.Int()
 		if err != nil {
 			return Element(&intElement{
@@ -1667,8 +1664,7 @@ func TestSeries_Map(t *testing.T) {
 
 	// trim (XyZ) prefix from string
 	trimXyZPrefix := func(e Element) Element {
-		var result Element
-		result = e.Copy()
+		result := e.Copy()
 		result.Set(strings.TrimPrefix(result.String(), "XyZ"))
 		return Element(result)
 	}
