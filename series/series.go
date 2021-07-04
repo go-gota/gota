@@ -821,7 +821,7 @@ func (s Series) Sum() float64 {
 
 // Slice slices Series from j to k-1 index.
 func (s Series) Slice(j, k int) Series {
-	if err := s.Err; err != nil {
+	if s.Err != nil {
 		return s
 	}
 
