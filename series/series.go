@@ -831,10 +831,10 @@ func (s Series) Slice(j, k int) Series {
 		return empty
 	}
 
-	indixes := []int{}
-	for i := j; i < k; i++ {
-		indixes = append(indixes, i)
+	idxs := make([]int, k-j)
+	for i := 0; j+i < k; i++ {
+		idxs[i] = j + i
 	}
 
-	return s.Subset(indixes)
+	return s.Subset(idxs)
 }
