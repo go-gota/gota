@@ -813,3 +813,23 @@ func (s Series) Sum() float64 {
 	}
 	return sum
 }
+
+// Slice slices Series from j to k-1 index.
+func (s Series) Slice(j, k int) Series {
+	if s.Err != nil {
+		return s
+	}
+
+	if j > k || j < 0 || k >= s.Len() {
+		empty := s.Empty()
+		empty.Err = fmt.Errorf("slice index out of bounds")
+		return empty
+	}
+
+	idxs := make([]int, k-j)
+	for i := 0; j+i < k; i++ {
+		idxs[i] = j + i
+	}
+
+	return s.Subset(idxs)
+}

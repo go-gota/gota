@@ -1774,3 +1774,64 @@ func TestSeries_Sum(t *testing.T) {
 		}
 	}
 }
+
+func TestSeries_Slice(t *testing.T) {
+	seriesWithErr := Ints([]int{})
+	seriesWithErr.Err = fmt.Errorf("slice index out of bounds")
+
+	tests := []struct {
+		j        int
+		k        int
+		series   Series
+		expected Series
+	}{
+		{
+			0,
+			3,
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{1, 2, 3}),
+		},
+		{
+			1,
+			1,
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{}),
+		},
+		{
+			-1,
+			1,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
+		{
+			0,
+			5,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.expected
+		received := test.series.Slice(test.j, test.k)
+
+		for i := 0; i < expected.Len(); i++ {
+			if strings.Compare(expected.Elem(i).String(),
+				received.Elem(i).String()) != 0 {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+
+		if expected.Err != nil {
+			if received.Err == nil || expected.Err.Error() != received.Err.Error() {
+				t.Errorf(
+					"Test:%v\nExpected error:\n%v\nReceived:\n%v",
+					testnum, expected.Err, received.Err,
+				)
+			}
+		}
+	}
+}
