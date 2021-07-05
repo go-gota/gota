@@ -1801,6 +1801,18 @@ func TestSeries_Slice(t *testing.T) {
 			Ints([]int{1, 2, 3, 4, 5}),
 			Ints([]int{}),
 		},
+		{
+			-1,
+			1,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
+		{
+			0,
+			5,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
 	}
 
 	for testnum, test := range tests {
@@ -1813,6 +1825,15 @@ func TestSeries_Slice(t *testing.T) {
 				t.Errorf(
 					"Test:%v\nExpected:\n%v\nReceived:\n%v",
 					testnum, expected, received,
+				)
+			}
+		}
+
+		if expected.Err != nil {
+			if received.Err == nil || expected.Err.Error() != received.Err.Error() {
+				t.Errorf(
+					"Test:%v\nExpected error:\n%v\nReceived:\n%v",
+					testnum, expected.Err, received.Err,
 				)
 			}
 		}

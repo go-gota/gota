@@ -825,7 +825,7 @@ func (s Series) Slice(j, k int) Series {
 		return s
 	}
 
-	if j > k {
+	if j > k || j < 0 || k >= s.Len() {
 		empty := s.Empty()
 		empty.Err = fmt.Errorf("slice index out of bounds")
 		return empty
