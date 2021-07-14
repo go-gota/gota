@@ -4,14 +4,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/go-gota/gota/series"
+	"github.com/mengqingyan/gota/series"
 )
-
 
 func Test_Sub(t *testing.T) {
 	tests := []struct {
 		number series.Number
-		s series.Series
+		s      series.Series
 		expect series.Series
 	}{
 		{
@@ -44,11 +43,10 @@ func Test_Sub(t *testing.T) {
 	}
 }
 
-
 func Test_Div(t *testing.T) {
 	tests := []struct {
 		number series.Number
-		s series.Series
+		s      series.Series
 		expect series.Series
 	}{
 		{
@@ -81,11 +79,10 @@ func Test_Div(t *testing.T) {
 	}
 }
 
-
 func Test_Mod(t *testing.T) {
 	tests := []struct {
 		number series.Number
-		s series.Series
+		s      series.Series
 		expect series.Series
 	}{
 		{
