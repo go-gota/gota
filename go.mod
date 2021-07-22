@@ -1,4 +1,4 @@
-module github.com/mengqingyan/gota
+module github.com/mqy527/gota
 
 go 1.14
 

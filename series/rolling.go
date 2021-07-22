@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/mengqingyan/gota/util"
+	"github.com/mqy527/gota/util"
 	"gonum.org/v1/gonum/floats"
 )
 

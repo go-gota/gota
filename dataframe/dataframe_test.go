@@ -9,7 +9,7 @@ import (
 
 	"math"
 
-	"github.com/mengqingyan/gota/series"
+	"github.com/mqy527/gota/series"
 )
 
 // compareFloats compares floating point values up to the number of digits specified.

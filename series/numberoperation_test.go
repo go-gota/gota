@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/mengqingyan/gota/series"
+	"github.com/mqy527/gota/series"
 )
 
 func Test_Sub(t *testing.T) {

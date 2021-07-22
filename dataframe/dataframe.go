@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/mengqingyan/gota/series"
+	"github.com/mqy527/gota/series"
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such
