@@ -15,6 +15,15 @@ func ExampleNew() {
 		series.New([]float64{3.0, 4.0}, series.Float, "COL.3"),
 	)
 	fmt.Println(df)
+
+	// Output:
+	// [2x3] DataFrame
+	//
+	//     COL.1    COL.2 COL.3
+	//  0: b        1     3.000000
+	//  1: a        2     4.000000
+	//     <string> <int> <float>
+
 }
 
 func ExampleLoadStructs() {
@@ -30,6 +39,16 @@ func ExampleLoadStructs() {
 	}
 	df := dataframe.LoadStructs(users)
 	fmt.Println(df)
+
+	// Output:
+	// [3x3] DataFrame
+	//
+	//     Name     Age   Accuracy
+	//  0: Aram     17    0.200000
+	//  1: Juan     18    0.800000
+	//  2: Ana      22    0.500000
+	//     <string> <int> <float>
+
 }
 
 func ExampleLoadRecords() {
@@ -43,6 +62,17 @@ func ExampleLoadRecords() {
 		},
 	)
 	fmt.Println(df)
+
+	// Output:
+	// [4x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     5.100000 true
+	//  1: k        5     7.000000 true
+	//  2: k        4     6.000000 true
+	//  3: a        2     7.100000 false
+	//     <string> <int> <float>  <bool>
+
 }
 
 func ExampleLoadRecords_options() {
@@ -62,6 +92,17 @@ func ExampleLoadRecords_options() {
 		}),
 	)
 	fmt.Println(df)
+
+	// Output:
+	// [4x4] DataFrame
+	//
+	//     A        B        C        D
+	//  0: a        4.000000 5.100000 true
+	//  1: k        5.000000 7.000000 true
+	//  2: k        4.000000 6.000000 true
+	//  3: a        2.000000 7.100000 false
+	//     <string> <float>  <float>  <bool>
+
 }
 
 func ExampleLoadMaps() {
@@ -82,6 +123,15 @@ func ExampleLoadMaps() {
 		},
 	)
 	fmt.Println(df)
+
+	// Otput:
+	// [2x4] DataFrame
+	//
+	//     A        B     C      D
+	//  0: a        1     true   0.000000
+	//  1: b        2     true   0.500000
+	//     <string> <int> <bool> <float>
+
 }
 
 func ExampleReadCSV() {
@@ -98,12 +148,30 @@ Spain,2012-02-01,66,555.42,00241
 `
 	df := dataframe.ReadCSV(strings.NewReader(csvStr))
 	fmt.Println(df)
+
+	// Output:
+	// [8x5] DataFrame
+	//
+	//     Country        Date       Age   Amount     Id
+	//  0: United States  2012-02-01 50    112.100000 1234
+	//  1: United States  2012-02-01 32    321.310000 54320
+	//  2: United Kingdom 2012-02-01 17    18.200000  12345
+	//  3: United States  2012-02-01 32    321.310000 54320
+	//  4: United Kingdom 2012-02-01 NaN   18.200000  12345
+	//  5: United States  2012-02-01 32    321.310000 54320
+	//  6: United States  2012-02-01 32    321.310000 54320
+	//  7: Spain          2012-02-01 66    555.420000 241
+	//     <string>       <string>   <int> <float>    <int>
+
 }
 
 func ExampleReadJSON() {
 	jsonStr := `[{"COL.2":1,"COL.3":3},{"COL.1":5,"COL.2":2,"COL.3":2},{"COL.1":6,"COL.2":3,"COL.3":1}]`
 	df := dataframe.ReadJSON(strings.NewReader(jsonStr))
 	fmt.Println(df)
+
+	// Output:
+
 }
 
 func ExampleDataFrame_Subset() {
@@ -118,6 +186,9 @@ func ExampleDataFrame_Subset() {
 	)
 	sub := df.Subset([]int{0, 2})
 	fmt.Println(sub)
+
+	// Output:
+
 }
 
 func ExampleDataFrame_Select() {
@@ -134,6 +205,9 @@ func ExampleDataFrame_Select() {
 	sel2 := df.Select([]string{"A", "C"})
 	fmt.Println(sel1)
 	fmt.Println(sel2)
+
+	// Output:
+
 }
 
 func ExampleDataFrame_Filter() {
@@ -167,6 +241,9 @@ func ExampleDataFrame_Filter() {
 	)
 	fmt.Println(fil)
 	fmt.Println(fil2)
+
+	// Output:
+
 }
 
 func ExampleDataFrame_Mutate() {
@@ -189,6 +266,26 @@ func ExampleDataFrame_Mutate() {
 	)
 	fmt.Println(mut)
 	fmt.Println(mut2)
+
+	// Output:
+	//   [4x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     a        true
+	//  1: k        5     b        true
+	//  2: k        4     c        true
+	//  3: a        2     d        false
+	//     <string> <int> <string> <bool>
+
+	// [4x5] DataFrame
+	//
+	//     A        B     C        D      E
+	//  0: a        4     5.100000 true   a
+	//  1: k        5     7.000000 true   b
+	//  2: k        4     6.000000 true   c
+	//  3: a        2     7.100000 false  d
+	//     <string> <int> <float>  <bool> <string>
+
 }
 
 func ExampleDataFrame_InnerJoin() {
@@ -212,6 +309,19 @@ func ExampleDataFrame_InnerJoin() {
 	)
 	join := df.InnerJoin(df2, "D")
 	fmt.Println(join)
+
+	// Output:
+	// [6x6] DataFrame
+	//
+	//     D      A_0      B     C        A_1   F
+	//  0: true   a        4     5.100000 1     1
+	//  1: true   k        5     7.000000 1     1
+	//  2: true   k        4     6.000000 1     1
+	//  3: false  a        2     7.100000 4     2
+	//  4: false  a        2     7.100000 2     8
+	//  5: false  a        2     7.100000 5     9
+	//     <bool> <string> <int> <float>  <int> <int>
+
 }
 
 func ExampleDataFrame_Set() {
@@ -235,6 +345,17 @@ func ExampleDataFrame_Set() {
 		),
 	)
 	fmt.Println(df2)
+
+	// Output:
+	// [4x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: b        4     6.000000 true
+	//  1: k        5     7.000000 true
+	//  2: c        3     6.000000 false
+	//  3: a        2     7.100000 false
+	//     <string> <int> <float>  <bool>
+
 }
 
 func ExampleDataFrame_Arrange() {
@@ -252,6 +373,17 @@ func ExampleDataFrame_Arrange() {
 		dataframe.RevSort("B"),
 	)
 	fmt.Println(sorted)
+
+	// Output:
+	// [4x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     5.100000 true
+	//  1: a        2     7.100000 false
+	//  2: b        4     6.000000 true
+	//  3: c        3     6.000000 false
+	//     <string> <int> <float>  <bool>
+
 }
 
 func ExampleDataFrame_Describe() {
@@ -265,4 +397,19 @@ func ExampleDataFrame_Describe() {
 		},
 	)
 	fmt.Println(df.Describe())
+
+	// Output:
+	// [8x5] DataFrame
+	//
+	//     column   A        B        C        D
+	//  0: mean     -        3.250000 6.050000 0.500000
+	//  1: median   -        3.500000 6.000000 NaN
+	//  2: stddev   -        0.957427 0.818535 0.577350
+	//  3: min      a        2.000000 5.100000 0.000000
+	//  4: 25%      -        2.000000 5.100000 0.000000
+	//  5: 50%      -        3.000000 6.000000 0.000000
+	//  6: 75%      -        4.000000 6.000000 1.000000
+	//  7: max      c        4.000000 7.100000 1.000000
+	//     <string> <string> <float>  <float>  <float>
+
 }
