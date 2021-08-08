@@ -171,6 +171,13 @@ func ExampleReadJSON() {
 	fmt.Println(df)
 
 	// Output:
+	// [3x3] DataFrame
+	//
+	//     COL.1 COL.2 COL.3
+	//  0: NaN   1     3
+	//  1: 5     2     2
+	//  2: 6     3     1
+	//     <int> <int> <int>
 
 }
 
@@ -188,6 +195,12 @@ func ExampleDataFrame_Subset() {
 	fmt.Println(sub)
 
 	// Output:
+	// [2x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     5.100000 true
+	//  1: k        4     6.000000 true
+	//     <string> <int> <float>  <bool>
 
 }
 
@@ -207,6 +220,23 @@ func ExampleDataFrame_Select() {
 	fmt.Println(sel2)
 
 	// Output:
+	// [4x2] DataFrame
+	//
+	//     A        C
+	//  0: a        5.100000
+	//  1: k        7.000000
+	//  2: k        6.000000
+	//  3: a        7.100000
+	//     <string> <float>
+	//
+	// [4x2] DataFrame
+	//
+	//     A        C
+	//  0: a        5.100000
+	//  1: k        7.000000
+	//  2: k        6.000000
+	//  3: a        7.100000
+	//     <string> <float>
 
 }
 
@@ -243,6 +273,20 @@ func ExampleDataFrame_Filter() {
 	fmt.Println(fil2)
 
 	// Output:
+	// [3x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     5.100000 true
+	//  1: k        5     7.000000 true
+	//  2: a        2     7.100000 false
+	//     <string> <int> <float>  <bool>
+	//
+	// [2x4] DataFrame
+	//
+	//     A        B     C        D
+	//  0: a        4     5.100000 true
+	//  1: k        5     7.000000 true
+	//     <string> <int> <float>  <bool>
 
 }
 
