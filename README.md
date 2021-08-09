@@ -1,6 +1,8 @@
 Gota: DataFrames, Series and Data Wrangling for Go
 ==================================================
 
+Meet us on Slack: Slack: [gophers.slack.com](https://gophers.slack.com) #go-gota ([invite](https://gophersinvite.herokuapp.com/))
+
 This is an implementation of DataFrames, Series and data wrangling
 methods for the Go programming language. The API is still in flux so
 *use at your own risk*.

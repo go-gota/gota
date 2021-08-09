@@ -15,7 +15,7 @@ This document follows
 
 ### Removed in 0.12.0
 
-## [0.11.0] - 2021-04-25
+## [0.11.0] - 2021-06-27
 
 ### Added in 0.11.0
 

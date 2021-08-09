@@ -210,7 +210,7 @@ func (df DataFrame) print(
 	for i := 0; i < len(records); i++ {
 		// Add right padding to all elements
 		records[i][0] = addLeftPadding(records[i][0], maxChars[0]+1)
-		for j := 1; j < df.ncols+1; j++ {
+		for j := 1; j < df.ncols; j++ {
 			records[i][j] = addRightPadding(records[i][j], maxChars[j])
 		}
 		records[i] = records[i][0:maxCols]
