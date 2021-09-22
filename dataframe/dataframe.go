@@ -940,6 +940,9 @@ type loadOptions struct {
 	// Defines the csv delimiter
 	delimiter rune
 
+	// EnablesLazyQuotes
+	lazyQuotes bool
+
 	// Defines the comment delimiter
 	comment rune
 
@@ -993,6 +996,13 @@ func WithTypes(coltypes map[string]series.Type) LoadOption {
 func WithDelimiter(b rune) LoadOption {
 	return func(c *loadOptions) {
 		c.delimiter = b
+	}
+}
+
+// WithLazyQuotes sets csv parsing option to LazyQuotes
+func WithLazyQuotes(b bool) LoadOption {
+	return func(c *loadOptions) {
+		c.lazyQuotes = b
 	}
 }
 
@@ -1317,17 +1327,17 @@ func LoadMatrix(mat Matrix) DataFrame {
 func ReadCSV(r io.Reader, options ...LoadOption) DataFrame {
 	csvReader := csv.NewReader(r)
 	cfg := loadOptions{
-		delimiter: ',',
+		delimiter:  ',',
+		lazyQuotes: false,
+		comment:    0,
 	}
 	for _, option := range options {
 		option(&cfg)
 	}
-	if cfg.delimiter != ',' {
-		csvReader.Comma = cfg.delimiter
-	}
-	if cfg.comment != 0 {
-		csvReader.Comment = cfg.comment
-	}
+
+	csvReader.Comma = cfg.delimiter
+	csvReader.LazyQuotes = cfg.lazyQuotes
+	csvReader.Comment = cfg.comment
 
 	records, err := csvReader.ReadAll()
 	if err != nil {
