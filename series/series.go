@@ -623,7 +623,11 @@ func (s Series) Val(i int) interface{} {
 
 // Elem returns the element of a series for the given index. Will panic if the
 // index is out of bounds.
+// The index could be less than 0. When the index equals -1, Elem returns the last element of a series.
 func (s Series) Elem(i int) Element {
+	if i < 0 {
+		return s.elements.Elem(s.Len() + i)
+	}
 	return s.elements.Elem(i)
 }
 
