@@ -100,10 +100,10 @@ func (df DataFrame) Copy() DataFrame {
 
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
-	return df.print(true, true, true, true, 10, 70, "DataFrame")
+	return df.Print(true, true, true, true, 10, 70, "DataFrame")
 }
 
-func (df DataFrame) print(
+func (df DataFrame) Print(
 	shortRows, shortCols, showDims, showTypes bool,
 	maxRows int,
 	maxCharsTotal int,
