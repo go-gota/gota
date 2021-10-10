@@ -2423,6 +2423,58 @@ func TestDataFrame_Arrange(t *testing.T) {
 	}
 }
 
+func TestDataFrame_Arrange2(t *testing.T) {
+	table := []struct {
+		df       DataFrame
+		colnames []Order
+		expDf    DataFrame
+	}{
+		{
+			New(
+				series.New([]string{"A", "C", "B", "D", "C", "A", "D", "B"}, series.String, "A"),
+				series.New([]string{"103", "103", "103", "103", "100", "100", "100", "100"}, series.Int, "B"),
+			),
+			[]Order{Sort("B")},
+			New(
+				series.New([]string{"C", "A", "D", "B", "A", "C", "B", "D"}, series.String, "A"),
+				series.New([]string{"100", "100", "100", "100", "103", "103", "103", "103"}, series.Int, "B"),
+			),
+		},
+		{
+			New(
+				series.New([]string{"A", "C", "B", "D", "C", "A", "D", "B"}, series.String, "A"),
+				series.New([]string{"103", "103", "103", "103", "100", "100", "100", "100"}, series.Int, "B"),
+			),
+			[]Order{Sort("A"), Sort("B")},
+			New(
+				series.New([]string{"A", "A", "B", "B", "C", "C", "D", "D"}, series.String, "A"),
+				series.New([]string{"100", "103", "100", "103", "100", "103", "100", "103"}, series.Int, "B"),
+			),
+		},
+	}
+	for i, tc := range table {
+		b := tc.df.Arrange(tc.colnames...)
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
+		}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nExpected:%v\nRecieved:%v", i, tc.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nExpected:%v\nRecieved:%v", i, tc.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		tcr := tc.expDf.Records()
+		br := b.Records()
+		if !reflect.DeepEqual(tcr, br) {
+			t.Errorf("Test: %d\nDifferent values:\nExpected:%v\nRecieved:%v", i, tcr, br)
+		}
+	}
+}
+
 func TestDataFrame_Capply(t *testing.T) {
 	a := LoadRecords(
 		[][]string{
