@@ -1,0 +1,34 @@
+name: pull-request
+
+on:
+  pull_request:
+    branches: [ master, dev ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+
+      - name: Format
+        run: |
+          go fmt -d ./...
+          test -z "$(git status --porcelain)"
+
+      - name: Quality issues
+        run: go vet ./...
+
+      - name: Tidy go.mod
+        run: |
+          go mod tidy
+          test -z "$(git status --porcelain)"
+
+      - name: Tests
+        run: go test -v ./...

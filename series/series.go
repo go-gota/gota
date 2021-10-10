@@ -17,8 +17,8 @@ import (
 // elements. Most of the power of Series resides on the ability to compare and
 // subset Series of different types.
 type Series struct {
-	Name     string   // The name of the series
-	elements Elements // The values of the elements
+	  Name     string   // The name of the series
+elements Elements // The values of the elements
 	t        Type     // The type of the series
 
 	// deprecated: use Error() instead
