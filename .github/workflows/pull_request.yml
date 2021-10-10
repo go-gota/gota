@@ -19,7 +19,7 @@ jobs:
 
       - name: Format
         run: |
-          go fmt -d ./...
+          gofmt -d .
           test -z "$(git status --porcelain)"
 
       - name: Quality issues
