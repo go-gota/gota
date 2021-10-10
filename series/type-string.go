@@ -12,17 +12,20 @@ type stringElement struct {
 	nan bool
 }
 
+// force stringElement struct to implement Element interface
+var _ Element = (*stringElement)(nil)
+
 func (e *stringElement) Set(value interface{}) {
 	e.nan = false
-	switch value.(type) {
+	switch val := value.(type) {
 	case string:
-		e.e = string(value.(string))
+		e.e = string(val)
 		if e.e == "NaN" {
 			e.nan = true
 			return
 		}
 	case int:
-		e.e = strconv.Itoa(value.(int))
+		e.e = strconv.Itoa(val)
 	case float64:
 		e.e = strconv.FormatFloat(value.(float64), 'f', 6, 64)
 	case bool:
@@ -33,12 +36,11 @@ func (e *stringElement) Set(value interface{}) {
 			e.e = "false"
 		}
 	case Element:
-		e.e = value.(Element).String()
+		e.e = val.String()
 	default:
 		e.nan = true
 		return
 	}
-	return
 }
 
 func (e stringElement) Copy() Element {
@@ -49,10 +51,7 @@ func (e stringElement) Copy() Element {
 }
 
 func (e stringElement) IsNA() bool {
-	if e.nan {
-		return true
-	}
-	return false
+	return e.nan
 }
 
 func (e stringElement) Type() Type {

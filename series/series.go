@@ -20,7 +20,9 @@ type Series struct {
 	Name     string   // The name of the series
 	elements Elements // The values of the elements
 	t        Type     // The type of the series
-	Err      error    // If there are errors they are stored here
+
+	// deprecated: use Error() instead
+	Err error
 }
 
 // Elements is the interface that represents the array of elements contained on
@@ -157,37 +159,32 @@ func New(values interface{}, t Type, name string) Series {
 		return ret
 	}
 
-	switch values.(type) {
+	switch v := values.(type) {
 	case []string:
-		v := values.([]string)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []float64:
-		v := values.([]float64)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []int:
-		v := values.([]int)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []bool:
-		v := values.([]bool)
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case Series:
-		v := values.(Series)
 		l := v.Len()
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -237,6 +234,11 @@ func Bools(values interface{}) Series {
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	return New([]int{}, s.t, s.Name)
+}
+
+// Returns Error or nil if no error occured
+func (s *Series) Error() error {
+	return s.Err
 }
 
 // Append adds new elements to the end of the Series. When using Append, the
@@ -596,13 +598,13 @@ func (s Series) Elem(i int) Element {
 // out of bounds checks is performed.
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
-	switch indexes.(type) {
+	switch idxs := indexes.(type) {
 	case []int:
-		idx = indexes.([]int)
+		idx = idxs
 	case int:
-		idx = []int{indexes.(int)}
+		idx = []int{idxs}
 	case []bool:
-		bools := indexes.([]bool)
+		bools := idxs
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
@@ -612,7 +614,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 			}
 		}
 	case Series:
-		s := indexes.(Series)
+		s := idxs
 		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
@@ -655,7 +657,7 @@ func (s Series) Order(reverse bool) []int {
 	if reverse {
 		srt = sort.Reverse(srt)
 	}
-	sort.Sort(srt)
+	sort.Stable(srt)
 	var ret []int
 	for _, e := range ie {
 		ret = append(ret, e.index)
@@ -817,4 +819,24 @@ func (s Series) Sum() float64 {
 		sum += elem
 	}
 	return sum
+}
+
+// Slice slices Series from j to k-1 index.
+func (s Series) Slice(j, k int) Series {
+	if s.Err != nil {
+		return s
+	}
+
+	if j > k || j < 0 || k >= s.Len() {
+		empty := s.Empty()
+		empty.Err = fmt.Errorf("slice index out of bounds")
+		return empty
+	}
+
+	idxs := make([]int, k-j)
+	for i := 0; j+i < k; i++ {
+		idxs[i] = j + i
+	}
+
+	return s.Subset(idxs)
 }
