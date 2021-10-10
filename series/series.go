@@ -20,7 +20,9 @@ type Series struct {
 	Name     string   // The name of the series
 	elements Elements // The values of the elements
 	t        Type     // The type of the series
-	Err      error    // If there are errors they are stored here
+
+	// deprecated: use Error() instead
+	Err error
 }
 
 // Elements is the interface that represents the array of elements contained on
@@ -232,6 +234,11 @@ func Bools(values interface{}) Series {
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	return New([]int{}, s.t, s.Name)
+}
+
+// Returns Error or nil if no error occured
+func (s *Series) Error() error {
+	return s.Err
 }
 
 // Append adds new elements to the end of the Series. When using Append, the

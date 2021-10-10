@@ -5,15 +5,23 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 This document follows
 [markdownlint](https://github.com/markdownlint/markdownlint) formatting rules.
 
-## [0.12.0]
+## [0.12.0] - 2021-10-10
 
 ### Added in 0.12.0
 
+- Add dataframe.GetGroups (@arjunmahishi)
+- Add Series.Slice (@jfussion)
+- Add csv lazy quote (@fredericlemoine)
+
 ### Changed in 0.12.0
+
+- series.Err is deprecated; use Error() instead
+- dataframe.Err is deprecated; use Error() instead
 
 ### Fixed in 0.12.0
 
-### Removed in 0.12.0
+- Fix dataframe.GroupBy issue (@prliu)
+- making series Order stable (@mcolosimo-p4)
 
 ## [0.11.0] - 2021-06-27
 
@@ -290,3 +298,4 @@ This document follows
 [0.10.0]:https://github.com/go-gota/gota/compare/v0.9.0...v0.10.0
 [0.10.1]:https://github.com/go-gota/gota/compare/v0.10.0...v0.10.1
 [0.11.0]:https://github.com/go-gota/gota/compare/v0.10.1...v0.11.0
+[0.12.0]:https://github.com/go-gota/gota/compare/v0.11.0...v0.12.0

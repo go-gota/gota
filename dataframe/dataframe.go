@@ -34,7 +34,9 @@ type DataFrame struct {
 	columns []series.Series
 	ncols   int
 	nrows   int
-	Err     error
+
+	// deprecated: Use Error() instead
+	Err error
 }
 
 // New is the generic DataFrame constructor
@@ -101,6 +103,11 @@ func (df DataFrame) Copy() DataFrame {
 // String implements the Stringer interface for DataFrame
 func (df DataFrame) String() (str string) {
 	return df.print(true, true, true, true, 10, 70, "DataFrame")
+}
+
+// Returns error or nil if no error occured
+func (df *DataFrame) Error() error {
+	return df.Err
 }
 
 func (df DataFrame) print(
