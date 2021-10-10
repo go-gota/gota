@@ -650,7 +650,7 @@ func (s Series) Order(reverse bool) []int {
 	if reverse {
 		srt = sort.Reverse(srt)
 	}
-	sort.Sort(srt)
+	sort.Stable(srt)
 	var ret []int
 	for _, e := range ie {
 		ret = append(ret, e.index)
