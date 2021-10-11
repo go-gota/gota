@@ -19,8 +19,7 @@ jobs:
 
       - name: Format
         run: |
-          gofmt -d .
-          test -z "$(git status --porcelain)" || exit $?
+          test -z $(gofmt -l .)  || exit $?
 
       - name: Quality issues
         run: go vet ./... || exit $?
