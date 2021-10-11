@@ -19,7 +19,7 @@ jobs:
 
       - name: Format
         run: |
-          if [ -n $(gofmt -l .) ]; then
+          if [ -n "$(gofmt -l .)" ]; then 
             gofmt -d .
             exit 1
           fi
