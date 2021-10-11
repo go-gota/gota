@@ -20,15 +20,15 @@ jobs:
       - name: Format
         run: |
           gofmt -d .
-          test -z "$(git status --porcelain)"
+          test -z "$(git status --porcelain)" || exit $?
 
       - name: Quality issues
-        run: go vet ./...
+        run: go vet ./... || exit $?
 
       - name: Tidy go.mod
         run: |
           go mod tidy
-          test -z "$(git status --porcelain)"
+          test -z "$(git status --porcelain)" || exit $?
 
       - name: Tests
-        run: go test -v ./...
+        run: go test -v ./... || exit $?
