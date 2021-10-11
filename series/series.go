@@ -11,11 +11,6 @@ import (
 	"gonum.org/v1/gonum/stat"
 )
 
-// TODO: XXX remove - only for pipeline test
-func RemoveMe() string {
-	return fmt.Sprintf("%s, %s", "Apple", "Banana", "Kiwi")
-}
-
 // Series is a data structure designed for operating on arrays of elements that
 // should comply with a certain type structure. They are flexible enough that can
 // be transformed to other Series types and account for missing or non valid

@@ -21,7 +21,7 @@ jobs:
         run: |
           if [ -n $(gofmt -l .) ]; then
             gofmt -d .
-            exit $?
+            exit 1
           fi
 
       - name: Quality issues
