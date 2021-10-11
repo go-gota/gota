@@ -19,7 +19,10 @@ jobs:
 
       - name: Format
         run: |
-          test -z $(gofmt -l .)  || exit $?
+          if [ -z $(gofmt -l .) ]; then
+            gofmt -d .
+            exit $?
+          fi
 
       - name: Quality issues
         run: go vet ./... || exit $?
