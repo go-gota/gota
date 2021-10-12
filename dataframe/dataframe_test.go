@@ -2928,6 +2928,7 @@ func IsEqual(f1, f2 float64) bool {
 		return math.Dim(f2, f1) < MIN
 	}
 }
+
 func TestDataFrame_GroupBy(t *testing.T) {
 	a := New(
 		series.New([]string{"b", "a", "b", "a", "b"}, series.String, "key1"),
@@ -2962,6 +2963,34 @@ func TestDataFrame_GroupBy(t *testing.T) {
 	if groups.Err == nil {
 		t.Errorf("GroupBy: COLUMNS NOT FOUND")
 	}
+}
+
+func TestDataFrame_GroupBy1(t *testing.T) {
+	df := LoadRecords([][]string{
+		{"AA", "BB", "CC"},
+		{"AB", "BB", "X"},
+		{"AC", "BC", "Y"},
+		{"AD", "BD", "X"},
+	})
+
+	dfg := df.GroupBy("AA", "CC")
+	if len(dfg.groups) != 3 {
+		t.Errorf("expected groups length %d, got %d", 3, len(dfg.groups))
+	}
+	if len(dfg.colnames) != 2 {
+		t.Errorf("expected column names length %d, got %d", 2, len(dfg.colnames))
+	}
+
+	agg := dfg.Aggregation([]AggregationType{Aggregation_COUNT}, []string{"countn"})
+	if agg.Err == nil {
+		t.Errorf("expected error, got success")
+	}
+	if agg.ncols != 0 || agg.nrows != 0 || len(agg.columns) != 0 {
+		t.Errorf("expected empty Dataframe, got filled one")
+	}
+
+	agg2 := dfg.Aggregation([]AggregationType{Aggregation_COUNT}, []string{"AA"})
+	fmt.Println(agg2)
 }
 
 func TestDataFrame_Aggregation(t *testing.T) {
