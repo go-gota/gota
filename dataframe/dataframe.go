@@ -464,6 +464,11 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 	if len(typs) != len(colnames) {
 		return DataFrame{Err: fmt.Errorf("Aggregation: len(typs) != len(colanmes)")}
 	}
+	for _, c := range colnames {
+		if idx := findInStringSlice(c, gps.colnames); idx == -1 {
+			return DataFrame{Err: fmt.Errorf("Aggregation: column %s is not in Groups.colnames", c)}
+		}
+	}
 	dfMaps := make([]map[string]interface{}, 0)
 	for _, df := range gps.groups {
 		targetMap := df.Maps()[0]
