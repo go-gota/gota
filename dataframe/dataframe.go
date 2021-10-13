@@ -41,7 +41,7 @@ type DataFrame struct {
 
 // New is the generic DataFrame constructor
 func New(se ...series.Series) DataFrame {
-	if se == nil || len(se) == 0 {
+	if len(se) == 0 {
 		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
 	}
 
@@ -782,7 +782,7 @@ func (df DataFrame) Arrange(order ...Order) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	if order == nil || len(order) == 0 {
+	if len(order) == 0 {
 		return DataFrame{Err: fmt.Errorf("rename: no arguments")}
 	}
 
@@ -1518,7 +1518,7 @@ func ReadHTML(r io.Reader, options ...LoadOption) []DataFrame {
 
 	doc, err = html.Parse(r)
 	if err != nil {
-		return []DataFrame{DataFrame{Err: err}}
+		return []DataFrame{{Err: err}}
 	}
 
 	f = func(n *html.Node) {
@@ -2177,13 +2177,13 @@ func findInStringSlice(str string, s []string) int {
 
 func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int, error) {
 	var idx []int
-	switch indexes.(type) {
+	switch indexes := indexes.(type) {
 	case []int:
-		idx = indexes.([]int)
+		idx = indexes
 	case int:
-		idx = []int{indexes.(int)}
+		idx = []int{indexes}
 	case []bool:
-		bools := indexes.([]bool)
+		bools := indexes
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
@@ -2193,14 +2193,14 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 			}
 		}
 	case string:
-		s := indexes.(string)
+		s := indexes
 		i := findInStringSlice(s, colnames)
 		if i < 0 {
 			return nil, fmt.Errorf("can't select columns: column name %q not found", s)
 		}
 		idx = append(idx, i)
 	case []string:
-		xs := indexes.([]string)
+		xs := indexes
 		for _, s := range xs {
 			i := findInStringSlice(s, colnames)
 			if i < 0 {
@@ -2209,7 +2209,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 			idx = append(idx, i)
 		}
 	case series.Series:
-		s := indexes.(series.Series)
+		s := indexes
 		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
@@ -2226,7 +2226,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 			}
 			return parseSelectIndexes(l, bools, colnames)
 		case series.String:
-			xs := indexes.(series.Series).Records()
+			xs := indexes.Records()
 			return parseSelectIndexes(l, xs, colnames)
 		default:
 			return nil, fmt.Errorf("indexing error: unknown indexing mode")
