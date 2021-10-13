@@ -602,7 +602,7 @@ func TestDataFrame_Concat(t *testing.T) {
 			),
 			New(
 				series.New([]string{"b", "a", "b", "c", "d", "b", "a", "b", "c", "d"}, series.String, "COL.1"),
-				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.Int, "")),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{{}, {}, {}, {}, {}}, series.Int, "")),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 			),
 		},
@@ -618,7 +618,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
 			),
 		},
 		{
@@ -633,7 +633,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
 			),
 		},
 		{
