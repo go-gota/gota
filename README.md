@@ -332,6 +332,32 @@ df.Capply(mean)
 df.Rapply(mean)
 ```
 
+#### Math
+
+Element-wise arithmetic vector operations are available on `int` and
+`float64` values through the `Math` method:
+
+```go
+df := dataframe.New(
+	series.New([]string{"e", "Pi", "Phi", "Sqrt2", "Ln2"}, series.String, "Strings"),
+	series.New([]float64{2.718, 3.142, 1.618, 1.414, 0.693}, series.Float, "Floats"),
+	series.New([]int{1, 3, 5, 7, 11}, series.Int, "Primes"),
+	series.New([]int{1, 2, 3, 4, 5}, series.Int, "Naturals"),
+)
+	
+// Returns a new DataFrame with a column named "Diff" = Floats - Primes
+withNewDiffColumn := df.Math("Diff", "-", "Floats", "Primes")
+```
+
+It is also possible for the second argument (the operator) to be a
+function (unary, binary, or trinary) on `int` or `float64` (especially
+useful with Go's `math` package):
+
+```go
+import "math"
+withNewFMACol := df.Math("FMA", math.FMA, "Floats", "Primes", "Naturals")
+```
+
 #### Chaining operations
 
 DataFrames support a number of methods for wrangling the data,

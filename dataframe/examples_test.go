@@ -2,6 +2,7 @@ package dataframe_test
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/go-gota/gota/dataframe"
@@ -456,4 +457,63 @@ func ExampleDataFrame_Describe() {
 	//  7: max      c        4.000000 7.100000 1.000000
 	//     <string> <string> <float>  <float>  <float>
 
+}
+
+func ExampleDataFrame_FindElem() {
+	df := dataframe.New(
+		series.New([]string{"e", "Pi", "Phi", "Sqrt2", "Ln2"}, series.String, "Strings"),
+		series.New([]int{1, 3, 5, 7, 11}, series.Int, "Ints"),
+		series.New([]float64{2.718, 3.142, 1.618, 1.414, 0.693}, series.Float, "Floats"),
+		series.New([]bool{false, true, false, false, false}, series.Bool, "Bools"),
+	)
+
+	if f, ok := df.FindElem("Strings", "Pi", "Floats"); ok {
+		fmt.Printf("The value of Pi is %f\n", f.Float())
+	}
+}
+
+func ExampleDataFrame_Math() {
+	/*  `input` is a 5x4 DataFrame:
+
+	   Strings  Floats   Primes Naturals
+	0: e        2.718000 1      1
+	1: Pi       3.142000 3      2
+	2: Phi      1.618000 5      3
+	3: Sqrt2    1.414000 7      4
+	4: Ln2      0.693000 11     5
+	   <string> <float>  <int>  <int>
+	*/
+	df := dataframe.New(
+		series.New([]string{"e", "Pi", "Phi", "Sqrt2", "Ln2"}, series.String, "Strings"),
+		series.New([]float64{2.718, 3.142, 1.618, 1.414, 0.693}, series.Float, "Floats"),
+		series.New([]int{1, 3, 5, 7, 11}, series.Int, "Primes"),
+		series.New([]int{1, 2, 3, 4, 5}, series.Int, "Naturals"),
+	)
+
+	// `Math` takes a new column name, an operator (string or func) and at least one column name
+	withNewDiffColumn := df.Math("Diff", "-", "Floats", "Primes")
+
+	// New `DataFrame` now has a column named "Diff" which is
+	// the result of subtracting Primes from Floats.
+	fmt.Println(withNewDiffColumn)
+
+	/*
+	      Strings  Floats   Primes Naturals Diff
+	   0: e        2.718000 1      1        1.718000
+	   1: Pi       3.142000 3      2        0.142000
+	   2: Phi      1.618000 5      3        -3.382000
+	   3: Sqrt2    1.414000 7      4        -5.586000
+	   4: Ln2      0.693000 11     5        -10.307000
+	      <string> <float>  <int>  <int>    <float>
+	*/
+
+	// Also supports passing unary, binary, or trinary functions of
+	// int or float64, e.g., for functions from Go's `math` package.
+	// (Note here that `dataframe.Math` supports specifying many
+	// column names depending on the given operator, and also that
+	// it automatically coerces int to float64 when `op` is a
+	// function on float64.)
+	withNewFMACol := df.Math("FMA", math.FMA, "Floats", "Primes", "Naturals")
+
+	fmt.Println(withNewFMACol)
 }

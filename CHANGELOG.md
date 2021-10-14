@@ -35,6 +35,8 @@ This document follows
 - Combining filters with AND
 - User-defined filters
 - Concatination of Dataframes
+- Math for vector operations on multiple columns
+- FindElem for content-based location of an element
 
 ### Changed in 0.11.0
 
