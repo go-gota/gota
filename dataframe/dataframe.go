@@ -2362,3 +2362,37 @@ func (df DataFrame) Describe() DataFrame {
 	ddf := New(ss...)
 	return ddf
 }
+
+// Eq compares two dataframes and checks if they are equal
+// Checkes performed:
+//   - are the dimensions same
+//   - are the column types and names same
+//   - are all the adjecent series equal
+func (d DataFrame) Eq(b DataFrame) bool {
+	dx, dy := d.Dims()
+	bx, by := b.Dims()
+	if dx != bx || dy != by {
+		return false
+	}
+
+	bNames := b.Names()
+	for i, name := range d.Names() {
+		if name != bNames[i] {
+			return false
+		}
+	}
+
+	bTypes := b.Types()
+	for i, t := range d.Types() {
+		if t != bTypes[i] {
+			return false
+		}
+	}
+
+	for i, col := range d.columns {
+		if !col.Eq(b.columns[i]) {
+			return false
+		}
+	}
+	return true
+}
