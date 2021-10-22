@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Check that there are no shared memory addreses between the elements of two Series
@@ -1833,5 +1835,44 @@ func TestSeries_Slice(t *testing.T) {
 				)
 			}
 		}
+	}
+}
+
+func TestSeries_Eq(t *testing.T) {
+	tests := []struct {
+		name     string
+		a        Series
+		b        Series
+		areEqual bool
+	}{
+		{
+			name:     "should be equal",
+			a:        Ints([]int{1, 2, 3, 4}),
+			b:        Ints([]int{1, 2, 3, 4}),
+			areEqual: true,
+		},
+		{
+			name:     "should not equal -- different type",
+			a:        Ints([]int{1, 2, 3, 4}),
+			b:        Floats([]int{1, 2, 3, 4}),
+			areEqual: false,
+		},
+		{
+			name:     "should not equal -- different name",
+			a:        New([]int{1, 2, 3, 4}, Int, "series A"),
+			b:        New([]int{1, 2, 3, 4}, Int, "series B"),
+			areEqual: false,
+		},
+		{
+			name:     "should not equal -- different elements",
+			a:        Ints([]int{1, 2, 3, 4}),
+			b:        Ints([]int{1, 2, 3, 5}),
+			areEqual: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.areEqual, tt.a.Eq(tt.b))
+		})
 	}
 }
