@@ -3,14 +3,14 @@ package dataframe
 import (
 	"bytes"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"testing"
 
-	"math"
-
 	"github.com/go-gota/gota/series"
+	"github.com/stretchr/testify/assert"
 )
 
 // compareFloats compares floating point values up to the number of digits specified.
@@ -3027,5 +3027,74 @@ func TestGroups_GetGroups(t *testing.T) {
 	}
 	if len(groupNames) != 3 {
 		t.Fatalf("Expected to get 3 groups, got %d", len(groupNames))
+	}
+}
+
+func TestDataFrame_Eq(t *testing.T) {
+	tests := []struct {
+		name     string
+		dfA      DataFrame
+		dfB      DataFrame
+		areEqual bool
+	}{
+		{
+			name: "Should be equal",
+			dfA: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			dfB: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			areEqual: true,
+		},
+		{
+			name: "Should not be equal -- different dimensions",
+			dfA: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			dfB: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"},
+			}),
+			areEqual: false,
+		},
+		{
+			name: "Should not be equal -- different column names",
+			dfA: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			dfB: LoadRecords([][]string{
+				{"colA", "colB", "colC"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			areEqual: false,
+		},
+		{
+			name: "Should not be equal -- different column types",
+			dfA: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"1", "2", "3"}, {"4", "5", "6"}, {"7", "8", "9"},
+			}, DefaultType(series.Int)),
+			dfB: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"1", "2", "3"}, {"4", "5", "6"}, {"7", "8", "9"},
+			}, WithTypes(map[string]series.Type{
+				"col1": series.Float,
+				"col2": series.Float,
+				"col3": series.Float,
+			})),
+			areEqual: false,
+		},
+		{
+			name: "Should not be equal -- different elements",
+			dfA: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "val9"},
+			}),
+			dfB: LoadRecords([][]string{
+				{"col1", "col2", "col3"}, {"val1", "val2", "val3"}, {"val4", "val5", "val6"}, {"val7", "val8", "valA"},
+			}),
+			areEqual: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equal(t, tt.areEqual, tt.dfA.Eq(tt.dfB))
+		})
 	}
 }

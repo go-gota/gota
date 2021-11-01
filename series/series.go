@@ -840,3 +840,26 @@ func (s Series) Slice(j, k int) Series {
 
 	return s.Subset(idxs)
 }
+
+// Eq compares two series and checks if they are equal
+// Checkes performed:
+//   - is the length same
+//   - is the type and name same
+//   - are all the adjecent elements equal
+func (s Series) Eq(b Series) bool {
+	if s.Len() != b.Len() {
+		return false
+	}
+
+	if s.Type() != b.Type() || s.Name != b.Name {
+		return false
+	}
+
+	bRecords := b.Records()
+	for i, ele := range s.Records() {
+		if ele != bRecords[i] {
+			return false
+		}
+	}
+	return true
+}
