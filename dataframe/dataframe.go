@@ -1214,7 +1214,9 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	// Extract headers
 	headers := make([]string, len(records[0]))
 	if cfg.hasHeader {
-		headers = records[0]
+		for i, colname := range records[0] {
+			headers[i] = strings.TrimSpace(colname)
+		}
 		records = records[1:]
 	}
 	if cfg.names != nil {
