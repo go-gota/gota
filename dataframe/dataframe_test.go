@@ -582,36 +582,52 @@ func TestDataFrame_Mutate(t *testing.T) {
 	)
 	table := []struct {
 		s     series.Series
+		s1 	  series.Series
 		expDf DataFrame
 	}{
 		{
 			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+			series.New([]int{2, 3, 5, 6, 7}, series.String, "COL.3"),
 			New(
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
-				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]int{2, 3, 5, 6, 7}, series.String, "COL.3"),
 			),
 		},
 		{
 			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
+			series.New([]string{"w", "e", "r", "t", "y"}, series.String, "COL.1"),
 			New(
-				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+				series.New([]string{"w", "e", "r", "t", "y"}, series.String, "COL.1"),
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 			),
 		},
 		{
 			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			series.New([]int{2, 3, 5, 6, 7}, series.String, "COL.5"),
 			New(
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+				series.New([]int{2, 3, 5, 6, 7}, series.String, "COL.5"),
+			),
+		},
+		{
+			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			series.New([]float64{3.3, 4.3, 5.3, 5.5, 6.4}, series.Float, "COL.5"),
+			New(
+				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+				series.New([]float64{3.3, 4.3, 5.3, 5.5, 6.4}, series.Float, "COL.5"),
 			),
 		},
 	}
 	for i, tc := range table {
-		b := a.Mutate(tc.s)
+		b := a.Mutate(tc.s, tc.s1)
 
 		if b.Err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)

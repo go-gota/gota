@@ -429,21 +429,32 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
-func (df DataFrame) Mutate(s series.Series) DataFrame {
-	if df.Err != nil {
+func (df DataFrame) Mutate(ss ...series.Series) DataFrame {
+	if df.Err != nil || len(ss) == 0{
 		return df
 	}
-	if s.Len() != df.nrows {
+	
+	slen := ss[0].Len()
+	for i := 1; i < len(ss); i++ {
+		if slen != ss[i].Len() {
+			return DataFrame{Err: fmt.Errorf("mutate: serieses length not equal")}	
+		}
+	}
+	if slen != df.nrows {
 		return DataFrame{Err: fmt.Errorf("mutate: wrong dimensions")}
 	}
 	df = df.Copy()
 	// Check that colname exist on dataframe
 	columns := df.columns
-	if idx := findInStringSlice(s.Name, df.Names()); idx != -1 {
-		columns[idx] = s
-	} else {
-		columns = append(columns, s)
+	dfNames := df.Names()
+	for i := 0; i < len(ss); i++ {
+		if idx := findInStringSlice(ss[i].Name, dfNames); idx != -1 {
+			columns[idx] = ss[i]
+		} else {
+			columns = append(columns, ss[i])
+		}
 	}
+	
 	nrows, ncols, err := checkColumnsDimensions(columns...)
 	if err != nil {
 		return DataFrame{Err: err}
@@ -1712,6 +1723,16 @@ func (df DataFrame) Maps() []map[string]interface{} {
 // out of bounds.
 func (df DataFrame) Elem(r, c int) series.Element {
 	return df.columns[c].Elem(r)
+}
+
+// Elem returns the element on row `r` and column `c`. Will panic if the index is
+// out of bounds.
+func (df DataFrame) ElemByRowAndColName(row int, columnName string) series.Element {
+	colIndex := df.colIndex(columnName)
+	if colIndex < 0 {
+		return nil
+	}
+	return df.columns[colIndex].Elem(row)
 }
 
 // fixColnames assigns a name to the missing column names and makes it so that the
