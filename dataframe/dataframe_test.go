@@ -1214,6 +1214,23 @@ func TestLoadRecords(t *testing.T) {
 			),
 			false,
 		},
+		{ //Test 16. Test for trimming whitespace when getting a list of column names
+			LoadRecords(
+				[][]string{
+					{"A A", " B B", " C ", " D D "},
+					{"5.1", "3.5", "1.4", "0.2"},
+					{"1", "1", "true", "0.5"},
+					{"1", "2", "0.5", "a"},
+				},
+			),
+			New(
+				series.New([]float64{5.1, 1, 1}, series.Float, "A A"),
+				series.New([]float64{3.5, 1, 2}, series.Float, "B B"),
+				series.New([]string{"1.4", "true", "NaN"}, series.Bool, "C"),
+				series.New([]string{"0.2", "0.5", "a"}, series.String, "D D"),
+			),
+			false,
+		},
 	}
 
 	for i, tc := range table {
