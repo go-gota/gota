@@ -1437,6 +1437,49 @@ Spain,2012-02-01,66,555.42,00241
 	}
 }
 
+// test case for issue #169
+func TestReadCSV_Issue169(t *testing.T) {
+	// Load the data from a CSV string and try to infer the type of the
+	// columns, but NA won't be converted to NaN when data type is specified
+	// as string.
+	const ExampleData = `
+Country,Region,Date,Age,Amount,Id
+"United States",NA,2012-02-01,50,112.1,01234
+"United States",US,2012-02-01,32,321.31,54320
+"United Kingdom",GB,2012-02-01,17,18.2,12345
+"United States",NA,2012-02-01,32,321.31,54320
+"United States","NA",2012-02-01,17,321.31,54320
+"United Kingdom",GB,2012-02-01,NA,18.2,12345
+"United States",NA,2012-02-01,32,321.31,54320
+Spain,EU,2012-02-01,66,555.42,00241
+`
+
+	df := ReadCSV(
+		strings.NewReader(ExampleData),
+		WithTypes(map[string]series.Type{
+			"Region": series.String,
+			"Age":    series.String,
+		}),
+	)
+
+	if df.Err != nil {
+		t.Errorf("Expected success, got error: %v", df.Err)
+	}
+
+	for _, v := range df.Col("Region").Records() {
+		if v == "NaN" {
+			t.Errorf("Expected not to convert NA to NaN, but it does")
+		}
+	}
+
+	for _, v := range df.Col("Age").Records() {
+		if v == "NaN" {
+			t.Errorf("Expected not to convert NA to NaN, but it does")
+		}
+	}
+
+}
+
 func TestReadJSON(t *testing.T) {
 	table := []struct {
 		jsonStr string
