@@ -18,6 +18,7 @@ type Window interface {
 	Quantile(p float64) float64
 	Median() float64
 	StdDev() float64
+	Apply(func(windowFloats []float64,windowEles []Element) interface{}) interface{}
 }
 
 type rollingWindow struct {
@@ -33,7 +34,7 @@ func NewRollingWindow(s Series, windowSize int, minPeriods int) RollingWindow {
 
 	eles := make([]Element, s.Len())
 	for i := 0; i < s.Len(); i++ {
-		eles[i] = s.Elem(i)
+		eles[i] = s.Elem(i).Copy()
 	}
 
 	return &rollingWindow{
@@ -104,6 +105,10 @@ func (ew elementsWindow) Median() float64 {
 
 func (ew elementsWindow) StdDev() float64 {
 	return stat.StdDev(ew.floats, nil)
+}
+
+func (ew elementsWindow) Apply(f func(windowFloats []float64, windowEles []Element) interface{}) interface{}{
+	return f(ew.floats, ew.eles)
 }
 
 

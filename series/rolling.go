@@ -12,9 +12,11 @@ type Rolling interface {
 	Max() Series
 	Min() Series
 	Mean() Series
+	MeanByWeights(weights []float64) Series
 	Quantile(p float64) Series
 	Median() Series
 	StdDev() Series
+	Apply(f func(windowFloats []float64, windowEles []Element) interface{}) Series
 }
 
 type rollingSeries struct {
@@ -109,6 +111,31 @@ func (s rollingSeries) Mean() Series {
 	return newS
 }
 
+func (s rollingSeries) MeanByWeights(weights []float64) Series {
+	if s.window != len(weights) {
+		panic("window must be equal to weights length")
+	}
+	weightSum := floats.Sum(weights)
+	weightLen := len(weights)
+	ma := s.Apply(
+		func(windowFloats []float64, windowEles []Element) interface{} {
+			weightsUse := weights
+			weightSumUse := weightSum
+			wfL := len(windowFloats)
+			if wfL < weightLen {
+				weightsUse = weights[weightLen - wfL:]
+				weightSumUse = floats.Sum(weightsUse)
+			}
+			totalSum := 0.0
+			for i := 0; i < wfL; i++ {
+				totalSum += weightsUse[i] * windowFloats[i]
+			}
+			return totalSum / weightSumUse
+	})
+	return ma
+}
+
+
 func (s rollingSeries) Quantile(p float64) Series {
 	if s.Len() == 0 {
 		return s.Empty()
@@ -170,5 +197,26 @@ func (s rollingSeries) StdDev() Series {
 	}
 	newS := New(eles, Float,
 		fmt.Sprintf("%s_RStdDev[w:%d]", s.Name, s.window))
+	return newS
+}
+
+
+func (s rollingSeries) Apply(f func(windowFloats []float64, windowEles []Element) interface{}) Series {
+	if s.Len() == 0 {
+		return s.Empty()
+	}
+	eles := make([]Element, s.Len())
+	var index int
+	for index = 0; index < s.minPeriods-1; index++ {
+		eles[index] = s.Elem(0).NA()
+	}
+	frw := NewRollingWindow(s.Series, s.window, s.minPeriods)
+	for frw.HasNext() {
+		ele := s.Elem(0).NA()
+		ele.Set(frw.Next().Apply(f))
+		eles[index] = ele
+		index++
+	}
+	newS := New(eles, s.Type(), fmt.Sprintf("%s_RApply[w:%d]", s.Name, s.window))
 	return newS
 }

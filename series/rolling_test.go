@@ -131,3 +131,91 @@ func TestSeries_Rolling(t *testing.T) {
 	}
 }
 
+
+func TestSeries_MeanByWeights(t *testing.T) {
+	tests := []struct {
+		series       Series
+		window       int
+		minPeriod    int
+		weights  []float64
+		meanExpected Series
+	}{
+		{
+			Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
+			3,
+			2,
+			[]float64{0.5, 0.3, 0.2},
+			Floats([]string{NaN, "-0.392", "-0.2864794", "-1.7922349", "0.0392358", "7.0928975"}),
+		},
+		{
+			Floats([]string{"23", "13", "101", "-64", "-3"}),
+			3,
+			1,
+			[]float64{5, 3, 2},
+			Floats([]string{"23", "19", "35.6", "24", "30.7"}),
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.meanExpected.Records()
+		b := test.series.Rolling(test.window, test.minPeriod).MeanByWeights(test.weights)
+		received := b.Records()
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test-MeanByWeights:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_RollingApply(t *testing.T) {
+	tests := []struct {
+		series       Series
+		window       int
+		minPeriod    int
+		applyExpected  Series
+		applyFunc  func([]float64, []Element) interface{}
+	}{
+		{
+			Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
+			3,
+			2,
+			Floats([]string{NaN, "2.5", "2.5", "-2.23", "0.662603", "0.619921"}),
+			func(f []float64, e []Element) interface{} {
+				return f[0] + 1
+			},
+		},
+		{
+			Strings([]string{"20210618", "20200909", "20200910", "20200912", "20200911"}),
+			3,
+			2,
+			Strings([]string{NaN, "20210618-", "20210618-", "20200909-", "20200910-"}),
+			func(f []float64, e []Element) interface{} {
+				return e[0].String() + "-"
+			},
+		},
+		{
+			Ints([]string{"23", "13", "101", "-64", "-3"}),
+			3,
+			1,
+			Ints([]string{"24", "14", "102", "-63", "-2"}),
+			func(f []float64, e []Element) interface{} {
+				return f[len(f)-1]+1
+			},
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.applyExpected.Records()
+		b := test.series.Rolling(test.window, test.minPeriod).Apply(test.applyFunc)
+		received := b.Records()
+		if !reflect.DeepEqual(expected, received) {
+			t.Errorf(
+				"Test-Apply:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
