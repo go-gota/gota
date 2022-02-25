@@ -2,12 +2,12 @@ package series
 
 import (
 	"fmt"
+	"math"
 	"reflect"
 	"sort"
 	"strings"
 
-	"math"
-
+	"github.com/cespare/xxhash/v2"
 	"gonum.org/v1/gonum/stat"
 )
 
@@ -53,6 +53,10 @@ type Element interface {
 	Int() (int, error)
 	Float() float64
 	Bool() (bool, error)
+	StringList() []string
+	IntList() ([]int, error)
+	FloatList() []float64
+	BoolList() ([]bool, error)
 
 	// Information methods
 	IsNA() bool
@@ -65,11 +69,23 @@ type intElements []intElement
 func (e intElements) Len() int           { return len(e) }
 func (e intElements) Elem(i int) Element { return &e[i] }
 
+// intListElements is the concrete implementation of Elements for IntList elements.
+type intListElements []intListElement
+
+func (e intListElements) Len() int           { return len(e) }
+func (e intListElements) Elem(i int) Element { return &e[i] }
+
 // stringElements is the concrete implementation of Elements for String elements.
 type stringElements []stringElement
 
 func (e stringElements) Len() int           { return len(e) }
 func (e stringElements) Elem(i int) Element { return &e[i] }
+
+// stringListElements is the concrete implementation of Elements for IntList elements.
+type stringListElements []stringListElement
+
+func (e stringListElements) Len() int           { return len(e) }
+func (e stringListElements) Elem(i int) Element { return &e[i] }
 
 // floatElements is the concrete implementation of Elements for Float elements.
 type floatElements []floatElement
@@ -77,11 +93,23 @@ type floatElements []floatElement
 func (e floatElements) Len() int           { return len(e) }
 func (e floatElements) Elem(i int) Element { return &e[i] }
 
+// floatListElements is the concrete implementation of Elements for IntList elements.
+type floatListElements []floatListElement
+
+func (e floatListElements) Len() int           { return len(e) }
+func (e floatListElements) Elem(i int) Element { return &e[i] }
+
 // boolElements is the concrete implementation of Elements for Bool elements.
 type boolElements []boolElement
 
 func (e boolElements) Len() int           { return len(e) }
 func (e boolElements) Elem(i int) Element { return &e[i] }
+
+// boolListElements is the concrete implementation of Elements for IntList elements.
+type boolListElements []boolListElement
+
+func (e boolListElements) Len() int           { return len(e) }
+func (e boolListElements) Elem(i int) Element { return &e[i] }
 
 // ElementValue represents the value that can be used for marshaling or
 // unmarshaling Elements.
@@ -114,10 +142,14 @@ type Type string
 
 // Supported Series Types
 const (
-	String Type = "string"
-	Int    Type = "int"
-	Float  Type = "float"
-	Bool   Type = "bool"
+	String     Type = "string"
+	Int        Type = "int"
+	Float      Type = "float"
+	Bool       Type = "bool"
+	StringList Type = "string_list"
+	IntList    Type = "int_list"
+	FloatList  Type = "float_list"
+	BoolList   Type = "bool_list"
 )
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -148,6 +180,14 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements = make(floatElements, n)
 		case Bool:
 			ret.elements = make(boolElements, n)
+		case StringList:
+			ret.elements = make(stringListElements, n)
+		case IntList:
+			ret.elements = make(intListElements, n)
+		case FloatList:
+			ret.elements = make(floatListElements, n)
+		case BoolList:
+			ret.elements = make(boolListElements, n)
 		default:
 			panic(fmt.Sprintf("unknown type %v", t))
 		}
@@ -161,28 +201,131 @@ func New(values interface{}, t Type, name string) Series {
 
 	switch v := values.(type) {
 	case []string:
+		if strings.HasSuffix(string(t), "_list") {
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
+		}
+	case [][]string:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []float64:
+		if strings.HasSuffix(string(t), "_list") {
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
+		}
+	case [][]float64:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []int:
+		if strings.HasSuffix(string(t), "_list") {
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
+		}
+	case [][]int:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []bool:
+		if strings.HasSuffix(string(t), "_list") {
+			if len(v) > 0 {
+				preAlloc(1)
+				ret.elements.Elem(0).Set(v)
+			} else {
+				preAlloc(0)
+			}
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				ret.elements.Elem(i).Set(v[i])
+			}
+		}
+	case [][]bool:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
+		}
+	case []interface{}:
+		if strings.HasSuffix(string(t), "_list") {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				if v[i] == nil {
+					ret.elements.Elem(i).Set(nil)
+					continue
+				}
+				switch reflect.TypeOf(v[i]).Kind() {
+				case reflect.Slice:
+					ret.elements.Elem(i).Set(v[i])
+				default:
+					ret.elements.Elem(i).Set(fmt.Sprint(v[i]))
+				}
+			}
+		} else {
+			l := len(v)
+			preAlloc(l)
+			for i := 0; i < l; i++ {
+				if v[i] == nil {
+					ret.elements.Elem(i).Set(nil)
+					continue
+				}
+				switch reflect.TypeOf(v[i]).Kind() {
+				case reflect.Slice:
+					ret.elements.Elem(i).Set(v[i])
+				default:
+					ret.elements.Elem(i).Set(v[i])
+				}
+			}
+		}
+	case [][]interface{}:
+		l := len(v)
+		preAlloc(l)
+		for i := 0; i < l; i++ {
+			if v[i] == nil {
+				ret.elements.Elem(i).Set(nil)
+				continue
+			}
+			s := toStringArray(v[i])
+			ret.elements.Elem(i).Set(s)
 		}
 	case Series:
 		l := v.Len()
@@ -207,8 +350,21 @@ func New(values interface{}, t Type, name string) Series {
 			ret.elements.Elem(0).Set(val)
 		}
 	}
-
 	return ret
+}
+
+func toStringArray(v []interface{}) []string {
+	l := len(v)
+	s := make([]string, l)
+	for i := 0; i < l; i++ {
+		if v[i] == nil {
+			s[i] = "NaN"
+			continue
+		}
+
+		s[i] = fmt.Sprint(v[i])
+	}
+	return s
 }
 
 // Strings is a constructor for a String Series
@@ -229,6 +385,26 @@ func Floats(values interface{}) Series {
 // Bools is a constructor for a Bool Series
 func Bools(values interface{}) Series {
 	return New(values, Bool, "")
+}
+
+// StringsList is a constructor for an StringList Series
+func StringsList(values interface{}) Series {
+	return New(values, StringList, "")
+}
+
+// IntsList is a constructor for an IntList Series
+func IntsList(values interface{}) Series {
+	return New(values, IntList, "")
+}
+
+// FloatsList is a constructor for an FloatList Series
+func FloatsList(values interface{}) Series {
+	return New(values, FloatList, "")
+}
+
+// BoolsList is a constructor for an BoolList Series
+func BoolsList(values interface{}) Series {
+	return New(values, BoolList, "")
 }
 
 // Empty returns an empty Series of the same type
@@ -257,6 +433,14 @@ func (s *Series) Append(values interface{}) {
 		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
 	case Bool:
 		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
+	case StringList:
+		s.elements = append(s.elements.(stringListElements), news.elements.(stringListElements)...)
+	case IntList:
+		s.elements = append(s.elements.(intListElements), news.elements.(intListElements)...)
+	case FloatList:
+		s.elements = append(s.elements.(floatListElements), news.elements.(floatListElements)...)
+	case BoolList:
+		s.elements = append(s.elements.(boolListElements), news.elements.(boolListElements)...)
 	}
 }
 
@@ -312,6 +496,30 @@ func (s Series) Subset(indexes Indexes) Series {
 		elements := make(boolElements, len(idx))
 		for k, i := range idx {
 			elements[k] = s.elements.(boolElements)[i]
+		}
+		ret.elements = elements
+	case StringList:
+		elements := make(stringListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(stringListElements)[i]
+		}
+		ret.elements = elements
+	case IntList:
+		elements := make(intListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(intListElements)[i]
+		}
+		ret.elements = elements
+	case FloatList:
+		elements := make(floatListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(floatListElements)[i]
+		}
+		ret.elements = elements
+	case BoolList:
+		elements := make(boolListElements, len(idx))
+		for k, i := range idx {
+			elements[k] = s.elements.(boolListElements)[i]
 		}
 		ret.elements = elements
 	default:
@@ -452,22 +660,37 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Multiple element comparison
-	if s.Len() != comp.Len() {
-		s := s.Empty()
-		s.Err = fmt.Errorf("can't compare: length mismatch")
-		return s
-	}
-	for i := 0; i < s.Len(); i++ {
-		e := s.elements.Elem(i)
-		c, err := compareElements(e, comp.elements.Elem(i), comparator)
-		if err != nil {
-			s = s.Empty()
-			s.Err = err
+	// Multiple element comparison of single value types
+	switch s.t {
+	case String, Int, Float, Bool:
+		if s.Len() != comp.Len() {
+			s := s.Empty()
+			s.Err = fmt.Errorf("can't compare: length mismatch")
 			return s
 		}
-		bools[i] = c
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			c, err := compareElements(e, comp.elements.Elem(i), comparator)
+			if err != nil {
+				s = s.Empty()
+				s.Err = err
+				return s
+			}
+			bools[i] = c
+		}
+	case StringList, IntList, FloatList, BoolList:
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			c, err := compareElements(e, comp.elements.Elem(i), comparator)
+			if err != nil {
+				s = s.Empty()
+				s.Err = err
+				return s
+			}
+			bools[i] = c
+		}
 	}
+
 	return Bools(bools)
 }
 
@@ -490,6 +713,18 @@ func (s Series) Copy() Series {
 	case Int:
 		elements = make(intElements, s.Len())
 		copy(elements.(intElements), s.elements.(intElements))
+	case StringList:
+		elements = make(stringListElements, s.Len())
+		copy(elements.(stringListElements), s.elements.(stringListElements))
+	case FloatList:
+		elements = make(floatListElements, s.Len())
+		copy(elements.(floatListElements), s.elements.(floatListElements))
+	case BoolList:
+		elements = make(boolListElements, s.Len())
+		copy(elements.(boolListElements), s.elements.(boolListElements))
+	case IntList:
+		elements = make(intListElements, s.Len())
+		copy(elements.(intListElements), s.elements.(intListElements))
 	}
 	ret := Series{
 		Name:     name,
@@ -552,9 +787,66 @@ func (s Series) Bool() ([]bool, error) {
 	return ret, nil
 }
 
+// StringList returns the elements of a Series as a [][]string
+func (s Series) StringList() [][]string {
+	ret := make([][]string, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		ret[i] = e.StringList()
+	}
+	return ret
+}
+
+// IntList returns the elements of a Series as a [][]int or an error if the
+// transformation is not possible.
+func (s Series) IntList() ([][]int, error) {
+	ret := make([][]int, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		val, err := e.IntList()
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = val
+	}
+	return ret, nil
+}
+
+// FloatList returns the elements of a Series as a [][]float64. If the elements can not
+// be converted to float64 or contains a NaN returns the float representation of
+// NaN.
+func (s Series) FloatList() [][]float64 {
+	ret := make([][]float64, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		ret[i] = e.FloatList()
+	}
+	return ret
+}
+
+// BoolList returns the elements of a Series as a [][]bool or an error if the
+// transformation is not possible.
+func (s Series) BoolList() ([][]bool, error) {
+	ret := make([][]bool, s.Len())
+	for i := 0; i < s.Len(); i++ {
+		e := s.elements.Elem(i)
+		val, err := e.BoolList()
+		if err != nil {
+			return nil, err
+		}
+		ret[i] = val
+	}
+	return ret, nil
+}
+
 // Type returns the type of a given series
 func (s Series) Type() Type {
 	return s.t
+}
+
+// IsListElement returns true if the series' element type is list type.
+func (s Series) IsListElement() bool {
+	return s.t == StringList || s.t == IntList || s.t == FloatList || s.t == BoolList
 }
 
 // Len returns the length of a given Series
@@ -639,8 +931,9 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	return idx, nil
 }
 
-// Order returns the indexes for sorting a Series. NaN elements are pushed to the
-// end by order of appearance.
+// Order returns the indexes for sorting a Series. NaN or nil elements are pushed to the
+// end by order of appearance. Empty elements are pushed to the beginning by order of
+// appearance.
 func (s Series) Order(reverse bool) []int {
 	var ie indexedElements
 	var nasIdx []int
@@ -649,7 +942,7 @@ func (s Series) Order(reverse bool) []int {
 		if e.IsNA() {
 			nasIdx = append(nasIdx, i)
 		} else {
-			ie = append(ie, indexedElement{i, e})
+			ie = append(ie, indexedElement{i, e, s.IsListElement()})
 		}
 	}
 	var srt sort.Interface
@@ -666,31 +959,52 @@ func (s Series) Order(reverse bool) []int {
 }
 
 type indexedElement struct {
-	index   int
-	element Element
+	index         int
+	element       Element
+	IsListElement bool
 }
 
 type indexedElements []indexedElement
 
-func (e indexedElements) Len() int           { return len(e) }
-func (e indexedElements) Less(i, j int) bool { return e[i].element.Less(e[j].element) }
-func (e indexedElements) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+func (e indexedElements) Len() int { return len(e) }
+func (e indexedElements) Less(i, j int) bool {
+	if e[i].IsListElement {
+		return e[i].element.LessEq(e[j].element)
+	}
+	return e[i].element.Less(e[j].element)
+}
+func (e indexedElements) Swap(i, j int) { e[i], e[j] = e[j], e[i] }
 
-// StdDev calculates the standard deviation of a series
+// StdDev calculates the standard deviation of a series.
+// If a series is a list element type, flatten the series first.
 func (s Series) StdDev() float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	stdDev := stat.StdDev(s.Float(), nil)
 	return stdDev
 }
 
-// Mean calculates the average value of a series
+// Mean calculates the average value of a series.
+// If a series is a list element type, flatten the series first.
 func (s Series) Mean() float64 {
-	stdDev := stat.Mean(s.Float(), nil)
-	return stdDev
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
+	mean := stat.Mean(s.Float(), nil)
+	return mean
 }
 
 // Median calculates the middle or median value, as opposed to
 // mean, and there is less susceptible to being affected by outliers.
+// If a series is a list element type, flatten the series first.
 func (s Series) Median() float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 ||
 		s.Type() == String ||
 		s.Type() == Bool {
@@ -714,8 +1028,13 @@ func (s Series) Median() float64 {
 		newElem[len(newElem)/2].Float()) * 0.5
 }
 
-// Max return the biggest element in the series
+// Max return the biggest element in the series.
+// If a series is a list element type, flatten the series first.
 func (s Series) Max() float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 || s.Type() == String {
 		return math.NaN()
 	}
@@ -730,8 +1049,13 @@ func (s Series) Max() float64 {
 	return max.Float()
 }
 
-// MaxStr return the biggest element in a series of type String
+// MaxStr return the biggest element in a series of type String.
+// If a series is a list element type, flatten the series first.
 func (s Series) MaxStr() string {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 || s.Type() != String {
 		return ""
 	}
@@ -746,8 +1070,13 @@ func (s Series) MaxStr() string {
 	return max.String()
 }
 
-// Min return the lowest element in the series
+// Min return the lowest element in the series.
+// If a series is a list element type, flatten the series first.
 func (s Series) Min() float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 || s.Type() == String {
 		return math.NaN()
 	}
@@ -762,8 +1091,13 @@ func (s Series) Min() float64 {
 	return min.Float()
 }
 
-// MinStr return the lowest element in a series of type String
+// MinStr return the lowest element in a series of type String.
+// If a series is a list element type, flatten the series first.
 func (s Series) MinStr() string {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 || s.Type() != String {
 		return ""
 	}
@@ -780,8 +1114,13 @@ func (s Series) MinStr() string {
 
 // Quantile returns the sample of x such that x is greater than or
 // equal to the fraction p of samples.
-// Note: gonum/stat panics when called with strings
+// Note: gonum/stat panics when called with strings.
+// If a series is a list element type, flatten the series first.
 func (s Series) Quantile(p float64) float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.Type() == String || s.Len() == 0 {
 		return math.NaN()
 	}
@@ -807,8 +1146,13 @@ func (s Series) Map(f MapFunction) Series {
 	return New(mappedValues, s.Type(), s.Name)
 }
 
-// Sum calculates the sum value of a series
+// Sum calculates the sum value of a series.
+// If a series is a list element type, flatten the series first.
 func (s Series) Sum() float64 {
+	if s.IsListElement() {
+		s = s.Flatten()
+	}
+
 	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {
 		return math.NaN()
 	}
@@ -839,4 +1183,153 @@ func (s Series) Slice(j, k int) Series {
 	}
 
 	return s.Subset(idxs)
+}
+
+// Flatten returns the flattened elements of series. If the series is list type (2D), it returns the standard type (1D).
+// Examples:
+// - Strings([]string{"A", "B", "C"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}}) -> Ints([]int{1, 11, 3, 33})
+func (s Series) Flatten() Series {
+	switch s.Type() {
+	case StringList:
+		elements := []string{}
+		for i := 0; i < s.elements.Len(); i++ {
+			elements = append(elements, s.elements.Elem(i).StringList()...)
+		}
+		return New(elements, String, s.Name)
+	case IntList:
+		elements := []int{}
+		for i := 0; i < s.elements.Len(); i++ {
+			l, err := s.elements.Elem(i).IntList()
+			if err != nil {
+				continue
+			}
+			elements = append(elements, l...)
+		}
+		return New(elements, Int, s.Name)
+	case FloatList:
+		elements := []float64{}
+		for i := 0; i < s.elements.Len(); i++ {
+			elements = append(elements, s.elements.Elem(i).FloatList()...)
+		}
+		return New(elements, Float, s.Name)
+	case BoolList:
+		elements := []bool{}
+		for i := 0; i < s.elements.Len(); i++ {
+			l, err := s.elements.Elem(i).BoolList()
+			if err != nil {
+				continue
+			}
+			elements = append(elements, l...)
+		}
+		return New(elements, Bool, s.Name)
+	default:
+		return s
+	}
+}
+
+// Unique returns unique values based on a hash table.
+// Examples:
+// - Strings([]string{"A", "B", "C", "A", "B"}) -> Strings([]string{"A", "B", "C"})
+// - IntsList([][]int{{1, 11}, {3, 33}, {3, 33}}) -> IntsList([][]int{{1, 11}, {3, 33}})
+func (s Series) Unique() Series {
+	switch s.Type() {
+	case StringList:
+		l := s.elements.Len()
+		m := make(map[uint64]int, l)
+		elements := [][]string{}
+		for i := 0; i < l; i++ {
+			key := xxhash.Sum64String(strings.Join(s.elements.Elem(i).StringList(), ":"))
+			if _, ok := m[key]; ok {
+				continue
+			}
+
+			m[key] = 1
+			elements = append(elements, s.elements.Elem(i).StringList())
+		}
+		return New(elements, s.Type(), s.Name)
+	case IntList:
+		l := s.elements.Len()
+		m := make(map[uint64]int, l)
+		elements := [][]int{}
+		for i := 0; i < l; i++ {
+			list, err := s.elements.Elem(i).IntList()
+			if err != nil {
+				continue
+			}
+
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
+			if _, ok := m[key]; ok {
+				continue
+			}
+
+			m[key] = 1
+			elements = append(elements, list)
+		}
+		return New(elements, s.Type(), s.Name)
+	case FloatList:
+		l := s.elements.Len()
+		m := make(map[uint64]int, l)
+		elements := [][]float64{}
+		for i := 0; i < l; i++ {
+			list := s.elements.Elem(i).FloatList()
+
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
+			if _, ok := m[key]; ok {
+				continue
+			}
+
+			m[key] = 1
+			elements = append(elements, s.elements.Elem(i).FloatList())
+		}
+		return New(elements, s.Type(), s.Name)
+	case BoolList:
+		l := s.elements.Len()
+		m := make(map[uint64]int, l)
+		elements := [][]bool{}
+		for i := 0; i < l; i++ {
+			list, err := s.elements.Elem(i).BoolList()
+			if err != nil {
+				continue
+			}
+
+			h := xxhash.New()
+			for _, i := range list {
+				h.WriteString(fmt.Sprintf("%v:", i))
+			}
+			key := h.Sum64()
+
+			if _, ok := m[key]; ok {
+				continue
+			}
+
+			m[key] = 1
+			elements = append(elements, list)
+		}
+		return New(elements, s.Type(), s.Name)
+	default:
+		l := s.elements.Len()
+		m := make(map[uint64]int, l)
+		elements := []interface{}{}
+		for i := 0; i < l; i++ {
+			key := xxhash.Sum64String(fmt.Sprint(s.elements.Elem(i)))
+			if _, ok := m[key]; ok {
+				continue
+			}
+
+			m[key] = 1
+			elements = append(elements, s.elements.Elem(i))
+		}
+		return New(elements, s.Type(), s.Name)
+	}
 }

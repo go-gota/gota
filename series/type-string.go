@@ -26,8 +26,14 @@ func (e *stringElement) Set(value interface{}) {
 		}
 	case int:
 		e.e = strconv.Itoa(val)
+	case int32:
+		e.e = strconv.Itoa(int(val))
+	case int64:
+		e.e = strconv.FormatInt(val, 10)
+	case float32:
+		e.e = strconv.FormatFloat(float64(val), 'f', 6, 32)
 	case float64:
-		e.e = strconv.FormatFloat(value.(float64), 'f', 6, 64)
+		e.e = strconv.FormatFloat(val, 'f', 6, 64)
 	case bool:
 		b := value.(bool)
 		if b {
@@ -101,6 +107,48 @@ func (e stringElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert String \"%v\" to bool", e.e)
+}
+
+func (e stringElement) StringList() []string {
+	if e.IsNA() {
+		return []string{"NaN"}
+	}
+	return []string{string(e.e)}
+}
+
+func (e stringElement) IntList() ([]int, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []int")
+	}
+	val, err := strconv.Atoi(e.e)
+	if err != nil {
+		return nil, fmt.Errorf("cant't convert String \"%v\" to []int", e.e)
+	}
+	return []int{val}, nil
+}
+
+func (e stringElement) FloatList() []float64 {
+	if e.IsNA() {
+		return []float64{math.NaN()}
+	}
+	f, err := strconv.ParseFloat(e.e, 64)
+	if err != nil {
+		return []float64{math.NaN()}
+	}
+	return []float64{f}
+}
+
+func (e stringElement) BoolList() ([]bool, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []bool")
+	}
+	switch strings.ToLower(e.e) {
+	case "true", "t", "1":
+		return []bool{true}, nil
+	case "false", "f", "0":
+		return []bool{false}, nil
+	}
+	return nil, fmt.Errorf("can't convert String \"%v\" to []bool", e.e)
 }
 
 func (e stringElement) Eq(elem Element) bool {

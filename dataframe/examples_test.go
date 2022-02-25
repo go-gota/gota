@@ -23,7 +23,24 @@ func ExampleNew() {
 	//  0: b        1     3.000000
 	//  1: a        2     4.000000
 	//     <string> <int> <float>
+}
 
+func ExampleNew_ListTypes() {
+	df := dataframe.New(
+		series.New([][]string{{"B", "b"}, {"A", "a"}}, series.StringList, "COL.1"),
+		series.New([][]int{{1, 11}, {2, 22}}, series.IntList, "COL.2"),
+		series.New([][]float64{{3.0, 3.14}, {4.0, -16.64}}, series.FloatList, "COL.3"),
+		series.New([][]bool{{true, false}, {false, true}}, series.BoolList, "COL.4"),
+	)
+	fmt.Println(df)
+
+	// Output:
+	// [2x4] DataFrame
+	//
+	//     COL.1         COL.2      COL.3                 COL.4
+	//  0: [B b]         [1 11]     [3.000000 3.140000]   [true false]
+	//  1: [A a]         [2 22]     [4.000000 -16.640000] [false true]
+	//     <string_list> <int_list> <float_list>          <bool_list>
 }
 
 func ExampleLoadStructs() {
@@ -48,7 +65,6 @@ func ExampleLoadStructs() {
 	//  1: Juan     18    0.800000
 	//  2: Ana      22    0.500000
 	//     <string> <int> <float>
-
 }
 
 func ExampleLoadRecords() {
@@ -72,7 +88,6 @@ func ExampleLoadRecords() {
 	//  2: k        4     6.000000 true
 	//  3: a        2     7.100000 false
 	//     <string> <int> <float>  <bool>
-
 }
 
 func ExampleLoadRecords_options() {
@@ -102,7 +117,6 @@ func ExampleLoadRecords_options() {
 	//  2: k        4.000000 6.000000 true
 	//  3: a        2.000000 7.100000 false
 	//     <string> <float>  <float>  <bool>
-
 }
 
 func ExampleLoadMaps() {
@@ -131,7 +145,6 @@ func ExampleLoadMaps() {
 	//  0: a        1     true   0.000000
 	//  1: b        2     true   0.500000
 	//     <string> <int> <bool> <float>
-
 }
 
 func ExampleReadCSV() {
@@ -162,7 +175,6 @@ Spain,2012-02-01,66,555.42,00241
 	//  6: United States  2012-02-01 32    321.310000 54320
 	//  7: Spain          2012-02-01 66    555.420000 241
 	//     <string>       <string>   <int> <float>    <int>
-
 }
 
 func ExampleReadJSON() {
@@ -178,7 +190,6 @@ func ExampleReadJSON() {
 	//  1: 5     2     2
 	//  2: 6     3     1
 	//     <int> <int> <int>
-
 }
 
 func ExampleDataFrame_Subset() {
@@ -201,7 +212,6 @@ func ExampleDataFrame_Subset() {
 	//  0: a        4     5.100000 true
 	//  1: k        4     6.000000 true
 	//     <string> <int> <float>  <bool>
-
 }
 
 func ExampleDataFrame_Select() {
@@ -237,7 +247,6 @@ func ExampleDataFrame_Select() {
 	//  2: k        6.000000
 	//  3: a        7.100000
 	//     <string> <float>
-
 }
 
 func ExampleDataFrame_Filter() {
@@ -287,7 +296,6 @@ func ExampleDataFrame_Filter() {
 	//  0: a        4     5.100000 true
 	//  1: k        5     7.000000 true
 	//     <string> <int> <float>  <bool>
-
 }
 
 func ExampleDataFrame_Mutate() {
@@ -329,7 +337,6 @@ func ExampleDataFrame_Mutate() {
 	//  2: k        4     6.000000 true   c
 	//  3: a        2     7.100000 false  d
 	//     <string> <int> <float>  <bool> <string>
-
 }
 
 func ExampleDataFrame_InnerJoin() {
@@ -365,7 +372,6 @@ func ExampleDataFrame_InnerJoin() {
 	//  4: false  a        2     7.100000 2     8
 	//  5: false  a        2     7.100000 5     9
 	//     <bool> <string> <int> <float>  <int> <int>
-
 }
 
 func ExampleDataFrame_Set() {
@@ -399,7 +405,6 @@ func ExampleDataFrame_Set() {
 	//  2: c        3     6.000000 false
 	//  3: a        2     7.100000 false
 	//     <string> <int> <float>  <bool>
-
 }
 
 func ExampleDataFrame_Arrange() {
@@ -427,7 +432,6 @@ func ExampleDataFrame_Arrange() {
 	//  2: b        4     6.000000 true
 	//  3: c        3     6.000000 false
 	//     <string> <int> <float>  <bool>
-
 }
 
 func ExampleDataFrame_Describe() {
@@ -455,5 +459,4 @@ func ExampleDataFrame_Describe() {
 	//  6: 75%      -        4.000000 6.000000 1.000000
 	//  7: max      c        4.000000 7.100000 1.000000
 	//     <string> <string> <float>  <float>  <float>
-
 }

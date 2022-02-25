@@ -30,6 +30,12 @@ func (e *floatElement) Set(value interface{}) {
 		e.e = f
 	case int:
 		e.e = float64(val)
+	case int32:
+		e.e = float64(val)
+	case int64:
+		e.e = float64(val)
+	case float32:
+		e.e = float64(val)
 	case float64:
 		e.e = float64(val)
 	case bool:
@@ -111,6 +117,47 @@ func (e floatElement) Bool() (bool, error) {
 		return false, nil
 	}
 	return false, fmt.Errorf("can't convert Float \"%v\" to bool", e.e)
+}
+
+func (e floatElement) StringList() []string {
+	if e.IsNA() {
+		return []string{"NaN"}
+	}
+	return []string{fmt.Sprintf("%f", e.e)}
+}
+
+func (e floatElement) IntList() ([]int, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []int")
+	}
+	f := e.e
+	if math.IsInf(f, 1) || math.IsInf(f, -1) {
+		return nil, fmt.Errorf("can't convert Inf to []int")
+	}
+	if math.IsNaN(f) {
+		return nil, fmt.Errorf("can't convert NaN to []int")
+	}
+	return []int{int(f)}, nil
+}
+
+func (e floatElement) FloatList() []float64 {
+	if e.IsNA() {
+		return []float64{math.NaN()}
+	}
+	return []float64{e.e}
+}
+
+func (e floatElement) BoolList() ([]bool, error) {
+	if e.IsNA() {
+		return nil, fmt.Errorf("can't convert NaN to []bool")
+	}
+	switch e.e {
+	case 1:
+		return []bool{true}, nil
+	case 0:
+		return []bool{false}, nil
+	}
+	return nil, fmt.Errorf("can't convert Float \"%v\" to []bool", e.e)
 }
 
 func (e floatElement) Eq(elem Element) bool {
