@@ -30,6 +30,7 @@ type Series struct {
 type Elements interface {
 	Elem(int) Element
 	Len() int
+	Slice(start, end int) Elements
 }
 
 // Element is the interface that defines the types of methods to be present for
@@ -66,24 +67,28 @@ type intElements []intElement
 
 func (e intElements) Len() int           { return len(e) }
 func (e intElements) Elem(i int) Element { return &e[i] }
+func (e intElements) Slice(start, end int) Elements { return e[start : end] }
 
 // stringElements is the concrete implementation of Elements for String elements.
 type stringElements []stringElement
 
 func (e stringElements) Len() int           { return len(e) }
 func (e stringElements) Elem(i int) Element { return &e[i] }
+func (e stringElements) Slice(start, end int) Elements { return e[start : end] }
 
 // floatElements is the concrete implementation of Elements for Float elements.
 type floatElements []floatElement
 
 func (e floatElements) Len() int           { return len(e) }
 func (e floatElements) Elem(i int) Element { return &e[i] }
+func (e floatElements) Slice(start, end int) Elements { return e[start : end] }
 
 // boolElements is the concrete implementation of Elements for Bool elements.
 type boolElements []boolElement
 
 func (e boolElements) Len() int           { return len(e) }
 func (e boolElements) Elem(i int) Element { return &e[i] }
+func (e boolElements) Slice(start, end int) Elements { return e[start : end] }
 
 // ElementValue represents the value that can be used for marshaling or
 // unmarshaling Elements.
@@ -998,7 +1003,7 @@ func(s Series) FillNaNBackward() {
 	}
 }
 
-func(s Series) Rolling(window int, minPeriods int) Rolling {
+func(s Series) Rolling(window int, minPeriods int) RollingSeries {
 	return NewRollingSeries(window, minPeriods, s)
 }
 
@@ -1037,4 +1042,31 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 	}
 	result := New(eles, seriess[0].t,"")
 	return result, nil
+}
+
+func NaNElementByType(t Type) Element {
+	switch t {
+	case String:
+		return &stringElement{
+			e:   NaN,
+			nan: true,
+		}
+	case Float:
+		return &floatElement{
+			e:   math.NaN(),
+			nan: true,
+		}
+	case Bool:
+		return &boolElement{
+			e:   false,
+			nan: true,
+		}
+	case Int:
+		return &intElement{
+			e:   0,
+			nan: true,
+		}
+	default:
+		panic("not supported type:" + t)
+	}
 }

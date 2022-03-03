@@ -26,7 +26,7 @@ func TestSeries_Rolling(t *testing.T) {
 			Bools([]string{"false", "false", "false", "false", "false"}),
 			Floats([]string{"0.000000", "0.500000", "0.500000", "0.000000", "0.500000"}),
 			0.8,
-			Bools([]string{"false", "true", "true", "false", "true"}),
+			Floats([]string{"0.000000", "1.000000", "1.000000", "0.000000", "1.000000"}),
 			Bools([]string{NaN, NaN, NaN, NaN, NaN}),
 			Floats([]string{NaN, "0.707106781", "0.707106781", "0.000000", "0.707106781"}),
 		},
@@ -50,7 +50,7 @@ func TestSeries_Rolling(t *testing.T) {
 			Strings([]string{NaN, "20200909", "20200909", "20200909", "20200910"}),
 			Floats([]string{NaN, "20205763.500000", "20204145.666667", "20200910.333333", "20200911.000000"}),
 			0.8,
-			Strings([]string{NaN, "20210618.000000", "20210618.000000", "20200912.000000", "20200912.000000"}),
+			Strings([]string{NaN, NaN, NaN, NaN, NaN}),
 			Strings([]string{NaN, NaN, NaN, NaN, NaN}),
 			Strings([]string{NaN, "6865.299739", "5605.205111", "1.527525", "1.000000"}),
 		},
@@ -62,8 +62,8 @@ func TestSeries_Rolling(t *testing.T) {
 			Ints([]string{"23", "13", "13", "-64", "-64"}),
 			Floats([]string{"23.000000", "18.000000", "45.666667", "16.666667", "11.333333"}),
 			0.8,
-			Ints([]string{"23", "23", "101", "101", "101"}),
-			Ints([]string{"23", "18", "23", "13", "-3"}),
+			Floats([]string{"23", "23", "101", "101", "101"}),
+			Floats([]string{"23", "18", "23", "13", "-3"}),
 			Floats([]string{NaN, "7.071067812", "48.18021724", "82.56108849", "83.4286122"}),
 		},
 	}
@@ -175,40 +175,45 @@ func TestSeries_RollingApply(t *testing.T) {
 		window       int
 		minPeriod    int
 		applyExpected  Series
-		applyFunc  func([]float64, []Element) interface{}
+		applyFunc  func(window Series, windowIndex int) interface{}
+		t Type
 	}{
 		{
 			Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
 			3,
 			2,
 			Floats([]string{NaN, "2.5", "2.5", "-2.23", "0.662603", "0.619921"}),
-			func(f []float64, e []Element) interface{} {
-				return f[0] + 1
+			func(window Series, windowIndex int) interface{} {
+				return window.Float()[0] + 1
 			},
+			"",
 		},
 		{
 			Strings([]string{"20210618", "20200909", "20200910", "20200912", "20200911"}),
 			3,
 			2,
 			Strings([]string{NaN, "20210618-", "20210618-", "20200909-", "20200910-"}),
-			func(f []float64, e []Element) interface{} {
-				return e[0].String() + "-"
+			func(window Series, windowIndex int) interface{} {
+				return window.Elem(0).String() + "-"
 			},
+			String,
 		},
 		{
 			Ints([]string{"23", "13", "101", "-64", "-3"}),
 			3,
 			1,
 			Ints([]string{"24", "14", "102", "-63", "-2"}),
-			func(f []float64, e []Element) interface{} {
-				return f[len(f)-1]+1
+			func(window Series, windowIndex int) interface{} {
+				i, _ := window.Elem(-1).Int()
+				return i+1
 			},
+			Int,
 		},
 	}
 
 	for testnum, test := range tests {
 		expected := test.applyExpected.Records()
-		b := test.series.Rolling(test.window, test.minPeriod).Apply(test.applyFunc)
+		b := test.series.Rolling(test.window, test.minPeriod).Apply(test.applyFunc, test.t)
 		received := b.Records()
 		if !reflect.DeepEqual(expected, received) {
 			t.Errorf(
