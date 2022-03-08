@@ -69,7 +69,7 @@ func NewRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 	if minPeriods < 1 || minPeriods > window {
 		panic("minPeriods must >= 1 && minPeriods must <= window")
 	}
-	return &rollingSeries{
+	return rollingSeries{
 		Series:     s,
 		window:     window,
 		minPeriods: minPeriods,
