@@ -96,7 +96,7 @@ func (e boolElements) Slice(start, end int) Elements { return e[start : end] }
 // unmarshaling Elements.
 type ElementValue interface{}
 
-type MapFunction func(Element, int) Element
+type MapFunction func(ele Element, index int) Element
 
 // Comparator is a convenience alias that can be used for a more type safe way of
 // reason and use comparators.
