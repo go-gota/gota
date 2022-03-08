@@ -12,28 +12,30 @@ type stringElement struct {
 	nan bool
 }
 
+// force stringElement struct to implement Element interface
+var _ Element = (*stringElement)(nil)
+
 func (e *stringElement) Set(value interface{}) {
 	e.nan = false
-	switch vt := value.(type) {
+	switch val := value.(type) {
 	case string:
-		e.e = string(vt)
+		e.e = val
 		if e.e == "NaN" {
 			e.nan = true
 			return
 		}
 	case int:
-		e.e = strconv.Itoa(vt)
+		e.e = strconv.Itoa(val)
 	case float64:
-		e.e = strconv.FormatFloat(vt, 'f', 6, 64)
+		e.e = strconv.FormatFloat(val, 'f', 6, 64)
 	case bool:
-		b := vt
-		if b {
+		if val {
 			e.e = "true"
 		} else {
 			e.e = "false"
 		}
 	case Element:
-		e.e = vt.String()
+		e.e = val.String()
 	default:
 		e.nan = true
 	}

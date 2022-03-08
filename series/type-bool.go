@@ -11,15 +11,18 @@ type boolElement struct {
 	nan bool
 }
 
+// force boolElement struct to implement Element interface
+var _ Element = (*boolElement)(nil)
+
 func (e *boolElement) Set(value interface{}) {
 	e.nan = false
-	switch vt := value.(type) {
+	switch val := value.(type) {
 	case string:
-		if vt == "NaN" {
+		if val == "NaN" {
 			e.nan = true
 			return
 		}
-		switch strings.ToLower(vt) {
+		switch strings.ToLower(val) {
 		case "true", "t", "1":
 			e.e = true
 		case "false", "f", "0":
@@ -29,7 +32,7 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case int:
-		switch vt {
+		switch val {
 		case 1:
 			e.e = true
 		case 0:
@@ -39,7 +42,7 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case float64:
-		switch vt {
+		switch val {
 		case 1:
 			e.e = true
 		case 0:
@@ -49,9 +52,9 @@ func (e *boolElement) Set(value interface{}) {
 			return
 		}
 	case bool:
-		e.e = vt
+		e.e = val
 	case Element:
-		b, err := vt.Bool()
+		b, err := val.Bool()
 		if err != nil {
 			e.nan = true
 			return

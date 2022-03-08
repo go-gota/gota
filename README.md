@@ -1,6 +1,8 @@
 Gota: DataFrames, Series and Data Wrangling for Go
 ==================================================
 
+Meet us on Slack: Slack: [gophers.slack.com](https://gophers.slack.com) #go-gota ([invite](https://gophersinvite.herokuapp.com/))
+
 This is an implementation of DataFrames, Series and data wrangling
 methods for the Go programming language. The API is still in flux so
 *use at your own risk*.
@@ -182,14 +184,80 @@ column "B" is greater than 4:
 fil := df.Filter(
     dataframe.F{"A", series.Eq, "a"},
     dataframe.F{"B", series.Greater, 4},
+)
+
+filAlt := df.FilterAggregation(
+    dataframe.Or,
+    dataframe.F{"A", series.Eq, "a"},
+    dataframe.F{"B", series.Greater, 4},
 ) 
+```
+
+Filters inside Filter are combined as OR operations, alternatively we can use `df.FilterAggragation` with `dataframe.Or`.
+
+If we want to combine filters with AND operations, we can use `df.FilterAggregation` with `dataframe.And`.
+
+```go
+fil := df.FilterAggregation(
+    dataframe.And, 
+    dataframe.F{"A", series.Eq, "a"},
+    dataframe.F{"D", series.Eq, true},
+)
+```
+
+To combine AND and OR operations, we can use chaining of filters.
+
+```go
+// combine filters with OR
+fil := df.Filter(
+    dataframe.F{"A", series.Eq, "a"},
+    dataframe.F{"B", series.Greater, 4},
+)
+// apply AND for fil and fil2
 fil2 := fil.Filter(
     dataframe.F{"D", series.Eq, true},
 )
 ```
 
-Filters inside Filter are combined as OR operations whereas if we chain
-Filter methods, they will behave as AND.
+Filtering is based on predefined comparison operators: 
+* `series.Eq`
+* `series.Neq`
+* `series.Greater`
+* `series.GreaterEq`
+* `series.Less`
+* `series.LessEq`
+* `series.In`
+
+However, if these filter operations are not sufficient, we can use user-defined comparators.
+We use `series.CompFunc` and a user-defined function with the signature `func(series.Element) bool` to provide user-defined filters to `df.Filter` and `df.FilterAggregation`.
+
+```go
+hasPrefix := func(prefix string) func(el series.Element) bool {
+        return func (el series.Element) bool {
+            if el.Type() == String {
+                if val, ok := el.Val().(string); ok {
+                    return strings.HasPrefix(val, prefix)
+                }
+            }
+            return false
+        }
+    }
+
+fil := df.Filter(
+    dataframe.F{"A", series.CompFunc, hasPrefix("aa")},
+)
+```
+
+This example filters rows based on whether they have a cell value starting with `"aa"` in column `"A"`.
+
+#### GroupBy && Aggregation
+
+GroupBy && Aggregation
+
+```go
+groups := df.GroupBy("key1", "key2") // Group by column "key1", and column "key2" 
+aggre := groups.Aggregation([]AggregationType{Aggregation_MAX, Aggregation_MIN}, []string{"values", "values2"}) // Maximum value in column "values",  Minimum value in column "values2"
+```
 
 #### Arrange
 

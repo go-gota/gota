@@ -1,32 +1,86 @@
 # Change Log
+
 All notable changes to this project will be documented in this file.
 This project adheres to [Semantic Versioning](http://semver.org/).
+This document follows
+[markdownlint](https://github.com/markdownlint/markdownlint) formatting rules.
+
+## [0.12.0] - 2021-10-10
+
+### Added in 0.12.0
+
+- Add dataframe.GetGroups (@arjunmahishi)
+- Add Series.Slice (@jfussion)
+- Add csv lazy quote (@fredericlemoine)
+
+### Changed in 0.12.0
+
+- series.Err is deprecated; use Error() instead
+- dataframe.Err is deprecated; use Error() instead
+
+### Fixed in 0.12.0
+
+- Fix dataframe.GroupBy issue (@prliu)
+- making series Order stable (@mcolosimo-p4)
+
+## [0.11.0] - 2021-06-27
+
+### Added in 0.11.0
+
+- Rolling window Mean and StdDev
+- GroupBy and Aggregate
+- Numeric column index
+- Read HTML tables
+- extra checks for TravisCI
+- Combining filters with AND
+- User-defined filters
+- Concatination of Dataframes
+
+### Changed in 0.11.0
+
+- Make fixColnames faster
+- Use Go 1.16
+- Update dependencies
+
+### Fixed in 0.11.0
+
+- Linter issues
+- Failing tests
 
 ## [0.10.1] - 2019-11-08
-### Fixed
+
+### Fixed in 0.10.1
+
 - LoadRecords printing type debug information
 - Missing closing brackets in series.go
 - Fix gonum import path in dataframe_test
 
 ## [0.10.0] - 2019-11-08
-### Changed
+
+### Changed in 0.10.0
+
 - Merged dev branch changes from multiple collaborators (Sam Zaydel, Kyle
   Ellrott, Daniela Petruzalek, Christoph Laaber).
 
 ## [0.9.0] - 2016-10-03
-### Added
+
+### Added in 0.9.0
+
 - Additional method to load arbitrary struct slices to DataFrames (Juan Álvarez)
 - New LoadOption Names to set initial column names (Sander van Harmelen).
 - Parser option for csv delimiter (Kyle Ellrott)
 - New Describe method for reporting summary statistics (Daniela Petruzalek)
 
-### Changed
+### Changed in 0.9.0
+
 - Improve the performance of multiple operations.
 - Code cleanup for better consistency (Sander van Harmelen)
 - Renamed 'Deselect' function to 'Drop' (Ben Marshall)
 
 ## [0.8.0] - 2016-12-12
-### Added
+
+### Added in 0.8.0
+
 - Series.Order method and tests.
 - Series.IsNaN method and tests.
 - DataFrame.Arrange method and tests.
@@ -41,7 +95,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   interface via `DataFrame.Matrix()` and load a `mat64.Matrix` via
   `dataframe.LoadMatrix()`.
 
-### Changed
+### Changed in 0.8.0
+
 - elementInterface is now exported as Element.
 - Split element.go into separate files for the implementations of the
   Element interface.
@@ -56,10 +111,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   interface is much nicer, showing only the first 10 rows and limiting
   the number of characters that can be shown by line
 
-### Removed
+### Removed in 0.8.0
+
 - Some unused functions from the helpers.go file.
 
-### Fix
+### Fix in 0.8.0
+
 - Linter errors.
 - stringElement.Float now returns NaN instead of 0 when applicable.
 - Autorenaming column names when `hasHeaders == false` now is
@@ -68,7 +125,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   suffix numbers if the number of duplicates was greater than two.
 
 ## [0.7.0] - 2016-11-27
-### Added
+
+### Added in 0.7.0
+
 - Many more table tests for both `series` and `dataframe`
 - Set method for `Series` and `DataFrame`
 - When loading data from CSV, JSON, or Records, different
@@ -76,7 +135,8 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   a default type, manually specifying the column types and others.
 - More documentation for previously undocumented functions.
 
-### Changed
+### Changed in 0.7.0
+
 - The project has been restructured on separated `dataframe` and
   `series` packages.
 - Reviewed entire `Series` codebase for better style and
@@ -89,23 +149,30 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   `io.Reader` and `io.Writer` respectively.
 - Updated README with the new changes.
 
-### Removed
+### Removed in 0.7.0
+
 - Removed unnecessary abstraction layer on `Series.elements`
 
 ## [0.6.0] - 2016-10-29
-### Added
+
+### Added in 0.6.0
+
 - InnerJoin, CrossJoin, RightJoin, LeftJoin, OuterJoin functions
 
-### Changed
+### Changed in 0.6.0
+
 - More code refactoring for easier maintenance and management
 - Add more documentation to the exported functions
 - Remove unnecessary methods and structures from the exported API
 
-### Removed
+### Removed in 0.6.0
+
 - colnames and coltypes from the DataFrame structure
 
 ## [0.5.0] - 2016-08-09
-### Added
+
+### Added in 0.5.0
+
 - Read and write DataFrames from CSV, JSON, []map[string]interface{},
   [][]string.
 - New constructor for DataFrame accept Series and NamedSeries as
@@ -113,18 +180,22 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Subset, Select, Rename, Mutate, Filter, RBind and CBind methods
 - Much Better error handling
 
-### Changed
+### Changed in 0.5.0
+
 - Almost complete rewrite of DataFrame code.
 - Now using Series as first class citizens and building blocks for
   DataFrames.
 
-### Removed
+### Removed in 0.5.0
+
 - Merge/Join functions have been temporarily removed to be adapted to
   the new architecture.
 - Cell interface for allowing custom types into the system.
 
 ## [0.4.0] - 2016-02-18
-### Added
+
+### Added in 0.4.0
+
 - Getter methods for nrows and ncols.
 - An InnerJoin function that performs an Inner Merge/Join of two
   DataFrames by the given keys.
@@ -136,38 +207,44 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   return a empty cell for the given type.
 - Cell interface now have to implement a Copy method.
 
-### Changed
+### Changed in 0.4.0
+
 - The `cell` interface is now exported: `Cell`.
 - Cell method NA() is now IsNA().
 - The function parseColumn is now a method.
 - A number of fields and methods are now expoted.
 
-### Fixed
+### Fixed in 0.4.0
+
 - Now ensuring that generated subsets are in fact new copies entirely,
   not copying pointers to the same memory address.
 
 ## [0.3.0] - 2016-02-18
-### Added
+
+### Added in 0.3.0
+
 - Getter and setter methods for the column names of a DataFrame
 - Bool column type has been made available
 - New Bool() interface
 - A `column` now can now if any of it's elements is NA and a list of
   said NA elements ([]bool).
 
-### Changed
+### Changed in 0.3.0
+
 - Renamed `cell` interface elements to be more idiomatic:
-    - ToInteger() is now Int()
-    - ToFloat() is now Float()
+  - ToInteger() is now Int()
+  - ToFloat() is now Float()
 - The `cell` interface has changed. Int() and Float() now
   return pointers instead of values to prevent future conflicts when
-  returning an error. 
+  returning an error.
 - The `cell` interface has changed. Checksum() [16]byte added.
 - Using cell.Checksum() for identification of unique elements instead
   of raw strings.
 - The `cell` interface has changed, now also requires ToBool() method.
 - String type now does not contain a string, but a pointer to a string.
 
-### Fixed
+### Fixed in 0.3.0
+
 - Bool type constructor function Bools now parses `bool` and `[]bool`
   elements correctly.
 - Int type constructor function Ints now parses `bool` and `[]bool`
@@ -178,23 +255,29 @@ This project adheres to [Semantic Versioning](http://semver.org/).
   elements correctly.
 
 ## [0.2.1] - 2016-02-14
-### Fixed
+
+### Fixed in 0.2.1
+
 - Fixed a bug when the maximum number of characters on a column was
   not being updated properly when subsetting.
 
 ## [0.2.0] - 2016-02-13
-### Added
+
+### Added in 0.2.0
+
 - Added a lot of unit tests
 
-### Changed
+### Changed in 0.2.0
+
 - The base types are now `df.String`, `df.Int`, and `df.Float`.
 - Restructured the project in different files.
 - Refactored the project so that it will allow columns to be of any
   type as long as it complies with the necessary interfaces.
 
-
 ## [0.1.0] - 2016-02-06
-### Added
+
+### Added in 0.1.0
+
 - Load csv data to DataFrame.
 - Parse data to four supported types: `int`, `float64`, `date`
   & `string`.
@@ -214,3 +297,5 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 [0.9.0]:https://github.com/go-gota/gota/compare/v0.8.0...v0.9.0
 [0.10.0]:https://github.com/go-gota/gota/compare/v0.9.0...v0.10.0
 [0.10.1]:https://github.com/go-gota/gota/compare/v0.10.0...v0.10.1
+[0.11.0]:https://github.com/go-gota/gota/compare/v0.10.1...v0.11.0
+[0.12.0]:https://github.com/go-gota/gota/compare/v0.11.0...v0.12.0

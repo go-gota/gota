@@ -22,7 +22,9 @@ type Series struct {
 	Name     string   // The name of the series
 	elements Elements // The values of the elements
 	t        Type     // The type of the series
-	Err      error    // If there are errors they are stored here
+
+	// deprecated: use Error() instead
+	Err error
 }
 
 // Elements is the interface that represents the array of elements contained on
@@ -102,14 +104,18 @@ type Comparator string
 
 // Supported Comparators
 const (
-	Eq        Comparator = "==" // Equal
-	Neq       Comparator = "!=" // Non equal
-	Greater   Comparator = ">"  // Greater than
-	GreaterEq Comparator = ">=" // Greater or equal than
-	Less      Comparator = "<"  // Lesser than
-	LessEq    Comparator = "<=" // Lesser or equal than
-	In        Comparator = "in" // Inside
+	Eq        Comparator = "=="   // Equal
+	Neq       Comparator = "!="   // Non equal
+	Greater   Comparator = ">"    // Greater than
+	GreaterEq Comparator = ">="   // Greater or equal than
+	Less      Comparator = "<"    // Lesser than
+	LessEq    Comparator = "<="   // Lesser or equal than
+	In        Comparator = "in"   // Inside
+	CompFunc  Comparator = "func" // user-defined comparison function
 )
+
+// compFunc defines a user-defined comparator function. Used internally for type assertions
+type compFunc = func(el Element) bool
 
 // Type is a convenience alias that can be used for a more type safe way of
 // reason and use Series types.
@@ -164,43 +170,38 @@ func New(values interface{}, t Type, name string) Series {
 		return ret
 	}
 
-	switch vt := values.(type) {
+	switch v := values.(type) {
 	case []string:
-		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []float64:
-		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []int:
-		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []bool:
-		v := vt
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
 			ret.elements.Elem(i).Set(v[i])
 		}
 	case []Element:
-		l := len(vt)
+		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(vt[i])
+			ret.elements.Elem(i).Set(v[i])
 		}
 	case Series:
-		v := vt
 		l := v.Len()
 		preAlloc(l)
 		for i := 0; i < l; i++ {
@@ -284,6 +285,11 @@ func Bools(values interface{}) Series {
 // Empty returns an empty Series of the same type
 func (s Series) Empty() Series {
 	return New([]int{}, s.t, s.Name)
+}
+
+// Returns Error or nil if no error occured
+func (s *Series) Error() error {
+	return s.Err
 }
 
 // Append adds new elements to the end of the Series. When using Append, the
@@ -450,9 +456,25 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return ret, nil
 	}
 
-	comp := New(comparando, s.t, "")
 	bools := make([]bool, s.Len())
-	// In comparator comparation
+
+	// CompFunc comparator comparison
+	if comparator == CompFunc {
+		f, ok := comparando.(compFunc)
+		if !ok {
+			panic("comparando is not a comparison function of type func(el Element) bool")
+		}
+
+		for i := 0; i < s.Len(); i++ {
+			e := s.elements.Elem(i)
+			bools[i] = f(e)
+		}
+
+		return Bools(bools)
+	}
+
+	comp := New(comparando, s.t, "")
+	// In comparator comparison
 	if comparator == In {
 		for i := 0; i < s.Len(); i++ {
 			e := s.elements.Elem(i)
@@ -640,13 +662,13 @@ func (s Series) Elem(i int) Element {
 // out of bounds checks is performed.
 func parseIndexes(l int, indexes Indexes) ([]int, error) {
 	var idx []int
-	switch vt := indexes.(type) {
+	switch idxs := indexes.(type) {
 	case []int:
-		idx = vt
+		idx = idxs
 	case int:
-		idx = []int{vt}
+		idx = []int{idxs}
 	case []bool:
-		bools := vt
+		bools := idxs
 		if len(bools) != l {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
@@ -656,7 +678,7 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 			}
 		}
 	case Series:
-		s := vt
+		s := idxs
 		if err := s.Err; err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
@@ -699,7 +721,7 @@ func (s Series) Order(reverse bool) []int {
 	if reverse {
 		srt = sort.Reverse(srt)
 	}
-	sort.Sort(srt)
+	sort.Stable(srt)
 	var ret []int
 	for _, e := range ie {
 		ret = append(ret, e.index)
@@ -841,7 +863,6 @@ func (s Series) Quantile(p float64) float64 {
 // the function passed in via argument `f` will not expect another type, but
 // instead expects to handle Element(s) of type Float.
 func (s Series) Map(f MapFunction) Series {
-
 	mappedValues := make([]Element, s.Len())
 	for i := 0; i < s.Len(); i++ {
 		value := f(s.elements.Elem(i), i)
@@ -1069,4 +1090,36 @@ func NaNElementByType(t Type) Element {
 	default:
 		panic("not supported type:" + t)
 	}
+}
+// Sum calculates the sum value of a series
+func (s Series) Sum() float64 {
+	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {
+		return math.NaN()
+	}
+	sFloat := s.Float()
+	sum := sFloat[0]
+	for i := 1; i < len(sFloat); i++ {
+		sum += sFloat[i]
+	}
+	return sum
+}
+
+// Slice slices Series from j to k-1 index.
+func (s Series) Slice(j, k int) Series {
+	if s.Err != nil {
+		return s
+	}
+
+	if j > k || j < 0 || k >= s.Len() {
+		empty := s.Empty()
+		empty.Err = fmt.Errorf("slice index out of bounds")
+		return empty
+	}
+
+	idxs := make([]int, k-j)
+	for i := 0; j+i < k; i++ {
+		idxs[i] = j + i
+	}
+
+	return s.Subset(idxs)
 }

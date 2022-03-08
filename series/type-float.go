@@ -11,33 +11,36 @@ type floatElement struct {
 	nan bool
 }
 
+// force floatElement struct to implement Element interface
+var _ Element = (*floatElement)(nil)
+
 func (e *floatElement) Set(value interface{}) {
 	e.nan = false
-	switch vt := value.(type) {
+	switch val := value.(type) {
 	case string:
-		if vt == "NaN" {
+		if val == "NaN" {
 			e.nan = true
 			return
 		}
-		f, err := strconv.ParseFloat(vt, 64)
+		f, err := strconv.ParseFloat(val, 64)
 		if err != nil {
 			e.nan = true
 			return
 		}
 		e.e = f
 	case int:
-		e.e = float64(vt)
+		e.e = float64(val)
 	case float64:
-		e.e = float64(vt)
+		e.e = val
 	case bool:
-		b := vt
+		b := val
 		if b {
 			e.e = 1
 		} else {
 			e.e = 0
 		}
 	case Element:
-		e.e = vt.Float()
+		e.e = val.Float()
 	default:
 		e.nan = true
 	}

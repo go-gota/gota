@@ -11,24 +11,27 @@ type intElement struct {
 	nan bool
 }
 
+// force intElement struct to implement Element interface
+var _ Element = (*intElement)(nil)
+
 func (e *intElement) Set(value interface{}) {
 	e.nan = false
-	switch vt := value.(type) {
+	switch val := value.(type) {
 	case string:
-		if vt == "NaN" {
+		if val == "NaN" {
 			e.nan = true
 			return
 		}
-		i, err := strconv.Atoi(vt)
+		i, err := strconv.Atoi(val)
 		if err != nil {
 			e.nan = true
 			return
 		}
 		e.e = i
 	case int:
-		e.e = int(vt)
+		e.e = val
 	case float64:
-		f := vt
+		f := val
 		if math.IsNaN(f) ||
 			math.IsInf(f, 0) ||
 			math.IsInf(f, 1) {
@@ -37,14 +40,14 @@ func (e *intElement) Set(value interface{}) {
 		}
 		e.e = int(f)
 	case bool:
-		b := vt
+		b := val
 		if b {
 			e.e = 1
 		} else {
 			e.e = 0
 		}
 	case Element:
-		v, err := vt.Int()
+		v, err := val.Int()
 		if err != nil {
 			e.nan = true
 			return

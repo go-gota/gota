@@ -422,6 +422,76 @@ func TestSeries_Compare(t *testing.T) {
 	}
 }
 
+func TestSeries_Compare_CompFunc(t *testing.T) {
+	table := []struct {
+		series     Series
+		comparator Comparator
+		comparando interface{}
+		expected   Series
+		panic      bool
+	}{
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			CompFunc,
+			func(el Element) bool {
+				if el.Type() == String {
+					if val, ok := el.Val().(string); ok {
+						return strings.HasPrefix(val, "B")
+					}
+					return false
+				}
+				return false
+			},
+			Bools([]bool{false, true, false, true, false, true}),
+			false,
+		},
+		{
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			CompFunc,
+			func(el Element) {},
+			Bools([]bool{false, false, false, false, false}),
+			true,
+		},
+	}
+	for testnum, test := range table {
+		func() {
+			defer func() {
+				if r := recover(); r != nil {
+					// recovered
+					if !test.panic {
+						t.Errorf("did not expected panic but was '%v'", r)
+					}
+				} else {
+					// nothing to recover from
+					if test.panic {
+						t.Errorf("exptected panic but did not panic")
+					}
+				}
+			}()
+
+			a := test.series
+			b := a.Compare(test.comparator, test.comparando)
+			if err := b.Err; err != nil {
+				t.Errorf("Test:%v\nError:%v", testnum, err)
+			}
+			expected := test.expected.Records()
+			received := b.Records()
+			if !reflect.DeepEqual(expected, received) {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+			if err := checkTypes(b); err != nil {
+				t.Errorf(
+					"Test:%v\nError:%v",
+					testnum, err,
+				)
+			}
+		}()
+	}
+}
+
 func TestSeries_Subset(t *testing.T) {
 	table := []struct {
 		series   Series
@@ -1526,9 +1596,8 @@ func TestSeries_Quantile(t *testing.T) {
 	}
 }
 
-
 func TestSeries_Map(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		expected Series
 	}{
@@ -1586,11 +1655,11 @@ func TestSeries_Map(t *testing.T) {
 		i, err := result.Int()
 		if err != nil {
 			return Element(&intElement{
-				e: +5,
+				e:   +5,
 				nan: false,
 			})
 		}
-		result.Set(i + 5)		
+		result.Set(i + 5)
 		return Element(result)
 	}
 
@@ -1601,12 +1670,12 @@ func TestSeries_Map(t *testing.T) {
 		return Element(result)
 	}
 
-		for testnum, test := range tests {
+	for testnum, test := range tests {
 		switch test.series.Type() {
 		case Bool:
 			expected := test.expected
 			received := test.series.Map(and)
-			for i := 0 ; i<expected.Len() ; i++ {
+			for i := 0; i < expected.Len(); i++ {
 				e, _ := expected.Elem(i).Bool()
 				r, _ := received.Elem(i).Bool()
 
@@ -1617,13 +1686,13 @@ func TestSeries_Map(t *testing.T) {
 					)
 				}
 			}
-			
+
 		case Float:
 			expected := test.expected
 			received := test.series.Map(doubleFloat64)
-			for i := 0 ; i<expected.Len() ; i++ {
+			for i := 0; i < expected.Len(); i++ {
 				if !compareFloats(expected.Elem(i).Float(),
-				received.Elem(i).Float(), 6) {
+					received.Elem(i).Float(), 6) {
 					t.Errorf(
 						"Test:%v\nExpected:\n%v\nReceived:\n%v",
 						testnum, expected, received,
@@ -1633,7 +1702,7 @@ func TestSeries_Map(t *testing.T) {
 		case Int:
 			expected := test.expected
 			received := test.series.Map(add5Int)
-			for i := 0 ; i<expected.Len() ; i++ {
+			for i := 0; i < expected.Len(); i++ {
 				e, _ := expected.Elem(i).Int()
 				r, _ := received.Elem(i).Int()
 				if e != r {
@@ -1646,9 +1715,9 @@ func TestSeries_Map(t *testing.T) {
 		case String:
 			expected := test.expected
 			received := test.series.Map(trimXyZPrefix)
-			for i :=0 ; i<expected.Len() ; i++ {
+			for i := 0; i < expected.Len(); i++ {
 				if strings.Compare(expected.Elem(i).String(),
-				received.Elem(i).String()) != 0 {
+					received.Elem(i).String()) != 0 {
 					t.Errorf(
 						"Test:%v\nExpected:\n%v\nReceived:\n%v",
 						testnum, expected, received,
@@ -1961,3 +2030,111 @@ func TestSeries_FillNaNBackward(t *testing.T) {
 	}
 }
 
+
+func TestSeries_Sum(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			// Extreme observations should not factor in.
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 100, 1000, 10000}),
+			11155,
+		},
+		{
+			// Change in order should influence result.
+			Ints([]int{1, 2, 3, 10, 100, 1000, 10000, 4, 5, 6, 7, 8, 9}),
+			11155,
+		},
+		{
+			Floats([]float64{20.2755, 4.98964, -20.2006, 1.19854, 1.89977,
+				1.51178, -17.4687, 4.65567, -8.65952, 6.31649,
+			}),
+			-5.481429999999998,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			math.NaN(),
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Sum()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
+func TestSeries_Slice(t *testing.T) {
+	seriesWithErr := Ints([]int{})
+	seriesWithErr.Err = fmt.Errorf("slice index out of bounds")
+
+	tests := []struct {
+		j        int
+		k        int
+		series   Series
+		expected Series
+	}{
+		{
+			0,
+			3,
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{1, 2, 3}),
+		},
+		{
+			1,
+			1,
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{}),
+		},
+		{
+			-1,
+			1,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
+		{
+			0,
+			5,
+			Ints([]int{1, 2, 3, 4, 5}),
+			seriesWithErr,
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.expected
+		received := test.series.Slice(test.j, test.k)
+
+		for i := 0; i < expected.Len(); i++ {
+			if strings.Compare(expected.Elem(i).String(),
+				received.Elem(i).String()) != 0 {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+
+		if expected.Err != nil {
+			if received.Err == nil || expected.Err.Error() != received.Err.Error() {
+				t.Errorf(
+					"Test:%v\nExpected error:\n%v\nReceived:\n%v",
+					testnum, expected.Err, received.Err,
+				)
+			}
+		}
+	}
+}

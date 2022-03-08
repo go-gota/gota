@@ -1,2 +1,7 @@
-.vscode
-go.sum
+# IntelliJ
+.idea/
+*.iml
+
+# vscode
+.vscode/
+*.code-workspace
