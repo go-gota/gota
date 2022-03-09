@@ -48,10 +48,6 @@ func (e stringElement) Copy() Element {
 	return &stringElement{e.e, false}
 }
 
-func (e stringElement) NA() Element {
-	return &stringElement{"", true}
-}
-
 func (e stringElement) IsNA() bool {
 	return e.nan
 }

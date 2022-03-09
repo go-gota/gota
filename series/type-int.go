@@ -65,10 +65,6 @@ func (e intElement) Copy() Element {
 	return &intElement{e.e, false}
 }
 
-func (e intElement) NA() Element {
-	return &intElement{0, true}
-}
-
 func (e intElement) IsNA() bool {
 	return e.nan
 }

@@ -60,8 +60,6 @@ type Element interface {
 	// Information methods
 	IsNA() bool
 	Type() Type
-
-	NA() Element
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -885,11 +883,12 @@ func (s Series) Shift(periods int) Series {
 			shiftElements[i] = s.Elem(i - periods).Copy()
 		}
 		for i := s.Len() + periods; i < s.Len(); i++ {
-			shiftElements[i] = s.Elem(0).NA()
+			shiftElements[i] = NaNElementByType(s.t)
+			
 		}	
 	} else if periods > 0 {
 		for i := 0; i < periods; i++ {
-			shiftElements[i] = s.Elem(0).NA()
+			shiftElements[i] = NaNElementByType(s.t)
 		}
 		for i := 0 ; i + periods < s.Len(); i++ {
 			shiftElements[i + periods] = s.Elem(i).Copy()
@@ -1009,7 +1008,7 @@ func(s Series) FillNaNForward() {
 	}
 }
 
-// FillNaNBackward Fill NaN values using the next non-NaN value
+// FillNaNBackward fill NaN values using the next non-NaN value
 func(s Series) FillNaNBackward() {
 	var lastNotNaNValue ElementValue = nil
 	for i := s.Len() - 1 ; i >= 0; i-- {
@@ -1028,7 +1027,7 @@ func(s Series) Rolling(window int, minPeriods int) RollingSeries {
 	return NewRollingSeries(window, minPeriods, s)
 }
 
-
+//Operation for multiple series calculation  
 func Operation(operate func(index int, eles ...Element) interface{}, seriess ...Series) (Series, error) {
 	if len(seriess) == 0 {
 		return Series{}, errors.New("seriess num must > 0")
@@ -1046,7 +1045,6 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 	}
 
 	eles := make([]Element, maxLen)
-	baseEle := seriess[0].Elem(0)
 	for i := 0; i < maxLen; i++ {
 		operateParam := make([]Element, len(seriess))
 		for j := 0; j < len(seriess); j++ {
@@ -1057,7 +1055,7 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 			}
 		}
 		res := operate(i, operateParam...)
-		e := baseEle.NA()
+		e := NaNElementByType(seriess[0].t)
 		e.Set(res)
 		eles[i] = e
 	}

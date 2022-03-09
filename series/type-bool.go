@@ -72,10 +72,6 @@ func (e boolElement) Copy() Element {
 	return &boolElement{e.e, false}
 }
 
-func (e boolElement) NA() Element {
-	return &boolElement{false, true}
-}
-
 func (e boolElement) IsNA() bool {
 	return e.nan
 }

@@ -53,10 +53,6 @@ func (e floatElement) Copy() Element {
 	return &floatElement{e.e, false}
 }
 
-func (e floatElement) NA() Element {
-	return &floatElement{math.NaN(), true}
-}
-
 func (e floatElement) IsNA() bool {
 	if e.nan || math.IsNaN(e.e) {
 		return true
