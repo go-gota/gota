@@ -13,11 +13,9 @@ import (
 	"strings"
 	"unicode/utf8"
 
-
-	"github.com/mqy527/gota/series"
+	"github.com/go-gota/gota/series"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
-
 )
 
 // DataFrame is a data structure designed for operating on table like data (Such

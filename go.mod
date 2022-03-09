@@ -1,4 +1,4 @@
-module github.com/mqy527/gota
+module github.com/go-gota/gota
 
 go 1.16
 

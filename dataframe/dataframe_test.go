@@ -10,7 +10,7 @@ import (
 
 	"math"
 
-	"github.com/mqy527/gota/series"
+	"github.com/go-gota/gota/series"
 )
 
 // compareFloats compares floating point values up to the number of digits specified.
@@ -694,7 +694,7 @@ func TestDataFrame_Mutate(t *testing.T) {
 	)
 	table := []struct {
 		s     series.Series
-		s1 	  series.Series
+		s1    series.Series
 		expDf DataFrame
 	}{
 		{
