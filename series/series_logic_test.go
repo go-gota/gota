@@ -48,6 +48,12 @@ func TestSeries_Logic(t *testing.T) {
 			Bools([]string{"false", "false", "false", "false", "false"}),
 			Bools([]string{"true", "true", "true", "false", "true"}),
 		},
+		{
+			Bools([]string{"false", "true", "false", "false", "123"}),
+			[]int	  {7, 0, 1, 0, 0},
+			Bools([]string{"NaN", "false", "false", "false", "NaN"}),
+			Bools([]string{"NaN", "true", "true", "false", "NaN"}),
+		},
 	}
 
 	for testnum, test := range tests {

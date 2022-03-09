@@ -6,10 +6,16 @@ import (
 
 
 func (s Series) And(in interface{}) Series {
-	inSeries := New(in, s.t, "")
+	inSeries := New(in, Bool, "")
 	result, err := Operation(func(index int, eles ...Element) interface{} {
-		e0b,_ := eles[0].Bool()
-		e1b,_ := eles[1].Bool()
+		e0b, err := eles[0].Bool()
+		if err != nil {
+			return nil
+		}
+		e1b, err := eles[1].Bool()
+		if err != nil {
+			return nil
+		}
 		return e0b && e1b
 	}, s, inSeries)
 	if err != nil {
@@ -19,10 +25,16 @@ func (s Series) And(in interface{}) Series {
 }
 
 func (s Series) Or(in interface{}) Series {
-	inSeries := New(in, s.t, "")
+	inSeries := New(in, Bool, "")
 	result, err := Operation(func(index int, eles ...Element) interface{} {
-		e0b,_ := eles[0].Bool()
-		e1b,_ := eles[1].Bool()
+		e0b, err := eles[0].Bool()
+		if err != nil {
+			return nil
+		}
+		e1b, err := eles[1].Bool()
+		if err != nil {
+			return nil
+		}
 		return e0b || e1b
 	}, s, inSeries)
 	if err != nil {
