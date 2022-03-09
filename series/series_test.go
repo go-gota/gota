@@ -2110,6 +2110,12 @@ func TestSeries_Slice(t *testing.T) {
 			0,
 			5,
 			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{1, 2, 3, 4, 5}),
+		},
+		{
+			0,
+			6,
+			Ints([]int{1, 2, 3, 4, 5}),
 			seriesWithErr,
 		},
 	}

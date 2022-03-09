@@ -918,25 +918,25 @@ func(s Series) AddConst(c float64) Series {
 
 // AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) MulConst(c float64) Series {
-	s.Name = fmt.Sprintf("(%s * %v)", s.Name, c)
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
 		result.Set(f * c)		
-		return Element(result)
+		return result
 	})
+	sm.Name = fmt.Sprintf("(%s * %v)", s.Name, c)
 	return sm
 }
 
 // DivConst Div the scalar c to all of the values in Series and returning a new Series object.
 func(s Series) DivConst(c float64) Series {
-	s.Name = fmt.Sprintf("(%s / %v)", s.Name, c)
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
 		result.Set(f / c)		
-		return Element(result)
+		return result
 	})
+	sm.Name = fmt.Sprintf("(%s / %v)", s.Name, c)
 	return sm
 }
 
@@ -973,13 +973,13 @@ func(s Series) Div(c Series) Series {
 }
 
 func(s Series) Abs() Series {
-	s.Name = fmt.Sprintf("Abs(%s)", s.Name)
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
 		result.Set(math.Abs(f))		
-		return Element(result)
+		return result
 	})
+	sm.Name = fmt.Sprintf("Abs(%s)", s.Name)
 	return sm
 }
 
@@ -1104,22 +1104,22 @@ func (s Series) Sum() float64 {
 	return sum
 }
 
-// Slice slices Series from j to k-1 index.
-func (s Series) Slice(j, k int) Series {
+// Slice slices Series from start to end-1 index.
+func (s Series) Slice(start, end int) Series {
 	if s.Err != nil {
 		return s
 	}
 
-	if j > k || j < 0 || k >= s.Len() {
+	if start > end || start < 0 || end > s.Len() {
 		empty := s.Empty()
 		empty.Err = fmt.Errorf("slice index out of bounds")
 		return empty
 	}
 
-	idxs := make([]int, k-j)
-	for i := 0; j+i < k; i++ {
-		idxs[i] = j + i
+	ret := Series{
+		Name: s.Name,
+		t:    s.t,
 	}
-
-	return s.Subset(idxs)
+	ret.elements = s.elements.Slice(start, end)
+	return ret
 }
