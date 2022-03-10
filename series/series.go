@@ -162,6 +162,19 @@ const (
 //     Series [Bool]  // Same as []bool
 type Indexes interface{}
 
+type LogicalOperator int
+
+const (
+	And LogicalOperator = iota
+	Or
+	XOr
+)
+
+func NewEmpty(t Type, name string, length int) Series {
+	values := make([]interface{}, length)
+	return New(values, t, name)
+}
+
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
 	ret := Series{
@@ -557,6 +570,62 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 	return s
 }
 
+// SetMutualExclusiveValue sets the values on the indexes of a Series, but exclude given indexes that already applied previously. This will returns the reference
+// for itself. The original Series is modified.
+func (s Series) SetMutualExclusiveValue(indexes, excludingIndexes Indexes, newvalues Series) Series {
+	existingSeries := s
+	if err := existingSeries.Err; err != nil {
+		return s
+	}
+	if err := newvalues.Err; err != nil {
+		s.Err = fmt.Errorf("set error: argument has errors: %v", err)
+		return s
+	}
+	idx, err := parseIndexes(existingSeries.Len(), indexes)
+	if err != nil {
+		s.Err = err
+		return s
+	}
+
+	excludedIdx, err := parseIndexes(existingSeries.Len(), excludingIndexes)
+	if err != nil {
+		s.Err = err
+		return s
+	}
+
+	excludedIdxDict := make(map[int]int, len(excludedIdx))
+	for _, k := range excludedIdx {
+		excludedIdxDict[k] = k
+	}
+
+	isBroadcastRightValue := newvalues.Len() == 1
+	if existingSeries.Len() != newvalues.Len() && !isBroadcastRightValue {
+		s.Err = fmt.Errorf("set error: dimensions mismatch")
+		return s
+	}
+	for _, i := range idx {
+		rightValIdx := 0
+		if !isBroadcastRightValue {
+			rightValIdx = i
+		}
+
+		if _, isExcludedIdx := excludedIdxDict[i]; isExcludedIdx {
+			continue
+		}
+
+		if i < 0 || i >= existingSeries.Len() {
+			s.Err = fmt.Errorf("set error: index out of range")
+			return s
+		}
+		newVal := newvalues.elements.Elem(rightValIdx)
+		if newVal.IsNA() {
+			newVal = nil
+		}
+		s.elements.Elem(i).Set(newVal)
+	}
+	return s
+}
+
 // HasNaN checks whether the Series contain NaN elements.
 func (s Series) HasNaN() bool {
 	for i := 0; i < s.Len(); i++ {
@@ -621,7 +690,17 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	comp := New(comparando, s.t, "")
+	// check whether comparando already series
+	var comp Series
+	switch val := comparando.(type) {
+	case Series:
+		comp = val
+	case *Series:
+		comp = *val
+	default:
+		comp = New(comparando, s.t, "")
+	}
+
 	// In comparator comparison
 	if comparator == In {
 		for i := 0; i < s.Len(); i++ {
@@ -645,58 +724,144 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 		return Bools(bools)
 	}
 
-	// Single element comparison
-	if comp.Len() == 1 {
-		for i := 0; i < s.Len(); i++ {
-			e := s.elements.Elem(i)
-			c, err := compareElements(e, comp.elements.Elem(0), comparator)
-			if err != nil {
-				s = s.Empty()
-				s.Err = err
-				return s
-			}
-			bools[i] = c
-		}
-		return Bools(bools)
+	isBroadcastLeftValue := s.Len() == 1
+	isBroadcastRightValue := comp.Len() == 1
+
+	if s.Len() != comp.Len() && !isBroadcastLeftValue && !isBroadcastRightValue {
+		s := s.Empty()
+		s.Err = fmt.Errorf("can't compare: length mismatch")
+		return s
 	}
 
-	// Multiple element comparison of single value types
-	switch s.t {
-	case String, Int, Float, Bool:
-		if s.Len() != comp.Len() {
-			s := s.Empty()
-			s.Err = fmt.Errorf("can't compare: length mismatch")
+	len := s.Len()
+	if isBroadcastLeftValue {
+		len = comp.Len()
+	}
+	resultBools := make([]bool, len)
+	for i := 0; i < len; i++ {
+		leftIdx := 0
+		rightIdx := 0
+		if !isBroadcastLeftValue {
+			leftIdx = i
+		}
+		if !isBroadcastRightValue {
+			rightIdx = i
+		}
+		e := s.elements.Elem(leftIdx)
+		c, err := compareElements(e, comp.elements.Elem(rightIdx), comparator)
+		if err != nil {
+			s = s.Empty()
+			s.Err = err
 			return s
 		}
-		for i := 0; i < s.Len(); i++ {
-			e := s.elements.Elem(i)
-			c, err := compareElements(e, comp.elements.Elem(i), comparator)
-			if err != nil {
-				s = s.Empty()
-				s.Err = err
-				return s
-			}
-			bools[i] = c
-		}
-	case StringList, IntList, FloatList, BoolList:
-		for i := 0; i < s.Len(); i++ {
-			e := s.elements.Elem(i)
-			c, err := compareElements(e, comp.elements.Elem(i), comparator)
-			if err != nil {
-				s = s.Empty()
-				s.Err = err
-				return s
-			}
-			bools[i] = c
-		}
+		resultBools[i] = c
 	}
 
-	return Bools(bools)
+	return Bools(resultBools)
+}
+
+// AND operation in multiple series
+// Returning Boolean series
+func (s Series) And(rightValues interface{}) Series {
+	return s.logicalOperation(And, rightValues)
+}
+
+// OR operation in multiple series
+// Returning Boolean series
+func (s Series) Or(rightValues interface{}) Series {
+	return s.logicalOperation(Or, rightValues)
+}
+
+// XOR operation in multiple series
+// Returning Boolean series
+func (s Series) XOr(rightValues interface{}) Series {
+	return s.logicalOperation(XOr, rightValues)
+}
+
+func (s Series) logicalOperation(operator LogicalOperator, rightValues interface{}) Series {
+	res, err := s.Bool()
+	if err != nil {
+		errSeries := s.Empty()
+		errSeries.Err = fmt.Errorf("could not convert to bool")
+		return errSeries
+	}
+
+	var rValues []interface{}
+	rightVal := reflect.ValueOf(rightValues)
+	switch rightVal.Kind() {
+	case reflect.Slice:
+		rValues = make([]interface{}, rightVal.Len())
+		for index := 0; index < rightVal.Len(); index++ {
+			idxVal := rightVal.Index(index)
+			rValues[index] = idxVal.Interface()
+		}
+	default:
+		rValues = []interface{}{rightValues}
+	}
+
+	for i := 0; i < len(rValues); i++ {
+
+		var rightSeries Series
+		switch val := rValues[i].(type) {
+		case Series:
+			rightSeries = val
+		case *Series:
+			rightSeries = *val
+		default:
+			rightSeries = New(val, s.t, "")
+		}
+		nexRes, err := rightSeries.Bool()
+		if err != nil {
+			return Series{Err: err}
+		}
+
+		isBroadCastLeft := len(res) == 1
+		isBroadCastRight := len(nexRes) == 1
+
+		if len(res) != len(nexRes) && !isBroadCastLeft && !isBroadCastRight {
+			errRes := s.Empty()
+			errRes.Err = fmt.Errorf("can't compare mismatch length")
+			return errRes
+		}
+
+		lenOfResult := len(nexRes)
+		if lenOfResult < len(res) {
+			lenOfResult = len(res)
+		}
+
+		newRes := make([]bool, lenOfResult)
+		for j := 0; j < lenOfResult; j++ {
+			leftVal := res[0]
+			if !isBroadCastLeft {
+				leftVal = res[j]
+			}
+			rightVal := nexRes[0]
+			if !isBroadCastRight {
+				rightVal = nexRes[j]
+			}
+			switch operator {
+			case And:
+				newRes[j] = leftVal && rightVal
+			case Or:
+				newRes[j] = leftVal || rightVal
+			case XOr:
+				newRes[j] = leftVal != rightVal
+			default:
+				panic(fmt.Errorf("operator not valid %v", operator))
+			}
+		}
+		res = newRes
+	}
+	return New(res, Bool, "")
 }
 
 // Copy will return a copy of the Series.
 func (s Series) Copy() Series {
-	name := s.Name
+	return s.CopyWithName(s.Name)
+}
+
+func (s Series) CopyWithName(colName string) Series {
+	name := colName
 	t := s.t
 	err := s.Err
 	var elements Elements
@@ -1171,7 +1336,7 @@ func (s Series) Slice(j, k int) Series {
 		return s
 	}
 
-	if j > k || j < 0 || k >= s.Len() {
+	if j > k || j < 0 || k > s.Len() {
 		empty := s.Empty()
 		empty.Err = fmt.Errorf("slice index out of bounds")
 		return empty

@@ -114,8 +114,8 @@ func (df DataFrame) print(
 	shortRows, shortCols, showDims, showTypes bool,
 	maxRows int,
 	maxCharsTotal int,
-	class string) (str string) {
-
+	class string,
+) (str string) {
 	addRightPadding := func(s string, nchar int) string {
 		if utf8.RuneCountInString(s) < nchar {
 			return s + strings.Repeat(" ", nchar-utf8.RuneCountInString(s))
@@ -434,6 +434,62 @@ func (df DataFrame) GroupBy(colnames ...string) *Groups {
 	return groups
 }
 
+type ColumnValuesPerSubset struct {
+	Values      series.Series
+	SubsetIndex series.Indexes
+}
+
+type ColumnUpdateRule struct {
+	ColName      string
+	ColumnValues []ColumnValuesPerSubset
+}
+
+func broadcastBoolScalar(scalar bool, dim int) series.Series {
+	bools := make([]bool, dim)
+	for i := 0; i < dim; i++ {
+		bools[i] = scalar
+	}
+	return series.Bools(bools)
+}
+
+// UpdateColumns will update columns in a table based on rule that specified
+func (df DataFrame) UpdateColumns(rules []ColumnUpdateRule) DataFrame {
+	if len(rules) == 0 {
+		return DataFrame{
+			Err: fmt.Errorf("update rules is not set"),
+		}
+	}
+	updatedCols := make([]series.Series, 0, len(rules))
+
+	for _, rule := range rules {
+		colName := rule.ColName
+		resCol := df.Col(colName)
+		resColIsNotExist := resCol.Err != nil
+
+		alreadySelectedIndexes := broadcastBoolScalar(false, df.nrows)
+		if len(rule.ColumnValues) == 0 {
+			return DataFrame{Err: fmt.Errorf(`one of 'ColumnValue' or 'DefaultValue' must be set when updating column: %s`, colName)}
+		}
+
+		colValue := rule.ColumnValues[0]
+		if resColIsNotExist {
+			resCol = series.NewEmpty(colValue.Values.Type(), colName, df.nrows)
+			if resCol.Err != nil {
+				return DataFrame{Err: fmt.Errorf("failed create column %s with err: %v", colName, resCol.Err)}
+			}
+		}
+
+		for _, s := range rule.ColumnValues {
+			resCol = resCol.SetMutualExclusiveValue(s.SubsetIndex, alreadySelectedIndexes, s.Values)
+			alreadySelectedIndexes = alreadySelectedIndexes.Or(s.SubsetIndex)
+		}
+		updatedCols = append(updatedCols, resCol)
+
+	}
+	df = df.Mutate(updatedCols...)
+	return df
+}
+
 // AggregationType Aggregation method type
 type AggregationType int
 
@@ -635,25 +691,31 @@ func (df DataFrame) Concat(dfb DataFrame) DataFrame {
 
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
-func (df DataFrame) Mutate(s series.Series) DataFrame {
+func (df DataFrame) Mutate(cols ...series.Series) DataFrame {
 	if df.Err != nil {
 		return df
 	}
-	if s.Len() != df.nrows {
-		return DataFrame{Err: fmt.Errorf("mutate: wrong dimensions")}
-	}
+
 	df = df.Copy()
-	// Check that colname exist on dataframe
 	columns := df.columns
-	if idx := findInStringSlice(s.Name, df.Names()); idx != -1 {
-		columns[idx] = s
-	} else {
-		columns = append(columns, s)
+
+	for _, s := range cols {
+		if s.Len() != df.nrows {
+			return DataFrame{Err: fmt.Errorf("mutate: wrong dimensions")}
+		}
+
+		// Check that colname exist on dataframe
+		if idx := findInStringSlice(s.Name, df.Names()); idx != -1 {
+			columns[idx] = s
+		} else {
+			columns = append(columns, s)
+		}
 	}
 	nrows, ncols, err := checkColumnsDimensions(columns...)
 	if err != nil {
 		return DataFrame{Err: err}
 	}
+
 	df = DataFrame{
 		columns: columns,
 		ncols:   ncols,
@@ -733,24 +795,16 @@ func (df DataFrame) FilterAggregation(agg Aggregation, filters ...F) DataFrame {
 		return df.Copy()
 	}
 
-	res, err := compResults[0].Bool()
-	if err != nil {
-		return DataFrame{Err: fmt.Errorf("filter: %v", err)}
-	}
-	for i := 1; i < len(compResults); i++ {
-		nextRes, err := compResults[i].Bool()
-		if err != nil {
-			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
-		}
-		for j := 0; j < len(res); j++ {
-			switch agg {
-			case Or:
-				res[j] = res[j] || nextRes[j]
-			case And:
-				res[j] = res[j] && nextRes[j]
-			default:
-				panic(agg)
-			}
+	res := compResults[0]
+	if len(compResults) > 1 {
+		restOfResults := compResults[1:]
+		switch agg {
+		case Or:
+			res = res.Or(restOfResults)
+		case And:
+			res = res.And(restOfResults)
+		default:
+			panic(agg)
 		}
 	}
 	return df.Subset(res)
@@ -1513,7 +1567,7 @@ func ReadHTML(r io.Reader, options ...LoadOption) []DataFrame {
 
 	doc, err = html.Parse(r)
 	if err != nil {
-		return []DataFrame{DataFrame{Err: err}}
+		return []DataFrame{{Err: err}}
 	}
 
 	f = func(n *html.Node) {
@@ -1607,6 +1661,19 @@ func (df DataFrame) Col(colname string) series.Series {
 		return series.Series{Err: fmt.Errorf("unknown column name")}
 	}
 	return df.columns[idx].Copy()
+}
+
+func (df DataFrame) Slice(start, end int) DataFrame {
+	nCol := df.ncols
+	newCols := make([]series.Series, 0, nCol)
+	for _, col := range df.columns {
+		newCol := col.Slice(start, end)
+		if newCol.Err != nil {
+			return DataFrame{Err: fmt.Errorf("failed slice col: %s due to: %v", col.Name, newCol.Err)}
+		}
+		newCols = append(newCols, newCol)
+	}
+	return New(newCols...)
 }
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.

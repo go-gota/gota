@@ -84,6 +84,12 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{false, true, false, true, false, false}),
 		},
 		{
+			Strings([]string{"B"}),
+			Eq,
+			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
+			Bools([]bool{false, true, false, true, false, false}),
+		},
+		{
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
 			Eq,
 			[]string{"B", "B", "C", "D", "A", "A"},
@@ -5366,12 +5372,17 @@ func TestSeries_Slice(t *testing.T) {
 			seriesWithErr,
 		},
 		{
-			0,
+			1,
 			5,
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{2, 3, 4, 5}),
+		},
+		{
+			1,
+			6,
 			Ints([]int{1, 2, 3, 4, 5}),
 			seriesWithErr,
 		},
-
 		{
 			0,
 			1,
@@ -5601,5 +5612,234 @@ func TestSeries_Unique(t *testing.T) {
 				)
 			}
 		}
+	}
+}
+
+func TestSeries_SetMutualExclusiveValue(t *testing.T) {
+	type args struct {
+		indexes          Indexes
+		excludingIndexes Indexes
+		newvalues        Series
+	}
+	tests := []struct {
+		name        string
+		inputSeries Series
+		args        args
+		want        Series
+	}{
+		{
+			name:        "all value in indexes and exluding indexes is mutually exclusive",
+			inputSeries: Ints([]int{1, 2, 3, 4, 5}),
+			args: args{
+				indexes:          Bools([]bool{true, true, false, false, true}),
+				excludingIndexes: Bools([]bool{false, false, false, false, false}),
+				newvalues:        Ints([]int{2, 4, 6, 8, 10}),
+			},
+			want: Ints([]int{2, 4, 3, 4, 10}),
+		},
+		{
+			name:        "some value in indexes is part of excluding indexes and those indexes is those modified ",
+			inputSeries: Ints([]int{1, 2, 3, 4, 5}),
+			args: args{
+				indexes:          Bools([]bool{true, true, false, false, true}),
+				excludingIndexes: Bools([]bool{true, false, false, false, true}),
+				newvalues:        Ints([]int{2, 4, 6, 8, 10}),
+			},
+			want: Ints([]int{1, 4, 3, 4, 5}),
+		},
+		{
+			name:        "one dimension new values",
+			inputSeries: New([]interface{}{1, 2, 3, 4, nil}, Int, ""),
+			args: args{
+				indexes:          Bools([]bool{true, true, false, false, true}),
+				excludingIndexes: Bools([]bool{true, true, true, true, false}),
+				newvalues:        Ints([]int{-1}),
+			},
+			want: Ints([]int{1, 2, 3, 4, -1}),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.inputSeries.SetMutualExclusiveValue(tt.args.indexes, tt.args.excludingIndexes, tt.args.newvalues); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.SetMutualExclusiveValue() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeries_And(t *testing.T) {
+	type args struct {
+		rightValues interface{}
+	}
+	tests := []struct {
+		name        string
+		inputSeries Series
+		args        args
+		want        Series
+	}{
+		{
+			name:        "and with single series",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: Bools([]bool{false, true, false, true}),
+			},
+			want: Bools([]bool{false, true, false, true}),
+		},
+		{
+			name:        "and with single bool",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: false,
+			},
+			want: Bools([]bool{false, false, false, false}),
+		},
+		{
+			name:        "and with multiple series",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+				},
+			},
+			want: Bools([]bool{false, false, false, false}),
+		},
+		{
+			name:        "and with multiple series; different dimensions",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+					Bools([]bool{false, true, false}),
+				},
+			},
+			want: Series{Err: fmt.Errorf("can't compare mismatch length"), t: Bool, elements: boolElements{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.inputSeries.And(tt.args.rightValues); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.And() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeries_Or(t *testing.T) {
+	type args struct {
+		rightValues interface{}
+	}
+	tests := []struct {
+		name        string
+		inputSeries Series
+		args        args
+		want        Series
+	}{
+		{
+			name:        "or with single series",
+			inputSeries: Bools([]bool{false, false, false, true}),
+			args: args{
+				rightValues: Bools([]bool{false, true, false, true}),
+			},
+			want: Bools([]bool{false, true, false, true}),
+		},
+		{
+			name:        "or with single bool",
+			inputSeries: Bools([]bool{true, false, true, false}),
+			args: args{
+				rightValues: false,
+			},
+			want: Bools([]bool{true, false, true, false}),
+		},
+		{
+			name:        "or with multiple series",
+			inputSeries: Bools([]bool{false, false, false, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+				},
+			},
+			want: Bools([]bool{false, true, false, true}),
+		},
+		{
+			name:        "or with multiple series; different dimensions",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+					Bools([]bool{false, true, false}),
+				},
+			},
+			want: Series{Err: fmt.Errorf("can't compare mismatch length"), t: Bool, elements: boolElements{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.inputSeries.Or(tt.args.rightValues); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.Or() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSeries_XOr(t *testing.T) {
+	type args struct {
+		rightValues interface{}
+	}
+	tests := []struct {
+		name        string
+		inputSeries Series
+		args        args
+		want        Series
+	}{
+		{
+			name:        "xor with single series",
+			inputSeries: Bools([]bool{false, false, false, true}),
+			args: args{
+				rightValues: Bools([]bool{false, true, false, true}),
+			},
+			want: Bools([]bool{false, true, false, false}),
+		},
+		{
+			name:        "xor with single bool",
+			inputSeries: Bools([]bool{true, false, true, false}),
+			args: args{
+				rightValues: false,
+			},
+			want: Bools([]bool{true, false, true, false}),
+		},
+		{
+			name:        "xor with multiple series",
+			inputSeries: Bools([]bool{false, false, false, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+				},
+			},
+			want: Bools([]bool{false, true, false, false}),
+		},
+		{
+			name:        "xor with multiple series; different dimensions",
+			inputSeries: Bools([]bool{true, true, true, true}),
+			args: args{
+				rightValues: []Series{
+					Bools([]bool{false, true, false, true}),
+					Bools([]bool{false}),
+					Bools([]bool{false, true, false}),
+				},
+			},
+			want: Series{Err: fmt.Errorf("can't compare mismatch length"), t: Bool, elements: boolElements{}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.inputSeries.XOr(tt.args.rightValues); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Series.XOr() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }
