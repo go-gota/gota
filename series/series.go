@@ -33,6 +33,9 @@ type Elements interface {
 	Elem(int) Element
 	Len() int
 	Slice(start, end int) Elements
+	Get(indexs ...int) Elements
+	Append(Elements) Elements
+	Copy() Elements
 }
 
 // Element is the interface that defines the types of methods to be present for
@@ -65,30 +68,98 @@ type Element interface {
 // intElements is the concrete implementation of Elements for Int elements.
 type intElements []intElement
 
-func (e intElements) Len() int           { return len(e) }
-func (e intElements) Elem(i int) Element { return &e[i] }
-func (e intElements) Slice(start, end int) Elements { return e[start : end] }
+func (e intElements) Len() int                      { return len(e) }
+func (e intElements) Elem(i int) Element            { return &e[i] }
+func (e intElements) Slice(start, end int) Elements { return e[start:end] }
+func (e intElements) Get(indexs ...int) Elements {
+	elements := make(intElements, len(indexs))
+	for k, i := range indexs {
+		elements[k] = e[i]
+	}
+	return elements
+}
+func (e intElements) Append(elements Elements) Elements {
+	eles := elements.(intElements)
+	ret := append(e, eles...)
+	return ret
+}
+func (e intElements) Copy() Elements {
+	elements := make(intElements, len(e))
+	copy(elements, e)
+	return elements
+}
 
 // stringElements is the concrete implementation of Elements for String elements.
 type stringElements []stringElement
 
-func (e stringElements) Len() int           { return len(e) }
-func (e stringElements) Elem(i int) Element { return &e[i] }
-func (e stringElements) Slice(start, end int) Elements { return e[start : end] }
+func (e stringElements) Len() int                      { return len(e) }
+func (e stringElements) Elem(i int) Element            { return &e[i] }
+func (e stringElements) Slice(start, end int) Elements { return e[start:end] }
+func (e stringElements) Get(indexs ...int) Elements {
+	elements := make(stringElements, len(indexs))
+	for k, i := range indexs {
+		elements[k] = e[i]
+	}
+	return elements
+}
+func (e stringElements) Append(elements Elements) Elements {
+	eles := elements.(stringElements)
+	ret := append(e, eles...)
+	return ret
+}
+func (e stringElements) Copy() Elements {
+	elements := make(stringElements, len(e))
+	copy(elements, e)
+	return elements
+}
 
 // floatElements is the concrete implementation of Elements for Float elements.
 type floatElements []floatElement
 
-func (e floatElements) Len() int           { return len(e) }
-func (e floatElements) Elem(i int) Element { return &e[i] }
-func (e floatElements) Slice(start, end int) Elements { return e[start : end] }
+func (e floatElements) Len() int                      { return len(e) }
+func (e floatElements) Elem(i int) Element            { return &e[i] }
+func (e floatElements) Slice(start, end int) Elements { return e[start:end] }
+func (e floatElements) Get(indexs ...int) Elements {
+	elements := make(floatElements, len(indexs))
+	for k, i := range indexs {
+		elements[k] = e[i]
+	}
+	return elements
+}
+func (e floatElements) Append(elements Elements) Elements {
+	eles := elements.(floatElements)
+	ret := append(e, eles...)
+	return ret
+}
+func (e floatElements) Copy() Elements {
+	elements := make(floatElements, len(e))
+	copy(elements, e)
+	return elements
+}
 
 // boolElements is the concrete implementation of Elements for Bool elements.
 type boolElements []boolElement
 
-func (e boolElements) Len() int           { return len(e) }
-func (e boolElements) Elem(i int) Element { return &e[i] }
-func (e boolElements) Slice(start, end int) Elements { return e[start : end] }
+func (e boolElements) Len() int                      { return len(e) }
+func (e boolElements) Elem(i int) Element            { return &e[i] }
+func (e boolElements) Slice(start, end int) Elements { return e[start:end] }
+func (e boolElements) Get(indexs ...int) Elements {
+	elements := make(boolElements, len(indexs))
+	for k, i := range indexs {
+		elements[k] = e[i]
+	}
+	return elements
+}
+func (e boolElements) Append(elements Elements) Elements {
+	eles := elements.(boolElements)
+	ret := append(e, eles...)
+	return ret
+}
+func (e boolElements) Copy() Elements {
+	elements := make(boolElements, len(e))
+	copy(elements, e)
+	return elements
+}
 
 // ElementValue represents the value that can be used for marshaling or
 // unmarshaling Elements.
@@ -127,6 +198,23 @@ const (
 	Bool   Type = "bool"
 )
 
+func (t Type) emptyElements(n int) Elements {
+	var elements Elements
+	switch t {
+	case String:
+		elements = make(stringElements, n)
+	case Int:
+		elements = make(intElements, n)
+	case Float:
+		elements = make(floatElements, n)
+	case Bool:
+		elements = make(boolElements, n)
+	default:
+		panic(fmt.Sprintf("unknown type %v", t))
+	}
+	return elements
+}
+
 const NaN = "NaN"
 
 // Indexes represent the elements that can be used for selecting a subset of
@@ -148,18 +236,7 @@ func New(values interface{}, t Type, name string) Series {
 
 	// Pre-allocate elements
 	preAlloc := func(n int) {
-		switch t {
-		case String:
-			ret.elements = make(stringElements, n)
-		case Int:
-			ret.elements = make(intElements, n)
-		case Float:
-			ret.elements = make(floatElements, n)
-		case Bool:
-			ret.elements = make(boolElements, n)
-		default:
-			panic(fmt.Sprintf("unknown type %v", t))
-		}
+		ret.elements = t.emptyElements(n)
 	}
 
 	if values == nil {
@@ -234,18 +311,7 @@ func NewDefault(defaultValue interface{}, t Type, name string, len int) Series {
 
 	// Pre-allocate elements
 	preAlloc := func(n int) {
-		switch t {
-		case String:
-			ret.elements = make(stringElements, n)
-		case Int:
-			ret.elements = make(intElements, n)
-		case Float:
-			ret.elements = make(floatElements, n)
-		case Bool:
-			ret.elements = make(boolElements, n)
-		default:
-			panic(fmt.Sprintf("unknown type %v", t))
-		}
+		ret.elements = t.emptyElements(n)
 	}
 
 	if defaultValue == nil {
@@ -297,16 +363,7 @@ func (s *Series) Append(values interface{}) {
 		return
 	}
 	news := New(values, s.t, s.Name)
-	switch s.t {
-	case String:
-		s.elements = append(s.elements.(stringElements), news.elements.(stringElements)...)
-	case Int:
-		s.elements = append(s.elements.(intElements), news.elements.(intElements)...)
-	case Float:
-		s.elements = append(s.elements.(floatElements), news.elements.(floatElements)...)
-	case Bool:
-		s.elements = append(s.elements.(boolElements), news.elements.(boolElements)...)
-	}
+	s.elements = s.elements.Append(news.elements)
 }
 
 // Concat concatenates two series together. It will return a new Series with the
@@ -335,36 +392,9 @@ func (s Series) Subset(indexes Indexes) Series {
 		return s
 	}
 	ret := Series{
-		Name: s.Name,
-		t:    s.t,
-	}
-	switch s.t {
-	case String:
-		elements := make(stringElements, len(idx))
-		for k, i := range idx {
-			elements[k] = s.elements.(stringElements)[i]
-		}
-		ret.elements = elements
-	case Int:
-		elements := make(intElements, len(idx))
-		for k, i := range idx {
-			elements[k] = s.elements.(intElements)[i]
-		}
-		ret.elements = elements
-	case Float:
-		elements := make(floatElements, len(idx))
-		for k, i := range idx {
-			elements[k] = s.elements.(floatElements)[i]
-		}
-		ret.elements = elements
-	case Bool:
-		elements := make(boolElements, len(idx))
-		for k, i := range idx {
-			elements[k] = s.elements.(boolElements)[i]
-		}
-		ret.elements = elements
-	default:
-		panic("unknown series type")
+		Name:     s.Name,
+		t:        s.t,
+		elements: s.elements.Get(idx...),
 	}
 	return ret
 }
@@ -531,29 +561,11 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 
 // Copy will return a copy of the Series.
 func (s Series) Copy() Series {
-	name := s.Name
-	t := s.t
-	err := s.Err
-	var elements Elements
-	switch s.t {
-	case String:
-		elements = make(stringElements, s.Len())
-		copy(elements.(stringElements), s.elements.(stringElements))
-	case Float:
-		elements = make(floatElements, s.Len())
-		copy(elements.(floatElements), s.elements.(floatElements))
-	case Bool:
-		elements = make(boolElements, s.Len())
-		copy(elements.(boolElements), s.elements.(boolElements))
-	case Int:
-		elements = make(intElements, s.Len())
-		copy(elements.(intElements), s.elements.(intElements))
-	}
 	ret := Series{
-		Name:     name,
-		t:        t,
-		elements: elements,
-		Err:      err,
+		Name:     s.Name,
+		t:        s.t,
+		elements: s.elements.Copy(),
+		Err:      s.Err,
 	}
 	return ret
 }
@@ -879,48 +891,49 @@ func (s Series) Shift(periods int) Series {
 	}
 	shiftElements := make([]Element, s.Len())
 	if periods < 0 {
-		for i := 0; i - periods < s.Len(); i++ {
+		for i := 0; i-periods < s.Len(); i++ {
 			shiftElements[i] = s.Elem(i - periods).Copy()
 		}
 		for i := s.Len() + periods; i < s.Len(); i++ {
 			shiftElements[i] = NaNElementByType(s.t)
-			
-		}	
+
+		}
 	} else if periods > 0 {
 		for i := 0; i < periods; i++ {
 			shiftElements[i] = NaNElementByType(s.t)
 		}
-		for i := 0 ; i + periods < s.Len(); i++ {
-			shiftElements[i + periods] = s.Elem(i).Copy()
+		for i := 0; i+periods < s.Len(); i++ {
+			shiftElements[i+periods] = s.Elem(i).Copy()
 		}
 	}
 	return New(shiftElements, s.Type(), fmt.Sprintf("%s_Shift_%d", s.Name, periods))
 }
+
 // CumProd finds the cumulative product of the first i elements in s and returning a new Series object.
-func(s Series) CumProd() Series {
+func (s Series) CumProd() Series {
 	dst := make([]float64, s.Len())
 	floats.CumProd(dst, s.Float())
-	return New(dst,s.Type(), fmt.Sprintf("%s_CumProd", s.Name))
+	return New(dst, s.Type(), fmt.Sprintf("%s_CumProd", s.Name))
 }
 
 // Prod returns the product of the elements of the Series. Returns 1 if len(s) = 0.
-func(s Series) Prod() float64 {
+func (s Series) Prod() float64 {
 	return floats.Prod(s.Float())
 }
 
 // AddConst adds the scalar c to all of the values in Series and returning a new Series object.
-func(s Series) AddConst(c float64) Series {
+func (s Series) AddConst(c float64) Series {
 	dst := s.Float()
 	floats.AddConst(c, dst)
-	return New(dst,s.Type(), fmt.Sprintf("(%s + %v)", s.Name, c))
+	return New(dst, s.Type(), fmt.Sprintf("(%s + %v)", s.Name, c))
 }
 
 // AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
-func(s Series) MulConst(c float64) Series {
+func (s Series) MulConst(c float64) Series {
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
-		result.Set(f * c)		
+		result.Set(f * c)
 		return result
 	})
 	sm.Name = fmt.Sprintf("(%s * %v)", s.Name, c)
@@ -928,18 +941,18 @@ func(s Series) MulConst(c float64) Series {
 }
 
 // DivConst Div the scalar c to all of the values in Series and returning a new Series object.
-func(s Series) DivConst(c float64) Series {
+func (s Series) DivConst(c float64) Series {
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
-		result.Set(f / c)		
+		result.Set(f / c)
 		return result
 	})
 	sm.Name = fmt.Sprintf("(%s / %v)", s.Name, c)
 	return sm
 }
 
-func(s Series) Add(c Series) Series {
+func (s Series) Add(c Series) Series {
 	sf := s.Float()
 	cf := c.Float()
 	dst := make([]float64, s.Len())
@@ -947,7 +960,7 @@ func(s Series) Add(c Series) Series {
 	return New(dst, Float, fmt.Sprintf("(%s + %s)", s.Name, c.Name))
 }
 
-func(s Series) Sub(c Series) Series {
+func (s Series) Sub(c Series) Series {
 	sf := s.Float()
 	cf := c.Float()
 	dst := make([]float64, s.Len())
@@ -955,7 +968,7 @@ func(s Series) Sub(c Series) Series {
 	return New(dst, Float, fmt.Sprintf("(%s - %s)", s.Name, c.Name))
 }
 
-func(s Series) Mul(c Series) Series {
+func (s Series) Mul(c Series) Series {
 	sf := s.Float()
 	cf := c.Float()
 	dst := make([]float64, s.Len())
@@ -963,7 +976,7 @@ func(s Series) Mul(c Series) Series {
 	return New(dst, Float, fmt.Sprintf("(%s * %s)", s.Name, c.Name))
 }
 
-func(s Series) Div(c Series) Series {
+func (s Series) Div(c Series) Series {
 	sf := s.Float()
 	cf := c.Float()
 	dst := make([]float64, s.Len())
@@ -971,20 +984,19 @@ func(s Series) Div(c Series) Series {
 	return New(dst, Float, fmt.Sprintf("(%s / %s)", s.Name, c.Name))
 }
 
-func(s Series) Abs() Series {
+func (s Series) Abs() Series {
 	sm := s.Map(func(e Element, index int) Element {
 		result := e.Copy()
 		f := result.Float()
-		result.Set(math.Abs(f))		
+		result.Set(math.Abs(f))
 		return result
 	})
 	sm.Name = fmt.Sprintf("Abs(%s)", s.Name)
 	return sm
 }
 
-
 // FillNaN Fill NaN values using the specified value.
-func(s Series) FillNaN(value ElementValue) {
+func (s Series) FillNaN(value ElementValue) {
 	for i := 0; i < s.Len(); i++ {
 		ele := s.Elem(i)
 		if ele.IsNA() {
@@ -994,7 +1006,7 @@ func(s Series) FillNaN(value ElementValue) {
 }
 
 // FillNaNForward Fill NaN values using the last non-NaN value
-func(s Series) FillNaNForward() {
+func (s Series) FillNaNForward() {
 	var lastNotNaNValue ElementValue = nil
 	for i := 0; i < s.Len(); i++ {
 		ele := s.Elem(i)
@@ -1009,9 +1021,9 @@ func(s Series) FillNaNForward() {
 }
 
 // FillNaNBackward fill NaN values using the next non-NaN value
-func(s Series) FillNaNBackward() {
+func (s Series) FillNaNBackward() {
 	var lastNotNaNValue ElementValue = nil
-	for i := s.Len() - 1 ; i >= 0; i-- {
+	for i := s.Len() - 1; i >= 0; i-- {
 		ele := s.Elem(i)
 		if !ele.IsNA() {
 			lastNotNaNValue = ele.Val()
@@ -1023,11 +1035,11 @@ func(s Series) FillNaNBackward() {
 	}
 }
 
-func(s Series) Rolling(window int, minPeriods int) RollingSeries {
+func (s Series) Rolling(window int, minPeriods int) RollingSeries {
 	return NewRollingSeries(window, minPeriods, s)
 }
 
-//Operation for multiple series calculation  
+//Operation for multiple series calculation
 func Operation(operate func(index int, eles ...Element) interface{}, seriess ...Series) (Series, error) {
 	if len(seriess) == 0 {
 		return Series{}, errors.New("seriess num must > 0")
@@ -1059,7 +1071,7 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 		e.Set(res)
 		eles[i] = e
 	}
-	result := New(eles, seriess[0].t,"")
+	result := New(eles, seriess[0].t, "")
 	return result, nil
 }
 
@@ -1089,6 +1101,7 @@ func NaNElementByType(t Type) Element {
 		panic("not supported type:" + t)
 	}
 }
+
 // Sum calculates the sum value of a series
 func (s Series) Sum() float64 {
 	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {

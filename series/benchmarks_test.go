@@ -214,6 +214,42 @@ func BenchmarkSeries_Subset(b *testing.B) {
 	}
 }
 
+
+func BenchmarkSeries_Append(b *testing.B) {
+	rand.Seed(100)
+	table := []struct {
+		name    string
+		series  series.Series
+	}{
+		{
+			"[]int(100000)_Int",
+			series.Ints(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_String",
+			series.Strings(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_Bool",
+			series.Bools(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_Float",
+			series.Floats(generateInts(100000)),
+		},
+	}
+	for _, test := range table {
+		origin := test.series.Copy()
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				test.series.Append(test.series)
+				test.series = origin
+			}
+		})
+	}
+}
+
+
 func BenchmarkSeries_Set(b *testing.B) {
 	rand.Seed(100)
 	table := []struct {
