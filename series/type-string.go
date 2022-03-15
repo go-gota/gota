@@ -20,7 +20,7 @@ func (e *stringElement) Set(value interface{}) {
 	switch val := value.(type) {
 	case string:
 		e.e = val
-		if e.e == "NaN" {
+		if e.e == NaN {
 			e.nan = true
 			return
 		}
@@ -65,7 +65,7 @@ func (e stringElement) Val() ElementValue {
 
 func (e stringElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return NaN
 	}
 	return string(e.e)
 }

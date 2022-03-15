@@ -18,7 +18,7 @@ func (e *floatElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
 	case string:
-		if val == "NaN" {
+		if val == NaN {
 			e.nan = true
 			return
 		}
@@ -73,7 +73,7 @@ func (e floatElement) Val() ElementValue {
 
 func (e floatElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return NaN
 	}
 	return fmt.Sprintf("%f", e.e)
 }

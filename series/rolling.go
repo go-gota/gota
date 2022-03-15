@@ -185,18 +185,23 @@ func (s rollingSeries) Apply(f func(window Series, windowIndex int) interface{},
 	if len(t) == 0 {
 		t = s.t
 	}
-	eles := make([]Element, s.Len())
+	eles := t.emptyElements(s.Len())
 	index := 0
 	rw := NewRollingWindow(s.Series, s.window)
 	for rw.HasNext() {
 		window := rw.NextWindow()
-		ele := NaNElementByType(t)
 		if window.Len() >= s.minPeriods {
-			ele.Set(f(window, index))
+			eles.Elem(index).Set(f(window, index))
+		} else {
+			eles.Elem(index).Set(NaN)
 		}
-		eles[index] = ele
 		index++
 	}
-	newS := New(eles, t, fmt.Sprintf("%s_RApply[w:%d]", s.Name, s.window))
+	newS := Series{
+		Name:     fmt.Sprintf("%s_RApply[w:%d]", s.Name, s.window),
+		elements: eles,
+		t:        t,
+		Err:      nil,
+	}
 	return newS
 }

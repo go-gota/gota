@@ -889,24 +889,31 @@ func (s Series) Shift(periods int) Series {
 	if periods == 0 {
 		return s.Copy()
 	}
-	shiftElements := make([]Element, s.Len())
-	if periods < 0 {
-		for i := 0; i-periods < s.Len(); i++ {
-			shiftElements[i] = s.Elem(i - periods).Copy()
-		}
-		for i := s.Len() + periods; i < s.Len(); i++ {
-			shiftElements[i] = NaNElementByType(s.t)
 
-		}
-	} else if periods > 0 {
-		for i := 0; i < periods; i++ {
-			shiftElements[i] = NaNElementByType(s.t)
-		}
-		for i := 0; i+periods < s.Len(); i++ {
-			shiftElements[i+periods] = s.Elem(i).Copy()
-		}
+	naLen := periods
+	if naLen < 0 {
+		naLen = -naLen
 	}
-	return New(shiftElements, s.Type(), fmt.Sprintf("%s_Shift_%d", s.Name, periods))
+	naEles := s.t.emptyElements(naLen)
+	for i := 0; i < naLen; i++ {
+		naEles.Elem(i).Set(NaN)
+	}
+
+	var shiftElements Elements
+	if periods < 0 {
+		//shift up
+		shiftElements = s.elements.Slice(-periods, s.Len()).Copy().Append(naEles)
+	} else if periods > 0 {
+		//move down
+		shiftElements = naEles.Append(s.elements.Slice(0, s.Len()-periods).Copy())
+	}
+	ret := Series{
+		Name:     fmt.Sprintf("%s_Shift_%d", s.Name, periods),
+		elements: shiftElements,
+		t:        s.t,
+		Err:      nil,
+	}
+	return ret
 }
 
 // CumProd finds the cumulative product of the first i elements in s and returning a new Series object.
@@ -1056,7 +1063,8 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 		}
 	}
 
-	eles := make([]Element, maxLen)
+	t := seriess[0].t
+	eles := t.emptyElements(maxLen)
 	for i := 0; i < maxLen; i++ {
 		operateParam := make([]Element, len(seriess))
 		for j := 0; j < len(seriess); j++ {
@@ -1067,39 +1075,15 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 			}
 		}
 		res := operate(i, operateParam...)
-		e := NaNElementByType(seriess[0].t)
-		e.Set(res)
-		eles[i] = e
+		eles.Elem(i).Set(res)
 	}
-	result := New(eles, seriess[0].t, "")
+	result := Series{
+		Name:     "",
+		elements: eles,
+		t:        t,
+		Err:      nil,
+	}
 	return result, nil
-}
-
-func NaNElementByType(t Type) Element {
-	switch t {
-	case String:
-		return &stringElement{
-			e:   NaN,
-			nan: true,
-		}
-	case Float:
-		return &floatElement{
-			e:   math.NaN(),
-			nan: true,
-		}
-	case Bool:
-		return &boolElement{
-			e:   false,
-			nan: true,
-		}
-	case Int:
-		return &intElement{
-			e:   0,
-			nan: true,
-		}
-	default:
-		panic("not supported type:" + t)
-	}
 }
 
 // Sum calculates the sum value of a series

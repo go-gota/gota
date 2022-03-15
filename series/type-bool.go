@@ -18,7 +18,7 @@ func (e *boolElement) Set(value interface{}) {
 	e.nan = false
 	switch val := value.(type) {
 	case string:
-		if val == "NaN" {
+		if val == NaN {
 			e.nan = true
 			return
 		}
@@ -89,7 +89,7 @@ func (e boolElement) Val() ElementValue {
 
 func (e boolElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return NaN
 	}
 	if e.e {
 		return "true"
