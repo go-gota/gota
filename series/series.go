@@ -447,7 +447,7 @@ func (s Series) IsNaN() []bool {
 	return ret
 }
 
-// IsNaN returns an array that identifies which of the elements are not NaN.
+// IsNotNaN returns an array that identifies which of the elements are not NaN.
 func (s Series) IsNotNaN() []bool {
 	ret := make([]bool, s.Len())
 	for i := 0; i < s.Len(); i++ {
