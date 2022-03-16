@@ -905,7 +905,7 @@ func (s Series) Shift(periods int) Series {
 		shiftElements = s.elements.Slice(-periods, s.Len()).Copy().Append(naEles)
 	} else if periods > 0 {
 		//move down
-		shiftElements = naEles.Append(s.elements.Slice(0, s.Len()-periods).Copy())
+		shiftElements = naEles.Append(s.elements.Slice(0, s.Len()-periods))
 	}
 	ret := Series{
 		Name:     fmt.Sprintf("%s_Shift_%d", s.Name, periods),
