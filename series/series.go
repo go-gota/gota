@@ -43,6 +43,11 @@ type Elements interface {
 type Element interface {
 	// Setter method
 	Set(interface{})
+	SetElement(val Element)
+	SetBool(val bool)
+	SetFloat(val float64)
+	SetInt(val int)
+	SetString(val string)
 
 	// Comparation methods
 	Eq(Element) bool
@@ -250,37 +255,37 @@ func New(values interface{}, t Type, name string) Series {
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+			ret.elements.Elem(i).SetString(v[i])
 		}
 	case []float64:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+			ret.elements.Elem(i).SetFloat(v[i])
 		}
 	case []int:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+			ret.elements.Elem(i).SetInt(v[i])
 		}
 	case []bool:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+			ret.elements.Elem(i).SetBool(v[i])
 		}
 	case []Element:
 		l := len(v)
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v[i])
+			ret.elements.Elem(i).SetElement(v[i])
 		}
 	case Series:
 		l := v.Len()
 		preAlloc(l)
 		for i := 0; i < l; i++ {
-			ret.elements.Elem(i).Set(v.elements.Elem(i))
+			ret.elements.Elem(i).SetElement(v.elements.Elem(i))
 		}
 	default:
 		switch reflect.TypeOf(values).Kind() {
@@ -320,8 +325,32 @@ func NewDefault(defaultValue interface{}, t Type, name string, len int) Series {
 		return ret
 	}
 	preAlloc(len)
-	for i := 0; i < len; i++ {
-		ret.elements.Elem(i).Set(defaultValue)
+
+	switch v := defaultValue.(type) {
+	case string:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).SetString(v)
+		}
+	case float64:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).SetFloat(v)
+		}
+	case int:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).SetInt(v)
+		}
+	case bool:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).SetBool(v)
+		}
+	case Element:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).SetElement(v)
+		}
+	default:
+		for i := 0; i < len; i++ {
+			ret.elements.Elem(i).Set(defaultValue)
+		}
 	}
 	return ret
 }
@@ -423,7 +452,7 @@ func (s Series) Set(indexes Indexes, newvalues Series) Series {
 			s.Err = fmt.Errorf("set error: index out of range")
 			return s
 		}
-		s.elements.Elem(i).Set(newvalues.elements.Elem(k))
+		s.elements.Elem(i).SetElement(newvalues.elements.Elem(k))
 	}
 	return s
 }
@@ -873,12 +902,18 @@ func (s Series) Quantile(p float64) float64 {
 // the function passed in via argument `f` will not expect another type, but
 // instead expects to handle Element(s) of type Float.
 func (s Series) Map(f MapFunction) Series {
-	mappedValues := make([]Element, s.Len())
+	eles := s.Type().emptyElements(s.Len())
 	for i := 0; i < s.Len(); i++ {
 		value := f(s.elements.Elem(i), i)
-		mappedValues[i] = value
+		eles.Elem(i).SetElement(value)
 	}
-	return New(mappedValues, s.Type(), s.Name)
+	ret := Series{
+		Name:     s.Name,
+		elements: eles,
+		t:        s.Type(),
+		Err:      nil,
+	}
+	return ret
 }
 
 //Shift series by desired number of periods and returning a new Series object.

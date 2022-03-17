@@ -16,27 +16,46 @@ type stringElement struct {
 var _ Element = (*stringElement)(nil)
 
 func (e *stringElement) Set(value interface{}) {
-	e.nan = false
 	switch val := value.(type) {
 	case string:
-		e.e = val
-		if e.e == NaN {
-			e.nan = true
-			return
-		}
+		e.SetString(val)
 	case int:
-		e.e = strconv.Itoa(val)
+		e.SetInt(val)
 	case float64:
-		e.e = strconv.FormatFloat(val, 'f', 6, 64)
+		e.SetFloat(val)
 	case bool:
-		if val {
-			e.e = "true"
-		} else {
-			e.e = "false"
-		}
+		e.SetBool(val)
 	case Element:
-		e.e = val.String()
+		e.SetElement(val)
 	default:
+		e.nan = true
+	}
+}
+
+func (e *stringElement) SetElement(val Element) {
+	e.nan = false
+	e.e = val.String()
+}
+func (e *stringElement) SetBool(val bool) {
+	e.nan = false
+	if val {
+		e.e = "true"
+	} else {
+		e.e = "false"
+	}
+}
+func (e *stringElement) SetFloat(val float64) {
+	e.nan = false
+	e.e = strconv.FormatFloat(val, 'f', 6, 64)
+}
+func (e *stringElement) SetInt(val int) {
+	e.nan = false
+	e.e = strconv.Itoa(val)
+}
+func (e *stringElement) SetString(val string) {
+	e.nan = false
+	e.e = val
+	if e.e == NaN {
 		e.nan = true
 	}
 }

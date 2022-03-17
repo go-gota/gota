@@ -15,51 +15,70 @@ type boolElement struct {
 var _ Element = (*boolElement)(nil)
 
 func (e *boolElement) Set(value interface{}) {
-	e.nan = false
 	switch val := value.(type) {
 	case string:
-		if val == NaN {
-			e.nan = true
-			return
-		}
-		switch strings.ToLower(val) {
-		case "true", "t", "1":
-			e.e = true
-		case "false", "f", "0":
-			e.e = false
-		default:
-			e.nan = true
-			return
-		}
+		e.SetString(val)
 	case int:
-		switch val {
-		case 1:
-			e.e = true
-		case 0:
-			e.e = false
-		default:
-			e.nan = true
-			return
-		}
+		e.SetInt(val)
 	case float64:
-		switch val {
-		case 1:
-			e.e = true
-		case 0:
-			e.e = false
-		default:
-			e.nan = true
-			return
-		}
+		e.SetFloat(val)
 	case bool:
-		e.e = val
+		e.SetBool(val)
 	case Element:
-		b, err := val.Bool()
-		if err != nil {
-			e.nan = true
-			return
-		}
-		e.e = b
+		e.SetElement(val)
+	default:
+		e.nan = true
+	}
+}
+
+func (e *boolElement) SetElement(val Element) {
+	e.nan = false
+	b, err := val.Bool()
+	if err != nil {
+		e.nan = true
+		return
+	}
+	e.e = b
+}
+
+func (e *boolElement) SetBool(val bool) {
+	e.nan = false
+	e.e = val
+}
+
+func (e *boolElement) SetFloat(val float64) {
+	e.nan = false
+	switch val {
+	case 1:
+		e.e = true
+	case 0:
+		e.e = false
+	default:
+		e.nan = true
+	}
+}
+func (e *boolElement) SetInt(val int) {
+	e.nan = false
+	switch val {
+	case 1:
+		e.e = true
+	case 0:
+		e.e = false
+	default:
+		e.nan = true
+	}
+}
+func (e *boolElement) SetString(val string) {
+	e.nan = false
+	if val == NaN {
+		e.nan = true
+		return
+	}
+	switch strings.ToLower(val) {
+	case "true", "t", "1":
+		e.e = true
+	case "false", "f", "0":
+		e.e = false
 	default:
 		e.nan = true
 	}
@@ -171,4 +190,3 @@ func (e boolElement) GreaterEq(elem Element) bool {
 	}
 	return e.e || !b
 }
-
