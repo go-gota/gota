@@ -13,7 +13,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
-	"github.com/go-gota/gota/series"
+	"github.com/mqy527/gota/series"
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 )
@@ -636,14 +636,14 @@ func (df DataFrame) Concat(dfb DataFrame) DataFrame {
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
 func (df DataFrame) Mutate(ss ...series.Series) DataFrame {
-	if df.Err != nil || len(ss) == 0{
+	if df.Err != nil || len(ss) == 0 {
 		return df
 	}
-	
+
 	slen := ss[0].Len()
 	for i := 1; i < len(ss); i++ {
 		if slen != ss[i].Len() {
-			return DataFrame{Err: fmt.Errorf("mutate: serieses length not equal")}	
+			return DataFrame{Err: fmt.Errorf("mutate: serieses length not equal")}
 		}
 	}
 	if slen != df.nrows {
@@ -660,7 +660,7 @@ func (df DataFrame) Mutate(ss ...series.Series) DataFrame {
 			columns = append(columns, ss[i])
 		}
 	}
-	
+
 	nrows, ncols, err := checkColumnsDimensions(columns...)
 	if err != nil {
 		return DataFrame{Err: err}
