@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/go-gota/gota/series"
+	"github.com/mqy527/gota/series"
 )
 
 func generateInts(n int) (data []int) {
@@ -214,12 +214,11 @@ func BenchmarkSeries_Subset(b *testing.B) {
 	}
 }
 
-
 func BenchmarkSeries_Append(b *testing.B) {
 	rand.Seed(100)
 	table := []struct {
-		name    string
-		series  series.Series
+		name   string
+		series series.Series
 	}{
 		{
 			"[]int(100000)_Int",
@@ -248,7 +247,6 @@ func BenchmarkSeries_Append(b *testing.B) {
 		})
 	}
 }
-
 
 func BenchmarkSeries_Set(b *testing.B) {
 	rand.Seed(100)
