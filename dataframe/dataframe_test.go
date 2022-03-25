@@ -615,7 +615,7 @@ func TestDataFrame_Concat(t *testing.T) {
 			),
 			New(
 				series.New([]string{"b", "a", "b", "c", "d", "b", "a", "b", "c", "d"}, series.String, "COL.1"),
-				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.Int, "")),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{{}, {}, {}, {}, {}}, series.Int, "")),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 			),
 		},
@@ -631,7 +631,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
 			),
 		},
 		{
@@ -646,7 +646,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
 			),
 		},
 		{
@@ -3133,7 +3133,7 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 		Err     error
 	}
 	type args struct {
-		rules []ColumnUpdateRule
+		rules []ColumnUpdate
 	}
 	tests := []struct {
 		name   string
@@ -3152,21 +3152,21 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "C",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, true, true}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, false, false, false}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, false, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{false, false, true, false, false}),
-								Values:      series.Ints([]int{-1, -1, -1, -1, -1}),
+								RowIndexes: series.Bools([]bool{false, false, true, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
 							},
 						},
 					},
@@ -3193,21 +3193,21 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "A",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, true, true, true}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, true, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, true, false, false}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, true, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, false, false}),
-								Values:      series.Ints([]int{-1, -1, -1, -1, -1}),
+								RowIndexes: series.Bools([]bool{false, false, false, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
 							},
 						},
 					},
@@ -3233,21 +3233,21 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "A",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, true, true}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, false, true, false}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, false, true, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{false, false, true, false, false}),
-								Values:      series.Ints([]int{-1, -1, -1, -1, -1}),
+								RowIndexes: series.Bools([]bool{false, false, true, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
 							},
 						},
 					},
@@ -3273,17 +3273,17 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "C",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, true, true}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, false, false, true}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, false, false, true}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 						},
 					},
@@ -3310,14 +3310,14 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "C",
 					},
 				},
 			},
 			want: DataFrame{
-				Err: fmt.Errorf("one of 'ColumnValue' or 'DefaultValue' must be set when updating column: C"),
+				Err: fmt.Errorf("'RowValues' must be set when updating column: C"),
 			},
 		},
 		{
@@ -3331,34 +3331,34 @@ func TestDataFrame_UpdateColumns(t *testing.T) {
 				nrows: 5,
 			},
 			args: args{
-				rules: []ColumnUpdateRule{
+				rules: []ColumnUpdate{
 					{
 						ColName: "C",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, true, true}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, false, false, false}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, false, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 						},
 					},
 					{
 						ColName: "A",
-						ColumnValues: []ColumnValuesPerSubset{
+						RowValues: []RowValues{
 							{
-								SubsetIndex: series.Bools([]bool{false, false, true, true, false}),
-								Values:      series.Ints([]int{2, 4, 6, 8, 10}),
+								RowIndexes: series.Bools([]bool{false, false, true, true, false}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{true, true, true, false, false}),
-								Values:      series.Ints([]int{3, 6, 9, 27, 30}),
+								RowIndexes: series.Bools([]bool{true, true, true, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
 							},
 							{
-								SubsetIndex: series.Bools([]bool{false, false, false, false, true}),
-								Values:      series.Ints([]int{-1, -1, -1, -1, -1}),
+								RowIndexes: series.Bools([]bool{false, false, false, false, true}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
 							},
 						},
 					},

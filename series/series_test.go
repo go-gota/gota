@@ -1354,6 +1354,16 @@ func TestSeries_Subset(t *testing.T) {
 		},
 		{
 			Strings([]string{"A", "B", "C", "K", "D"}),
+			Bools([]bool{true}),
+			"[A B C K D]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			Bools([]bool{false}),
+			"[]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
 			Bools([]bool{true, false, false, true, true}),
 			"[A K D]",
 		},
@@ -1378,6 +1388,11 @@ func TestSeries_Subset(t *testing.T) {
 			StringsList([][]string{{"A"}, {"B"}, {"C"}, {"K"}, {"D"}}),
 			[]bool{true, false, false, true, true},
 			"[[A] [K] [D]]",
+		},
+		{
+			Strings([]string{"A", "B", "C", "K", "D"}),
+			[]bool{true},
+			"[A B C K D]",
 		},
 		{
 			StringsList([][]string{{"A"}, {"B"}, {"C"}, {"K"}, {"D"}}),
@@ -5636,6 +5651,26 @@ func TestSeries_SetMutualExclusiveValue(t *testing.T) {
 				newvalues:        Ints([]int{2, 4, 6, 8, 10}),
 			},
 			want: Ints([]int{2, 4, 3, 4, 10}),
+		},
+		{
+			name:        "all value in indexes and exluding indexes is mutually exclusive, selected indexes is a single true boolean value",
+			inputSeries: Ints([]int{1, 2, 3, 4, 5}),
+			args: args{
+				indexes:          Bools([]bool{true}),
+				excludingIndexes: Bools([]bool{false, false, false, false, false}),
+				newvalues:        Ints([]int{2, 4, 6, 8, 10}),
+			},
+			want: Ints([]int{2, 4, 6, 8, 10}),
+		},
+		{
+			name:        "all value in indexes and exluding indexes is mutually exclusive, selected indexes is a single false boolean value",
+			inputSeries: Ints([]int{1, 2, 3, 4, 5}),
+			args: args{
+				indexes:          Bools([]bool{false}),
+				excludingIndexes: Bools([]bool{false, false, false, false, false}),
+				newvalues:        Ints([]int{2, 4, 6, 8, 10}),
+			},
+			want: Ints([]int{1, 2, 3, 4, 5}),
 		},
 		{
 			name:        "some value in indexes is part of excluding indexes and those indexes is those modified ",

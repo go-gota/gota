@@ -153,14 +153,14 @@ func (e stringElement) BoolList() ([]bool, error) {
 
 func (e stringElement) Eq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
-		return false
+		return e.IsNA() == elem.IsNA()
 	}
 	return e.e == elem.String()
 }
 
 func (e stringElement) Neq(elem Element) bool {
 	if e.IsNA() || elem.IsNA() {
-		return false
+		return e.IsNA() != elem.IsNA()
 	}
 	return e.e != elem.String()
 }

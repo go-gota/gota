@@ -434,54 +434,60 @@ func (df DataFrame) GroupBy(colnames ...string) *Groups {
 	return groups
 }
 
-type ColumnValuesPerSubset struct {
-	Values      series.Series
-	SubsetIndex series.Indexes
+// RowValues indicate which values that needs to be set in a set of row
+type RowValues struct {
+	Values     series.Series
+	RowIndexes series.Indexes
 }
 
-type ColumnUpdateRule struct {
-	ColName      string
-	ColumnValues []ColumnValuesPerSubset
+// ColumnUpdate is a rule to update a column, this contains of name of column and `RowValues` indicate values for set of row in a column
+type ColumnUpdate struct {
+	ColName   string
+	RowValues []RowValues
 }
 
-func broadcastBoolScalar(scalar bool, dim int) series.Series {
-	bools := make([]bool, dim)
-	for i := 0; i < dim; i++ {
-		bools[i] = scalar
+// columnType determine type of the column based on the first type in the rule
+func (c ColumnUpdate) columnType() series.Type {
+	colType := series.String
+	if len(c.RowValues) > 0 {
+		colType = c.RowValues[0].Values.Type()
 	}
-	return series.Bools(bools)
+	return colType
 }
 
 // UpdateColumns will update columns in a table based on rule that specified
-func (df DataFrame) UpdateColumns(rules []ColumnUpdateRule) DataFrame {
-	if len(rules) == 0 {
+func (df DataFrame) UpdateColumns(columnUpdate []ColumnUpdate) DataFrame {
+	if len(columnUpdate) == 0 {
 		return DataFrame{
-			Err: fmt.Errorf("update rules is not set"),
+			Err: fmt.Errorf("columnUpdate is not set"),
 		}
 	}
-	updatedCols := make([]series.Series, 0, len(rules))
-
-	for _, rule := range rules {
+	updatedCols := make([]series.Series, 0, len(columnUpdate))
+	for _, rule := range columnUpdate {
 		colName := rule.ColName
 		resCol := df.Col(colName)
-		resColIsNotExist := resCol.Err != nil
+		colIsNotExist := resCol.Err != nil
 
-		alreadySelectedIndexes := broadcastBoolScalar(false, df.nrows)
-		if len(rule.ColumnValues) == 0 {
-			return DataFrame{Err: fmt.Errorf(`one of 'ColumnValue' or 'DefaultValue' must be set when updating column: %s`, colName)}
+		if len(rule.RowValues) == 0 {
+			return DataFrame{Err: fmt.Errorf(`'RowValues' must be set when updating column: %s`, colName)}
 		}
 
-		colValue := rule.ColumnValues[0]
-		if resColIsNotExist {
-			resCol = series.NewEmpty(colValue.Values.Type(), colName, df.nrows)
+		expectedType := rule.columnType()
+		if colIsNotExist || resCol.Type() != expectedType {
+			resCol = series.NewEmpty(expectedType, colName, df.nrows)
 			if resCol.Err != nil {
 				return DataFrame{Err: fmt.Errorf("failed create column %s with err: %v", colName, resCol.Err)}
 			}
 		}
 
-		for _, s := range rule.ColumnValues {
-			resCol = resCol.SetMutualExclusiveValue(s.SubsetIndex, alreadySelectedIndexes, s.Values)
-			alreadySelectedIndexes = alreadySelectedIndexes.Or(s.SubsetIndex)
+		// initialize index that already processed, initially the values is false
+		alreadyProcessedIdx := series.Bools([]bool{false})
+		for _, s := range rule.RowValues {
+			resCol = resCol.SetMutualExclusiveValue(s.RowIndexes, alreadyProcessedIdx, s.Values)
+			if resCol.Error() != nil {
+				return DataFrame{Err: fmt.Errorf("failed set value for column: %s with err: %v", colName, resCol.Error())}
+			}
+			alreadyProcessedIdx = alreadyProcessedIdx.Or(s.RowIndexes)
 		}
 		updatedCols = append(updatedCols, resCol)
 
@@ -692,7 +698,7 @@ func (df DataFrame) Concat(dfb DataFrame) DataFrame {
 // Mutate changes a column of the DataFrame with the given Series or adds it as
 // a new column if the column name does not exist.
 func (df DataFrame) Mutate(cols ...series.Series) DataFrame {
-	if df.Err != nil {
+	if df.Error() != nil {
 		return df
 	}
 
@@ -1665,13 +1671,14 @@ func (df DataFrame) Col(colname string) series.Series {
 
 func (df DataFrame) Slice(start, end int) DataFrame {
 	nCol := df.ncols
-	newCols := make([]series.Series, 0, nCol)
-	for _, col := range df.columns {
+	newCols := make([]series.Series, nCol)
+	for i, col := range df.columns {
 		newCol := col.Slice(start, end)
 		if newCol.Err != nil {
 			return DataFrame{Err: fmt.Errorf("failed slice col: %s due to: %v", col.Name, newCol.Err)}
 		}
-		newCols = append(newCols, newCol)
+		// newCols = append(newCols, newCol)
+		newCols[i] = newCol
 	}
 	return New(newCols...)
 }

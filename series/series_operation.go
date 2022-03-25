@@ -119,11 +119,12 @@ func (s Series) doArithmeticOperation(right Series, indexes Indexes, operator ar
 	}
 	resultType := getArithmeticResultType(left, right)
 	columnOperationFn, ok := operationPerColumnType[resultType]
-	res := make([]interface{}, seriesLen)
 
 	if !ok {
 		return Series{Err: fmt.Errorf("%s is not supported for %s operation", resultType, operator)}
 	}
+
+	res := make([]interface{}, seriesLen)
 	for _, idx := range affectedIndexes {
 		leftIdx := 0
 		if !isBroadcastLeft {

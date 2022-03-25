@@ -326,6 +326,10 @@ func (e boolListElement) BoolList() ([]bool, error) {
 }
 
 func (e boolListElement) Eq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() == elem.IsNA()
+	}
+
 	list, err := elem.BoolList()
 	if err != nil {
 		return false
@@ -345,6 +349,10 @@ func (e boolListElement) Eq(elem Element) bool {
 }
 
 func (e boolListElement) Neq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() != elem.IsNA()
+	}
+
 	list, err := elem.BoolList()
 	if err != nil {
 		return false

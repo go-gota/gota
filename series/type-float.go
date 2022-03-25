@@ -161,6 +161,9 @@ func (e floatElement) BoolList() ([]bool, error) {
 }
 
 func (e floatElement) Eq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() == elem.IsNA()
+	}
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false
@@ -169,6 +172,9 @@ func (e floatElement) Eq(elem Element) bool {
 }
 
 func (e floatElement) Neq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() != elem.IsNA()
+	}
 	f := elem.Float()
 	if e.IsNA() || math.IsNaN(f) {
 		return false

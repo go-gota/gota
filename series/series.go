@@ -698,6 +698,9 @@ func (s Series) Compare(comparator Comparator, comparando interface{}) Series {
 	case *Series:
 		comp = *val
 	default:
+		if comparando == nil {
+			comparando = "NaN"
+		}
 		comp = New(comparando, s.t, "")
 	}
 
@@ -1062,11 +1065,16 @@ func parseIndexes(l int, indexes Indexes) ([]int, error) {
 		idx = []int{idxs}
 	case []bool:
 		bools := idxs
-		if len(bools) != l {
+		if len(bools) != l && len(bools) != 1 {
 			return nil, fmt.Errorf("indexing error: index dimensions mismatch")
 		}
-		for i, b := range bools {
-			if b {
+		isBroadcasted := len(bools) == 1
+		for i := 0; i < l; i++ {
+			index := 0
+			if !isBroadcasted {
+				index = i
+			}
+			if b := bools[index]; b {
 				idx = append(idx, i)
 			}
 		}
