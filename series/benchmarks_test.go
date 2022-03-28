@@ -1,6 +1,7 @@
 package series_test
 
 import (
+	"fmt"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -286,6 +287,49 @@ func BenchmarkSeries_Set(b *testing.B) {
 		b.Run(test.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				s.Set(test.indexes, test.newValues)
+			}
+		})
+	}
+}
+
+func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
+	tests := []struct {
+		series       series.Series
+		window       int
+		minPeriod    int
+		weights  []float64
+	}{
+		{
+			series.Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
+			3,
+			2,
+			[]float64{0.5, 0.3, 0.2},
+		},
+		{
+			series.Floats([]string{"23", "13", "101", "-64", "-3"}),
+			3,
+			1,
+			[]float64{5, 3, 2},
+		},
+	}
+
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		r := test.series.Rolling(test.window, test.minPeriod)
+		b.Run("Rolling-" + test.series.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				r.MeanByWeights(test.weights)
+			}
+		})
+	}
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		rs := series.NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
+		b.Run("CacheRolling-" + test.series.Name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				rs.MeanByWeights(test.weights)
 			}
 		})
 	}
