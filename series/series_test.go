@@ -84,6 +84,12 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{false, true, false, true, false, false}),
 		},
 		{
+			Strings([]interface{}{"A", "B", "C", "B", "D", "BADA", nil}),
+			Eq,
+			nil,
+			Bools([]bool{false, false, false, false, false, false, true}),
+		},
+		{
 			Strings([]string{"B"}),
 			Eq,
 			Strings([]string{"A", "B", "C", "B", "D", "BADA"}),
@@ -102,10 +108,22 @@ func TestSeries_Compare(t *testing.T) {
 			Bools([]bool{true, true, false, true, false}),
 		},
 		{
+			Ints([]interface{}{0, 2, 1, 5, nil}),
+			Eq,
+			nil,
+			Bools([]bool{false, false, false, false, true}),
+		},
+		{
 			Floats([]float64{0.1, 2, 1, 5, 9}),
 			Eq,
 			"2",
 			Bools([]bool{false, true, false, false, false}),
+		},
+		{
+			Floats([]interface{}{0.1, 2, 1, 5, nil}),
+			Eq,
+			nil,
+			Bools([]bool{false, false, false, false, true}),
 		},
 		{
 			Floats([]float64{0.1, 2, 1, 5, 9}),
@@ -118,6 +136,12 @@ func TestSeries_Compare(t *testing.T) {
 			Eq,
 			"true",
 			Bools([]bool{true, true, false}),
+		},
+		{
+			Bools([]interface{}{true, true, nil}),
+			Eq,
+			nil,
+			Bools([]bool{false, false, true}),
 		},
 		{
 			Bools([]bool{true, true, false}),
