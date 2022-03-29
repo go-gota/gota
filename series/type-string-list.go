@@ -244,8 +244,11 @@ func (e stringListElement) BoolList() ([]bool, error) {
 }
 
 func (e stringListElement) Eq(elem Element) bool {
-	list := elem.StringList()
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() == elem.IsNA()
+	}
 
+	list := elem.StringList()
 	if len(e.e) != len(list) {
 		return false
 	}
@@ -260,6 +263,10 @@ func (e stringListElement) Eq(elem Element) bool {
 }
 
 func (e stringListElement) Neq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() != elem.IsNA()
+	}
+
 	list := elem.StringList()
 
 	if len(e.e) != len(list) {

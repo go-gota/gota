@@ -615,7 +615,7 @@ func TestDataFrame_Concat(t *testing.T) {
 			),
 			New(
 				series.New([]string{"b", "a", "b", "c", "d", "b", "a", "b", "c", "d"}, series.String, "COL.1"),
-				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.Int, "")),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2").Concat(series.New([]NA{{}, {}, {}, {}, {}}, series.Int, "")),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 			),
 		},
@@ -631,7 +631,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.4").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.4")),
 			),
 		},
 		{
@@ -646,7 +646,7 @@ func TestDataFrame_Concat(t *testing.T) {
 				series.New([]string{"b", "a", "b", "c", "d", "1", "2", "4", "5", "4"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4, 1, 2, 4, 5, 4}, series.Int, "COL.2"),
 				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2, 3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
-				series.New([]NA{NA{}, NA{}, NA{}, NA{}, NA{}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
+				series.New([]NA{{}, {}, {}, {}, {}}, series.String, "COL.0").Concat(series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.0")),
 			),
 		},
 		{
@@ -707,11 +707,11 @@ func TestDataFrame_Mutate(t *testing.T) {
 		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
 	)
 	table := []struct {
-		s     series.Series
+		s     []series.Series
 		expDf DataFrame
 	}{
 		{
-			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+			[]series.Series{series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1")},
 			New(
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
@@ -719,7 +719,7 @@ func TestDataFrame_Mutate(t *testing.T) {
 			),
 		},
 		{
-			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
+			[]series.Series{series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2")},
 			New(
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.2"),
@@ -727,7 +727,7 @@ func TestDataFrame_Mutate(t *testing.T) {
 			),
 		},
 		{
-			series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			[]series.Series{series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4")},
 			New(
 				series.New([]string{"b", "a", "b", "c", "d"}, series.String, "COL.1"),
 				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
@@ -735,9 +735,21 @@ func TestDataFrame_Mutate(t *testing.T) {
 				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
 			),
 		},
+		{
+			[]series.Series{
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			},
+			New(
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.1"),
+				series.New([]int{1, 2, 4, 5, 4}, series.Int, "COL.2"),
+				series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "COL.3"),
+				series.New([]string{"A", "B", "A", "A", "A"}, series.String, "COL.4"),
+			),
+		},
 	}
 	for i, tc := range table {
-		b := a.Mutate(tc.s)
+		b := a.Mutate(tc.s...)
 
 		if b.Err != nil {
 			t.Errorf("Test: %d\nError:%v", i, b.Err)
@@ -3013,5 +3025,367 @@ func TestGroups_GetGroups(t *testing.T) {
 	}
 	if len(groupNames) != 3 {
 		t.Fatalf("Expected to get 3 groups, got %d", len(groupNames))
+	}
+}
+
+func TestDataFrame_Slice(t *testing.T) {
+	type fields struct {
+		columns []series.Series
+		ncols   int
+		nrows   int
+		Err     error
+	}
+	type args struct {
+		start int
+		end   int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   DataFrame
+	}{
+		{
+			name: "start < end, end < row len",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5, 6}, series.Int, "A"),
+					series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 6,
+			},
+			args: args{
+				start: 1,
+				end:   3,
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{2, 3}, series.Int, "A"),
+					series.New([]int{4, 6}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 2,
+			},
+		},
+		{
+			name: "start < end, end == row len",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5, 6}, series.Int, "A"),
+					series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 6,
+			},
+			args: args{
+				start: 1,
+				end:   6,
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{2, 3, 4, 5, 6}, series.Int, "A"),
+					series.New([]int{4, 6, 8, 10, 12}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+		},
+		{
+			name: "start < end, end > row len",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5, 6}, series.Int, "A"),
+					series.New([]int{2, 4, 6, 8, 10, 12}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				start: 1,
+				end:   7,
+			},
+			want: DataFrame{
+				Err: fmt.Errorf("failed slice col: A due to: slice index out of bounds"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			df := DataFrame{
+				columns: tt.fields.columns,
+				ncols:   tt.fields.ncols,
+				nrows:   tt.fields.nrows,
+				Err:     tt.fields.Err,
+			}
+			if got := df.Slice(tt.args.start, tt.args.end); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DataFrame.Slice() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDataFrame_UpdateColumns(t *testing.T) {
+	type fields struct {
+		columns []series.Series
+		ncols   int
+		nrows   int
+		Err     error
+	}
+	type args struct {
+		rules []ColumnUpdate
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   DataFrame
+	}{
+		{
+			name: "single new col update",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "C",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, false, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{false, false, true, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
+							},
+						},
+					},
+				},
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+					series.New([]int{3, 6, -1, 8, 10}, series.Int, "C"),
+				},
+				ncols: 3,
+				nrows: 5,
+			},
+		},
+		{
+			name: "single existing col update, and overlapping rule",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "A",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, true, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, true, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
+							},
+						},
+					},
+				},
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{3, 6, 6, 8, 10}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+		},
+		{
+			name: "single existing col update, with overlapping rule",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "A",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, false, true, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{false, false, true, false, false}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
+							},
+						},
+					},
+				},
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{3, 6, -1, 8, 10}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+		},
+		{
+			name: "single new col update, with overlapping rule",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "C",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, false, false, true}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+						},
+					},
+				},
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+					series.New([]interface{}{3, 6, nil, 8, 10}, series.Int, "C"),
+				},
+				ncols: 3,
+				nrows: 5,
+			},
+		},
+		{
+			name: "single new col update, no column values rules and default value",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "C",
+					},
+				},
+			},
+			want: DataFrame{
+				Err: fmt.Errorf("'RowValues' must be set when updating column: C"),
+			},
+		},
+		{
+			name: "multiple col update",
+			fields: fields{
+				columns: []series.Series{
+					series.New([]int{1, 2, 3, 4, 5}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+				},
+				ncols: 2,
+				nrows: 5,
+			},
+			args: args{
+				rules: []ColumnUpdate{
+					{
+						ColName: "C",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, true, true}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, false, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+						},
+					},
+					{
+						ColName: "A",
+						RowValues: []RowValues{
+							{
+								RowIndexes: series.Bools([]bool{false, false, true, true, false}),
+								Values:     series.Ints([]int{2, 4, 6, 8, 10}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{true, true, true, false, false}),
+								Values:     series.Ints([]int{3, 6, 9, 27, 30}),
+							},
+							{
+								RowIndexes: series.Bools([]bool{false, false, false, false, true}),
+								Values:     series.Ints([]int{-1, -1, -1, -1, -1}),
+							},
+						},
+					},
+				},
+			},
+			want: DataFrame{
+				columns: []series.Series{
+					series.New([]int{3, 6, 6, 8, -1}, series.Int, "A"),
+					series.New([]int{10, 20, 30, 40, 50}, series.Int, "B"),
+					series.New([]interface{}{3, 6, nil, 8, 10}, series.Int, "C"),
+				},
+				ncols: 3,
+				nrows: 5,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			df := DataFrame{
+				columns: tt.fields.columns,
+				ncols:   tt.fields.ncols,
+				nrows:   tt.fields.nrows,
+				Err:     tt.fields.Err,
+			}
+			if got := df.UpdateColumns(tt.args.rules); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DataFrame.UpdateColumns() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

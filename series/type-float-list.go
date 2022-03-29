@@ -249,6 +249,10 @@ func (e floatListElement) BoolList() ([]bool, error) {
 }
 
 func (e floatListElement) Eq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() == elem.IsNA()
+	}
+
 	list := elem.FloatList()
 
 	if len(e.e) != len(list) {
@@ -265,6 +269,9 @@ func (e floatListElement) Eq(elem Element) bool {
 }
 
 func (e floatListElement) Neq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() != elem.IsNA()
+	}
 	list := elem.FloatList()
 
 	if len(e.e) != len(list) {

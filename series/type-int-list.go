@@ -277,6 +277,10 @@ func (e intListElement) BoolList() ([]bool, error) {
 // For list element, it is considered to be equal when
 // all of its value on the same index is equal.
 func (e intListElement) Eq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() == elem.IsNA()
+	}
+
 	list, err := elem.IntList()
 	if err != nil {
 		return false
@@ -296,6 +300,10 @@ func (e intListElement) Eq(elem Element) bool {
 }
 
 func (e intListElement) Neq(elem Element) bool {
+	if e.IsNA() || elem.IsNA() {
+		return e.IsNA() != elem.IsNA()
+	}
+
 	list, err := elem.IntList()
 	if err != nil {
 		return false
