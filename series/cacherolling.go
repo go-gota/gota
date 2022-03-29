@@ -2,56 +2,14 @@ package series
 
 import (
 	"fmt"
-	"sync"
-	"time"
 	"unsafe"
-
-	"github.com/patrickmn/go-cache"
 )
-
-var CacheAble = false
-
-var c Cache
-
-var once sync.Once
-
-//Cache define rolling cache
-type Cache interface {
-	Set(k string, x interface{})
-	Get(k string) (interface{}, bool)
-}
-
-type defaultCache struct {
-	c *cache.Cache
-}
-
-func (dc *defaultCache) Set(k string, v interface{}) {
-	dc.c.SetDefault(k, v)
-}
-
-func (dc *defaultCache) Get(k string) (interface{}, bool) {
-	return dc.c.Get(k)
-}
-
-//InitCache 
-func InitCache(f func() Cache) {
-	once.Do(func() {
-		CacheAble = true
-		if f == nil {
-			c = &defaultCache{
-				c: cache.New(5*time.Minute, 10*time.Minute),
-			}
-		} else {
-			c = f()
-		}
-	})
-}
 
 type cacheAbleRollingSeries struct {
 	RollingSeries
 	cacheKey string
 }
-
+// NewCacheAbleRollingSeries. You should make sure that the Series will not be modified.
 func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 	if len(s.Name) == 0 {
 		panic("series must have a name")
@@ -60,7 +18,7 @@ func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeri
 		InitCache(nil)
 	}
 	cr := cacheAbleRollingSeries{
-		RollingSeries: NewRollingSeries(window, minPeriods, s),
+		RollingSeries: NewRollingSeries(window, minPeriods, s.Copy()),
 		cacheKey:   fmt.Sprintf("%s|%d|%d|%d", s.Name, s.Len(), window, minPeriods),
 	}
 	return cr

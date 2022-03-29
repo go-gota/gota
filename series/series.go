@@ -1078,10 +1078,12 @@ func (s Series) FillNaNBackward() {
 }
 
 func (s Series) Rolling(window int, minPeriods int) RollingSeries {
-	if CacheAble {
-		return NewCacheAbleRollingSeries(window, minPeriods, s)
-	}
 	return NewRollingSeries(window, minPeriods, s)
+}
+
+// CacheAble
+func (s Series) CacheAble() CacheAbleSeries {
+	return newCacheAbleSeries(s)
 }
 
 //Operation for multiple series calculation
