@@ -39,6 +39,10 @@ func (mc *mockCache) Clear() {
 	mc.hitCount = 0
 }
 
+func (mc *mockCache) DelByKeyPrefix(keyPrefix string) {
+	mc.innerCache.DelByKeyPrefix(keyPrefix)
+}
+
 var testCache = &mockCache{
 	innerCache: &defaultCache{
 		c: cache.New(5*time.Minute, 10*time.Minute),
@@ -46,6 +50,7 @@ var testCache = &mockCache{
 }
 
 func TestMain(m *testing.M) {
+	ClearCache()
 	InitCache(func() Cache {
 		return testCache
 	})
@@ -130,7 +135,7 @@ func TestCacheSeries_Map(t *testing.T) {
 	setCount := 0
 	getCount := 0
 	hitCount := 0
-
+	ClearCache()
 	for testnum, test := range tests {
 		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		tmpSeries := test.series.CacheAble()
@@ -212,7 +217,7 @@ func TestCacheSeries_Map(t *testing.T) {
 		}
 	}
 	if setCount != testCache.setCount {
-		t.Errorf("CacheInfo[setCount]:\nsetExpected:%v\nActual:%v", setCount, testCache.setCount)
+		t.Errorf("CacheInfo[setCount]:\nExpected:%v\nActual:%v", setCount, testCache.setCount)
 	}
 	if getCount != testCache.getCount {
 		t.Errorf("CacheInfo[getCount]:\nExpected:%v\nActual:%v", getCount, testCache.getCount)
@@ -222,7 +227,6 @@ func TestCacheSeries_Map(t *testing.T) {
 	}
 
 }
-
 
 func TestCacheSeries_Compare(t *testing.T) {
 	table := []struct {
@@ -568,6 +572,7 @@ func TestCacheSeries_Compare(t *testing.T) {
 			Bools([]bool{false, false, true}),
 		},
 	}
+	ClearCache()
 	for testnum, test := range table {
 		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		a := test.series.CacheAble()
@@ -594,5 +599,3 @@ func TestCacheSeries_Compare(t *testing.T) {
 
 	fmt.Printf("getCount:%d, setCount:%d, hitCount:%d \n", testCache.getCount, testCache.setCount, testCache.hitCount)
 }
-
-

@@ -10,7 +10,6 @@ import (
 
 var _ Series = (*cacheAbleSeries)(nil)
 
-
 type cacheAbleSeries struct {
 	Series
 	cacheKey string
@@ -25,8 +24,8 @@ func newCacheAbleSeries(s Series) Series {
 	}
 
 	ret := &cacheAbleSeries{
-		Series:        s,
-		cacheKey: fmt.Sprintf("%s|%d", s.Name(), s.Len()),
+		Series:   s,
+		cacheKey: fmt.Sprintf("%s(%d)", s.Name(), s.Len()),
 	}
 	return ret
 }
@@ -34,7 +33,7 @@ func newCacheAbleSeries(s Series) Series {
 func (cs cacheAbleSeries) Rolling(window int, minPeriods int) RollingSeries {
 	cr := cacheAbleRollingSeries{
 		RollingSeries: NewRollingSeries(window, minPeriods, cs.Series),
-		cacheKey:      fmt.Sprintf("%s|%d|%d", cs.cacheKey, window, minPeriods),
+		cacheKey:      fmt.Sprintf("%s|[w%d,p%d]", cs.cacheKey, window, minPeriods),
 	}
 	return cr
 }
@@ -88,21 +87,21 @@ func (cs cacheAbleSeries) Compare(comparator Comparator, comparando interface{})
 		cacheKey = fmt.Sprintf("%s_Compare(%s, %v)", cs.cacheKey, comparator, (*(*int64)(unsafe.Pointer(&f))))
 	} else {
 		switch v := comparando.(type) {
-		case series:
-			if len(v.name) == 0 {
+		case Series:
+			if len(v.Name()) == 0 {
 				panic("series must have a name")
 			}
-			cacheKey = fmt.Sprintf("%s_Compare(%s, %s|%d)", cs.cacheKey, comparator, v.name, v.Len())
+			cacheKey = fmt.Sprintf("%s_Compare(%s, %s|%d)", cs.cacheKey, comparator, v.Name(), v.Len())
 		default:
 			switch reflect.TypeOf(comparando).Kind() {
-				case reflect.Slice:
-					return cs.Series.Compare(comparator, comparando)
-				default:
-					cacheKey = fmt.Sprintf("%s_Compare(%s, %v)", cs.cacheKey, comparator, comparando)
+			case reflect.Slice:
+				return cs.Series.Compare(comparator, comparando)
+			default:
+				cacheKey = fmt.Sprintf("%s_Compare(%s, %v)", cs.cacheKey, comparator, comparando)
 			}
 		}
 	}
-	
+
 	ret, _ := cacheOrExecuted(cacheKey, func() (interface{}, error) {
 		ret := cs.Series.Compare(comparator, comparando)
 		return ret, nil
@@ -409,6 +408,79 @@ func (cs cacheAbleSeries) Elem(i int) Element {
 }
 
 func (cs cacheAbleSeries) Slice(start int, end int) Series {
-	return cs.Series.Slice(start, end)
+	cacheKey := fmt.Sprintf("%s_Slice(%d,%d)", cs.cacheKey, start, end)
+	res := cs.Series.Slice(start, end)
+	res.SetName(cacheKey)
+	ret := newCacheAbleSeries(res)
+	return ret
 }
 
+func (cs *cacheAbleSeries) CacheAble() Series {
+	return cs
+}
+
+func (cs *cacheAbleSeries) Set(indexes Indexes, newvalues Series) Series {
+	c.DelByKeyPrefix(cs.cacheKey)
+	return cs.Series.Set(indexes, newvalues)
+}
+
+func (cs *cacheAbleSeries) Append(values interface{}) {
+	c.DelByKeyPrefix(cs.cacheKey)
+	cs.Series.Append(values)
+}
+func (cs *cacheAbleSeries) And(in interface{}) Series {
+	var cacheKey string
+	switch v := in.(type) {
+	case Series:
+		if len(v.Name()) == 0 {
+			panic("series must have a name")
+		}
+		cacheKey = fmt.Sprintf("%s_And(%s|%d)", cs.cacheKey, v.Name(), v.Len())
+	default:
+		switch reflect.TypeOf(in).Kind() {
+		case reflect.Slice:
+			res := cs.Series.And(in)
+			res.SetName(cacheKey)
+			ret := newCacheAbleSeries(res)
+			return ret
+		default:
+			cacheKey = fmt.Sprintf("%s_And(%v)", cs.cacheKey, in)
+		}
+	}
+
+	ret, _ := cacheOrExecuted(cacheKey, func() (interface{}, error) {
+		res := cs.Series.And(in)
+		res.SetName(cacheKey)
+		ret := newCacheAbleSeries(res)
+		return ret, nil
+	})
+	return ret.(Series)
+}
+func (cs *cacheAbleSeries) Or(in interface{}) Series {
+var cacheKey string
+	switch v := in.(type) {
+	case Series:
+		if len(v.Name()) == 0 {
+			panic("series must have a name")
+		}
+		cacheKey = fmt.Sprintf("%s_Or(%s|%d)", cs.cacheKey, v.Name(), v.Len())
+	default:
+		switch reflect.TypeOf(in).Kind() {
+		case reflect.Slice:
+			res := cs.Series.Or(in)
+			res.SetName(cacheKey)
+			ret := newCacheAbleSeries(res)
+			return ret
+		default:
+			cacheKey = fmt.Sprintf("%s_Or(%v)", cs.cacheKey, in)
+		}
+	}
+
+	ret, _ := cacheOrExecuted(cacheKey, func() (interface{}, error) {
+		res := cs.Series.Or(in)
+		res.SetName(cacheKey)
+		ret := newCacheAbleSeries(res)
+		return ret, nil
+	})
+	return ret.(Series)
+}
