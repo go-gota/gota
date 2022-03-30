@@ -29,12 +29,12 @@ import (
 func checkTypes(s Series) error {
 	var types []Type
 	for i := 0; i < s.Len(); i++ {
-		e := s.elements.Elem(i)
+		e := s.Elem(i)
 		types = append(types, e.Type())
 	}
 	for _, t := range types {
-		if t != s.t {
-			return fmt.Errorf("bad types for %v Series:\n%v", s.t, types)
+		if t != s.Type() {
+			return fmt.Errorf("bad types for %v Series:\n%v", s.Type(), types)
 		}
 	}
 	return nil
@@ -399,7 +399,7 @@ func TestSeries_Compare(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := a.Compare(test.comparator, test.comparando)
-		if err := b.Err; err != nil {
+		if err := b.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected.Records()
@@ -471,7 +471,7 @@ func TestSeries_Compare_CompFunc(t *testing.T) {
 
 			a := test.series
 			b := a.Compare(test.comparator, test.comparando)
-			if err := b.Err; err != nil {
+			if err := b.Error(); err != nil {
 				t.Errorf("Test:%v\nError:%v", testnum, err)
 			}
 			expected := test.expected.Records()
@@ -537,7 +537,7 @@ func TestSeries_Subset(t *testing.T) {
 	for testnum, test := range table {
 		a := test.series
 		b := a.Subset(test.indexes)
-		if err := b.Err; err != nil {
+		if err := b.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -594,7 +594,7 @@ func TestSeries_Set(t *testing.T) {
 	}
 	for testnum, test := range table {
 		b := test.series.Set(test.indexes, test.values)
-		if err := b.Err; err != nil {
+		if err := b.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -696,7 +696,7 @@ func TestStrings(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err; err != nil {
+		if err := test.series.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -796,7 +796,7 @@ func TestInts(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err; err != nil {
+		if err := test.series.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -892,7 +892,7 @@ func TestFloats(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err; err != nil {
+		if err := test.series.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -988,7 +988,7 @@ func TestBools(t *testing.T) {
 		},
 	}
 	for testnum, test := range table {
-		if err := test.series.Err; err != nil {
+		if err := test.series.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		expected := test.expected
@@ -1018,7 +1018,7 @@ func TestSeries_Copy(t *testing.T) {
 		if fmt.Sprint(a) != fmt.Sprint(b) {
 			t.Error("Different values when copying String elements")
 		}
-		if err := b.Err; err != nil {
+		if err := b.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		if err := checkTypes(b); err != nil {
@@ -1141,7 +1141,7 @@ func TestSeries_Concat(t *testing.T) {
 	}
 	for testnum, test := range tests {
 		ab := test.a.Concat(test.b)
-		if err := ab.Err; err != nil {
+		if err := ab.Error(); err != nil {
 			t.Errorf("Test:%v\nError:%v", testnum, err)
 		}
 		received := ab.Records()
@@ -2080,7 +2080,7 @@ func TestSeries_Sum(t *testing.T) {
 
 func TestSeries_Slice(t *testing.T) {
 	seriesWithErr := Ints([]int{})
-	seriesWithErr.Err = fmt.Errorf("slice index out of bounds")
+	seriesWithErr.SetErr(fmt.Errorf("slice index out of bounds"))
 
 	tests := []struct {
 		j        int
@@ -2134,11 +2134,11 @@ func TestSeries_Slice(t *testing.T) {
 			}
 		}
 
-		if expected.Err != nil {
-			if received.Err == nil || expected.Err.Error() != received.Err.Error() {
+		if expected.Error() != nil {
+			if received.Error() == nil || expected.Error().Error() != received.Error().Error() {
 				t.Errorf(
 					"Test:%v\nExpected error:\n%v\nReceived:\n%v",
-					testnum, expected.Err, received.Err,
+					testnum, expected.Error(), received.Error(),
 				)
 			}
 		}

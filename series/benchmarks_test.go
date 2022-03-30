@@ -315,9 +315,9 @@ func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
 
 	b.ResetTimer()
 	for testnum, test := range tests {
-		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		r := test.series.Rolling(test.window, test.minPeriod)
-		b.Run("Rolling-" + test.series.Name, func(b *testing.B) {
+		b.Run("Rolling-" + test.series.Name(), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				r.MeanByWeights(test.weights)
 			}
@@ -325,9 +325,9 @@ func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
 	}
 	b.ResetTimer()
 	for testnum, test := range tests {
-		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		rs := series.NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
-		b.Run("CacheRolling-" + test.series.Name, func(b *testing.B) {
+		b.Run("CacheRolling-" + test.series.Name(), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 				rs.MeanByWeights(test.weights)
 			}

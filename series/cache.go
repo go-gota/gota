@@ -15,6 +15,7 @@ var once sync.Once
 type Cache interface {
 	Set(k string, x interface{})
 	Get(k string) (interface{}, bool)
+	Clear()
 }
 
 type defaultCache struct {
@@ -29,6 +30,10 @@ func (dc *defaultCache) Get(k string) (interface{}, bool) {
 	return dc.c.Get(k)
 }
 
+func (dc *defaultCache) Clear() {
+	dc.c.Flush()
+}
+
 //InitCache
 func InitCache(f func() Cache) {
 	once.Do(func() {
@@ -40,4 +45,10 @@ func InitCache(f func() Cache) {
 			c = f()
 		}
 	})
+}
+
+func ClearCache() {
+	if c != nil {
+		c.Clear()
+	}
 }

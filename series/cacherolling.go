@@ -11,7 +11,7 @@ type cacheAbleRollingSeries struct {
 }
 // NewCacheAbleRollingSeries. You should make sure that the Series will not be modified.
 func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeries {
-	if len(s.Name) == 0 {
+	if len(s.Name()) == 0 {
 		panic("series must have a name")
 	}
 	if c == nil {
@@ -19,7 +19,7 @@ func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeri
 	}
 	cr := cacheAbleRollingSeries{
 		RollingSeries: NewRollingSeries(window, minPeriods, s.Copy()),
-		cacheKey:   fmt.Sprintf("%s|%d|%d|%d", s.Name, s.Len(), window, minPeriods),
+		cacheKey:   fmt.Sprintf("%s|%d|%d|%d", s.Name(), s.Len(), window, minPeriods),
 	}
 	return cr
 }

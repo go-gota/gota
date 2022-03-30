@@ -63,7 +63,7 @@ func New(se ...series.Series) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -76,8 +76,8 @@ func checkColumnsDimensions(se ...series.Series) (nrows, ncols int, err error) {
 		return
 	}
 	for i, s := range se {
-		if s.Err != nil {
-			err = fmt.Errorf("error on series %d: %v", i, s.Err)
+		if s.Error() != nil {
+			err = fmt.Errorf("error on series %d: %v", i, s.Error())
 			return
 		}
 		if nrows == -1 {
@@ -273,8 +273,8 @@ func (df DataFrame) Set(indexes series.Indexes, newvalues DataFrame) DataFrame {
 	columns := make([]series.Series, df.ncols)
 	for i, s := range df.columns {
 		columns[i] = s.Set(indexes, newvalues.columns[i])
-		if columns[i].Err != nil {
-			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Err)}
+		if columns[i].Error() != nil {
+			df = DataFrame{Err: fmt.Errorf("setting error on column %d: %v", i, columns[i].Error())}
 			return df
 		}
 	}
@@ -343,7 +343,7 @@ func (df DataFrame) Select(indexes SelectIndexes) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -375,7 +375,7 @@ func (df DataFrame) Drop(indexes SelectIndexes) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -424,7 +424,7 @@ func (df DataFrame) GroupBy(colnames ...string) *Groups {
 	// Save column types
 	colTypes := map[string]series.Type{}
 	for _, c := range df.columns {
-		colTypes[c.Name] = c.Type()
+		colTypes[c.Name()] = c.Type()
 	}
 
 	for k, cMaps := range groupSeries {
@@ -542,7 +542,7 @@ func (df DataFrame) Rename(newname, oldname string) DataFrame {
 	}
 
 	copy := df.Copy()
-	copy.columns[idx].Name = newname
+	copy.columns[idx].SetName(newname)
 	return copy
 }
 
@@ -577,7 +577,7 @@ func (df DataFrame) RBind(dfb DataFrame) DataFrame {
 		originalSeries := df.columns[k]
 		addedSeries := dfb.columns[idx]
 		newSeries := originalSeries.Concat(addedSeries)
-		if err := newSeries.Err; err != nil {
+		if err := newSeries.Error(); err != nil {
 			return DataFrame{Err: fmt.Errorf("rbind: %v", err)}
 		}
 		expandedSeries[k] = newSeries
@@ -617,15 +617,15 @@ func (df DataFrame) Concat(dfb DataFrame) DataFrame {
 			a = df.columns[aidx]
 		} else {
 			bb := dfb.columns[bidx]
-			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name)
+			a = series.New(make([]struct{}, df.nrows), bb.Type(), bb.Name())
 		}
 		if bidx != -1 {
 			b = dfb.columns[bidx]
 		} else {
-			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name)
+			b = series.New(make([]struct{}, dfb.nrows), a.Type(), a.Name())
 		}
 		newSeries := a.Concat(b)
-		if err := newSeries.Err; err != nil {
+		if err := newSeries.Error(); err != nil {
 			return DataFrame{Err: fmt.Errorf("concat: %v", err)}
 		}
 		expandedSeries[k] = newSeries
@@ -654,7 +654,7 @@ func (df DataFrame) Mutate(ss ...series.Series) DataFrame {
 	columns := df.columns
 	dfNames := df.Names()
 	for i := 0; i < len(ss); i++ {
-		if idx := findInStringSlice(ss[i].Name, dfNames); idx != -1 {
+		if idx := findInStringSlice(ss[i].Name(), dfNames); idx != -1 {
 			columns[idx] = ss[i]
 		} else {
 			columns = append(columns, ss[i])
@@ -673,7 +673,7 @@ func (df DataFrame) Mutate(ss ...series.Series) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -734,7 +734,7 @@ func (df DataFrame) FilterAggregation(agg Aggregation, filters ...F) DataFrame {
 			}
 		}
 		res := df.columns[idx].Compare(f.Comparator, f.Comparando)
-		if err := res.Err; err != nil {
+		if err := res.Error(); err != nil {
 			return DataFrame{Err: fmt.Errorf("filter: %v", err)}
 		}
 		compResults[i] = res
@@ -834,7 +834,7 @@ func (df DataFrame) Capply(f func(series.Series) series.Series) DataFrame {
 	columns := make([]series.Series, df.ncols)
 	for i, s := range df.columns {
 		applied := f(s)
-		applied.Name = s.Name
+		applied.SetName(s.Name())
 		columns[i] = applied
 	}
 	return New(columns...)
@@ -890,8 +890,8 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 			row.Append(col.Elem(i))
 		}
 		row = f(row)
-		if row.Err != nil {
-			return DataFrame{Err: fmt.Errorf("error applying function on row %d: %v", i, row.Err)}
+		if row.Error() != nil {
+			return DataFrame{Err: fmt.Errorf("error applying function on row %d: %v", i, row.Error())}
 		}
 
 		if rowlen != -1 && rowlen != row.Len() {
@@ -933,7 +933,7 @@ func (df DataFrame) Rapply(f func(series.Series) series.Series) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -1254,8 +1254,8 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	columns := make([]series.Series, len(headers))
 	for i, colname := range headers {
 		col := series.New(rawcols[i], types[i], colname)
-		if col.Err != nil {
-			return DataFrame{Err: col.Err}
+		if col.Error() != nil {
+			return DataFrame{Err: col.Error()}
 		}
 		columns[i] = col
 	}
@@ -1272,7 +1272,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -1342,7 +1342,7 @@ func LoadMatrix(mat Matrix) DataFrame {
 	colnames := df.Names()
 	fixColnames(colnames)
 	for i, colname := range colnames {
-		df.columns[i].Name = colname
+		df.columns[i].SetName(colname)
 	}
 	return df
 }
@@ -1563,7 +1563,7 @@ func ReadHTML(r io.Reader, options ...LoadOption) []DataFrame {
 func (df DataFrame) Names() []string {
 	colnames := make([]string, df.ncols)
 	for i, s := range df.columns {
-		colnames[i] = s.Name
+		colnames[i] = s.Name()
 	}
 	return colnames
 }
@@ -1587,7 +1587,7 @@ func (df DataFrame) SetNames(colnames ...string) error {
 		return fmt.Errorf("setting names: wrong dimensions")
 	}
 	for k, s := range colnames {
-		df.columns[k].Name = s
+		df.columns[k].SetName(s)
 	}
 	return nil
 }
@@ -1610,12 +1610,12 @@ func (df DataFrame) Ncol() int {
 // Col returns a copy of the Series with the given column name contained in the DataFrame.
 func (df DataFrame) Col(colname string) series.Series {
 	if df.Err != nil {
-		return series.Series{Err: df.Err}
+		return series.Err(df.Err)
 	}
 	// Check that colname exist on dataframe
 	idx := findInStringSlice(colname, df.Names())
 	if idx < 0 {
-		return series.Series{Err: fmt.Errorf("unknown column name")}
+		return series.Err(fmt.Errorf("unknown column name"))
 	}
 	return df.columns[idx].Copy()
 }
@@ -2226,7 +2226,7 @@ func parseSelectIndexes(l int, indexes SelectIndexes, colnames []string) ([]int,
 		}
 	case series.Series:
 		s := indexes.(series.Series)
-		if err := s.Err; err != nil {
+		if err := s.Error(); err != nil {
 			return nil, fmt.Errorf("indexing error: new values has errors: %v", err)
 		}
 		if s.HasNaN() {
@@ -2332,7 +2332,7 @@ func (df DataFrame) Describe() DataFrame {
 		"75%",
 		"max",
 	})
-	labels.Name = "column"
+	labels.SetName("column")
 
 	ss := []series.Series{labels}
 
@@ -2351,7 +2351,7 @@ func (df DataFrame) Describe() DataFrame {
 				col.MaxStr(),
 			},
 				col.Type(),
-				col.Name,
+				col.Name(),
 			)
 		case series.Bool:
 			fallthrough
@@ -2369,7 +2369,7 @@ func (df DataFrame) Describe() DataFrame {
 				col.Max(),
 			},
 				series.Float,
-				col.Name,
+				col.Name(),
 			)
 		}
 		ss = append(ss, newCol)

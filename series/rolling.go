@@ -50,11 +50,7 @@ func (rw *rollingWindow) HasNext() bool {
 }
 
 func (rw *rollingWindow) NextWindow() Series {
-	window := Series{
-		Name: rw.s.Name,
-		t:    rw.s.t,
-	}
-	window.elements = rw.s.elements.Slice(rw.startIndex, rw.endIndexExclude)
+	window := rw.s.Slice(rw.startIndex, rw.endIndexExclude)
 	rw.endIndexExclude++
 	startIndex := rw.endIndexExclude - rw.windowSize
 	if startIndex > rw.startIndex {
@@ -63,7 +59,7 @@ func (rw *rollingWindow) NextWindow() Series {
 	return window
 }
 
-//NewRollingSeries establish a rolling series
+//NewRollingSeries establish a rolling Series
 func NewRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 	if window < 1 {
 		panic("window must >= 1")
@@ -93,7 +89,7 @@ func (s rollingSeries) Max() Series {
 	}
 
 	newS := s.Apply(maxFunc, "")
-	newS.Name = fmt.Sprintf("%s_RMax[w:%d]", s.Name, s.window)
+	newS.SetName(fmt.Sprintf("%s_RMax[w:%d]", s.Name(), s.window))
 	return newS
 }
 
@@ -111,7 +107,7 @@ func (s rollingSeries) Min() Series {
 	}
 
 	newS := s.Apply(minFunc, "")
-	newS.Name = fmt.Sprintf("%s_RMin[w:%d]", s.Name, s.window)
+	newS.SetName(fmt.Sprintf("%s_RMin[w:%d]", s.Name(), s.window))
 	return newS
 }
 
@@ -120,7 +116,7 @@ func (s rollingSeries) Mean() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Mean()
 	}, Float)
-	newS.Name = fmt.Sprintf("%s_RMean[w:%d]", s.Name, s.window)
+	newS.SetName(fmt.Sprintf("%s_RMean[w:%d]", s.Name(), s.window))
 	return newS
 }
 
@@ -131,7 +127,7 @@ func (s rollingSeries) MeanByWeights(weights []float64) Series {
 	}
 	weightSum := floats.Sum(weights)
 	weightLen := len(weights)
-	ma := s.Apply(
+	newS := s.Apply(
 		func(window Series, windowIndex int) interface{} {
 			weightsUse := weights
 			weightSumUse := weightSum
@@ -147,7 +143,8 @@ func (s rollingSeries) MeanByWeights(weights []float64) Series {
 			}
 			return totalSum / weightSumUse
 		}, Float)
-	return ma
+	newS.SetName(fmt.Sprintf("%s_MeanByWeights[w:%d,%v]", s.Name(), s.window, weights))
+	return newS
 }
 
 // Quantile calculates the quantile value of a rollingSeries
@@ -155,7 +152,7 @@ func (s rollingSeries) Quantile(p float64) Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Quantile(p)
 	}, Float)
-	newS.Name = fmt.Sprintf("%s_RQuantile[w:%d, p:%f]", s.Name, s.window, p)
+	newS.SetName(fmt.Sprintf("%s_RQuantile[w:%d,p:%f]", s.Name(), s.window, p))
 	return newS
 }
 
@@ -164,7 +161,7 @@ func (s rollingSeries) Median() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Median()
 	}, Float)
-	newS.Name = fmt.Sprintf("%s_RMedian[w:%d]", s.Name, s.window)
+	newS.SetName(fmt.Sprintf("%s_RMedian[w:%d]", s.Name(), s.window))
 	return newS
 }
 
@@ -173,7 +170,7 @@ func (s rollingSeries) StdDev() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.StdDev()
 	}, Float)
-	newS.Name = fmt.Sprintf("%s_RStdDev[w:%d]", s.Name, s.window)
+	newS.SetName(fmt.Sprintf("%s_RStdDev[w:%d]", s.Name(), s.window))
 	return newS
 }
 
@@ -183,7 +180,7 @@ func (s rollingSeries) Apply(f func(window Series, windowIndex int) interface{},
 		return s.Empty()
 	}
 	if len(t) == 0 {
-		t = s.t
+		t = s.Type()
 	}
 	eles := t.emptyElements(s.Len())
 	index := 0
@@ -197,11 +194,11 @@ func (s rollingSeries) Apply(f func(window Series, windowIndex int) interface{},
 		}
 		index++
 	}
-	newS := Series{
-		Name:     fmt.Sprintf("%s_RApply[w:%d]", s.Name, s.window),
+	newS := &series{
+		name:     fmt.Sprintf("%s_RApply[w:%d]", s.Name(), s.window),
 		elements: eles,
 		t:        t,
-		Err:      nil,
+		err:      nil,
 	}
 	return newS
 }

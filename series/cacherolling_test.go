@@ -73,9 +73,9 @@ func TestSeries_RollingCache(t *testing.T) {
 
 	for testnum, test := range tests {
 		var b Series
-		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		expected := test.maxExpected.Records()
-		rs := NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
+		rs := test.series.CacheAble().Rolling(test.window, test.minPeriod)
 		b = rs.Max()
 		b = rs.Max()
 		received := b.Records()
@@ -169,9 +169,9 @@ func TestSeries_RollingCacheMeanByWeights(t *testing.T) {
 
 	for testnum, test := range tests {
 		var b Series
-		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum)) 
 		expected := test.meanExpected.Records()
-		rs := NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
+		rs := test.series.CacheAble().Rolling(test.window, test.minPeriod)
 		b = rs.MeanByWeights(test.weights)
 		b = rs.MeanByWeights(test.weights)
 		received := b.Records()
@@ -239,9 +239,9 @@ func TestSeries_RollingCacheApply(t *testing.T) {
 
 	for testnum, test := range tests {
 		var b Series
-		test.series.Name = fmt.Sprintf("Name-%d", testnum)
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		expected := test.applyExpected.Records()
-		rs := NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
+		rs := test.series.CacheAble().Rolling(test.window, test.minPeriod)
 		b = rs.Apply(test.applyFunc, test.t)
 		b = rs.Apply(test.applyFunc, test.t)
 		received := b.Records()
