@@ -40,7 +40,7 @@ func (mc *mockCache) DelByKeyPrefix(keyPrefix string) int {
 	return mc.innerCache.DelByKeyPrefix(keyPrefix)
 }
 
-func (dc *mockCache) Size() int { 
+func (dc *mockCache) Size() int {
 	return dc.innerCache.Size()
 }
 
@@ -597,4 +597,66 @@ func TestCacheSeries_Compare(t *testing.T) {
 	}
 
 	fmt.Printf("getCount:%d, setCount:%d, hitCount:%d \n", testCache.getCount, testCache.setCount, testCache.hitCount)
+}
+
+func TestCacheSeries_Add(t *testing.T) {
+	tests := []struct {
+		series   Series
+		addSeries   Series
+		addConst   float64
+		expected Series
+	}{
+		{
+			Floats([]float64{1.5, -3.23, -0.33, -0.38, 1.6, 34.}),
+			Floats([]float64{3, -6.46, -0.67, -0.76, 3.2, 68.}),
+			1,
+			Floats([]float64{5.5, -8.69, 0, -0.14, 5.8, 103.}),
+		},
+		{
+			Ints([]int{23, 13, 101, -6, -3}),
+			Ints([]int{28, 18, 106, -5, 2}),
+			2,
+			Ints([]int{53, 33, 209, -9, 1}),
+		},
+	}
+
+	setCount := 0
+	getCount := 0
+	hitCount := 0
+	ClearCache()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		test.addSeries.SetName(fmt.Sprintf("AddName-%d", testnum))
+		tmpSeries := test.series.CacheAble()
+		var received Series
+
+		expected := test.expected
+		_ = tmpSeries.Add(test.addSeries).AddConst(test.addConst)
+		setCount = setCount + 2
+		getCount = getCount + 2
+		
+		received = tmpSeries.Add(test.addSeries).AddConst(test.addConst)
+		getCount = getCount + 2
+		hitCount = hitCount + 2
+		
+		for i := 0; i < expected.Len(); i++ {
+			if !compareFloats(expected.Elem(i).Float(),
+				received.Elem(i).Float(), 6) {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+	}
+	if setCount != testCache.setCount {
+		t.Errorf("CacheInfo[setCount]:\nExpected:%v\nActual:%v", setCount, testCache.setCount)
+	}
+	if getCount != testCache.getCount {
+		t.Errorf("CacheInfo[getCount]:\nExpected:%v\nActual:%v", getCount, testCache.getCount)
+	}
+	if hitCount != testCache.hitCount {
+		t.Errorf("CacheInfo[hitCount]:\nExpected:%v\nActual:%v", hitCount, testCache.hitCount)
+	}
+
 }

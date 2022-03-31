@@ -20,7 +20,7 @@ func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeri
 	}
 	cr := cacheAbleRollingSeries{
 		RollingSeries: NewRollingSeries(window, minPeriods, s.Copy()),
-		cacheKey:      fmt.Sprintf("%s(%d)|[w%d,p%d]", s.Name(), s.Len(), window, minPeriods),
+		cacheKey:      fmt.Sprintf("%s[w%d,p%d]", s.Name(), window, minPeriods),
 	}
 	return cr
 }
@@ -34,7 +34,7 @@ func cacheOrExecuteRolling(cacheKey string, f func() Series) Series {
 		return nil
 	}
 	res.SetName(cacheKey)
-	ret := newCacheAbleSeries(res)
+	ret := res.CacheAble()
 	c.Set(cacheKey, ret)
 	return ret
 }

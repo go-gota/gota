@@ -1018,7 +1018,7 @@ func (s series) Shift(periods int) Series {
 		shiftElements = naEles.Append(s.elements.Slice(0, s.Len()-periods))
 	}
 	ret := &series{
-		name:     fmt.Sprintf("%s_Shift_%d", s.name, periods),
+		name:     fmt.Sprintf("%s_Shift(%d)", s.name, periods),
 		elements: shiftElements,
 		t:        s.t,
 		err:      nil,
@@ -1227,7 +1227,7 @@ func (s series) Slice(start, end int) Series {
 	}
 
 	ret := &series{
-		name: s.name,
+		name: fmt.Sprintf("%s_Slice(%d,%d)", s.name, start, end),
 		t:    s.t,
 	}
 	ret.elements = s.elements.Slice(start, end)
