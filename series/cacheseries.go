@@ -424,6 +424,19 @@ func (cs *cacheAbleSeries) Set(indexes Indexes, newvalues Series) Series {
 	return cs.Series.Set(indexes, newvalues)
 }
 
+func (cs *cacheAbleSeries) FillNaN(value ElementValue) {
+	c.DelByKeyPrefix(cs.cacheKey)
+	cs.Series.FillNaN(value)
+}
+func (cs *cacheAbleSeries) FillNaNForward() {
+	c.DelByKeyPrefix(cs.cacheKey)
+	cs.Series.FillNaNForward()
+}
+func (cs *cacheAbleSeries) FillNaNBackward() {
+	c.DelByKeyPrefix(cs.cacheKey)
+	cs.Series.FillNaNBackward()
+}
+
 func (cs *cacheAbleSeries) Append(values interface{}) {
 	c.DelByKeyPrefix(cs.cacheKey)
 	cs.Series.Append(values)
@@ -457,7 +470,7 @@ func (cs *cacheAbleSeries) And(in interface{}) Series {
 	return ret.(Series)
 }
 func (cs *cacheAbleSeries) Or(in interface{}) Series {
-var cacheKey string
+	var cacheKey string
 	switch v := in.(type) {
 	case Series:
 		if len(v.Name()) == 0 {

@@ -6,9 +6,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/patrickmn/go-cache"
 )
 
 type mockCache struct {
@@ -39,14 +36,16 @@ func (mc *mockCache) Clear() {
 	mc.hitCount = 0
 }
 
-func (mc *mockCache) DelByKeyPrefix(keyPrefix string) {
-	mc.innerCache.DelByKeyPrefix(keyPrefix)
+func (mc *mockCache) DelByKeyPrefix(keyPrefix string) int {
+	return mc.innerCache.DelByKeyPrefix(keyPrefix)
+}
+
+func (dc *mockCache) Size() int { 
+	return dc.innerCache.Size()
 }
 
 var testCache = &mockCache{
-	innerCache: &defaultCache{
-		c: cache.New(5*time.Minute, 10*time.Minute),
-	},
+	innerCache: NewDefaultCache(),
 }
 
 func TestMain(m *testing.M) {
