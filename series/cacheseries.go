@@ -17,7 +17,7 @@ type cacheAbleSeries struct {
 
 func newCacheAbleSeries(s Series) Series {
 	if len(s.Name()) == 0 {
-		panic("series must have a name")
+		return s
 	}
 	if c == nil {
 		InitCache(nil)
@@ -33,7 +33,7 @@ func newCacheAbleSeries(s Series) Series {
 func (cs cacheAbleSeries) Rolling(window int, minPeriods int) RollingSeries {
 	cr := cacheAbleRollingSeries{
 		RollingSeries: NewRollingSeries(window, minPeriods, cs.Series),
-		cacheKey:      fmt.Sprintf("%s|[w%d,p%d]", cs.cacheKey, window, minPeriods),
+		cacheKey:      fmt.Sprintf("%s[w%d,p%d]", cs.cacheKey, window, minPeriods),
 	}
 	return cr
 }
@@ -89,9 +89,9 @@ func (cs cacheAbleSeries) Compare(comparator Comparator, comparando interface{})
 		switch v := comparando.(type) {
 		case Series:
 			if len(v.Name()) == 0 {
-				panic("series must have a name")
+				return cs.Series.Compare(comparator, comparando)
 			}
-			cacheKey = fmt.Sprintf("%s_Compare(%s, %s|%d)", cs.cacheKey, comparator, v.Name(), v.Len())
+			cacheKey = fmt.Sprintf("%s_Compare(%s, %s)", cs.cacheKey, comparator, v.Name())
 		default:
 			switch reflect.TypeOf(comparando).Kind() {
 			case reflect.Slice:
@@ -103,7 +103,9 @@ func (cs cacheAbleSeries) Compare(comparator Comparator, comparando interface{})
 	}
 
 	ret, _ := cacheOrExecute(cacheKey, func() (interface{}, error) {
-		ret := cs.Series.Compare(comparator, comparando)
+		res := cs.Series.Compare(comparator, comparando)
+		res.SetName(cacheKey)
+		ret := res.CacheAble()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -274,7 +276,7 @@ func (cs cacheAbleSeries) DivConst(c float64) Series {
 
 func (cs cacheAbleSeries) Add(c Series) Series {
 	if len(c.Name()) == 0 {
-		panic("series c must have a name")
+		return cs.Series.Add(c)
 	}
 	cacheKey := fmt.Sprintf("%s_Add(%s)", cs.cacheKey, c.Name())
 	ret, _ := cacheOrExecute(cacheKey, func() (interface{}, error) {
@@ -288,7 +290,7 @@ func (cs cacheAbleSeries) Add(c Series) Series {
 
 func (cs cacheAbleSeries) Sub(c Series) Series {
 	if len(c.Name()) == 0 {
-		panic("series c must have a name")
+		return cs.Series.Sub(c)
 	}
 	cacheKey := fmt.Sprintf("%s_Sub(%s)", cs.cacheKey, c.Name())
 	ret, _ := cacheOrExecute(cacheKey, func() (interface{}, error) {
@@ -302,7 +304,7 @@ func (cs cacheAbleSeries) Sub(c Series) Series {
 
 func (cs cacheAbleSeries) Mul(c Series) Series {
 	if len(c.Name()) == 0 {
-		panic("series c must have a name")
+		return cs.Series.Mul(c)
 	}
 	cacheKey := fmt.Sprintf("%s_Mul(%s)", cs.cacheKey, c.Name())
 	ret, _ := cacheOrExecute(cacheKey, func() (interface{}, error) {
@@ -316,7 +318,7 @@ func (cs cacheAbleSeries) Mul(c Series) Series {
 
 func (cs cacheAbleSeries) Div(c Series) Series {
 	if len(c.Name()) == 0 {
-		panic("series c must have a name")
+		return cs.Series.Div(c)
 	}
 	cacheKey := fmt.Sprintf("%s_Div(%s)", cs.cacheKey, c.Name())
 	ret, _ := cacheOrExecute(cacheKey, func() (interface{}, error) {
@@ -362,7 +364,7 @@ func (cs cacheAbleSeries) Subset(indexes Indexes) Series {
 
 func (cs cacheAbleSeries) Concat(x Series) Series {
 	if len(x.Name()) == 0 {
-		panic("series x must have a name")
+		return cs.Series.Concat(x)
 	}
 	cacheKey := fmt.Sprintf("%s_Concat(%s)", cs.cacheKey, x.Name())
 	res := cs.Series.Concat(x)
@@ -447,7 +449,7 @@ func (cs *cacheAbleSeries) And(in interface{}) Series {
 	switch v := in.(type) {
 	case Series:
 		if len(v.Name()) == 0 {
-			panic("series must have a name")
+			return cs.Series.And(in)
 		}
 		cacheKey = fmt.Sprintf("%s_And(%s)", cs.cacheKey, v.Name())
 	default:
@@ -474,7 +476,7 @@ func (cs *cacheAbleSeries) Or(in interface{}) Series {
 	switch v := in.(type) {
 	case Series:
 		if len(v.Name()) == 0 {
-			panic("series must have a name")
+			return cs.Series.Or(in)
 		}
 		cacheKey = fmt.Sprintf("%s_Or(%s)", cs.cacheKey, v.Name())
 	default:
@@ -494,4 +496,12 @@ func (cs *cacheAbleSeries) Or(in interface{}) Series {
 		return ret, nil
 	})
 	return ret.(Series)
+}
+
+func (cs cacheAbleSeries) Not() Series {
+	cacheKey := cs.cacheKey + "_Not"
+	res := cs.Series.Not()
+	res.SetName(cacheKey)
+	ret := res.CacheAble()
+	return ret
 }

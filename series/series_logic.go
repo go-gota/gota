@@ -42,3 +42,18 @@ func (s series) Or(in interface{}) Series {
 	}
 	return result
 }
+
+func (s series) Not() Series {
+	result := s.Map(func(ele Element, index int) Element {
+		ret := ele.Copy()
+		b, err := ele.Bool()
+		if err != nil {
+			ret.Set(nil)
+			return ret
+		} else {
+			ret.SetBool(!b)
+		}
+		return ret
+	})
+	return result
+}

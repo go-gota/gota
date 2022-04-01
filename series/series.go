@@ -72,63 +72,134 @@ type Element interface {
 
 type Series interface {
 	Rolling(window int, minPeriods int) RollingSeries
+	// HasNaN checks whether the Series contain NaN elements.
 	HasNaN() bool
+	// IsNaN returns an array that identifies which of the elements are NaN.
 	IsNaN() []bool
+	// IsNotNaN returns an array that identifies which of the elements are not NaN.
 	IsNotNaN() []bool
+	// Compare compares the values of a Series with other elements. To do so, the
+	// elements with are to be compared are first transformed to a Series of the same
+	// type as the caller.
 	Compare(comparator Comparator, comparando interface{}) Series
+	// Float returns the elements of a Series as a []float64. If the elements can not
+	// be converted to float64 or contains a NaN returns the float representation of
+	// NaN.
 	Float() []float64
+	// Bool returns the elements of a Series as a []bool or an error if the
+	// transformation is not possible.
 	Bool() ([]bool, error)
+	// Int returns the elements of a Series as a []int or an error if the
+	// transformation is not possible.
 	Int() ([]int, error)
-
+	// Order returns the indexes for sorting a Series. NaN elements are pushed to the
+	// end by order of appearance.
 	Order(reverse bool) []int
+	// StdDev calculates the standard deviation of a series
 	StdDev() float64
+	// Mean calculates the average value of a series
 	Mean() float64
+	// Median calculates the middle or median value, as opposed to
+	// mean, and there is less susceptible to being affected by outliers.
 	Median() float64
+	// Max return the biggest element in the series
 	Max() float64
+	// MaxStr return the biggest element in a series of type String
 	MaxStr() string
+	// Min return the lowest element in the series
 	Min() float64
+	// MinStr return the lowest element in a series of type String
 	MinStr() string
+	// Quantile returns the sample of x such that x is greater than or
+	// equal to the fraction p of samples.
+	// Note: gonum/stat panics when called with strings
 	Quantile(p float64) float64
+	// Map applies a function matching MapFunction signature, which itself
+	// allowing for a fairly flexible MAP implementation, intended for mapping
+	// the function over each element in Series and returning a new Series object.
+	// Function must be compatible with the underlying type of data in the Series.
+	// In other words it is expected that when working with a Float Series, that
+	// the function passed in via argument `f` will not expect another type, but
+	// instead expects to handle Element(s) of type Float.
 	Map(f MapFunction) Series
+	//Shift series by desired number of periods and returning a new Series object.
 	Shift(periods int) Series
+	// CumProd finds the cumulative product of the first i elements in s and returning a new Series object.
 	CumProd() Series
+	// Prod returns the product of the elements of the Series. Returns 1 if len(s) = 0.
 	Prod() float64
+	// AddConst adds the scalar c to all of the values in Series and returning a new Series object.
 	AddConst(c float64) Series
+	// AddConst multiply the scalar c to all of the values in Series and returning a new Series object.
 	MulConst(c float64) Series
+	// DivConst Div the scalar c to all of the values in Series and returning a new Series object.
 	DivConst(c float64) Series
 	Add(c Series) Series
 	Sub(c Series) Series
 	Mul(c Series) Series
 	Div(c Series) Series
 	Abs() Series
+	// Sum calculates the sum value of a series
 	Sum() float64
+	// Empty returns an empty Series of the same type
 
 	Empty() Series
+	// Returns Error or nil if no error occured
 	Error() error
+	// Subset returns a subset of the series based on the given Indexes.
 	Subset(indexes Indexes) Series
-
+	// Concat concatenates two series together. It will return a new Series with the
+	// combined elements of both Series.
 	Concat(x Series) Series
+	// Copy will return a copy of the Series.
 	Copy() Series
-	
+	// Records returns the elements of a Series as a []string
 	Records() []string
+	// Type returns the type of a given series
 	Type() Type
+	// Len returns the length of a given Series
 	Len() int
+	// String implements the Stringer interface for Series
 	String() string
+	// Str prints some extra information about a given series
 	Str() string
+	// Val returns the value of a series for the given index. Will panic if the index
+	// is out of bounds.
 	Val(i int) interface{}
+	// Elem returns the element of a series for the given index. Will panic if the
+	// index is out of bounds.
+	// The index could be less than 0. When the index equals -1, Elem returns the last element of a series.
 	Elem(i int) Element
+	// Slice slices Series from start to end-1 index.
 	Slice(start, end int) Series
+	// FillNaN Fill NaN values using the specified value.
 	FillNaN(value ElementValue)
+	// FillNaNForward Fill NaN values using the last non-NaN value
 	FillNaNForward()
+	// FillNaNBackward fill NaN values using the next non-NaN value
 	FillNaNBackward()
+	// CacheAble
 	CacheAble() Series
+	// Set sets the values on the indexes of a Series and returns the reference
+	// for itself. The original Series is modified.
 	Set(indexes Indexes, newvalues Series) Series
+	// Append adds new elements to the end of the Series. When using Append, the
+	// Series is modified in place.
 	Append(values interface{})
 	Name() string
 	SetName(name string)
 	SetErr(err error)
+	//And logical operation
 	And(in interface{}) Series
+	//Or logical operation
 	Or(in interface{}) Series
+	//Not logical operation
+	Not() Series
+
+	//Wrap define special operations for multiple Series
+	Wrap(ss ...Series) Wrapper
+	//When define conditional computation
+	When(whenF WhenFilterFunction) When
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -298,6 +369,7 @@ var _ Series = (*series)(nil)
 func Err(err error) Series {
 	return &series{err: err}
 }
+
 // New is the generic Series constructor
 func New(values interface{}, t Type, name string) Series {
 	ret := newSeries(values, t, name)
@@ -377,7 +449,6 @@ func newSeries(values interface{}, t Type, name string) series {
 
 	return ret
 }
-
 
 func NewDefault(defaultValue interface{}, t Type, name string, len int) Series {
 	ret := &series{
@@ -1240,4 +1311,12 @@ func (s *series) SetName(name string) {
 
 func (s series) Name() string {
 	return s.name
+}
+
+func (s *series) Wrap(ss ...Series) Wrapper {
+	return newWrapper(s, ss)
+}
+
+func (s *series) When(whenF WhenFilterFunction) When {
+	return newWhen(whenF, s)
 }
