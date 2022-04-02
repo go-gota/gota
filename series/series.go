@@ -178,7 +178,8 @@ type Series interface {
 	FillNaNForward()
 	// FillNaNBackward fill NaN values using the next non-NaN value
 	FillNaNBackward()
-	// CacheAble
+	// CacheAble returns a cacheable series and the returned series's calculation will be cached in case of repeate calcution.
+	// You should make sure that the series will not be modified and has a unique name.
 	CacheAble() Series
 	// Set sets the values on the indexes of a Series and returns the reference
 	// for itself. The original Series is modified.
@@ -1227,7 +1228,8 @@ func (s series) Rolling(window int, minPeriods int) RollingSeries {
 	return NewRollingSeries(window, minPeriods, &s)
 }
 
-// CacheAble
+// CacheAble returns a cacheable series and the returned series's calculation will be cached in case of repeate calcution.
+// You should make sure that the series will not be modified and has a unique name.
 func (s series) CacheAble() Series {
 	return newCacheAbleSeries(&s)
 }

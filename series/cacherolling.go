@@ -10,21 +10,6 @@ type cacheAbleRollingSeries struct {
 	cacheKey string
 }
 
-// NewCacheAbleRollingSeries. You should make sure that the Series will not be modified.
-func NewCacheAbleRollingSeries(window int, minPeriods int, s Series) RollingSeries {
-	if len(s.Name()) == 0 {
-		return NewRollingSeries(window, minPeriods, s)
-	}
-	if c == nil {
-		InitCache(nil)
-	}
-	cr := cacheAbleRollingSeries{
-		RollingSeries: NewRollingSeries(window, minPeriods, s),
-		cacheKey:      fmt.Sprintf("%s[w%d,p%d]", s.Name(), window, minPeriods),
-	}
-	return cr
-}
-
 func cacheOrExecuteRolling(cacheKey string, f func() Series) Series {
 	if ret, found := c.Get(cacheKey); found {
 		return ret.(Series)

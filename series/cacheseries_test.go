@@ -601,10 +601,10 @@ func TestCacheSeries_Compare(t *testing.T) {
 
 func TestCacheSeries_Add(t *testing.T) {
 	tests := []struct {
-		series   Series
-		addSeries   Series
-		addConst   float64
-		expected Series
+		series    Series
+		addSeries Series
+		addConst  float64
+		expected  Series
 	}{
 		{
 			Floats([]float64{1.5, -3.23, -0.33, -0.38, 1.6, 34.}),
@@ -634,11 +634,11 @@ func TestCacheSeries_Add(t *testing.T) {
 		_ = tmpSeries.Add(test.addSeries).AddConst(test.addConst)
 		setCount = setCount + 2
 		getCount = getCount + 2
-		
+
 		received = tmpSeries.Add(test.addSeries).AddConst(test.addConst)
 		getCount = getCount + 2
 		hitCount = hitCount + 2
-		
+
 		for i := 0; i < expected.Len(); i++ {
 			if !compareFloats(expected.Elem(i).Float(),
 				received.Elem(i).Float(), 6) {

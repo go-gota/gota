@@ -300,13 +300,13 @@ func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
 		weights  []float64
 	}{
 		{
-			series.Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
+			series.Floats(generateFloats(100000)),
 			3,
 			2,
 			[]float64{0.5, 0.3, 0.2},
 		},
 		{
-			series.Floats([]string{"23", "13", "101", "-64", "-3"}),
+			series.Floats(generateFloats(100000)),
 			3,
 			1,
 			[]float64{5, 3, 2},
@@ -316,9 +316,10 @@ func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
 	b.ResetTimer()
 	for testnum, test := range tests {
 		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
-		r := test.series.Rolling(test.window, test.minPeriod)
+		
 		b.Run("Rolling-" + test.series.Name(), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
+				r := test.series.Rolling(test.window, test.minPeriod)
 				r.MeanByWeights(test.weights)
 			}
 		})
@@ -326,10 +327,53 @@ func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
 	b.ResetTimer()
 	for testnum, test := range tests {
 		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
-		rs := series.NewCacheAbleRollingSeries(test.window, test.minPeriod, test.series)
 		b.Run("CacheRolling-" + test.series.Name(), func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
-				rs.MeanByWeights(test.weights)
+				r := test.series.CacheAble().Rolling(test.window, test.minPeriod)
+				r.MeanByWeights(test.weights)
+			}
+		})
+	}
+}
+
+func BenchmarkSeries_RollingCacheQuantile(b *testing.B) {
+	tests := []struct {
+		series       series.Series
+		window       int
+		minPeriod    int
+		quantile  float64
+	}{
+		{
+			series.Floats(generateFloats(2000)),
+			100,
+			2,
+			0.15,
+		},
+		{
+			series.Floats(generateFloats(2000)),
+			300,
+			1,
+			0.93,
+		},
+	}
+
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		b.Run("Rolling-" + test.series.Name(), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				r := test.series.Rolling(test.window, test.minPeriod)
+				r.Quantile(test.quantile)
+			}
+		})
+	}
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		b.Run("CacheRolling-" + test.series.Name(), func(b *testing.B) {
+			r := test.series.CacheAble().Rolling(test.window, test.minPeriod)
+			for i := 0; i < b.N; i++ {
+				r.Quantile(test.quantile)
 			}
 		})
 	}

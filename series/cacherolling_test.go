@@ -169,7 +169,7 @@ func TestSeries_RollingCacheMeanByWeights(t *testing.T) {
 
 	for testnum, test := range tests {
 		var b Series
-		test.series.SetName(fmt.Sprintf("Name-%d", testnum)) 
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
 		expected := test.meanExpected.Records()
 		rs := test.series.CacheAble().Rolling(test.window, test.minPeriod)
 		b = rs.MeanByWeights(test.weights)
@@ -254,18 +254,16 @@ func TestSeries_RollingCacheApply(t *testing.T) {
 	}
 }
 
-
 func TestSeries_RollingRollingCache(t *testing.T) {
 
 	tests := []struct {
-		series           Series
-		window           int
-		minPeriod        int
-		maxExpected      Series
-		maxExpectedRolling      Series
-		minExpected      Series
-		minExpectedRolling      Series
-		
+		series             Series
+		window             int
+		minPeriod          int
+		maxExpected        Series
+		maxExpectedRolling Series
+		minExpected        Series
+		minExpectedRolling Series
 	}{
 		{
 			Bools([]string{"false", "true", "false", "false", "true"}),

@@ -5,15 +5,24 @@ import (
 	"gonum.org/v1/gonum/floats"
 )
 
-//RollingSeries define rolling methods
+//RollingSeries defines methods of a rolling series
 type RollingSeries interface {
+	// Max return the biggest element in the rolling series
 	Max() Series
+	// Min return the lowest element in the rolling series
 	Min() Series
+	// Mean calculates the average value of the rolling series
 	Mean() Series
+	// Mean calculates the weighted average value of the rolling series
 	MeanByWeights(weights []float64) Series
+	// Quantile returns the sample of x such that x is greater than or
+	// equal to the fraction p of samples.
 	Quantile(p float64) Series
+	// Median calculates the middle or median value of the rolling series
 	Median() Series
+	// StdDev calculates the standard deviation of the rolling series
 	StdDev() Series
+	// Apply applies a function for the rolling series
 	Apply(f func(window Series, windowIndex int) interface{}, t Type) Series
 }
 
@@ -30,10 +39,10 @@ type RollingWindow interface {
 }
 
 type rollingWindow struct {
-	startIndex int
-	endIndexExclude   int
-	windowSize int
-	s Series
+	startIndex      int
+	endIndexExclude int
+	windowSize      int
+	s               Series
 }
 
 func NewRollingWindow(s Series, windowSize int) RollingWindow {
@@ -74,7 +83,6 @@ func NewRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 	}
 }
 
-// Max return the biggest element in the rollingSeries
 func (s rollingSeries) Max() Series {
 
 	var maxFunc func(window Series, windowIndex int) interface{}
@@ -93,7 +101,6 @@ func (s rollingSeries) Max() Series {
 	return newS
 }
 
-// Min return the lowest element in the rollingSeries
 func (s rollingSeries) Min() Series {
 	var minFunc func(window Series, windowIndex int) interface{}
 	if s.Type() == String {
@@ -111,7 +118,6 @@ func (s rollingSeries) Min() Series {
 	return newS
 }
 
-// Mean calculates the average value of a rollingSeries
 func (s rollingSeries) Mean() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Mean()
@@ -120,7 +126,6 @@ func (s rollingSeries) Mean() Series {
 	return newS
 }
 
-// MeanByWeights calculates the weighted average value of a rollingSeries
 func (s rollingSeries) MeanByWeights(weights []float64) Series {
 	if s.window != len(weights) {
 		panic("window must be equal to weights length")
@@ -147,7 +152,6 @@ func (s rollingSeries) MeanByWeights(weights []float64) Series {
 	return newS
 }
 
-// Quantile calculates the quantile value of a rollingSeries
 func (s rollingSeries) Quantile(p float64) Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Quantile(p)
@@ -156,7 +160,6 @@ func (s rollingSeries) Quantile(p float64) Series {
 	return newS
 }
 
-// Median calculates the median value of a rollingSeries
 func (s rollingSeries) Median() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.Median()
@@ -165,7 +168,6 @@ func (s rollingSeries) Median() Series {
 	return newS
 }
 
-// StdDev calculates the standard deviation of a rollingSeries
 func (s rollingSeries) StdDev() Series {
 	newS := s.Apply(func(window Series, windowIndex int) interface{} {
 		return window.StdDev()
@@ -174,7 +176,6 @@ func (s rollingSeries) StdDev() Series {
 	return newS
 }
 
-// Apply for extend the computation
 func (s rollingSeries) Apply(f func(window Series, windowIndex int) interface{}, t Type) Series {
 	if s.Len() == 0 {
 		return s.Empty()

@@ -1633,11 +1633,11 @@ func TestSeries_Map(t *testing.T) {
 
 	doubleFloat64 := func(e Element, index int) Element {
 		result := e.Copy()
-		result.Set(result.Float() * 2)		
+		result.Set(result.Float() * 2)
 		return Element(result)
 	}
 
-	// and two booleans 
+	// and two booleans
 	and := func(e Element, index int) Element {
 		result := e.Copy()
 		b, err := result.Bool()
@@ -1729,9 +1729,9 @@ func TestSeries_Map(t *testing.T) {
 	}
 }
 func TestSeries_Shift(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
-		shift int
+		shift    int
 		expected Series
 	}{
 		{
@@ -1752,9 +1752,9 @@ func TestSeries_Shift(t *testing.T) {
 		{
 			Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
 			1,
-			Floats([]string{ "NaN", "1.5", "-3.23", "-0.337397", "-0.380079", "1.60979"}),
+			Floats([]string{"NaN", "1.5", "-3.23", "-0.337397", "-0.380079", "1.60979"}),
 		},
-		
+
 		{
 			Strings([]string{"XyZApple", "XyZBanana", "XyZCitrus", "XyZDragonfruit"}),
 			2,
@@ -1802,7 +1802,7 @@ func TestSeries_Shift(t *testing.T) {
 }
 
 func TestSeries_CumProd(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		expected Series
 	}{
@@ -1829,7 +1829,7 @@ func TestSeries_CumProd(t *testing.T) {
 	}
 }
 func TestSeries_Prod(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		expected float64
 	}{
@@ -1856,9 +1856,9 @@ func TestSeries_Prod(t *testing.T) {
 }
 
 func TestSeries_AddConst(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
-		c		float64
+		c        float64
 		expected Series
 	}{
 		{
@@ -1887,9 +1887,9 @@ func TestSeries_AddConst(t *testing.T) {
 }
 
 func TestSeries_MulConst(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
-		c		float64
+		c        float64
 		expected Series
 	}{
 		{
@@ -1918,7 +1918,7 @@ func TestSeries_MulConst(t *testing.T) {
 }
 
 func TestSeries_FillNA(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		nanValue ElementValue
 		expected Series
@@ -1959,7 +1959,7 @@ func TestSeries_FillNA(t *testing.T) {
 }
 
 func TestSeries_FillNaNForward(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		expected Series
 	}{
@@ -1995,7 +1995,7 @@ func TestSeries_FillNaNForward(t *testing.T) {
 }
 
 func TestSeries_FillNaNBackward(t *testing.T) {
-		tests := []struct {
+	tests := []struct {
 		series   Series
 		expected Series
 	}{
@@ -2029,7 +2029,6 @@ func TestSeries_FillNaNBackward(t *testing.T) {
 		}
 	}
 }
-
 
 func TestSeries_Sum(t *testing.T) {
 	tests := []struct {
