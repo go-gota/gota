@@ -38,7 +38,7 @@ func NewDefaultCache() Cache {
 
 func (dc *seriesCache) Set(k string, v interface{}) {
 	err := dc.c.Add(k, v, cache.DefaultExpiration)
-	if err != nil {
+	if err == nil {
 		dc.mu.Lock()
 		dc.keys[k] = struct{}{}
 		dc.mu.Unlock()
