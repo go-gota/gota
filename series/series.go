@@ -35,6 +35,7 @@ type Elements interface {
 	Slice(start, end int) Elements
 	Get(indexs ...int) Elements
 	Append(Elements) Elements
+	AppendOne(Element) Elements
 	Copy() Elements
 }
 
@@ -201,6 +202,9 @@ type Series interface {
 	Wrap(ss ...Series) Wrapper
 	//When define conditional computation
 	When(whenF WhenFilterFunction) When
+
+	//Filter Select the elements that match the FilterFunction
+	Filter(ff FilterFunction) Series
 }
 
 // intElements is the concrete implementation of Elements for Int elements.
@@ -221,6 +225,13 @@ func (e intElements) Append(elements Elements) Elements {
 	ret := append(e, eles...)
 	return ret
 }
+func (e intElements) AppendOne(element Element) Elements {
+	ele := element.(*intElement)
+	ret := append(e, *ele)
+	return ret
+}
+
+
 func (e intElements) Copy() Elements {
 	elements := make(intElements, len(e))
 	copy(elements, e)
@@ -243,6 +254,11 @@ func (e stringElements) Get(indexs ...int) Elements {
 func (e stringElements) Append(elements Elements) Elements {
 	eles := elements.(stringElements)
 	ret := append(e, eles...)
+	return ret
+}
+func (e stringElements) AppendOne(element Element) Elements {
+	ele := element.(*stringElement)
+	ret := append(e, *ele)
 	return ret
 }
 func (e stringElements) Copy() Elements {
@@ -269,6 +285,11 @@ func (e floatElements) Append(elements Elements) Elements {
 	ret := append(e, eles...)
 	return ret
 }
+func (e floatElements) AppendOne(element Element) Elements {
+	ele := element.(*floatElement)
+	ret := append(e, *ele)
+	return ret
+}
 func (e floatElements) Copy() Elements {
 	elements := make(floatElements, len(e))
 	copy(elements, e)
@@ -291,6 +312,11 @@ func (e boolElements) Get(indexs ...int) Elements {
 func (e boolElements) Append(elements Elements) Elements {
 	eles := elements.(boolElements)
 	ret := append(e, eles...)
+	return ret
+}
+func (e boolElements) AppendOne(element Element) Elements {
+	ele := element.(*boolElement)
+	ret := append(e, *ele)
 	return ret
 }
 func (e boolElements) Copy() Elements {
@@ -1321,4 +1347,24 @@ func (s *series) Wrap(ss ...Series) Wrapper {
 
 func (s *series) When(whenF WhenFilterFunction) When {
 	return newWhen(whenF, s)
+}
+
+//FilterFunction Select the elements that match the FilterFunction
+type FilterFunction func(ele Element, index int) bool
+
+func (s *series) Filter(ff FilterFunction) Series {
+	eles := s.Type().emptyElements(0)
+	for i := 0; i < s.Len(); i++ {
+		ele := s.elements.Elem(i)
+		if ff(ele, i) {
+			eles = eles.AppendOne(ele)
+		}
+	}
+	ret := &series{
+		name:     s.name,
+		elements: eles,
+		t:        s.Type(),
+		err:      nil,
+	}
+	return ret
 }

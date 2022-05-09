@@ -2143,3 +2143,60 @@ func TestSeries_Slice(t *testing.T) {
 		}
 	}
 }
+
+
+func TestSeries_Filter(t *testing.T) {
+	tests := []struct {
+		ff FilterFunction
+		series   Series
+		expected Series
+	}{
+		{
+			func(ele Element, index int) bool {
+				v, _ := ele.Int()
+				return v <= 3
+			},
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{1, 2, 3}),
+		},
+		{
+			func(ele Element, index int) bool {
+				v, _ := ele.Int()
+				return v == 3
+			},
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{3}),
+		},
+		{
+			func(ele Element, index int) bool {
+				return index % 2 == 0
+			},
+			Ints([]int{1, 2, 3, 4, 5}),
+			Ints([]int{1, 3, 5}),
+		},
+		{
+			func(ele Element, index int) bool {
+				return !ele.IsNA()
+			},
+			Ints([]string{"1", NaN, "3", NaN, "5"}),
+			Ints([]int{1, 3, 5}),
+		},
+	}
+
+	for testnum, test := range tests {
+		expected := test.expected
+		received := test.series.Filter(test.ff)
+
+		for i := 0; i < expected.Len(); i++ {
+			if strings.Compare(expected.Elem(i).String(),
+				received.Elem(i).String()) != 0 {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+	}
+}
+
+
