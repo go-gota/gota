@@ -1596,6 +1596,62 @@ func TestSeries_Quantile(t *testing.T) {
 	}
 }
 
+
+func TestSeries_DataQuantile(t *testing.T) {
+	tests := []struct {
+		series   Series
+		data        float64
+		expected float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			9,
+			0.9,
+		},
+		{
+			Floats([]float64{3.141592, math.Sqrt(3), 2.718281, math.Sqrt(2)}),
+			3.141592,
+			1,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			2.0,
+			0.5,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0, 4.0}),
+			2.0,
+			0.5,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			0.25,
+			math.NaN(),
+		},
+		{
+			Bools([]bool{false, false, false, true}),
+			0.0,
+			0.75,
+		},
+		{
+			Floats([]float64{}),
+			0.50,
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.DataQuantile(test.data)
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v\nSeries:\n%v",
+				testnum, expected, received, test.series.Float(),
+			)
+		}
+	}
+}
+
 func TestSeries_Map(t *testing.T) {
 	tests := []struct {
 		series   Series

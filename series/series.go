@@ -115,6 +115,8 @@ type Series interface {
 	// equal to the fraction p of samples.
 	// Note: gonum/stat panics when called with strings
 	Quantile(p float64) float64
+	// DataQuantile returns the data quantile in the series
+	DataQuantile(data float64) float64
 	// Map applies a function matching MapFunction signature, which itself
 	// allowing for a fairly flexible MAP implementation, intended for mapping
 	// the function over each element in Series and returning a new Series object.
@@ -230,7 +232,6 @@ func (e intElements) AppendOne(element Element) Elements {
 	ret := append(e, *ele)
 	return ret
 }
-
 
 func (e intElements) Copy() Elements {
 	elements := make(intElements, len(e))
@@ -1065,6 +1066,27 @@ func (s series) Quantile(p float64) float64 {
 	ordered := s.Subset(s.Order(false)).Float()
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
+}
+
+// DataQuantile returns the data quantile in the series
+func (s series) DataQuantile(data float64) float64 {
+	if s.Type() == String || s.Len() == 0 {
+		return math.NaN()
+	}
+
+	ordered := s.Subset(s.Order(false)).Float()
+
+	length := len(ordered)
+	if length%2 == 1 {
+		length = length + 1
+	}
+
+	for i, d := range ordered {
+		if data < d {
+			return float64(i) / float64(length)
+		}
+	}
+	return 1
 }
 
 // Map applies a function matching MapFunction signature, which itself
