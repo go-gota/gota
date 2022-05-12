@@ -15,15 +15,24 @@ type RollingSeries interface {
 	Mean() Series
 	// Mean calculates the weighted average value of the rolling series
 	MeanByWeights(weights []float64) Series
-	// Quantile returns the sample of x such that x is greater than or
-	// equal to the fraction p of samples.
+	// Quantile returns the quantile of the window of the rolling series.
 	Quantile(p float64) Series
+	// Quantiles can be computed in batches.
+	Quantiles(ps ...float64) []Series
+	// QuantileRolling scrolls to calculate the quantile in the rolling series.
+	// the p's element corresponds to the window of the rolling series one by one.
+	QuantileRolling(p Series) Series
+	// DataQuantile scrolls to calculate the current data's quantile in the rolling series.
+	// the data's element corresponds to the window of the rolling series one by one.
+	DataQuantileRolling(data Series) Series
 	// Median calculates the middle or median value of the rolling series
 	Median() Series
 	// StdDev calculates the standard deviation of the rolling series
 	StdDev() Series
 	// Apply applies a function for the rolling series
 	Apply(f func(window Series, windowIndex int) interface{}, t Type) Series
+	//Iterate iterates the rolling series, the window series is nil when minPeriods is less than the window size
+	Iterate(f func(window Series, windowIndex int))
 }
 
 type rollingSeries struct {
@@ -148,7 +157,7 @@ func (s rollingSeries) MeanByWeights(weights []float64) Series {
 			}
 			return totalSum / weightSumUse
 		}, Float)
-	newS.SetName(fmt.Sprintf("%s_MeanByWeights[w:%d,%v]", s.Name(), s.window, weights))
+	newS.SetName(fmt.Sprintf("%s_RMeanByWeights[w:%d,%v]", s.Name(), s.window, weights))
 	return newS
 }
 
@@ -157,6 +166,59 @@ func (s rollingSeries) Quantile(p float64) Series {
 		return window.Quantile(p)
 	}, Float)
 	newS.SetName(fmt.Sprintf("%s_RQuantile[w:%d,p:%f]", s.Name(), s.window, p))
+	return newS
+}
+
+func (s rollingSeries) Quantiles(ps ...float64) []Series {
+	ret := make([]Series, len(ps))
+
+	for i := 0; i < len(ps); i++ {
+		ret[i] = &series{
+			name:     fmt.Sprintf("%s_RQuantile[w:%d,p:%f]", s.Name(), s.window, ps[i]),
+			elements: Float.emptyElements(s.Len()),
+			t:        Float,
+			err:      nil,
+		}
+	}
+
+	s.Iterate(func(window Series, windowIndex int) {
+		if window == nil {
+			for i := 0; i < len(ps); i++ {
+				ret[i].Elem(windowIndex).SetString(NaN)
+			}
+		} else {
+			qs := window.Quantiles(ps...)
+			for i := 0; i < len(ps); i++ {
+				ret[i].Elem(windowIndex).SetFloat(qs[i])
+			}
+		}
+	})
+	return ret
+}
+
+func (s rollingSeries) QuantileRolling(p Series) Series {
+	newS := s.Apply(func(window Series, windowIndex int) interface{} {
+		ele := p.Elem(windowIndex)
+		if ele.IsNA() {
+			return NaN
+		}
+		thisP := ele.Float()
+		return window.Quantile(thisP)
+	}, Float)
+	newS.SetName(fmt.Sprintf("%s_RQuantileRolling[w:%d,p:%s]", s.Name(), s.window, p.Name()))
+	return newS
+}
+
+func (s rollingSeries) DataQuantileRolling(data Series) Series {
+	newS := s.Apply(func(window Series, windowIndex int) interface{} {
+		ele := data.Elem(windowIndex)
+		if ele.IsNA() {
+			return NaN
+		}
+		thisData := ele.Float()
+		return window.DataQuantile(thisData)
+	}, Float)
+	newS.SetName(fmt.Sprintf("%s_RDataQuantileRolling[w:%d,d:%s]", s.Name(), s.window, data.Name()))
 	return newS
 }
 
@@ -202,4 +264,18 @@ func (s rollingSeries) Apply(f func(window Series, windowIndex int) interface{},
 		err:      nil,
 	}
 	return newS
+}
+
+func (s rollingSeries) Iterate(f func(window Series, windowIndex int)) {
+	index := 0
+	rw := NewRollingWindow(s.Series, s.window)
+	for rw.HasNext() {
+		window := rw.NextWindow()
+		if window.Len() >= s.minPeriods {
+			f(window, index)
+		} else {
+			f(nil, index)
+		}
+		index++
+	}
 }

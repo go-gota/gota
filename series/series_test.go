@@ -1568,6 +1568,16 @@ func TestSeries_Quantile(t *testing.T) {
 			2.0,
 		},
 		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			0.0,
+			1.0,
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			1.0,
+			3.0,
+		},
+		{
 			Strings([]string{"A", "B", "C", "D"}),
 			0.25,
 			math.NaN(),
@@ -1596,11 +1606,69 @@ func TestSeries_Quantile(t *testing.T) {
 	}
 }
 
+func TestSeries_Quantiles(t *testing.T) {
+	tests := []struct {
+		series   Series
+		ps       []float64
+		expected []float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			[]float64{0.9, 0.8, 0.4, 0.6, 0.0},
+			[]float64{9, 8, 4, 6, 1},
+		},
+		{
+			Floats([]float64{3.141592, math.Sqrt(3), 2.718281, math.Sqrt(2)}),
+			[]float64{0.8, 1},
+			[]float64{3.141592, 3.141592},
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			[]float64{0.5, 0.1, 1.0},
+			[]float64{2.0, 1.0, 3.0},
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			[]float64{0.25},
+			nil,
+		},
+		{
+			Bools([]bool{false, false, false, true}),
+			[]float64{1.0, 0.75, 0.0},
+			[]float64{1.0, 0.0, 0.0},
+		},
+		{
+			Floats([]float64{}),
+			[]float64{0.50},
+			nil,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Quantiles(test.ps...)
+		expected := test.expected
+		if len(expected) != len(received) {
+			t.Errorf(
+				"Test:%v\nExpected length:\n%v\nReceived length:\n%v",
+				testnum, len(expected), len(received),
+			)
+		}
+		for i := 0; i < len(received); i++ {
+			if !compareFloats(received[i], expected[i], 6) {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v",
+					testnum, expected, received,
+				)
+			}
+		}
+
+	}
+}
 
 func TestSeries_DataQuantile(t *testing.T) {
 	tests := []struct {
 		series   Series
-		data        float64
+		data     float64
 		expected float64
 	}{
 		{
@@ -1648,6 +1716,69 @@ func TestSeries_DataQuantile(t *testing.T) {
 				"Test:%v\nExpected:\n%v\nReceived:\n%v\nSeries:\n%v",
 				testnum, expected, received, test.series.Float(),
 			)
+		}
+	}
+}
+
+func TestSeries_DataQuantiles(t *testing.T) {
+	tests := []struct {
+		series   Series
+		datas    []float64
+		expected []float64
+	}{
+		{
+			Ints([]int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}),
+			[]float64{9, 8, 4, 6},
+			[]float64{0.9, 0.8, 0.4, 0.6},
+		},
+		{
+			Floats([]float64{3.141592, math.Sqrt(3), 2.718281, math.Sqrt(2)}),
+			[]float64{3.141592, 2.718281},
+			[]float64{1, 0.75},
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0}),
+			[]float64{2.0, 3.0, 1.0},
+			[]float64{0.5, 1, 0.25},
+		},
+		{
+			Floats([]float64{1.0, 2.0, 3.0, 4.0}),
+			[]float64{2.0, 3.0},
+			[]float64{0.5, 0.75},
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			[]float64{0.25},
+			nil,
+		},
+		{
+			Bools([]bool{false, false, false, true}),
+			[]float64{0.0, 1.0},
+			[]float64{0.75, 1},
+		},
+		{
+			Floats([]float64{}),
+			[]float64{0.50},
+			nil,
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.DataQuantiles(test.datas...)
+		expected := test.expected
+		if len(expected) != len(received) {
+			t.Errorf(
+				"Test:%v\nExpected length:\n%v\nReceived length:\n%v",
+				testnum, len(expected), len(received),
+			)
+		}
+		for i := 0; i < len(received); i++ {
+			if !compareFloats(received[i], expected[i], 6) {
+				t.Errorf(
+					"Test:%v\nExpected:\n%v\nReceived:\n%v\nSeries:\n%v",
+					testnum, expected, received, test.series.Float(),
+				)
+			}
 		}
 	}
 }
@@ -2200,10 +2331,9 @@ func TestSeries_Slice(t *testing.T) {
 	}
 }
 
-
 func TestSeries_Filter(t *testing.T) {
 	tests := []struct {
-		ff FilterFunction
+		ff       FilterFunction
 		series   Series
 		expected Series
 	}{
@@ -2225,7 +2355,7 @@ func TestSeries_Filter(t *testing.T) {
 		},
 		{
 			func(ele Element, index int) bool {
-				return index % 2 == 0
+				return index%2 == 0
 			},
 			Ints([]int{1, 2, 3, 4, 5}),
 			Ints([]int{1, 3, 5}),
@@ -2254,5 +2384,3 @@ func TestSeries_Filter(t *testing.T) {
 		}
 	}
 }
-
-

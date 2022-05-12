@@ -115,8 +115,10 @@ type Series interface {
 	// equal to the fraction p of samples.
 	// Note: gonum/stat panics when called with strings
 	Quantile(p float64) float64
+	Quantiles(ps ...float64) []float64
 	// DataQuantile returns the data quantile in the series
 	DataQuantile(data float64) float64
+	DataQuantiles(datas ...float64) []float64
 	// Map applies a function matching MapFunction signature, which itself
 	// allowing for a fairly flexible MAP implementation, intended for mapping
 	// the function over each element in Series and returning a new Series object.
@@ -1062,10 +1064,42 @@ func (s series) Quantile(p float64) float64 {
 	if s.Type() == String || s.Len() == 0 {
 		return math.NaN()
 	}
+	if p == 0 {
+		return s.Min()
+	}
+	if p == 1 {
+		return s.Max()
+	}
 
 	ordered := s.Subset(s.Order(false)).Float()
 
 	return stat.Quantile(p, stat.Empirical, ordered, nil)
+}
+
+func (s series) Quantiles(ps ...float64) []float64 {
+	if s.Type() == String || s.Len() == 0 {
+		return nil
+	}
+
+	ret := make([]float64, len(ps))
+	
+	var ordered []float64
+	for i := 0; i < len(ps); i++ {
+		if ps[i] == 0 {
+			ret[i] =  s.Min()
+			continue
+		}
+		if ps[i] == 1 {
+			ret[i] =  s.Max()
+			continue
+		}
+		if ordered == nil {
+			ordered = s.Subset(s.Order(false)).Float()
+		}
+		ret[i] = stat.Quantile(ps[i], stat.Empirical, ordered, nil)
+	}
+
+	return ret
 }
 
 // DataQuantile returns the data quantile in the series
@@ -1081,6 +1115,32 @@ func (s series) DataQuantile(data float64) float64 {
 		length = length + 1
 	}
 
+	ret := dataQuantile(data , ordered, length)
+	return ret
+}
+
+func (s series) DataQuantiles(datas ...float64) []float64 {
+	if s.Type() == String || s.Len() == 0 {
+		return nil
+	}
+
+	ordered := s.Subset(s.Order(false)).Float()
+
+	length := len(ordered)
+	if length%2 == 1 {
+		length = length + 1
+	}
+
+	ret := make([]float64, len(datas))
+
+	for j := 0; j < len(datas); j++ {
+		ret[j] = dataQuantile(datas[j] , ordered, length)
+	}
+
+	return ret
+}
+
+func dataQuantile(data float64, ordered []float64, length int) float64 {
 	for i, d := range ordered {
 		if data < d {
 			return float64(i) / float64(length)
