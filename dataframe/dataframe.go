@@ -303,6 +303,27 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	}
 }
 
+func (df DataFrame) Slice(start, end int) DataFrame {
+	if df.Err != nil {
+		return df
+	}
+	columns := make([]series.Series, df.ncols)
+	for i, column := range df.columns {
+		s := column.Slice(start, end)
+		columns[i] = s
+		columns[i].SetName(column.Name())
+	}
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+	return DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+}
+
 // SelectIndexes are the supported indexes used for the DataFrame.Select method. Currently supported are:
 //
 //     int              // Matches the given index number
