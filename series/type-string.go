@@ -33,9 +33,10 @@ func (e *stringElement) Set(value interface{}) {
 }
 
 func (e *stringElement) SetElement(val Element) {
-	e.nan = false
+	e.nan = val.IsNA()
 	e.e = val.String()
 }
+
 func (e *stringElement) SetBool(val bool) {
 	e.nan = false
 	if val {
@@ -45,18 +46,25 @@ func (e *stringElement) SetBool(val bool) {
 	}
 }
 func (e *stringElement) SetFloat(val float64) {
-	e.nan = false
+	if math.IsNaN(val) {
+		e.nan = true
+	} else {
+		e.nan = false
+	}
 	e.e = strconv.FormatFloat(val, 'f', 6, 64)
 }
+
 func (e *stringElement) SetInt(val int) {
 	e.nan = false
 	e.e = strconv.Itoa(val)
 }
+
 func (e *stringElement) SetString(val string) {
-	e.nan = false
 	e.e = val
 	if e.e == NaN {
 		e.nan = true
+	} else {
+		e.nan = false
 	}
 }
 

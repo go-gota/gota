@@ -32,7 +32,7 @@ func (e *boolElement) Set(value interface{}) {
 }
 
 func (e *boolElement) SetElement(val Element) {
-	e.nan = false
+	e.nan = val.IsNA()
 	b, err := val.Bool()
 	if err != nil {
 		e.nan = true

@@ -1082,15 +1082,15 @@ func (s series) Quantiles(ps ...float64) []float64 {
 	}
 
 	ret := make([]float64, len(ps))
-	
+
 	var ordered []float64
 	for i := 0; i < len(ps); i++ {
 		if ps[i] == 0 {
-			ret[i] =  s.Min()
+			ret[i] = s.Min()
 			continue
 		}
 		if ps[i] == 1 {
-			ret[i] =  s.Max()
+			ret[i] = s.Max()
 			continue
 		}
 		if ordered == nil {
@@ -1108,14 +1108,21 @@ func (s series) DataQuantile(data float64) float64 {
 		return math.NaN()
 	}
 
-	ordered := s.Subset(s.Order(false)).Float()
+	tmpS := s.Filter(func(ele Element, index int) bool {
+		return !ele.IsNA()
+	})
+	if tmpS.Len() == 0 {
+		return math.NaN()
+	}
+
+	ordered := tmpS.Subset(tmpS.Order(false)).Float()
 
 	length := len(ordered)
 	if length%2 == 1 {
 		length = length + 1
 	}
 
-	ret := dataQuantile(data , ordered, length)
+	ret := dataQuantile(data, ordered, length)
 	return ret
 }
 
@@ -1124,7 +1131,14 @@ func (s series) DataQuantiles(datas ...float64) []float64 {
 		return nil
 	}
 
-	ordered := s.Subset(s.Order(false)).Float()
+	tmpS := s.Filter(func(ele Element, index int) bool {
+		return !ele.IsNA()
+	})
+	if tmpS.Len() == 0 {
+		return nil
+	}
+
+	ordered := tmpS.Subset(tmpS.Order(false)).Float()
 
 	length := len(ordered)
 	if length%2 == 1 {
@@ -1134,7 +1148,7 @@ func (s series) DataQuantiles(datas ...float64) []float64 {
 	ret := make([]float64, len(datas))
 
 	for j := 0; j < len(datas); j++ {
-		ret[j] = dataQuantile(datas[j] , ordered, length)
+		ret[j] = dataQuantile(datas[j], ordered, length)
 	}
 
 	return ret

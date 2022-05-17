@@ -32,7 +32,7 @@ func (e *floatElement) Set(value interface{}) {
 }
 
 func (e *floatElement) SetElement(val Element) {
-	e.nan = false
+	e.nan = val.IsNA()
 	e.e = val.Float()
 }
 func (e *floatElement) SetBool(val bool) {
@@ -44,8 +44,12 @@ func (e *floatElement) SetBool(val bool) {
 	}
 }
 func (e *floatElement) SetFloat(val float64) {
-	e.nan = false
 	e.e = val
+	if math.IsNaN(val) {
+		e.nan = true
+	} else {
+		e.nan = false
+	}
 }
 func (e *floatElement) SetInt(val int) {
 	e.nan = false
