@@ -209,6 +209,9 @@ type Series interface {
 
 	//Filter Select the elements that match the FilterFunction
 	Filter(ff FilterFunction) Series
+
+	// All the operations on Self will influence the Series's content.
+	Self() Self
 }
 
 // intElements is the concrete implementation of Elements for Int elements.

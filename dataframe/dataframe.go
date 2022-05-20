@@ -303,7 +303,7 @@ func (df DataFrame) Subset(indexes series.Indexes) DataFrame {
 	}
 }
 
-func (df DataFrame) Slice(start, end int) DataFrame {
+func (df DataFrame) SliceRow(start, end int) DataFrame {
 	if df.Err != nil {
 		return df
 	}
