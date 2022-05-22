@@ -1,6 +1,6 @@
 package series
 
-// All the operations on it will influence the DataFrame's content.
+// All the operations on it will influence the Series's content.
 type Self struct {
 	this Series
 }

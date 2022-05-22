@@ -68,6 +68,32 @@ func New(se ...series.Series) DataFrame {
 	return df
 }
 
+// New is the generic DataFrame constructor
+func FromSeries(se ...series.Series) DataFrame {
+	if len(se) == 0 {
+		return DataFrame{Err: fmt.Errorf("empty DataFrame")}
+	}
+
+	columns := se
+	nrows, ncols, err := checkColumnsDimensions(columns...)
+	if err != nil {
+		return DataFrame{Err: err}
+	}
+
+	// Fill DataFrame base structure
+	df := DataFrame{
+		columns: columns,
+		ncols:   ncols,
+		nrows:   nrows,
+	}
+	colnames := df.Names()
+	fixColnames(colnames)
+	for i, colname := range colnames {
+		df.columns[i].SetName(colname)
+	}
+	return df
+}
+
 func checkColumnsDimensions(se ...series.Series) (nrows, ncols int, err error) {
 	ncols = len(se)
 	nrows = -1
@@ -651,7 +677,7 @@ func (df DataFrame) Concat(dfb DataFrame) DataFrame {
 		}
 		expandedSeries[k] = newSeries
 	}
-	return New(expandedSeries...)
+	return FromSeries(expandedSeries...)
 }
 
 // Mutate changes a column of the DataFrame with the given Series or adds it as
