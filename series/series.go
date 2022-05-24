@@ -1227,7 +1227,7 @@ func (s series) Shift(periods int) Series {
 func (s series) CumProd() Series {
 	dst := make([]float64, s.Len())
 	floats.CumProd(dst, s.Float())
-	return New(dst, s.Type(), fmt.Sprintf("%s_CumProd", s.name))
+	return New(dst, s.Type(), fmt.Sprintf("CumProd(%s)", s.name))
 }
 
 // Prod returns the product of the elements of the Series. Returns 1 if len(s) = 0.

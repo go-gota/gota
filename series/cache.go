@@ -1,92 +1,86 @@
 package series
 
 import (
-	"strings"
 	"sync"
-	"time"
-
-	"github.com/patrickmn/go-cache"
 )
 
-var c Cache
-
-var once sync.Once
+var CacheFactory func() Cache = nil
 
 //Cache define series cache
 type Cache interface {
-	Set(k string, x interface{})
-	Get(k string) (interface{}, bool)
+	Set(key string, value interface{})
+	Get(key string) (interface{}, bool)
 	Clear()
-	DelByKeyPrefix(keyPrefix string) int
 	Size() int
+	Delete(key string)
+	Copy() Cache
 }
 
 type seriesCache struct {
-	c    *cache.Cache
-	keys map[string]struct{}
-	mu   sync.RWMutex
+	c  map[string]interface{}
+	mu sync.RWMutex
 }
 
-func NewDefaultCache() Cache {
+func newSeriesCache() Cache {
+	if CacheFactory != nil {
+		return CacheFactory()
+	}
 	ch := &seriesCache{
-		c:    cache.New(5*time.Minute, 10*time.Minute),
-		keys: map[string]struct{}{},
-		mu:   sync.RWMutex{},
+		c:  map[string]interface{}{},
+		mu: sync.RWMutex{},
 	}
 	return ch
 }
 
-func (dc *seriesCache) Set(k string, v interface{}) {
-	err := dc.c.Add(k, v, cache.DefaultExpiration)
-	if err == nil {
-		dc.mu.Lock()
-		dc.keys[k] = struct{}{}
-		dc.mu.Unlock()
-	}
+func (dc *seriesCache) Set(key string, value interface{}) {
+	dc.mu.Lock()
+	dc.c[key] = value
+	dc.mu.Unlock()
 }
 
-func (dc *seriesCache) Size() int { 
-	return dc.c.ItemCount()
+func (dc *seriesCache) Size() int {
+	dc.mu.RLock()
+	defer dc.mu.RUnlock()
+	return len(dc.c)
 }
 
-func (dc *seriesCache) Get(k string) (interface{}, bool) {
-	return dc.c.Get(k)
+func (dc *seriesCache) Get(key string) (interface{}, bool) {
+	dc.mu.RLock()
+	v, ok := dc.c[key]
+	dc.mu.RUnlock()
+	return v, ok
 }
 
 func (dc *seriesCache) Clear() {
-	dc.c.Flush()
 	dc.mu.Lock()
-	dc.keys = map[string]struct{}{}
+	dc.c = make(map[string]interface{})
 	dc.mu.Unlock()
 }
 
-func (dc *seriesCache) DelByKeyPrefix(keyPrefix string) int {
-	delCount := 0
+func (dc *seriesCache) Delete(key string) {
 	dc.mu.Lock()
-	for key := range dc.keys {
-		if strings.HasPrefix(key, keyPrefix) {
-			delete(dc.keys, key)
-			dc.c.Delete(key)
-			delCount++
-		}
-	}
+	delete(dc.c, key)
 	dc.mu.Unlock()
-	return delCount
 }
 
-//InitCache
-func InitCache(f func() Cache) {
-	once.Do(func() {
-		if f == nil {
-			c = NewDefaultCache()
-		} else {
-			c = f()
-		}
-	})
-}
-
-func ClearCache() {
-	if c != nil {
-		c.Clear()
+func (dc *seriesCache) Copy() Cache {
+	nc := &seriesCache{
+		c:  map[string]interface{}{},
+		mu: sync.RWMutex{},
 	}
+	dc.mu.RLock()
+	defer dc.mu.RUnlock()
+	for k, v := range dc.c {
+		switch vt := v.(type) {
+		case Series:
+			nc.c[k] = vt.Copy()
+		case Element:
+			nc.c[k] = vt.Copy()
+		case string, float64, int, bool:
+			nc.c[k] = vt
+		default:
+			nc.c[k] = vt
+		}
+	}
+	return nc
 }

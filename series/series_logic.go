@@ -1,6 +1,7 @@
 package series
 
 import (
+	"fmt"
 	"log"
 )
 
@@ -55,5 +56,6 @@ func (s series) Not() Series {
 		}
 		return ret
 	})
+	result.SetName(fmt.Sprintf("Not(%s)", s.Name()))
 	return result
 }
