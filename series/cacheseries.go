@@ -13,7 +13,7 @@ type cacheAbleSeries struct {
 
 func newCacheAbleSeries(s Series) Series {
 	ret := &cacheAbleSeries{
-		Series: s,
+		Series: s.Immutable(),
 		c:      newSeriesCache(),
 	}
 	return ret
@@ -53,7 +53,11 @@ func (cs cacheAbleSeries) IsNaN() []bool {
 		ret := cs.Series.IsNaN()
 		return ret, nil
 	})
-	return ret.([]bool)
+	
+	bs := ret.([]bool)
+	retCopy := make([]bool, len(bs))
+	copy(retCopy, bs)
+	return retCopy
 }
 
 func (cs cacheAbleSeries) IsNotNaN() []bool {
@@ -62,7 +66,10 @@ func (cs cacheAbleSeries) IsNotNaN() []bool {
 		ret := cs.Series.IsNotNaN()
 		return ret, nil
 	})
-	return ret.([]bool)
+	bs := ret.([]bool)
+	retCopy := make([]bool, len(bs))
+	copy(retCopy, bs)
+	return retCopy
 }
 
 func (cs cacheAbleSeries) Float() []float64 {
@@ -71,7 +78,10 @@ func (cs cacheAbleSeries) Float() []float64 {
 		ret := cs.Series.Float()
 		return ret, nil
 	})
-	return ret.([]float64)
+	fs := ret.([]float64)
+	retCopy := make([]float64, len(fs))
+	copy(retCopy, fs)
+	return retCopy
 }
 
 func (cs cacheAbleSeries) Bool() ([]bool, error) {
@@ -80,7 +90,13 @@ func (cs cacheAbleSeries) Bool() ([]bool, error) {
 		ret, err := cs.Series.Bool()
 		return ret, err
 	})
-	return ret.([]bool), err
+	if err != nil {
+		return nil, err
+	}
+	bs := ret.([]bool)
+	retCopy := make([]bool, len(bs))
+	copy(retCopy, bs)
+	return retCopy, nil
 }
 
 func (cs cacheAbleSeries) Int() ([]int, error) {
@@ -89,7 +105,13 @@ func (cs cacheAbleSeries) Int() ([]int, error) {
 		ret, err := cs.Series.Int()
 		return ret, err
 	})
-	return ret.([]int), err
+	if err != nil {
+		return nil, err
+	}
+	ints := ret.([]int)
+	retCopy := make([]int, len(ints))
+	copy(retCopy, ints)
+	return retCopy, nil
 }
 
 func (cs cacheAbleSeries) Records() []string {
@@ -98,7 +120,10 @@ func (cs cacheAbleSeries) Records() []string {
 		ret := cs.Series.Records()
 		return ret, nil
 	})
-	return ret.([]string)
+	rs := ret.([]string)
+	retCopy := make([]string, len(rs))
+	copy(retCopy, rs)
+	return retCopy
 }
 
 func (cs cacheAbleSeries) Order(reverse bool) []int {
@@ -107,7 +132,10 @@ func (cs cacheAbleSeries) Order(reverse bool) []int {
 		ret := cs.Series.Order(reverse)
 		return ret, nil
 	})
-	return ret.([]int)
+	ints := ret.([]int)
+	retCopy := make([]int, len(ints))
+	copy(retCopy, ints)
+	return retCopy
 }
 
 func (cs cacheAbleSeries) StdDev() float64 {
@@ -186,7 +214,7 @@ func (cs cacheAbleSeries) CumProd() Series {
 	cacheKey := "CumProd"
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.CumProd()
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -205,7 +233,7 @@ func (cs cacheAbleSeries) AddConst(c float64) Series {
 	cacheKey := fmt.Sprintf("AddConst(%f)", c)
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.AddConst(c)
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -215,7 +243,7 @@ func (cs cacheAbleSeries) MulConst(c float64) Series {
 	cacheKey := fmt.Sprintf("MulConst(%f)", c)
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.MulConst(c)
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -225,7 +253,7 @@ func (cs cacheAbleSeries) DivConst(c float64) Series {
 	cacheKey := fmt.Sprintf("DivConst(%f)", c)
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.DivConst(c)
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -235,7 +263,7 @@ func (cs cacheAbleSeries) Abs() Series {
 	cacheKey := "Abs"
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.Abs()
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)
@@ -245,7 +273,7 @@ func (cs cacheAbleSeries) Not() Series {
 	cacheKey := "Not"
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
 		res := cs.Series.Not()
-		ret := res.CacheAble()
+		ret := res.Immutable()
 		return ret, nil
 	})
 	return ret.(Series)

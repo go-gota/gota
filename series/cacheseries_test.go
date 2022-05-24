@@ -2,68 +2,9 @@ package series
 
 import (
 	"reflect"
-	"sync"
 	"testing"
 )
 
-type mockCache struct {
-	setCount   int
-	getCount   int
-	hitCount   int
-	innerCache Cache
-}
-
-func (mc *mockCache) Set(k string, v interface{}) {
-	mc.innerCache.Set(k, v)
-	mc.setCount++
-}
-
-func (mc *mockCache) Get(k string) (interface{}, bool) {
-	mc.getCount++
-	v, ok := mc.innerCache.Get(k)
-	if ok {
-		mc.hitCount++
-	}
-	return v, ok
-}
-
-func (mc *mockCache) Clear() {
-	mc.innerCache.Clear()
-	mc.setCount = 0
-	mc.getCount = 0
-	mc.hitCount = 0
-}
-
-func (mc *mockCache) Delete(keyPrefix string) {
-	mc.innerCache.Delete(keyPrefix)
-}
-
-func (dc *mockCache) Size() int {
-	return dc.innerCache.Size()
-}
-
-func (dc *mockCache) Copy() Cache {
-	nc := &mockCache{
-		setCount:   dc.setCount,
-		getCount:   dc.getCount,
-		hitCount:   dc.hitCount,
-		innerCache: dc.innerCache.Copy(),
-	}
-	return nc
-}
-
-func TestMain(m *testing.M) {
-	CacheFactory = func() Cache {
-		testCache := &mockCache{
-			innerCache: &seriesCache{
-				c:  map[string]interface{}{},
-				mu: sync.RWMutex{},
-			},
-		}
-		return testCache
-	}
-	m.Run()
-}
 
 func TestCacheSeries_Add(t *testing.T) {
 	tests := []struct {

@@ -4,8 +4,6 @@ import (
 	"sync"
 )
 
-var CacheFactory func() Cache = nil
-
 //Cache define series cache
 type Cache interface {
 	Set(key string, value interface{})
@@ -22,9 +20,6 @@ type seriesCache struct {
 }
 
 func newSeriesCache() Cache {
-	if CacheFactory != nil {
-		return CacheFactory()
-	}
 	ch := &seriesCache{
 		c:  map[string]interface{}{},
 		mu: sync.RWMutex{},
