@@ -13,7 +13,7 @@ type cacheAbleSeries struct {
 
 func newCacheAbleSeries(s Series) Series {
 	ret := &cacheAbleSeries{
-		Series: s.Immutable(),
+		Series: s.Copy().Immutable(),
 		c:      newSeriesCache(),
 	}
 	return ret
@@ -21,7 +21,7 @@ func newCacheAbleSeries(s Series) Series {
 
 func (cs cacheAbleSeries) Rolling(window int, minPeriods int) RollingSeries {
 	cr := cacheAbleRollingSeries{
-		RollingSeries: NewRollingSeries(window, minPeriods, cs.Series),
+		RollingSeries: newRollingSeries(window, minPeriods, cs.Series),
 		c:             newSeriesCache(),
 	}
 	return cr
@@ -53,7 +53,7 @@ func (cs cacheAbleSeries) IsNaN() []bool {
 		ret := cs.Series.IsNaN()
 		return ret, nil
 	})
-	
+
 	bs := ret.([]bool)
 	retCopy := make([]bool, len(bs))
 	copy(retCopy, bs)
@@ -299,4 +299,80 @@ func (cs cacheAbleSeries) Copy() Series {
 
 func (cs *cacheAbleSeries) CacheAble() Series {
 	return cs
+}
+
+func (cs *cacheAbleSeries) Str() string {
+	return cs.Series.Str() + "\n" + cs.c.State()
+}
+
+
+//Cache define series cache
+type Cache interface {
+	Set(key string, value interface{})
+	Get(key string) (interface{}, bool)
+	Clear()
+	Size() int
+	Delete(key string)
+	Copy() Cache
+	State() string
+}
+
+type seriesCache struct {
+	c map[string]interface{}
+	setCount int
+	getCount int
+	hitCount int
+}
+
+func newSeriesCache() Cache {
+	ch := &seriesCache{
+		c: map[string]interface{}{},
+	}
+	return ch
+}
+
+func (dc *seriesCache) Set(key string, value interface{}) {
+	dc.setCount++
+	dc.c[key] = value
+}
+
+func (dc *seriesCache) Size() int {
+	return len(dc.c)
+}
+
+func (dc *seriesCache) Get(key string) (interface{}, bool) {
+	dc.getCount++
+	v, ok := dc.c[key]
+	if ok {
+		dc.hitCount++
+	}
+	return v, ok
+}
+
+func (dc *seriesCache) Clear() {
+	dc.c = make(map[string]interface{})
+	dc.setCount = 0
+	dc.getCount = 0
+	dc.hitCount = 0
+}
+
+func (dc *seriesCache) Delete(key string) {
+	delete(dc.c, key)
+}
+
+func (dc *seriesCache) Copy() Cache {
+	nc := &seriesCache{
+		c:        map[string]interface{}{},
+		setCount: dc.setCount,
+		getCount: dc.getCount,
+		hitCount: dc.hitCount,
+	}
+	for k, v := range dc.c {
+		nc.c[k] = v
+	}
+	return nc
+}
+
+func (dc *seriesCache) State() string {
+	return fmt.Sprintf("Cache info: size: %d, setCount: %d, getCount: %d, hitCount: %d\n", dc.Size(), dc.setCount, dc.getCount, dc.hitCount)
 }

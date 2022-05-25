@@ -2,6 +2,7 @@ package series_test
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"testing"
@@ -377,4 +378,58 @@ func BenchmarkSeries_RollingCacheQuantile(b *testing.B) {
 			}
 		})
 	}
+}
+
+
+
+func BenchmarkSeries_Quantile(b *testing.B) {
+	rand.Seed(100)
+	table := []struct {
+		name   string
+		series series.Series
+		quantile         float64
+	}{
+		{
+			"[]int(100000)_Int",
+			series.Ints(generateInts(100000)),
+			0.75,
+		},
+		{
+			"[]int(100000)_Float",
+			series.Floats(generateInts(100000)),
+			0.45,
+		},
+	}
+	for testnum, test := range table {
+		s := test.series
+		var result1, result2 float64
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				result1 = s.Quantile(test.quantile)
+			}
+		})
+		s = s.CacheAble()
+		b.Run(test.name + "-cacheAbleSeries", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				result2 = s.Quantile(test.quantile)
+			}
+		})
+
+		if !compareFloats(result1, result2, 6) {
+			b.Errorf(
+				"Test:%v\nresult1:\n%v\nresult2:\n%v",
+				testnum, result1, result2,
+			)
+		}
+	}
+}
+
+func compareFloats(lvalue, rvalue float64, digits int) bool {
+	if math.IsNaN(lvalue) || math.IsNaN(rvalue) {
+		return math.IsNaN(lvalue) && math.IsNaN(rvalue)
+	}
+	d := math.Pow(10.0, float64(digits))
+	lv := int(lvalue * d)
+	rv := int(rvalue * d)
+	return lv == rv
 }

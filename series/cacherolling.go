@@ -18,7 +18,7 @@ func (rc *cacheAbleRollingSeries) cacheOrExecuteRolling(cacheKey string, f func(
 		return nil
 	}
 	res.SetName(cacheKey)
-	ret := res.CacheAble()
+	ret := res.Immutable()
 	rc.c.Set(cacheKey, ret)
 	return ret
 }

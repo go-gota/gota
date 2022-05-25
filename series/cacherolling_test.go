@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
-	"unsafe"
 )
 
 func TestSeries_RollingCache(t *testing.T) {
@@ -178,76 +177,6 @@ func TestSeries_RollingCacheMeanByWeights(t *testing.T) {
 		if !reflect.DeepEqual(expected, received) {
 			t.Errorf(
 				"Test-MeanByWeights:%v\nExpected:\n%v\nReceived:\n%v",
-				testnum, expected, received,
-			)
-		}
-	}
-}
-
-func TestSeries_F(t *testing.T) {
-	f := func() {}
-	fmt.Println("f: ", &f)
-	vf := f
-	fmt.Println("vfd: ", &vf)
-
-	fmt.Println(*(*int64)(unsafe.Pointer(&f)))
-	fmt.Println(*(*int64)(unsafe.Pointer(&vf)))
-
-}
-
-func TestSeries_RollingCacheApply(t *testing.T) {
-	tests := []struct {
-		series        Series
-		window        int
-		minPeriod     int
-		applyExpected Series
-		applyFunc     func(window Series, windowIndex int) interface{}
-		t             Type
-	}{
-		{
-			Floats([]string{"1.5", "-3.23", "-0.337397", "-0.380079", "1.60979", "34."}),
-			3,
-			2,
-			Floats([]string{NaN, "2.5", "2.5", "-2.23", "0.662603", "0.619921"}),
-			func(window Series, windowIndex int) interface{} {
-				return window.Float()[0] + 1
-			},
-			"",
-		},
-		{
-			Strings([]string{"20210618", "20200909", "20200910", "20200912", "20200911"}),
-			3,
-			2,
-			Strings([]string{NaN, "20210618-", "20210618-", "20200909-", "20200910-"}),
-			func(window Series, windowIndex int) interface{} {
-				return window.Elem(0).String() + "-"
-			},
-			String,
-		},
-		{
-			Ints([]string{"23", "13", "101", "-64", "-3"}),
-			3,
-			1,
-			Ints([]string{"24", "14", "102", "-63", "-2"}),
-			func(window Series, windowIndex int) interface{} {
-				i, _ := window.Elem(-1).Int()
-				return i + 1
-			},
-			Int,
-		},
-	}
-
-	for testnum, test := range tests {
-		var b Series
-		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
-		expected := test.applyExpected.Records()
-		rs := test.series.CacheAble().Rolling(test.window, test.minPeriod)
-		b = rs.Apply(test.applyFunc, test.t)
-		b = rs.Apply(test.applyFunc, test.t)
-		received := b.Records()
-		if !reflect.DeepEqual(expected, received) {
-			t.Errorf(
-				"Test-Apply:%v\nExpected:\n%v\nReceived:\n%v",
 				testnum, expected, received,
 			)
 		}

@@ -1,6 +1,7 @@
 package series
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -42,7 +43,7 @@ func TestCacheSeries_Add(t *testing.T) {
 				testnum, exp, rev,
 			)
 		}
-
+		fmt.Printf("testnum[%d] series state info:\n %s", testnum, tmpSeries.Str())
 	}
 
 }

@@ -2,6 +2,7 @@ package series
 
 import (
 	"fmt"
+
 	"gonum.org/v1/gonum/floats"
 )
 
@@ -59,7 +60,7 @@ func NewRollingWindow(s Series, windowSize int) RollingWindow {
 		startIndex:      0,
 		endIndexExclude: 1,
 		windowSize:      windowSize,
-		s:               s.Copy(),
+		s:               s,
 	}
 }
 
@@ -77,8 +78,8 @@ func (rw *rollingWindow) NextWindow() Series {
 	return window
 }
 
-//NewRollingSeries establish a rolling Series
-func NewRollingSeries(window int, minPeriods int, s Series) RollingSeries {
+//newRollingSeries establish a rolling Series
+func newRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 	if window < 1 {
 		panic("window must >= 1")
 	}
@@ -86,7 +87,7 @@ func NewRollingSeries(window int, minPeriods int, s Series) RollingSeries {
 		panic("minPeriods must >= 1 && minPeriods must <= window")
 	}
 	return rollingSeries{
-		Series:     s,
+		Series:     s.Copy().Immutable(),
 		window:     window,
 		minPeriods: minPeriods,
 	}

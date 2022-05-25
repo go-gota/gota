@@ -19,7 +19,7 @@ func (df *DataFrame) Self() Self {
 	return self
 }
 
-// AppendColumns Append columns on the DataFrame.
+// AppendColumns Append columns on the DataFrame. The param's modification will influence the DataFrame's content after AppendColumns.
 func (s Self) AppendColumns(cols ...series.Series) error {
 	if s.this.Err != nil || len(cols) == 0 {
 		return nil
@@ -46,6 +46,7 @@ func (s Self) AppendColumns(cols ...series.Series) error {
 	}
 	return nil
 }
+
 // Capply applies the given function to the columns of a DataFrame, will influence the DataFrame's content.
 func (s Self) Capply(f func(series.Series)) {
 	if s.this.Err != nil {
@@ -54,4 +55,17 @@ func (s Self) Capply(f func(series.Series)) {
 	for _, s := range s.this.columns {
 		f(s)
 	}
+}
+
+// ImmutableCol returns an immutable Series of the DataFrame with the given column name contained in the DataFrame.
+func (s Self) ImmutableCol(colname string) series.Series {
+	if s.this.Err != nil {
+		return series.Err(s.this.Err)
+	}
+	// Check that colname exist on dataframe
+	idx := findInStringSlice(colname, s.this.Names())
+	if idx < 0 {
+		return series.Err(fmt.Errorf("unknown column name"))
+	}
+	return s.this.columns[idx].Immutable()
 }
