@@ -229,36 +229,6 @@ func (cs cacheAbleSeries) Prod() float64 {
 	return ret.(float64)
 }
 
-func (cs cacheAbleSeries) AddConst(c float64) Series {
-	cacheKey := fmt.Sprintf("AddConst(%f)", c)
-	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
-		res := cs.Series.AddConst(c)
-		ret := res.Immutable()
-		return ret, nil
-	})
-	return ret.(Series)
-}
-
-func (cs cacheAbleSeries) MulConst(c float64) Series {
-	cacheKey := fmt.Sprintf("MulConst(%f)", c)
-	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
-		res := cs.Series.MulConst(c)
-		ret := res.Immutable()
-		return ret, nil
-	})
-	return ret.(Series)
-}
-
-func (cs cacheAbleSeries) DivConst(c float64) Series {
-	cacheKey := fmt.Sprintf("DivConst(%f)", c)
-	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
-		res := cs.Series.DivConst(c)
-		ret := res.Immutable()
-		return ret, nil
-	})
-	return ret.(Series)
-}
-
 func (cs cacheAbleSeries) Abs() Series {
 	cacheKey := "Abs"
 	ret, _ := cs.cacheOrExecute(cacheKey, func() (interface{}, error) {
