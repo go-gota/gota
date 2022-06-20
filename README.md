@@ -352,7 +352,18 @@ if a.Err != nil {
     log.Fatal("Oh noes!")
 }
 ```
+#### Save a dataframe to file
+with using `WriteCSV` you can write a dataframe to a csv file. 
 
+```
+file, err := os.Create("output.csv")
+// Create file
+defer file.Close()
+if err != nil {
+	log.Fatal(err)
+}
+df.WriteCSV(file)
+```
 #### Print to console
 
 ```go
