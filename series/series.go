@@ -1405,7 +1405,7 @@ func Operation(operate func(index int, eles ...Element) interface{}, seriess ...
 
 // Sum calculates the sum value of a series
 func (s series) Sum() float64 {
-	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {
+	if s.elements.Len() == 0 || s.Type() == String {
 		return math.NaN()
 	}
 	sFloat := s.Float()

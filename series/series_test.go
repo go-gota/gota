@@ -2244,7 +2244,7 @@ func TestSeries_Sum(t *testing.T) {
 		},
 		{
 			Bools([]bool{true, true, false, true}),
-			math.NaN(),
+			3.0,
 		},
 		{
 			Floats([]float64{}),
