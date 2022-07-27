@@ -1479,6 +1479,16 @@ func TestSeries_Set(t *testing.T) {
 			"[A 1 2 K 3]",
 		},
 		{
+			Strings([]string{"A", "B", "C"}),
+			[]bool{true, true, true},
+			New([]interface{}{
+				"A",
+				stringElement{e: "", nan: true},
+				stringElement{e: "NaN", nan: true},
+			}, String, ""),
+			"[A NaN NaN]",
+		},
+		{
 			Strings([]string{"A", "B", "C", "K", "D"}),
 			[]bool{false, true, true, false, true},
 			Ints([]string{"1", "2", "3"}),
