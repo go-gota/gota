@@ -43,6 +43,7 @@ func (e *stringElement) Set(value interface{}) {
 		}
 	case Element:
 		e.e = val.String()
+		e.nan = val.IsNA()
 	default:
 		e.nan = true
 		return

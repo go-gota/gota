@@ -1479,6 +1479,26 @@ func TestSeries_Set(t *testing.T) {
 			"[A 1 2 K 3]",
 		},
 		{
+			Strings([]string{"A", "B", "C"}),
+			[]bool{true, true, true},
+			New([]interface{}{
+				"A",
+				stringElement{e: "", nan: true},
+				stringElement{e: "NaN", nan: true},
+			}, String, ""),
+			"[A NaN NaN]",
+		},
+		{
+			Floats([]float64{1.2, 2.2, 3.3}),
+			[]bool{true, true, true},
+			New([]interface{}{
+				&floatElement{e: math.NaN(), nan: true},
+				&floatElement{e: 0, nan: true},
+				&stringElement{e: "NaN", nan: true},
+			}, Float, ""),
+			"[NaN NaN NaN]",
+		},
+		{
 			Strings([]string{"A", "B", "C", "K", "D"}),
 			[]bool{false, true, true, false, true},
 			Ints([]string{"1", "2", "3"}),
@@ -1496,7 +1516,18 @@ func TestSeries_Set(t *testing.T) {
 			Ints([]string{"1", "2", "3"}),
 			"[A 1 2 K 3]",
 		},
-
+		{
+			Ints([]int{1, 2, 3, 4, 5}),
+			Bools([]bool{true, true, true, true, true}),
+			Ints([]interface{}{
+				&intElement{e: 0, nan: true},
+				&intElement{e: 0, nan: false},
+				3,
+				3,
+				3,
+			}),
+			"[NaN 0 3 3 3]",
+		},
 		{
 			StringsList([][]string{{"A"}, {"B"}, {"C"}, {"K"}, {"D"}}),
 			[]int{1, 2, 4},
