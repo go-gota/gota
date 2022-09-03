@@ -3000,3 +3000,45 @@ func TestGroups_GetGroups(t *testing.T) {
 		t.Fatalf("Expected to get 3 groups, got %d", len(groupNames))
 	}
 }
+
+func TestDataFrame_Head(t *testing.T) {
+	a := New(
+		series.New([]string{"a", "b", "c", "d", "e", "f", "g"}, series.String, "COL.1"),
+		series.New([]int{1, 2, 3, 4, 5, 6, 7}, series.Int, "COL.2"),
+		series.New([]float64{2.0, 4.0, 8.0, 16.0, 32.0, 64.0, 128.0}, series.Float, "COL.3"),
+	)
+	table := []struct {
+		expDf DataFrame
+	}{
+		{
+			New(
+				series.New([]string{"a", "b", "c", "d", "e"}, series.String, "COL.1"),
+				series.New([]int{1, 2, 3, 4, 5}, series.Int, "COL.2"),
+				series.New([]float64{2.0, 4.0, 8.0, 16.0, 32.0}, series.Float, "COL.3"),
+			),
+		},
+	}
+
+	for i, tc := range table {
+		b := a.Head()
+
+		if b.Err != nil {
+			t.Errorf("Test: %d\nError:%v", i, b.Err)
+		}
+		//if err := checkAddrDf(a, b); err != nil {
+		//t.Error(err)
+		//}
+		// Check that the types are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Types(), b.Types()) {
+			t.Errorf("Test: %d\nDifferent types:\nA:%v\nB:%v", i, tc.expDf.Types(), b.Types())
+		}
+		// Check that the colnames are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Names(), b.Names()) {
+			t.Errorf("Test: %d\nDifferent colnames:\nA:%v\nB:%v", i, tc.expDf.Names(), b.Names())
+		}
+		// Check that the values are the same between both DataFrames
+		if !reflect.DeepEqual(tc.expDf.Records(), b.Records()) {
+			t.Errorf("Test: %d\nDifferent values:\nA:%v\nB:%v", i, tc.expDf.Records(), b.Records())
+		}
+	}
+}
