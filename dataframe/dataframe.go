@@ -2357,3 +2357,8 @@ func (df DataFrame) Describe() DataFrame {
 	ddf := New(ss...)
 	return ddf
 }
+
+// Head returns the first 5 rows of the DataFrame
+func (df DataFrame) Head() DataFrame {
+	return df.Subset([]int{0, 1, 2, 3, 4})
+}
