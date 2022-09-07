@@ -1069,7 +1069,7 @@ func LoadStructs(i interface{}, options ...LoadOption) DataFrame {
 		defaultType: series.String,
 		detectTypes: true,
 		hasHeader:   true,
-		nanValues:   []string{"NA", "NaN", "<nil>"},
+		nanValues:   []string{},
 	}
 
 	// Set any custom load options
@@ -1185,7 +1185,7 @@ func LoadRecords(records [][]string, options ...LoadOption) DataFrame {
 		defaultType: series.String,
 		detectTypes: true,
 		hasHeader:   true,
-		nanValues:   []string{"NA", "NaN", "<nil>"},
+		nanValues:   []string{},
 	}
 
 	// Set any custom load options
