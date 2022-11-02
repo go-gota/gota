@@ -288,7 +288,7 @@ mut2 := df.Mutate(
 
 #### Joins
 
-Different Join operations are supported (`InnerJoin`, `OuterJoin` `LeftJoin`,
+Different Join operations are supported (`InnerJoin`, `OuterJoin`, `LeftJoin`,
 `RightJoin`, `CrossJoin`). In order to use these methods you have to
 specify which are the keys to be used for joining the DataFrames:
 
