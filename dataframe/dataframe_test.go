@@ -3000,3 +3000,82 @@ func TestGroups_GetGroups(t *testing.T) {
 		t.Fatalf("Expected to get 3 groups, got %d", len(groupNames))
 	}
 }
+
+func TestDataFrame_Pivot(t *testing.T) {
+	// case 1, set rows and values
+	df := New(
+		series.New([]string{"a", "b", "b"}, series.String, "A"),
+		series.New([]int{1, 2, 3}, series.Int, "B"),
+	)
+	newDF := df.Pivot([]string{"A"}, nil, []PivotValue{{Colname: "B", AggregationType: Aggregation_SUM}})
+	expectedRecords := [][]string{
+		{"A", "B_SUM"},
+		{"a", "1"},
+		{"b", "5"},
+	}
+	if !reflect.DeepEqual(newDF.Records(), expectedRecords) {
+		t.Fatalf("unexpced result, result=%v expected=%v", newDF.Records(), expectedRecords)
+	}
+
+	// case 2, set columns and values
+	df = New(
+		series.New([]string{"a", "b", "b"}, series.String, "A"),
+		series.New([]int{1, 2, 3}, series.Int, "B"),
+	)
+	newDF = df.Pivot(nil, []string{"A"}, []PivotValue{{Colname: "B", AggregationType: Aggregation_SUM}})
+	expectedRecords = [][]string{
+		{"a_B_SUM", "b_B_SUM"},
+		{"1", "5"},
+	}
+	if !reflect.DeepEqual(newDF.Records(), expectedRecords) {
+		t.Fatalf("unexpced result, result=%v expected=%v", newDF.Records(), expectedRecords)
+	}
+
+	// case 3, only set values
+	df = New(
+		series.New([]string{"a", "b"}, series.String, "A"),
+		series.New([]int{1, 2}, series.Int, "B"),
+	)
+	newDF = df.Pivot(nil, nil, []PivotValue{{Colname: "B", AggregationType: Aggregation_SUM}})
+	expectedRecords = [][]string{
+		{"B_SUM"},
+		{"3"},
+	}
+	if !reflect.DeepEqual(newDF.Records(), expectedRecords) {
+		t.Fatalf("unexpced result, result=%v expected=%v", newDF.Records(), expectedRecords)
+	}
+
+	// case4, set all parameters
+	newDF = New(
+		series.New([]string{"A1", "A1", "A1", "A1", "A1", "A1", "A1"}, series.String, "A"),
+		series.New([]string{"B1", "B1", "B1", "B2", "B2", "B2", "B2"}, series.String, "B"),
+		series.New([]string{"C1", "C1", "C2", "C1", "C1", "C2", "C2"}, series.String, "C"),
+		series.New([]string{"D1", "D2", "D1", "D1", "D2", "D1", "D1"}, series.String, "D"),
+		series.New([]int{1, 2, 3, 4, 5, 6, 7}, series.Int, "E"),
+		series.New([]int{8, 9, 10, 11, 12, 13, 14}, series.Int, "F"),
+	).Pivot(
+		[]string{"A", "B"},
+		[]string{"C", "D"},
+		[]PivotValue{
+			{Colname: "E", AggregationType: Aggregation_SUM},
+			{Colname: "F", AggregationType: Aggregation_COUNT},
+		})
+	expectedRecords = [][]string{
+		{"A", "B", "C1_D1_E_SUM", "C1_D1_F_COUNT", "C1_D2_E_SUM", "C1_D2_F_COUNT", "C2_D1_E_SUM", "C2_D1_F_COUNT"},
+		{"A1", "B1", "1", "1", "2", "1", "3", "1"},
+		{"A1", "B2", "4", "1", "5", "1", "13", "2"},
+	}
+	if !reflect.DeepEqual(newDF.Records(), expectedRecords) {
+		t.Fatalf("unexpced result, result=%v expected=%v", newDF.Records(), expectedRecords)
+	}
+
+	// case 5, invalid params
+	df = New(
+		series.New([]string{"a", "b"}, series.String, "A"),
+		series.New([]int{1, 2}, series.Int, "B"),
+	)
+	newDF = df.Pivot(nil, nil, nil)
+	if newDF.Err == nil {
+		t.Fatalf("expect param error")
+	}
+}
