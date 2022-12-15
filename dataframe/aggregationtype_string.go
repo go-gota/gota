@@ -15,11 +15,12 @@ func _() {
 	_ = x[Aggregation_STD-5]
 	_ = x[Aggregation_SUM-6]
 	_ = x[Aggregation_COUNT-7]
+	_ = x[Aggregation_PROD-8]
 }
 
-const _AggregationType_name = "MAXMINMEANMEDIANSTDSUMCOUNT"
+const _AggregationType_name = "MAXMINMEANMEDIANSTDSUMCOUNTPROD"
 
-var _AggregationType_index = [...]uint8{0, 3, 6, 10, 16, 19, 22, 27}
+var _AggregationType_index = [...]uint8{0, 3, 6, 10, 16, 19, 22, 27, 31}
 
 func (i AggregationType) String() string {
 	i -= 1

@@ -821,6 +821,20 @@ func (s Series) Sum() float64 {
 	return sum
 }
 
+// Prod calculates the product value of a series
+func (s Series) Prod() float64 {
+	if s.elements.Len() == 0 || s.Type() == String || s.Type() == Bool {
+		return math.NaN()
+	}
+	sFloat := s.Float()
+	prod := sFloat[0]
+	for i := 1; i < len(sFloat); i++ {
+		elem := sFloat[i]
+		prod *= elem
+	}
+	return prod
+}
+
 // Slice slices Series from j to k-1 index.
 func (s Series) Slice(j, k int) Series {
 	if s.Err != nil {
