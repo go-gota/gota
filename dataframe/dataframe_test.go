@@ -2972,7 +2972,8 @@ func TestDataFrame_Aggregation(t *testing.T) {
 		series.New([]float64{3.0, 4.0, 5.3, 3.2, 1.2}, series.Float, "values2"),
 	)
 	groups := a.GroupBy("key1", "key2")
-	df := groups.Aggregation([]AggregationType{Aggregation_MAX, Aggregation_MIN, Aggregation_COUNT, Aggregation_SUM}, []string{"values", "values2", "values2", "values2"})
+	df := groups.Aggregation([]AggregationType{Aggregation_MAX, Aggregation_MIN, Aggregation_COUNT, 
+		Aggregation_SUM, Aggregation_PROD}, []string{"values", "values2", "values2", "values2", "values2"})
 	resultMap := make(map[string]float32, 3)
 	resultMap[fmt.Sprintf("%s_%d", "a", 2)] = 4
 	resultMap[fmt.Sprintf("%s_%d", "b", 1)] = 5.3

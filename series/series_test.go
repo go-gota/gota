@@ -1775,6 +1775,51 @@ func TestSeries_Sum(t *testing.T) {
 	}
 }
 
+func TestSeries_Prod(t *testing.T) {
+	tests := []struct {
+		series   Series
+		expected float64
+	}{
+		{
+			// Extreme observations should not factor in.
+			Ints([]int{1, 2, 3, 4, 5, 10}),
+			1200,
+		},
+		{
+			// Change in order should not influence result.
+			Ints([]int{1, 2, 3, 4, 10, 5}),
+			1200,
+		},
+		{
+			Floats([]float64{3.1415926, -1.0, 2.33333}),
+			-7.330372261358001,
+		},
+		{
+			Strings([]string{"A", "B", "C", "D"}),
+			math.NaN(),
+		},
+		{
+			Bools([]bool{true, true, false, true}),
+			math.NaN(),
+		},
+		{
+			Floats([]float64{}),
+			math.NaN(),
+		},
+	}
+
+	for testnum, test := range tests {
+		received := test.series.Prod()
+		expected := test.expected
+		if !compareFloats(received, expected, 6) {
+			t.Errorf(
+				"Test:%v\nExpected:\n%v\nReceived:\n%v",
+				testnum, expected, received,
+			)
+		}
+	}
+}
+
 func TestSeries_Slice(t *testing.T) {
 	seriesWithErr := Ints([]int{})
 	seriesWithErr.Err = fmt.Errorf("slice index out of bounds")
