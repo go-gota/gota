@@ -57,6 +57,18 @@ func (s Self) Capply(f func(series.Series)) {
 	}
 }
 
+// CapplyWithName applies the given function to the column, will influence the DataFrame's content.
+func (s Self) CapplyWithName(colname string, f func(series.Series)) {
+	if s.this.Err != nil {
+		return
+	}
+	idx := findInStringSlice(colname, s.this.Names())
+	if idx < 0 {
+		return
+	}
+	f(s.this.columns[idx])
+}
+
 // ImmutableCol returns an immutable Series of the DataFrame with the given column name contained in the DataFrame.
 func (s Self) ImmutableCol(colname string) series.Series {
 	if s.this.Err != nil {
@@ -68,4 +80,35 @@ func (s Self) ImmutableCol(colname string) series.Series {
 		return series.Err(fmt.Errorf("unknown column name"))
 	}
 	return s.this.columns[idx].Immutable()
+}
+
+// Rename changes the name of one of the columns of a DataFrame
+func (s Self) Rename(newname, oldname string) {
+	if s.this.Err != nil {
+		return
+	}
+	// Check that colname exist on dataframe
+	colnames := s.this.Names()
+	idx := findInStringSlice(oldname, colnames)
+	if idx == -1 {
+		return
+	}
+	s.this.columns[idx].SetName(newname)
+}
+
+func (s Self) RemoveCols(removedColnames ...string) {
+	if s.this.Err != nil || len(removedColnames) == 0 {
+		return
+	}
+	var cols []series.Series
+	// Check that colname exist on dataframe
+	colnames := s.this.Names()
+	for i := 0; i < len(colnames); i++ {
+		idx := findInStringSlice(colnames[i], removedColnames)
+		if idx == -1 {
+			cols = append(cols, s.this.columns[i])
+		}
+	}
+	s.this.columns = cols
+	s.this.ncols = len(cols)
 }
