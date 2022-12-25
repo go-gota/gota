@@ -57,8 +57,8 @@ func (s Self) Capply(f func(series.Series)) {
 	}
 }
 
-// CapplyWithName applies the given function to the column, will influence the DataFrame's content.
-func (s Self) CapplyWithName(colname string, f func(series.Series)) {
+// CapplyByName applies the given function to the column, will influence the DataFrame's content.
+func (s Self) CapplyByName(colname string, f func(series.Series)) {
 	if s.this.Err != nil {
 		return
 	}
