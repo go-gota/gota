@@ -320,7 +320,6 @@ func generateJoinSeries(
 	}
 	rightVals := make([]int, rightRowCount)
 	for i := 0; i < rightRowCount*relationScaleRightToLeft; i++ {
-		// for j := 0; j < relationScaleRightToLeft; j++ {
 		if i >= rightRowCount {
 			break
 		}
