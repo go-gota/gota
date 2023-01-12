@@ -1683,12 +1683,17 @@ func (df DataFrame) Slice(start, end int) DataFrame {
 	return New(newCols...)
 }
 
+func (df DataFrame) createRowKey(keys []string, keyIdx []int, rowIdx int) string {
+	var sb strings.Builder
+	cols := df.columns
+	for k := range keys {
+		sb.WriteString(cols[keyIdx[k]].Elem(rowIdx).String())
+	}
+	return sb.String()
+}
+
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
 func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
-	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
-	}
-
 	props, err := getJoinProperties(df, b, keys...)
 	if err != nil {
 		return DataFrame{Err: err}
@@ -1710,10 +1715,7 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 	}
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
-		rowKey := ""
-		for k := range keys {
-			rowKey = rowKey + aCols[iKeysA[k]].Elem(i).String()
-		}
+		rowKey := df.createRowKey(keys, iKeysA, i)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		for _, j := range bMatchedRowIdxs {
 			ii := 0
@@ -1743,9 +1745,6 @@ func (df DataFrame) InnerJoin(b DataFrame, keys ...string) DataFrame {
 
 // LeftJoin returns a DataFrame containing the left join of two DataFrames.
 func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
-	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
-	}
 	props, err := getJoinProperties(df, b, keys...)
 	if err != nil {
 		return DataFrame{Err: err}
@@ -1767,10 +1766,7 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
-		rowKey := ""
-		for k := range keys {
-			rowKey = rowKey + aCols[iKeysA[k]].Elem(i).String()
-		}
+		rowKey := df.createRowKey(keys, iKeysA, i)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		if len(bMatchedRowIdxs) == 0 {
 			ii := 0
@@ -1819,10 +1815,6 @@ func (df DataFrame) LeftJoin(b DataFrame, keys ...string) DataFrame {
 
 // RightJoin returns a DataFrame containing the right join of two DataFrames.
 func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
-	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
-	}
-	// Check that we have all given keys in both DataFrames
 	props, err := getJoinProperties(df, b, keys...)
 	if err != nil {
 		return DataFrame{Err: err}
@@ -1847,10 +1839,7 @@ func (df DataFrame) RightJoin(b DataFrame, keys ...string) DataFrame {
 	aRowIdxLookup := df.createRowIdxLookup(keys, iKeysA)
 	// Fill newCols
 	for j := 0; j < b.nrows; j++ {
-		rowKey := ""
-		for k := range keys {
-			rowKey = rowKey + bCols[iKeysB[k]].Elem(j).String()
-		}
+		rowKey := b.createRowKey(keys, iKeysB, j)
 		aMatchedRowIdxs := aRowIdxLookup[rowKey]
 		if len(aMatchedRowIdxs) == 0 {
 			ii := 0
@@ -1909,10 +1898,6 @@ type joinProperty struct {
 
 // OuterJoin returns a DataFrame containing the outer join of two DataFrames.
 func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
-	if len(keys) == 0 {
-		return DataFrame{Err: fmt.Errorf("join keys not specified")}
-	}
-	// Check that we have all given keys in both DataFrames
 	props, err := getJoinProperties(df, b, keys...)
 	if err != nil {
 		return DataFrame{Err: err}
@@ -1935,10 +1920,11 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	}
 	// Fill newCols
 	for i := 0; i < df.nrows; i++ {
-		rowKey := ""
-		for k := range keys {
-			rowKey = rowKey + aCols[iKeysA[k]].Elem(i).String()
-		}
+		// rowKey := ""
+		// for k := range keys {
+		// 	rowKey = rowKey + aCols[iKeysA[k]].Elem(i).String()
+		// }
+		rowKey := df.createRowKey(keys, iKeysA, i)
 		bMatchedRowIdxs := bRowIdxLookup[rowKey]
 		if len(bMatchedRowIdxs) == 0 {
 			ii := 0
@@ -1980,11 +1966,7 @@ func (df DataFrame) OuterJoin(b DataFrame, keys ...string) DataFrame {
 	}
 
 	for j := 0; j < b.nrows; j++ {
-		key := make([]string, len(keys))
-		for k := range keys {
-			key[k] = bCols[iKeysB[k]].Elem(j).String()
-		}
-		rowKey := strings.Join(key, "")
+		rowKey := b.createRowKey(keys, iKeysB, j)
 		aMatchedRowIdxs := aRowIdxLookup[rowKey]
 		if len(aMatchedRowIdxs) > 0 {
 			continue
@@ -2042,14 +2024,9 @@ func (df DataFrame) CrossJoin(b DataFrame) DataFrame {
 }
 
 func (df DataFrame) createRowIdxLookup(keys []string, keyIdx []int) map[string][]int {
-	cols := df.columns
-	rowIdxLookup := make(map[string][]int)
+	rowIdxLookup := make(map[string][]int, df.nrows)
 	for i := 0; i < df.nrows; i++ {
-		key := make([]string, len(keys))
-		for k := range keys {
-			key[k] = cols[keyIdx[k]].Elem(i).String()
-		}
-		rowKey := strings.Join(key, "")
+		rowKey := df.createRowKey(keys, keyIdx, i)
 		rowIdxLookup[rowKey] = append(rowIdxLookup[rowKey], i)
 	}
 	return rowIdxLookup

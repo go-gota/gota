@@ -341,7 +341,7 @@ func generateJoinSeries(
 	return leftSeries, rightSeries
 }
 
-func BenchmarkDataFrame_InnerJoinOptimized(b *testing.B) {
+func BenchmarkDataFrame_InnerJoin(b *testing.B) {
 	table := []struct {
 		name                     string
 		joinRows                 []string
@@ -475,7 +475,7 @@ func BenchmarkDataFrame_InnerJoinOptimized(b *testing.B) {
 	}
 }
 
-func BenchmarkDataFrame_LeftJoinOptimized(b *testing.B) {
+func BenchmarkDataFrame_LeftJoin(b *testing.B) {
 	table := []struct {
 		name                     string
 		joinRows                 []string
@@ -609,7 +609,7 @@ func BenchmarkDataFrame_LeftJoinOptimized(b *testing.B) {
 	}
 }
 
-func BenchmarkDataFrame_RightJoinOptimized(b *testing.B) {
+func BenchmarkDataFrame_RightJoin(b *testing.B) {
 	table := []struct {
 		name                     string
 		joinRows                 []string
@@ -743,7 +743,7 @@ func BenchmarkDataFrame_RightJoinOptimized(b *testing.B) {
 	}
 }
 
-func BenchmarkDataFrame_OuterJoinOptimized(b *testing.B) {
+func BenchmarkDataFrame_OuterJoin(b *testing.B) {
 	table := []struct {
 		name                     string
 		joinRows                 []string
