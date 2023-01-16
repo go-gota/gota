@@ -1687,9 +1687,17 @@ func (df DataFrame) createRowKey(keys []string, keyIdx []int, rowIdx int) string
 	var sb strings.Builder
 	cols := df.columns
 	for k := range keys {
-		sb.WriteString(cols[keyIdx[k]].Elem(rowIdx).String())
+		val := cols[keyIdx[k]].Elem(rowIdx)
+		sb.WriteString(createValueKey(val))
 	}
 	return sb.String()
+}
+
+func createValueKey(val series.Element) string {
+	if val.Type() == series.Float {
+		return fmt.Sprintf("%g", val.Float())
+	}
+	return val.String()
 }
 
 // InnerJoin returns a DataFrame containing the inner join of two DataFrames.
