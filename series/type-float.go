@@ -26,6 +26,9 @@ func (e *floatElement) Set(value interface{}) {
 		e.SetBool(val)
 	case Element:
 		e.SetElement(val)
+	case FloatValuer:
+		e.e = val.Float()
+		e.nan = math.IsNaN(e.e)
 	default:
 		e.nan = true
 	}
@@ -181,4 +184,13 @@ func (e floatElement) GreaterEq(elem Element) bool {
 		return false
 	}
 	return e.e >= f
+}
+
+// FloatValuer is the interface providing the Float method.
+//
+// Types implementing FloatValuer interface are able to convert
+// themselves to a float Value.
+type FloatValuer interface {
+	// Float returns a float64 value.
+	Float() float64
 }
