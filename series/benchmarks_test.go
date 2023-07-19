@@ -1,11 +1,13 @@
 package series_test
 
 import (
+	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"testing"
 
-	"github.com/go-gota/gota/series"
+	"github.com/mqy527/gota/series"
 )
 
 func generateInts(n int) (data []int) {
@@ -214,6 +216,40 @@ func BenchmarkSeries_Subset(b *testing.B) {
 	}
 }
 
+func BenchmarkSeries_Append(b *testing.B) {
+	rand.Seed(100)
+	table := []struct {
+		name   string
+		series series.Series
+	}{
+		{
+			"[]int(100000)_Int",
+			series.Ints(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_String",
+			series.Strings(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_Bool",
+			series.Bools(generateInts(100000)),
+		},
+		{
+			"[]int(100000)_Float",
+			series.Floats(generateInts(100000)),
+		},
+	}
+	for _, test := range table {
+		origin := test.series.Copy()
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				test.series.Append(test.series)
+				test.series = origin
+			}
+		})
+	}
+}
+
 func BenchmarkSeries_Set(b *testing.B) {
 	rand.Seed(100)
 	table := []struct {
@@ -255,4 +291,145 @@ func BenchmarkSeries_Set(b *testing.B) {
 			}
 		})
 	}
+}
+
+func BenchmarkSeries_RollingCacheMeanByWeights(b *testing.B) {
+	tests := []struct {
+		series       series.Series
+		window       int
+		minPeriod    int
+		weights  []float64
+	}{
+		{
+			series.Floats(generateFloats(100000)),
+			3,
+			2,
+			[]float64{0.5, 0.3, 0.2},
+		},
+		{
+			series.Floats(generateFloats(100000)),
+			3,
+			1,
+			[]float64{5, 3, 2},
+		},
+	}
+
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		
+		b.Run("Rolling-" + test.series.Name(), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				r := test.series.Rolling(test.window, test.minPeriod)
+				r.MeanByWeights(test.weights)
+			}
+		})
+	}
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		b.Run("CacheRolling-" + test.series.Name(), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				r := test.series.CacheAble().Rolling(test.window, test.minPeriod)
+				r.MeanByWeights(test.weights)
+			}
+		})
+	}
+}
+
+func BenchmarkSeries_RollingCacheQuantile(b *testing.B) {
+	tests := []struct {
+		series       series.Series
+		window       int
+		minPeriod    int
+		quantile  float64
+	}{
+		{
+			series.Floats(generateFloats(2000)),
+			100,
+			2,
+			0.15,
+		},
+		{
+			series.Floats(generateFloats(2000)),
+			300,
+			1,
+			0.93,
+		},
+	}
+
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		b.Run("Rolling-" + test.series.Name(), func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				r := test.series.Rolling(test.window, test.minPeriod)
+				r.Quantile(test.quantile)
+			}
+		})
+	}
+	b.ResetTimer()
+	for testnum, test := range tests {
+		test.series.SetName(fmt.Sprintf("Name-%d", testnum))
+		b.Run("CacheRolling-" + test.series.Name(), func(b *testing.B) {
+			r := test.series.CacheAble().Rolling(test.window, test.minPeriod)
+			for i := 0; i < b.N; i++ {
+				r.Quantile(test.quantile)
+			}
+		})
+	}
+}
+
+
+
+func BenchmarkSeries_Quantile(b *testing.B) {
+	rand.Seed(100)
+	table := []struct {
+		name   string
+		series series.Series
+		quantile         float64
+	}{
+		{
+			"[]int(100000)_Int",
+			series.Ints(generateInts(100000)),
+			0.75,
+		},
+		{
+			"[]int(100000)_Float",
+			series.Floats(generateInts(100000)),
+			0.45,
+		},
+	}
+	for testnum, test := range table {
+		s := test.series
+		var result1, result2 float64
+		b.Run(test.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				result1 = s.Quantile(test.quantile)
+			}
+		})
+		s = s.CacheAble()
+		b.Run(test.name + "-cacheAbleSeries", func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+				result2 = s.Quantile(test.quantile)
+			}
+		})
+
+		if !compareFloats(result1, result2, 6) {
+			b.Errorf(
+				"Test:%v\nresult1:\n%v\nresult2:\n%v",
+				testnum, result1, result2,
+			)
+		}
+	}
+}
+
+func compareFloats(lvalue, rvalue float64, digits int) bool {
+	if math.IsNaN(lvalue) || math.IsNaN(rvalue) {
+		return math.IsNaN(lvalue) && math.IsNaN(rvalue)
+	}
+	d := math.Pow(10.0, float64(digits))
+	lv := int(lvalue * d)
+	rv := int(rvalue * d)
+	return lv == rv
 }

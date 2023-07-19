@@ -15,48 +15,65 @@ type intElement struct {
 var _ Element = (*intElement)(nil)
 
 func (e *intElement) Set(value interface{}) {
-	e.nan = false
 	switch val := value.(type) {
 	case string:
-		if val == "NaN" {
-			e.nan = true
-			return
-		}
-		i, err := strconv.Atoi(value.(string))
-		if err != nil {
-			e.nan = true
-			return
-		}
-		e.e = i
+		e.SetString(val)
 	case int:
-		e.e = int(val)
+		e.SetInt(val)
 	case float64:
-		f := val
-		if math.IsNaN(f) ||
-			math.IsInf(f, 0) ||
-			math.IsInf(f, 1) {
-			e.nan = true
-			return
-		}
-		e.e = int(f)
+		e.SetFloat(val)
 	case bool:
-		b := val
-		if b {
-			e.e = 1
-		} else {
-			e.e = 0
-		}
+		e.SetBool(val)
 	case Element:
-		v, err := val.Int()
-		if err != nil {
-			e.nan = true
-			return
-		}
-		e.e = v
+		e.SetElement(val)
 	default:
+		e.nan = true
+	}
+}
+
+func (e *intElement) SetElement(val Element) {
+	e.nan = val.IsNA()
+	v, err := val.Int()
+	if err != nil {
 		e.nan = true
 		return
 	}
+	e.e = v
+}
+func (e *intElement) SetBool(val bool) {
+	e.nan = false
+	if val {
+		e.e = 1
+	} else {
+		e.e = 0
+	}
+}
+func (e *intElement) SetFloat(val float64) {
+	e.nan = false
+	f := val
+	if math.IsNaN(f) ||
+		math.IsInf(f, 0) {
+		e.nan = true
+		return
+	}
+	e.e = int(f)
+}
+func (e *intElement) SetInt(val int) {
+	e.nan = false
+	e.e = val
+}
+func (e *intElement) SetString(val string) {
+	e.nan = false
+	if val == NaN {
+		e.nan = true
+		return
+	}
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		e.nan = true
+		return
+	}
+	e.e = i
 }
 
 func (e intElement) Copy() Element {
@@ -83,7 +100,7 @@ func (e intElement) Val() ElementValue {
 
 func (e intElement) String() string {
 	if e.IsNA() {
-		return "NaN"
+		return NaN
 	}
 	return fmt.Sprint(e.e)
 }
