@@ -469,7 +469,7 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 	for _, df := range gps.groups {
 		targetMap := df.Maps()[0]
 		curMap := make(map[string]interface{})
-		// add columns of  group by
+		// add columns of group by
 		for _, c := range gps.colnames {
 			if value, ok := targetMap[c]; ok {
 				curMap[c] = value
@@ -480,7 +480,7 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 		// Aggregation
 		for i, c := range colnames {
 			curSeries := df.Col(c)
-			var value float64
+			var value interface{}
 			switch typs[i] {
 			case Aggregation_MAX:
 				value = curSeries.Max()
@@ -497,7 +497,7 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 			case Aggregation_COUNT:
 				value = float64(curSeries.Len())
 			case Aggregation_FIRST:
-				value = curSeries.Elem(0).Float()
+				value = curSeries.Elem(0)
 			default:
 				return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
 
