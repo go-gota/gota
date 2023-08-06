@@ -497,12 +497,15 @@ func (gps Groups) Aggregation(typs []AggregationType, colnames []string) DataFra
 			case Aggregation_COUNT:
 				value = float64(curSeries.Len())
 			case Aggregation_FIRST:
-				value = curSeries.Elem(0)
+				if curSeries.Len() > 0 {
+					value = curSeries.Elem(0)
+				}
 			default:
 				return DataFrame{Err: fmt.Errorf("Aggregation: this method %s not found", typs[i])}
 
 			}
 			curMap[fmt.Sprintf("%s_%s", c, typs[i])] = value
+			//curMap[(c)] = value
 		}
 		dfMaps = append(dfMaps, curMap)
 
